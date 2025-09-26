@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full text-center">
+        <div class="space-y-6">
+            <!-- 403 Icon -->
+            <div class="flex justify-center">
+                <svg class="h-32 w-32 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+            </div>
+
+            <!-- Error Message -->
+            <div>
+                <h1 class="text-6xl font-bold text-gray-900">403</h1>
+                <p class="mt-4 text-xl text-gray-600">Access Forbidden</p>
+                <p class="mt-2 text-gray-500">You don't have permission to access this resource.</p>
+            </div>
+
+            <!-- Back to Home Button -->
+            <div class="mt-8">
+                <a href="{{ url_for('main.main_home') }}" 
+                   class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

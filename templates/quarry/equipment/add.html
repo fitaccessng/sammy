@@ -1,0 +1,31 @@
+{% extends 'quarry/base.html' %}
+{% block content %}
+<div class="max-w-xl mx-auto py-8">
+    <h1 class="text-2xl font-bold mb-6">Add Equipment</h1>
+    <form method="POST" class="space-y-6">
+        {{ form.hidden_tag() }}
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Equipment Name</label>
+            {{ form.name(class="input input-bordered w-full") }}
+            {% for error in form.name.errors %}
+                <span class="text-red-500 text-xs">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Status</label>
+            {{ form.status(class="input input-bordered w-full") }}
+            {% for error in form.status.errors %}
+                <span class="text-red-500 text-xs">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700">Last Service Date</label>
+            {{ form.last_service(class="input input-bordered w-full") }}
+            {% for error in form.last_service.errors %}
+                <span class="text-red-500 text-xs">{{ error }}</span>
+            {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary w-full">Add Equipment</button>
+    </form>
+</div>
+{% endblock %}

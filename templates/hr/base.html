@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SammyA HR{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <!-- FullCalendar CSS -->
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <!-- FullCalendar Core -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <!-- FullCalendar Plugins -->
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@5.11.3/main.min.js'></script>
+    <script src='https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@5.11.3/main.min.js'></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Custom styles for the HR dashboard */
+        body {
+            font-family: 'Nunito', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    {% include 'components/flash.html' %}
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="bg-blue-800 text-white w-64 min-h-screen p-4">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold">SammyA HR</h1>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="space-y-4">
+                <!-- Dashboard -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Main</h2>
+                    <a href="{{ url_for('hr.hr_home') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-dashboard text-xl'></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+
+                <!-- Staff Management -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Staff Management</h2>
+                    <a href="{{ url_for('hr.staff_list') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-user-detail text-xl'></i>
+                        <span>Staff Directory</span>
+                    </a>
+                    <a href="{{ url_for('hr.attendance') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-time-five text-xl'></i>
+                        <span>Attendance</span>
+                    </a>
+                    <a href="{{ url_for('hr.leave_management') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-calendar text-xl'></i>
+                        <span>Leave Management</span>
+                    </a>
+                </div>
+
+                <!-- Tasks & Projects -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Tasks</h2>
+                    <a href="{{ url_for('hr.tasks') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-task text-xl'></i>
+                        <span>Task Management</span>
+                    </a>
+                </div>
+
+                <!-- Finance -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Finance</h2>
+                    <a href="{{ url_for('hr.payroll') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-credit-card text-xl'></i>
+                        <span>Payroll</span>
+                    </a>
+                </div>
+
+                <!-- Communication -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Communication</h2>
+                    <a href="{{ url_for('hr.staff_queries') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-message-square-detail text-xl'></i>
+                        <span>Staff Queries</span>
+                    </a>
+                </div>
+
+                <!-- Reports -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports</h2>
+                    <a href="{{ url_for('hr.reports') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-report text-xl'></i>
+                        <span>HR Reports</span>
+                    </a>
+                    <a href="{{ url_for('hr.analytics') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-bar-chart-alt-2 text-xl'></i>
+                        <span>Analytics</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- Top Navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h1 class="text-xl font-semibold text-gray-800">{% block header %}Dashboard{% endblock %}</h1>
+                    <div class="flex items-center space-x-4">
+                        <button class="text-gray-500 hover:text-gray-700">
+                            <i class='bx bxs-bell text-xl'></i>
+                        </button>
+                        <div class="relative">
+                            <button id="userMenuBtn" class="flex items-center space-x-2">
+                                <img src="https://ui-avatars.com/api/?name=HR&background=0D8ABC&color=fff" 
+                                     alt="Profile" class="w-8 h-8 rounded-full">
+                                <span class="text-gray-700">HR Admin</span>
+                                <i class='bx bx-chevron-down text-gray-500'></i>
+                            </button>
+                            <!-- Dropdown Menu -->
+                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                <div class="py-1">
+                                    <a href="{{ url_for('hr.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                    <a href="{{ url_for('hr.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                    <div class="border-t border-gray-100"></div>
+                                    <a href="{{ url_for('hr.logout') }}" 
+                                       class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                        Logout
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <div class="p-6">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Add active state to current navigation item
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('nav a');
+            navLinks.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('text-white', 'bg-blue-700', 'rounded-lg', 'px-2', 'py-1');
+                }
+            });
+        });
+
+        // Toggle user menu dropdown
+        const userMenuBtn = document.getElementById('userMenuBtn');
+        const userMenu = document.getElementById('userMenu');
+        
+        userMenuBtn.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenuBtn.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

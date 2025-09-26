@@ -1,0 +1,67 @@
+{% extends "projects/base.html" %}
+
+{% block title %}Edit Project | SammyA{% endblock %}
+{% block header %}Edit Project{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <form id="editProjectForm" method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <!-- Project Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Project Name</label>
+                    <input type="text" name="name" required value="{{ project.name }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                                  focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <!-- Project Manager -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Project Manager</label>
+                    <input type="text" name="manager" required value="{{ project.manager }}"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                                  focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <!-- Project Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <select name="status" required
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm 
+                                   focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="Planning" {% if project.status == 'Planning' %}selected{% endif %}>
+                            Planning
+                        </option>
+                        <option value="Active" {% if project.status == 'Active' %}selected{% endif %}>
+                            Active
+                        </option>
+                        <option value="Completed" {% if project.status == 'Completed' %}selected{% endif %}>
+                            Completed
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end space-x-3">
+                    <a href="{{ url_for('project.project_details', project_id=project.id) }}" 
+                       class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 
+                              hover:bg-gray-50 focus:outline-none focus:ring-2 
+                              focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancel
+                    </a>
+                    <button type="submit" 
+                            class="px-4 py-2 border border-transparent rounded-md shadow-sm 
+                                   text-white bg-indigo-600 hover:bg-indigo-700 
+                                   focus:outline-none focus:ring-2 focus:ring-offset-2 
+                                   focus:ring-indigo-500">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

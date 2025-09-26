@@ -1,0 +1,67 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Project Sites | SammyA{% endblock %}
+{% block header %}Project Sites{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Actions Bar -->
+    <div class="flex justify-between items-center">
+        <div class="flex space-x-4">
+            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                <i class='bx bx-plus'></i>
+                <span>New Project</span>
+            </button>
+            <select class="bg-white rounded-lg shadow px-4 py-2">
+                <option>All Status</option>
+                <option>In Progress</option>
+                <option>Completed</option>
+                <option>On Hold</option>
+            </select>
+        </div>
+        <div class="flex items-center bg-white rounded-lg px-3 py-2 w-64 shadow">
+            <i class='bx bx-search text-gray-400'></i>
+            <input type="text" placeholder="Search projects..." class="ml-2 flex-1 outline-none">
+        </div>
+    </div>
+
+    <!-- Project Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Project Card -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+            <div class="h-40 bg-gray-200 relative">
+                <img src="https://images.unsplash.com/photo-1590674899484-13d44d994add" 
+                     alt="Project" class="w-full h-full object-cover">
+                <span class="absolute top-4 right-4 px-2 py-1 bg-green-500 text-white text-sm rounded-full">
+                    In Progress
+                </span>
+            </div>
+            <div class="p-4 space-y-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800">Marina Heights Complex</h3>
+                    <p class="text-sm text-gray-500">Lagos, Nigeria</p>
+                </div>
+                <div class="space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Progress</span>
+                        <span class="text-blue-600">65%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-blue-600 h-2 rounded-full" style="width: 65%"></div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <div class="flex -space-x-2">
+                        <img src="https://ui-avatars.com/api/?name=PM" class="w-8 h-8 rounded-full border-2 border-white">
+                        <img src="https://ui-avatars.com/api/?name=SE" class="w-8 h-8 rounded-full border-2 border-white">
+                        <span class="w-8 h-8 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center text-sm text-gray-500">+3</span>
+                    </div>
+                    <button class="text-blue-600 hover:text-blue-800">View Details</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add more project cards here -->
+    </div>
+</div>
+{% endblock %}

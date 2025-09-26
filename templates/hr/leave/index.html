@@ -1,0 +1,763 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Leave Management | SammyA HR{% endblock %}
+{% block header %}Leave Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Leave Statistics -->
+   <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave Management | SammyA HR</title>
+    <link href='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css' rel='stylesheet' />
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js'></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+     
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .stat-info h3 {
+            font-size: 14px;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+        
+        .stat-info .number {
+            font-size: 28px;
+            font-weight: bold;
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+        
+        .pending .number { color: #f59e0b; }
+        .pending .stat-icon { background: #fef3c7; color: #f59e0b; }
+        
+        .approved .number { color: #10b981; }
+        .approved .stat-icon { background: #d1fae5; color: #10b981; }
+        
+        .rejected .number { color: #ef4444; }
+        .rejected .stat-icon { background: #fee2e2; color: #ef4444; }
+        
+        .upcoming .number { color: #3b82f6; }
+        .upcoming .stat-icon { background: #dbeafe; color: #3b82f6; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 25px;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-section h2 {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #1e293b;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .date-fields {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+        
+        .calendar-section {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            height:100%;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .calendar-header h2 {
+            font-size: 20px;
+            color: #1e293b;
+        }
+        
+        .legend {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+        }
+        
+        .color-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        
+        .approved-dot { background: #86efac; }
+        .pending-dot { background: #fef08a; }
+        .rejected-dot { background: #fecaca; }
+        
+        #calendar {
+            height: 600px;
+            font-size: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            font-size: 20px;
+            color: #1e293b;
+        }
+        
+        .close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #64748b;
+        }
+        
+        .event-details {
+            margin-bottom: 20px;
+        }
+        
+        .detail-item {
+            margin-bottom: 12px;
+        }
+        
+        .detail-item strong {
+            display: inline-block;
+            width: 100px;
+            color: #64748b;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        @media (max-width: 1024px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-fields {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+      
+        
+        <div class="stats-grid">
+            <div class="stat-card pending">
+                <div class="stat-info">
+                    <h3>Pending Requests</h3>
+                    <div class="number">5</div>
+                </div>
+                <div class="stat-icon">
+                    <i class='bx bx-time'></i>
+                </div>
+            </div>
+            
+            <div class="stat-card approved">
+                <div class="stat-info">
+                    <h3>Approved</h3>
+                    <div class="number">12</div>
+                </div>
+                <div class="stat-icon">
+                    <i class='bx bx-check-circle'></i>
+                </div>
+            </div>
+            
+            <div class="stat-card rejected">
+                <div class="stat-info">
+                    <h3>Rejected</h3>
+                    <div class="number">3</div>
+                </div>
+                <div class="stat-icon">
+                    <i class='bx bx-x-circle'></i>
+                </div>
+            </div>
+            
+            <div class="stat-card upcoming">
+                <div class="stat-info">
+                    <h3>Upcoming</h3>
+                    <div class="number">8</div>
+                </div>
+                <div class="stat-icon">
+                    <i class='bx bx-calendar'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="content-grid">
+            <div class="form-section">
+                <h2>New Leave Request</h2>
+                <form id="leaveRequestForm">
+                    <div class="form-group">
+                        <label for="staffSelect">Staff Member</label>
+                        <select id="staffSelect" class="form-control">
+                            <option value="">Select Staff</option>
+                            <option value="1">John Doe (Engineering)</option>
+                            <option value="2">Jane Smith (Marketing)</option>
+                            <option value="3">Robert Johnson (Sales)</option>
+                            <option value="4">Sarah Williams (HR)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="leaveType">Leave Type</label>
+                        <select id="leaveType" class="form-control">
+                            <option value="annual">Annual Leave</option>
+                            <option value="sick">Sick Leave</option>
+                            <option value="maternity">Maternity Leave</option>
+                            <option value="study">Study Leave</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group date-fields">
+                        <div>
+                            <label for="startDate">Start Date</label>
+                            <input type="date" id="startDate" class="form-control">
+                        </div>
+                        <div>
+                            <label for="endDate">End Date</label>
+                            <input type="date" id="endDate" class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="reason">Reason</label>
+                        <textarea id="reason" class="form-control" placeholder="Brief reason for leave"></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Submit Request</button>
+                </form>
+            </div>
+            
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <h2>Leave Calendar</h2>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <span class="color-dot approved-dot"></span>
+                            <span>Approved</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-dot pending-dot"></span>
+                            <span>Pending</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="color-dot rejected-dot"></span>
+                            <span>Rejected</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="calendar"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Leave Details Modal -->
+    <div class="modal" id="leaveDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Leave Request Details</h3>
+                <span class="close">&times;</span>
+            </div>
+            
+            <div class="event-details">
+                <div class="detail-item">
+                    <strong>Staff:</strong>
+                    <span id="modal-staff">John Doe</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Department:</strong>
+                    <span id="modal-dept">Engineering</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Type:</strong>
+                    <span id="modal-type">Annual Leave</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Duration:</strong>
+                    <span id="modal-duration">Sept 15 - Sept 20, 2023 (5 days)</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Status:</strong>
+                    <span id="modal-status" class="status-badge">Pending</span>
+                </div>
+                <div class="detail-item">
+                    <strong>Reason:</strong>
+                    <span id="modal-reason">Family vacation</span>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button class="btn btn-success" id="approveBtn">Approve</button>
+                <button class="btn btn-danger" id="rejectBtn">Reject</button>
+                <button class="btn" id="closeBtn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize calendar
+            const calendarEl = document.getElementById('calendar');
+            const calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                height: '100%',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                selectable: true,
+                select: function(info) {
+                    // Set the selected dates in the form
+                    document.getElementById('startDate').value = formatDate(info.start);
+                    document.getElementById('endDate').value = formatDate(info.end);
+                    calendar.unselect();
+                },
+                events: [
+                    {
+                        title: 'John Doe - Annual Leave',
+                        start: '2023-09-05',
+                        end: '2023-09-10',
+                        extendedProps: {
+                            status: 'approved',
+                            type: 'Annual Leave',
+                            staff: 'John Doe',
+                            department: 'Engineering',
+                            reason: 'Family vacation'
+                        }
+                    },
+                    {
+                        title: 'Jane Smith - Sick Leave',
+                        start: '2023-09-12',
+                        end: '2023-09-15',
+                        extendedProps: {
+                            status: 'approved',
+                            type: 'Sick Leave',
+                            staff: 'Jane Smith',
+                            department: 'Marketing',
+                            reason: 'Medical appointment'
+                        }
+                    },
+                    {
+                        title: 'Robert Johnson - Annual Leave',
+                        start: '2023-09-18',
+                        end: '2023-09-25',
+                        extendedProps: {
+                            status: 'pending',
+                            type: 'Annual Leave',
+                            staff: 'Robert Johnson',
+                            department: 'Sales',
+                            reason: 'Holiday'
+                        }
+                    },
+                    {
+                        title: 'Sarah Williams - Maternity Leave',
+                        start: '2023-10-01',
+                        end: '2023-12-31',
+                        extendedProps: {
+                            status: 'approved',
+                            type: 'Maternity Leave',
+                            staff: 'Sarah Williams',
+                            department: 'HR',
+                            reason: 'Maternity leave'
+                        }
+                    }
+                ],
+                eventClick: function(info) {
+                    showLeaveDetails(info.event);
+                },
+                eventDidMount: function(info) {
+                    // Style events based on status
+                    const status = info.event.extendedProps.status;
+                    if (status === 'approved') {
+                        info.el.style.backgroundColor = '#86efac';
+                        info.el.style.borderColor = '#22c55e';
+                    } else if (status === 'pending') {
+                        info.el.style.backgroundColor = '#fef08a';
+                        info.el.style.borderColor = '#eab308';
+                    } else if (status === 'rejected') {
+                        info.el.style.backgroundColor = '#fecaca';
+                        info.el.style.borderColor = '#ef4444';
+                    }
+                }
+            });
+            
+            calendar.render();
+            
+            // Leave request form handler
+            const leaveRequestForm = document.getElementById('leaveRequestForm');
+            if (leaveRequestForm) {
+                leaveRequestForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const staffSelect = document.getElementById('staffSelect');
+                    const leaveType = document.getElementById('leaveType');
+                    const startDate = document.getElementById('startDate');
+                    const endDate = document.getElementById('endDate');
+                    const reason = document.getElementById('reason');
+                    
+                    if (!staffSelect.value || !startDate.value || !endDate.value) {
+                        alert('Please fill in all required fields');
+                        return;
+                    }
+                    
+                    // In a real application, you would send this data to the server
+                    console.log('Leave request submitted:', {
+                        staff: staffSelect.options[staffSelect.selectedIndex].text,
+                        type: leaveType.value,
+                        startDate: startDate.value,
+                        endDate: endDate.value,
+                        reason: reason.value
+                    });
+                    
+                    // Add event to calendar (in a real app, this would come from the server)
+                    const staffText = staffSelect.options[staffSelect.selectedIndex].text;
+                    const newEvent = {
+                        title: `${staffText.split(' ')[0]} - ${leaveType.options[leaveType.selectedIndex].text}`,
+                        start: startDate.value,
+                        end: endDate.value,
+                        extendedProps: {
+                            status: 'pending',
+                            type: leaveType.options[leaveType.selectedIndex].text,
+                            staff: staffText,
+                            department: staffText.split('(')[1].replace(')', ''),
+                            reason: reason.value
+                        }
+                    };
+                    
+                    calendar.addEvent(newEvent);
+                    
+                    // Reset form
+                    leaveRequestForm.reset();
+                    
+                    alert('Leave request submitted successfully! It is now pending approval.');
+                });
+            }
+            
+            // Modal functionality
+            const modal = document.getElementById('leaveDetailsModal');
+            const closeBtn = document.querySelector('.close');
+            const closeBtn2 = document.getElementById('closeBtn');
+            const approveBtn = document.getElementById('approveBtn');
+            const rejectBtn = document.getElementById('rejectBtn');
+            
+            closeBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            closeBtn2.addEventListener('click', function() {
+                modal.style.display = 'none';
+            });
+            
+            approveBtn.addEventListener('click', function() {
+                const eventId = approveBtn.getAttribute('data-event-id');
+                const event = calendar.getEventById(eventId);
+                
+                if (event) {
+                    event.setProp('backgroundColor', '#86efac');
+                    event.setProp('borderColor', '#22c55e');
+                    event.setExtendedProp('status', 'approved');
+                    
+                    // Update the status in the modal
+                    document.getElementById('modal-status').textContent = 'Approved';
+                    document.getElementById('modal-status').className = 'status-badge approved';
+                }
+                
+                modal.style.display = 'none';
+            });
+            
+            rejectBtn.addEventListener('click', function() {
+                const eventId = rejectBtn.getAttribute('data-event-id');
+                const event = calendar.getEventById(eventId);
+                
+                if (event) {
+                    event.setProp('backgroundColor', '#fecaca');
+                    event.setProp('borderColor', '#ef4444');
+                    event.setExtendedProp('status', 'rejected');
+                    
+                    // Update the status in the modal
+                    document.getElementById('modal-status').textContent = 'Rejected';
+                    document.getElementById('modal-status').className = 'status-badge rejected';
+                }
+                
+                modal.style.display = 'none';
+            });
+            
+            window.addEventListener('click', function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            });
+            
+            // Helper function to format date as YYYY-MM-DD
+            function formatDate(date) {
+                const d = new Date(date);
+                let month = '' + (d.getMonth() + 1);
+                let day = '' + d.getDate();
+                const year = d.getFullYear();
+                
+                if (month.length < 2) 
+                    month = '0' + month;
+                if (day.length < 2) 
+                    day = '0' + day;
+                    
+                return [year, month, day].join('-');
+            }
+            
+            // Function to show leave details in modal
+            function showLeaveDetails(event) {
+                const details = event.extendedProps;
+                const start = new Date(event.start);
+                const end = new Date(event.end);
+                const duration = Math.round((end - start) / (1000 * 60 * 60 * 24));
+                
+                document.getElementById('modal-staff').textContent = details.staff;
+                document.getElementById('modal-dept').textContent = details.department;
+                document.getElementById('modal-type').textContent = details.type;
+                document.getElementById('modal-duration').textContent = 
+                    `${start.toDateString()} - ${end.toDateString()} (${duration} days)`;
+                document.getElementById('modal-status').textContent = details.status.charAt(0).toUpperCase() + details.status.slice(1);
+                document.getElementById('modal-reason').textContent = details.reason;
+                
+                // Set status badge class
+                const statusBadge = document.getElementById('modal-status');
+                statusBadge.className = 'status-badge ' + details.status;
+                
+                // Set data attribute for approve/reject buttons
+                approveBtn.setAttribute('data-event-id', event.id);
+                rejectBtn.setAttribute('data-event-id', event.id);
+                
+                // Show the modal
+                modal.style.display = 'flex';
+            }
+        });
+    </script>
+</body>
+</html>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Leave request form handler
+    const leaveRequestForm = document.getElementById('leaveRequestForm');
+    if (leaveRequestForm) {
+        leaveRequestForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            // Add form submission logic here
+        });
+    }
+
+    // Initialize calendar
+    const calendarEl = document.getElementById('leaveCalendar');
+    if (calendarEl) {
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            height: '100%',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek'
+            },
+            events: [
+                {% for event in leave_events %}
+                {
+                    title: '{{ event.title }}',
+                    start: '{{ event.start }}',
+                    end: '{{ event.end }}',
+                    extendedProps: {
+                        status: '{{ event.extendedProps.status }}',
+                        type: '{{ event.extendedProps.type }}',
+                        staff: '{{ event.extendedProps.staff }}',
+                        department: '{{ event.extendedProps.department }}'
+                    }
+                }{% if not loop.last %},{% endif %}
+                {% endfor %}
+            ],
+            eventClick: function(info) {
+                showLeaveDetails(info.event);
+            },
+            eventDidMount: function(info) {
+                // Style events based on status
+                const status = info.event.extendedProps.status;
+                if (status === 'approved') {
+                    info.el.style.backgroundColor = '#86efac';
+                    info.el.style.borderColor = '#22c55e';
+                } else if (status === 'pending') {
+                    info.el.style.backgroundColor = '#fef08a';
+                    info.el.style.borderColor = '#eab308';
+                } else if (status === 'rejected') {
+                    info.el.style.backgroundColor = '#fecaca';
+                    info.el.style.borderColor = '#ef4444';
+                }
+            }
+        });
+        
+        calendar.render();
+    }
+
+    // Leave details modal
+    function showLeaveDetails(event) {
+        const details = event.extendedProps;
+        // Implement modal display logic here
+    }
+});
+</script>
+{% endblock %}

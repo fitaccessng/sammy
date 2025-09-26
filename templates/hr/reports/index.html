@@ -1,0 +1,154 @@
+{% extends "hr/base.html" %}
+
+{% block title %}HR Reports | SammyA HR{% endblock %}
+{% block header %}HR Reports{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Generate Report Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Generate Report</h3>
+            <form id="generateReportForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Report Type</label>
+                    <select id="reportType" class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="attendance">Attendance Report</option>
+                        <option value="leave">Leave Statistics</option>
+                        <option value="payroll">Payroll Summary</option>
+                        <option value="performance">Performance Review</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Date Range</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <input type="date" id="startDate" class="block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                        <input type="date" id="endDate" class="block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Format</label>
+                    <select id="format" class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
+                        <option value="pdf">PDF</option>
+                        <option value="excel">Excel</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    Generate Report
+                </button>
+            </form>
+        </div>
+
+        <!-- Available Reports -->
+        <div class="md:col-span-2 bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Available Reports</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for report in reports.available_reports %}
+                    <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900">{{ report.title }}</h4>
+                            <p class="text-xs text-gray-500">Last generated: {{ report.last_generated }}</p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                {{ report.format }}
+                            </span>
+                            <button onclick="downloadReport({{ report.id }})" 
+                                    class="text-blue-600 hover:text-blue-800">
+                                <i class='bx bx-download'></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Downloads -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Downloads</h3>
+        </div>
+        <div class="p-6">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Report Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Downloaded By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for download in reports.recent_downloads %}
+                    <tr>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ download.report_name }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ download.downloaded_by }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ download.downloaded_at }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const generateReportForm = document.getElementById('generateReportForm');
+    
+    if (generateReportForm) {
+        generateReportForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const data = {
+                type: document.getElementById('reportType').value,
+                date_range: {
+                    start: document.getElementById('startDate').value,
+                    end: document.getElementById('endDate').value
+                },
+                format: document.getElementById('format').value
+            };
+            
+            try {
+                const response = await fetch('/hr/api/reports/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    alert('Report generation started. You will be notified when it\'s ready.');
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                alert('Error generating report: ' + error.message);
+            }
+        });
+    }
+    
+    window.downloadReport = async function(reportId) {
+        try {
+            // Implement report download logic here
+            alert('Downloading report...');
+        } catch (error) {
+            alert('Error downloading report: ' + error.message);
+        }
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

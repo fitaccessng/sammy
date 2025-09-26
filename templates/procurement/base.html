@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SammyA Procurement{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Box Icons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="bg-green-800 text-white w-64 min-h-screen p-4">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold">SammyA Procurement</h1>
+            </div>
+            
+            <nav class="space-y-6">
+                <!-- Add this to your navigation menu -->
+                <a href="{{ url_for('procurement.profile') }}" 
+                   class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                    <i class="bx bxs-user-circle text-xl"></i>
+                    <span>Profile</span>
+                </a>
+
+                <!-- Dashboard -->
+                <div class="space-y-2">
+                    <a href="{{ url_for('procurement.procurement_home') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-dashboard text-xl'></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+
+                <!-- Asset Management -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Asset Management</h2>
+                    <a href="{{ url_for('procurement.assets') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-box text-xl'></i>
+                        <span>Assets Directory</span>
+                    </a>
+                    <a href="{{ url_for('procurement.maintenance') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-wrench text-xl'></i>
+                        <span>Maintenance</span>
+                    </a>
+                </div>
+
+                <!-- Purchasing -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Purchasing</h2>
+                    <a href="{{ url_for('procurement.purchases') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-cart text-xl'></i>
+                        <span>Purchase Orders</span>
+                    </a>
+                    <a href="{{ url_for('procurement.suppliers') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-business text-xl'></i>
+                        <span>Suppliers</span>
+                    </a>
+                </div>
+
+                <!-- Tracking -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Tracking</h2>
+                    <a href="{{ url_for('procurement.tracking') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-map text-xl'></i>
+                        <span>Asset Tracking</span>
+                    </a>
+                </div>
+
+                <!-- Inventory Management -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Inventory</h2>
+                    <a href="{{ url_for('procurement.inventory') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-box text-xl'></i>
+                        <span>Inventory Management</span>
+                    </a>
+                </div>
+
+                <!-- Reports -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports</h2>
+                    <a href="{{ url_for('procurement.reports') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-report text-xl'></i>
+                        <span>Reports</span>
+                    </a>
+                    <a href="{{ url_for('procurement.analytics') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class="bx bx-line-chart text-xl"></i>
+                        <span>Analytics</span>
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1">
+            <!-- Top Navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h1 class="text-xl font-semibold text-gray-800">{% block header %}Dashboard{% endblock %}</h1>
+                    <div class="flex items-center space-x-4">
+                        <!-- Notifications -->
+                        <div class="relative">
+                            <button class="text-gray-500 hover:text-gray-700">
+                                <i class='bx bxs-bell text-xl'></i>
+                                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center">
+                                    3
+                                </span>
+                            </button>
+                        </div>
+                        
+                        <!-- User Menu -->
+                        <div class="relative">
+                            <button id="userMenuBtn" class="flex items-center space-x-2">
+                                <img src="https://ui-avatars.com/api/?name=Procurement&background=16A34A&color=fff" 
+                                     alt="Profile" class="w-8 h-8 rounded-full">
+                                <span class="text-gray-700">Procurement Admin</span>
+                                <i class='bx bx-chevron-down text-gray-500'></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                <a href="{{ url_for('procurement.profile') }}" 
+                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class='bx bx-user mr-2'></i>
+                                    Profile
+                                </a>
+                                <a href="{{ url_for('procurement.settings') }}" 
+                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    <i class='bx bx-cog mr-2'></i>
+                                    Settings
+                                </a>
+                                <hr class="my-1 border-gray-200">
+                                <a href="{{ url_for('procurement.logout') }}" 
+                                   class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    <i class='bx bx-log-out mr-2'></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="p-6">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenuBtn && userDropdown) {
+                // Toggle dropdown
+                userMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!userMenuBtn.contains(e.target)) {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+                
+                // Close dropdown when pressing escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+    <script src="{{ url_for('static', filename='js/procurement.js') }}"></script>
+</body>
+</html>

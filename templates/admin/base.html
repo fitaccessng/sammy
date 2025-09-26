@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Construction Admin Dashboard | SammyA{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .sidebar {
+            width: 280px;
+            transition: all 0.3s ease;
+        }
+        .main-content {
+            margin-left: 280px;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-280px);
+                position: fixed;
+                z-index: 50;
+                height: 100vh;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .metric-card {
+            border-left: 4px solid var(--primary);
+        }
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .notification-dot {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--danger);
+        }
+        .nav-item {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: white;
+        }
+        .hamburger {
+            display: none;
+        }
+        @media (max-width: 1024px) {
+            .hamburger {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    {% include 'components/flash.html' %}
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="sidebar bg-gray-900 text-white fixed h-full overflow-y-auto">
+            <div class="p-5 border-b border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-xl font-bold flex items-center">
+                        <i class='bx bx-building-house mr-2'></i>
+                        <span>SammyA</span>
+                    </h1>
+                    <button id="sidebar-close" class="lg:hidden">
+                        <i class='bx bx-x text-2xl'></i>
+                    </button>
+                </div>
+                <p class="text-gray-400 text-sm mt-1">Construction Management</p>
+            </div>
+            <nav class="p-4 space-y-1">
+                {% block sidebar %}
+                <!-- Collapsible Sidebar Sections -->
+                <div x-data="{ open: {dashboard: true, hr: false, projects: false, inventory: false, orders: false, monitoring: false, scheduling: false, analytics: false, files: false, user: false} }" class="space-y-2">
+                    <!-- Dashboard Section -->
+                    <div>
+                        <button @click="open.dashboard = !open.dashboard" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Dashboard</span>
+                            <i :class="open.dashboard ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.dashboard" class="space-y-1">
+                            <a href="{{ url_for('admin.index') }}" class="nav-item flex items-center p-3 rounded-lg relative">
+                                <i class='bx bxs-dashboard mr-3'></i>
+                                <span>Overview</span>
+                                <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">3</span>
+                            </a>
+                            <a href="{{ url_for('admin.dashboard_data') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-data mr-3'></i>
+                                <span>Dashboard Data</span>
+                            </a>
+                            <a href="{{ url_for('admin.dashboard_upload') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-cloud-upload mr-3'></i>
+                                <span>Upload</span>
+                            </a>
+                            <a href="{{ url_for('admin.dashboard_action_log') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-notepad mr-3'></i>
+                                <span>Action Log</span>
+                            </a>
+                            <a href="{{ url_for('admin.dashboard_progress') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bx-bar-chart-alt-2 mr-3'></i>
+                                <span>Project Progress</span>
+                            </a>
+                            <a href="{{ url_for('admin.custom_dashboard') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-customize mr-3'></i>
+                                <span>Custom Dashboard</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- HR Management Section -->
+                    <div class="pt-2">
+                        <button @click="open.hr = !open.hr" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>HR Management</span>
+                            <i :class="open.hr ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.hr" class="space-y-1">
+                            <a href="{{ url_for('admin.employees') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-user-detail mr-3'></i>
+                                <span>Employees</span>
+                            </a>
+                            <a href="{{ url_for('admin.attendance') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-time-five mr-3'></i>
+                                <span>Attendance</span>
+                            </a>
+                            <a href="{{ url_for('admin.payroll') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-credit-card mr-3'></i>
+                                <span>Payroll</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_employee') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-user-plus mr-3'></i>
+                                <span>Add Employee</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Project Management Section -->
+                    <div class="pt-2">
+                        <button @click="open.projects = !open.projects" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Projects</span>
+                            <i :class="open.projects ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.projects" class="space-y-1">
+                            <a href="{{ url_for('admin.projects') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-building-house mr-3'></i>
+                                <span>All Projects</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_project') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-folder-plus mr-3'></i>
+                                <span>Add Project</span>
+                            </a>
+                            <a href="{{ url_for('admin.milestones', project_id=project.id if project else 1) }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-flag mr-3'></i>
+                                <span>Milestones</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_milestone', project_id=project.id if project else 1) }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-flag-plus mr-3'></i>
+                                <span>Add Milestone</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Inventory & Assets Section -->
+                    <div class="pt-2">
+                        <button @click="open.inventory = !open.inventory" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Inventory</span>
+                            <i :class="open.inventory ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.inventory" class="space-y-1">
+                            <a href="{{ url_for('quarry.equipment') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-wrench mr-3'></i>
+                                <span>Equipment</span>
+                            </a>
+                            <a href="{{ url_for('quarry.add_equipment') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-wrench-plus mr-3'></i>
+                                <span>Add Equipment</span>
+                            </a>
+                            <a href="{{ url_for('admin.assets') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-building mr-3'></i>
+                                <span>Assets</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_asset') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-building-plus mr-3'></i>
+                                <span>Add Asset</span>
+                            </a>
+                            <a href="{{ url_for('admin.stock') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-package mr-3'></i>
+                                <span>Stock</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_stock') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-package-plus mr-3'></i>
+                                <span>Add Stock</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Orders & Purchases Section -->
+                    <div class="pt-2">
+                        <button @click="open.orders = !open.orders" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Orders & Purchases</span>
+                            <i :class="open.orders ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.orders" class="space-y-1">
+                            <a href="{{ url_for('admin.orders') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-cart mr-3'></i>
+                                <span>Purchase Orders</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_order') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-cart-add mr-3'></i>
+                                <span>Add Order</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Monitoring Section -->
+                    <div class="pt-2">
+                        <button @click="open.monitoring = !open.monitoring" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Monitoring</span>
+                            <i :class="open.monitoring ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.monitoring" class="space-y-1">
+                            <a href="{{ url_for('admin.incidents') }}" class="nav-item flex items-center p-3 rounded-lg relative">
+                                <i class='bx bxs-error mr-3'></i>
+                                <span>Incidents</span>
+                                <span class="ml-auto bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full">1</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_incident') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-error-alt mr-3'></i>
+                                <span>Add Incident</span>
+                            </a>
+                            <a href="{{ url_for('admin.alerts') }}" class="nav-item flex items-center p-3 rounded-lg relative">
+                                <i class='bx bxs-bell-ring mr-3'></i>
+                                <span>Alerts</span>
+                                <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">5</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_alert') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-bell-plus mr-3'></i>
+                                <span>Add Alert</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Scheduling Section -->
+                    <div class="pt-2">
+                        <button @click="open.scheduling = !open.scheduling" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Scheduling</span>
+                            <i :class="open.scheduling ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.scheduling" class="space-y-1">
+                            <a href="{{ url_for('admin.schedules') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-calendar mr-3'></i>
+                                <span>Schedules</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_general_schedule') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-calendar-plus mr-3'></i>
+                                <span>Add Schedule</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Analytics Section -->
+                    <div class="pt-2">
+                        <button @click="open.analytics = !open.analytics" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Analytics</span>
+                            <i :class="open.analytics ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.analytics" class="space-y-1">
+                            <a href="{{ url_for('admin.analytics_custom') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-analyse mr-3'></i>
+                                <span>Custom Analytics</span>
+                            </a>
+                            <a href="{{ url_for('admin.analytics_export_csv') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-file-export mr-3'></i>
+                                <span>Export Analytics</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- File Management Section -->
+                    <div class="pt-2">
+                        <button @click="open.files = !open.files" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>File Management</span>
+                            <i :class="open.files ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.files" class="space-y-1">
+                            <a href="{{ url_for('files.search_files') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-file-find mr-3'></i>
+                                <span>Search Files</span>
+                            </a>
+                        </div>
+                    </div>
+                    <!-- User Section -->
+                    <div class="pt-2">
+                        <button @click="open.user = !open.user" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>User</span>
+                            <i :class="open.user ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.user" class="space-y-1">
+                            <a href="{{ url_for('admin.profile') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-user mr-3'></i>
+                                <span>Profile</span>
+                            </a>
+                            <a href="{{ url_for('admin.logout') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bx-log-out mr-3'></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endblock %}
+            </nav>
+           
+        </aside>
+        <!-- Main Content -->
+        <div class="main-content flex-1">
+            <!-- Top Navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center">
+                        <button id="sidebar-toggle" class="hamburger mr-4 text-gray-700">
+                            <i class='bx bx-menu text-2xl'></i>
+                        </button>
+                        <h1 class="text-xl font-semibold text-gray-800">{% block header %}Dashboard Overview{% endblock %}</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <button class="p-2 rounded-full hover:bg-gray-100 relative">
+                                <i class='bx bxs-bell text-xl text-gray-600'></i>
+                                <span class="notification-dot"></span>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <button id="user-menu-button" class="flex items-center space-x-2">
+                                <img src="https://ui-avatars.com/api/?name=Admin+User&background=2563eb&color=fff" 
+                                     alt="Profile" class="w-8 h-8 rounded-full">
+                                <span class="text-gray-700">Admin</span>
+                                <i class='bx bx-chevron-down text-gray-500'></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <!-- Page Content -->
+            <div class="p-6 space-y-6">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    <script>
+        // Sidebar toggle functionality
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebar-close');
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+        sidebarClose.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+        });
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 1024 && 
+                !sidebar.contains(e.target) && 
+                !sidebarToggle.contains(e.target) &&
+                sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+            }
+        });
+        // User menu functionality
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userMenu = document.getElementById('user-menu');
+        userMenuButton.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+        // Close user menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</body>
+</html>

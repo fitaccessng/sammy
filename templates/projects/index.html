@@ -1,0 +1,74 @@
+{% extends "projects/base.html" %}
+
+{% block title %}Projects Dashboard | SammyA{% endblock %}
+{% block header %}Projects Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <div class="flex space-x-3">
+            <a href="{{ url_for('project.create_project') }}" 
+               class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                Create New Project
+            </a>
+            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Export Projects
+            </button>
+        </div>
+        <div class="flex space-x-3">
+            <input type="text" placeholder="Search projects..." 
+                   class="px-4 py-2 border rounded-lg">
+        </div>
+    </div>
+
+    <!-- Projects Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for project in projects %}
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6">
+                <div class="flex justify-between items-start">
+                    <h3 class="text-lg font-semibold text-gray-900">{{ project.name }}</h3>
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                          {% if project.status == 'Active' %}bg-green-100 text-green-800
+                          {% elif project.status == 'Planning' %}bg-yellow-100 text-yellow-800
+                          {% else %}bg-gray-100 text-gray-800{% endif %}">
+                        {{ project.status }}
+                    </span>
+                </div>
+                
+                <div class="mt-4 space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Manager:</span>
+                        <span class="text-gray-900">{{ project.manager }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Created:</span>
+                        <span class="text-gray-900">{{ project.created_at }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Staff Assigned:</h4>
+                    <div class="space-y-1">
+                        {% for role, name in project.staff.items() %}
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">{{ role }}:</span>
+                            <span class="text-gray-900">{{ name }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-end space-x-3">
+                    <a href="{{ url_for('project.project_details', project_id=project.id) }}" 
+                       class="text-indigo-600 hover:text-indigo-900">View Details</a>
+                    <a href="{{ url_for('project.edit_project', project_id=project.id) }}" 
+                       class="text-gray-600 hover:text-gray-900">Edit</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

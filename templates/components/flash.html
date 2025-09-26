@@ -1,0 +1,10 @@
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="fixed top-4 right-4 z-50 {{ 'bg-green-100 text-green-800' if category == 'success' else 'bg-red-100 text-red-800' }} px-4 py-3 rounded-lg shadow-md flex items-center space-x-2">
+                <i class='bx {{ 'bx-check' if category == 'success' else 'bx-x' }} text-xl'></i>
+                <span>{{ message }}</span>
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}

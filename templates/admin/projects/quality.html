@@ -1,0 +1,83 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Quality Control | SammyA{% endblock %}
+{% block header %}Quality Control{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending Inspections</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">8</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-time text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Failed Inspections</p>
+                    <h3 class="text-2xl font-bold text-red-600">3</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bx-x-circle text-2xl text-red-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Passed Inspections</p>
+                    <h3 class="text-2xl font-bold text-green-600">45</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-check-circle text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inspection List -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Quality Inspections</h3>
+        </div>
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inspector</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Marina Heights</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">John Smith</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Foundation</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            Passed
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2025-09-01</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <button class="text-blue-600 hover:text-blue-900">View Report</button>
+                    </td>
+                </tr>
+                <!-- Add more inspection rows here -->
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

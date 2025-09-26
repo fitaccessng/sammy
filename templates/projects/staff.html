@@ -1,0 +1,173 @@
+{% extends "projects/base.html" %}
+
+{% block title %}Staff Management | SammyA Projects{% endblock %}
+{% block header %}Staff Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <div class="flex space-x-3">
+            <button id="addStaffBtn" 
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                Add Staff Member
+            </button>
+        </div>
+        <div class="flex space-x-3">
+            <select id="filterStaff" class="px-4 py-2 border rounded-lg">
+                <option value="">All Roles</option>
+                <option value="Project Manager">Project Managers</option>
+                <option value="Engineer">Engineers</option>
+                <option value="Architect">Architects</option>
+                <option value="Site Supervisor">Site Supervisors</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Project Managers -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Project Managers</h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for manager in staff.project_managers %}
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="h-12 w-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                                <i class="bx bxs-user text-2xl text-indigo-600"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900">{{ manager.name }}</h4>
+                            <p class="text-sm text-gray-500">{{ manager.role }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-600">Projects:</p>
+                        <div class="mt-1 flex flex-wrap gap-2">
+                            {% for project in manager.projects %}
+                            <span class="px-2 py-1 text-xs font-medium bg-indigo-100 text-indigo-800 rounded-full">
+                                {{ project }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Members -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Team Members</h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for member in staff.team_members %}
+                <div class="border rounded-lg p-4">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                            <div class="h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center">
+                                <i class="bx bxs-user text-2xl text-gray-600"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 class="text-lg font-medium text-gray-900">{{ member.name }}</h4>
+                            <p class="text-sm text-gray-500">{{ member.role }}</p>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <p class="text-sm text-gray-600">Projects:</p>
+                        <div class="mt-1 flex flex-wrap gap-2">
+                            {% for project in member.projects %}
+                            <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-full">
+                                {{ project }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Staff Modal -->
+<div id="addStaffModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Add Staff Member</h3>
+            <form id="addStaffForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" name="name" required class="mt-1 block w-full rounded-md border-gray-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Role</label>
+                    <select name="role" required class="mt-1 block w-full rounded-md border-gray-300">
+                        <option value="Project Manager">Project Manager</option>
+                        <option value="Engineer">Engineer</option>
+                        <option value="Architect">Architect</option>
+                        <option value="Site Supervisor">Site Supervisor</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="closeModal px-4 py-2 bg-gray-200 text-gray-800 rounded-md">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">
+                        Add Staff Member
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal controls
+    const modal = document.getElementById('addStaffModal');
+    const openModal = document.getElementById('addStaffBtn');
+    const closeModal = document.querySelector('button.closeModal');
+    const form = document.getElementById('addStaffForm');
+
+    // Filter control
+    const filterSelect = document.getElementById('filterStaff');
+
+    openModal.addEventListener('click', () => modal.classList.remove('hidden'));
+    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
+
+    // Form submission
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch('/projects/staff/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(Object.fromEntries(formData))
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+</script>
+{% endblock %}

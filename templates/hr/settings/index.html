@@ -1,0 +1,205 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Settings | SammyA HR{% endblock %}
+{% block header %}Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Settings Navigation -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <button onclick="showTab('account')" 
+                        class="px-6 py-4 text-blue-600 border-b-2 border-blue-600 font-medium">
+                    Account
+                </button>
+                <button onclick="showTab('notifications')" 
+                        class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                    Notifications
+                </button>
+                <button onclick="showTab('security')" 
+                        class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                    Security
+                </button>
+            </nav>
+        </div>
+
+        <!-- Account Settings -->
+        <div id="accountTab" class="p-6">
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Account Information</h3>
+                    <p class="text-sm text-gray-500">Update your account information and email preferences.</p>
+                </div>
+
+                <form class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Language</label>
+                            <select class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                                <option>English</option>
+                                <option>French</option>
+                                <option>Spanish</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Time Zone</label>
+                            <select class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                                <option>UTC (GMT+0)</option>
+                                <option>West Africa Time (GMT+1)</option>
+                                <option>Central Africa Time (GMT+2)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Date Format</label>
+                        <select class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
+                            <option>DD/MM/YYYY</option>
+                            <option>MM/DD/YYYY</option>
+                            <option>YYYY-MM-DD</option>
+                        </select>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notification Settings -->
+        <div id="notificationsTab" class="hidden p-6">
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Notification Preferences</h3>
+                    <p class="text-sm text-gray-500">Choose how you want to be notified.</p>
+                </div>
+
+                <form class="space-y-4">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">Email Notifications</h4>
+                                <p class="text-sm text-gray-500">Receive email updates about your account</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">Leave Request Updates</h4>
+                                <p class="text-sm text-gray-500">Get notified about leave request status changes</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">Task Assignments</h4>
+                                <p class="text-sm text-gray-500">Receive notifications for new task assignments</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer" checked>
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Save Preferences
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Security Settings -->
+        <div id="securityTab" class="hidden p-6">
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-lg font-medium text-gray-900">Security Settings</h3>
+                    <p class="text-sm text-gray-500">Manage your account security and login preferences.</p>
+                </div>
+
+                <form class="space-y-6">
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Change Password</h4>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Current Password</label>
+                                <input type="password" class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">New Password</label>
+                                <input type="password" class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                                <input type="password" class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-sm font-medium text-gray-900 mb-4">Two-Factor Authentication</h4>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-500">Add an extra layer of security to your account</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" class="sr-only peer">
+                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" 
+                                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            Update Security Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tabs = ['account', 'notifications', 'security'];
+    
+    window.showTab = function(tabName) {
+        // Hide all tabs
+        tabs.forEach(tab => {
+            document.getElementById(tab + 'Tab').classList.add('hidden');
+            document.querySelector(`button[onclick="showTab('${tab}')"]`)
+                .classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+            document.querySelector(`button[onclick="showTab('${tab}')"]`)
+                .classList.add('text-gray-500');
+        });
+        
+        // Show selected tab
+        document.getElementById(tabName + 'Tab').classList.remove('hidden');
+        document.querySelector(`button[onclick="showTab('${tabName}')"]`)
+            .classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+        document.querySelector(`button[onclick="showTab('${tabName}')"]`)
+            .classList.remove('text-gray-500');
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

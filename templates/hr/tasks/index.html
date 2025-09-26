@@ -1,0 +1,195 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Task Management | SammyA HR{% endblock %}
+{% block header %}Task Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Task Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Tasks</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ stats.total }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-list-check text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">In Progress</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ stats.in_progress }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-loader text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Completed</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ stats.completed }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-check-double text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Overdue</p>
+                    <h3 class="text-2xl font-bold text-red-600">{{ stats.overdue }}</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bx-alarm-exclamation text-2xl text-red-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Management -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- New Task Form -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Assign New Task</h3>
+            <form id="taskForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Title</label>
+                    <input type="text" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Assignee</label>
+                    <select class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm">
+                        <option>Select Staff</option>
+                        {% for staff in staff_list %}
+                        <option value="{{ staff.id }}">{{ staff.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Priority</label>
+                    <select class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
+                        <option>Low</option>
+                        <option>Medium</option>
+                        <option>High</option>
+                        <option>Urgent</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Due Date</label>
+                    <input type="date" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea rows="3" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    Assign Task
+                </button>
+            </form>
+        </div>
+
+        <!-- Task Board -->
+        <div class="bg-white rounded-lg shadow p-6 col-span-2">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Task Board</h3>
+                <div class="flex items-center space-x-3">
+                    <select class="rounded-md border-gray-300 shadow-sm text-sm">
+                        <option>All Tasks</option>
+                        <option>My Tasks</option>
+                        <option>Assigned Tasks</option>
+                    </select>
+                    <select class="rounded-md border-gray-300 shadow-sm text-sm">
+                        <option>All Priority</option>
+                        <option>High Priority</option>
+                        <option>Urgent</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <!-- To Do -->
+                <div class="space-y-4">
+                    <h4 class="font-medium text-gray-800">To Do</h4>
+                    {% for task in tasks.todo %}
+                    <div class="p-4 bg-white border rounded-lg shadow-sm">
+                        <div class="flex justify-between items-start">
+                            <h5 class="text-sm font-medium text-gray-900">{{ task.title }}</h5>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if task.priority == 'High' %}bg-red-100 text-red-800
+                                {% elif task.priority == 'Medium' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ task.priority }}
+                            </span>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-600">{{ task.description }}</p>
+                        <div class="mt-3 flex justify-between items-center">
+                            <div class="flex items-center">
+                                <img class="h-6 w-6 rounded-full" 
+                                     src="https://ui-avatars.com/api/?name={{ task.assignee }}" 
+                                     alt="{{ task.assignee }}">
+                                <span class="ml-2 text-xs text-gray-500">{{ task.assignee }}</span>
+                            </div>
+                            <span class="text-xs text-gray-500">Due: {{ task.due_date }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- In Progress -->
+                <div class="space-y-4">
+                    <h4 class="font-medium text-gray-800">In Progress</h4>
+                    {% for task in tasks.in_progress %}
+                    <div class="p-4 bg-white border rounded-lg shadow-sm">
+                        <!-- Same structure as To Do tasks -->
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Completed -->
+                <div class="space-y-4">
+                    <h4 class="font-medium text-gray-800">Completed</h4>
+                    {% for task in tasks.completed %}
+                    <div class="p-4 bg-white border rounded-lg shadow-sm opacity-75">
+                        <!-- Same structure as To Do tasks -->
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const taskForm = document.getElementById('taskForm');
+    
+    if (taskForm) {
+        taskForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            // Add form submission logic here
+        });
+    }
+
+    // Add drag and drop functionality for tasks
+    // Add task status update functionality
+    // Add task filtering functionality
+});
+</script>
+{% endblock %}

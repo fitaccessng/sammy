@@ -1,0 +1,129 @@
+{% extends "projects/base.html" %}
+
+{% block title %}Analytics | SammyA Projects{% endblock %}
+{% block header %}Project Analytics{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">Active Projects</h3>
+                <span class="text-2xl font-bold text-indigo-600">{{ data.project_status.Active }}</span>
+            </div>
+            <div class="mt-4">
+                <div class="h-2 bg-gray-200 rounded">
+                    <div class="h-2 bg-indigo-600 rounded" style="width: {{ (data.project_status.Active / total_projects * 100) if total_projects > 0 else 0 }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">Resource Utilization</h3>
+                <span class="text-2xl font-bold text-green-600">{{ data.resource_utilization }}%</span>
+            </div>
+            <div class="mt-4">
+                <div class="h-2 bg-gray-200 rounded">
+                    <div class="h-2 bg-green-600 rounded" style="width: {{ data.resource_utilization }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <h3 class="text-lg font-medium text-gray-900">Budget Overview</h3>
+                <span class="text-2xl font-bold text-blue-600">${{ '{:,.0f}'.format(data.budget_overview.spent) }}</span>
+            </div>
+            <div class="mt-4">
+                <div class="h-2 bg-gray-200 rounded">
+                    <div class="h-2 bg-blue-600 rounded" style="width: {{ (data.budget_overview.spent / data.budget_overview.allocated) * 100 }}%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Project Status Chart -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Project Status Distribution</h3>
+            <canvas id="projectStatusChart" height="300"></canvas>
+        </div>
+
+        <!-- Budget Allocation Chart -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Budget Allocation</h3>
+            <canvas id="budgetChart" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- Timeline Analysis -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Project Timeline Analysis</h3>
+        <canvas id="timelineChart"></canvas>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Project Status Chart
+    const statusCtx = document.getElementById('projectStatusChart').getContext('2d');
+    new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys({{ data.project_status|tojson }}),
+            datasets: [{
+                data: Object.values({{ data.project_status|tojson }}),
+                backgroundColor: ['#4F46E5', '#10B981', '#6B7280']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Budget Chart
+    const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+    new Chart(budgetCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Allocated', 'Spent', 'Remaining'],
+            datasets: [{
+                data: [
+                    {{ data.budget_overview.allocated }},
+                    {{ data.budget_overview.spent }},
+                    {{ data.budget_overview.remaining }}
+                ],
+                backgroundColor: ['#4F46E5', '#10B981', '#6B7280']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

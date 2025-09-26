@@ -1,0 +1,132 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}Budget Management | SammyA Procurement{% endblock %}
+{% block header %}Budget Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Budget Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Total Budget</h3>
+            <div class="text-3xl font-bold text-gray-900">₦{{ "{:,.2f}".format(data.total_budget) }}</div>
+            <p class="text-sm text-gray-500 mt-2">Financial Year 2025</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Utilized</h3>
+            <div class="text-3xl font-bold text-blue-600">₦{{ "{:,.2f}".format(data.utilized) }}</div>
+            <p class="text-sm text-gray-500 mt-2">
+                {{ (data.utilized / data.total_budget * 100)|round(1) }}% of total budget
+            </p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Remaining</h3>
+            <div class="text-3xl font-bold text-green-600">₦{{ "{:,.2f}".format(data.remaining) }}</div>
+            <p class="text-sm text-gray-500 mt-2">
+                {{ (data.remaining / data.total_budget * 100)|round(1) }}% available
+            </p>
+        </div>
+    </div>
+
+    <!-- Budget Breakdown -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Budget Breakdown</h3>
+        </div>
+        <div class="p-6">
+            <div class="space-y-6">
+                {% for item in data.breakdown %}
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <div>
+                            <h4 class="text-sm font-medium text-gray-900">{{ item.category }}</h4>
+                            <p class="text-xs text-gray-500">
+                                ₦{{ "{:,.2f}".format(item.spent) }} of ₦{{ "{:,.2f}".format(item.allocated) }}
+                            </p>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">
+                            {{ (item.spent / item.allocated * 100)|round(1) }}%
+                        </span>
+                    </div>
+                    <div class="relative pt-1">
+                        <div class="overflow-hidden h-2 text-xs flex rounded bg-gray-100">
+                            <div style="width: {{ (item.spent / item.allocated * 100)|round(1) }}%" 
+                                 class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center 
+                                        {% if (item.spent / item.allocated * 100) > 90 %}bg-red-600
+                                        {% elif (item.spent / item.allocated * 100) > 70 %}bg-yellow-600
+                                        {% else %}bg-green-600{% endif %}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Recent Transactions -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Transactions</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for i in range(5) %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-gray-100 p-2 rounded-full">
+                                <i class='bx bxs-receipt text-gray-600'></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Purchase Order #{{ loop.index }}</p>
+                                <p class="text-xs text-gray-500">{{ loop.index }} days ago</p>
+                            </div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900">₦{{ "{:,.2f}".format(150000 * loop.index) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Alerts -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Budget Alerts</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for category in data.breakdown %}
+                    {% if (category.spent / category.allocated * 100) > 80 %}
+                    <div class="flex items-center space-x-3 p-4 bg-red-50 rounded-lg">
+                        <div class="bg-red-100 p-2 rounded-full">
+                            <i class='bx bxs-error text-red-600'></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-red-900">{{ category.category }} Budget Alert</p>
+                            <p class="text-xs text-red-700">
+                                Budget utilization at {{ (category.spent / category.allocated * 100)|round(1) }}%
+                            </p>
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add any additional JavaScript functionality here
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,251 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}Supplier Management | SammyA Procurement{% endblock %}
+{% block header %}Supplier Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Supplier Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Suppliers</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ data.stats.total }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bxs-business text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Active</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ data.stats.active }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bxs-check-circle text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Pending Review</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ data.stats.pending_review }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bxs-time text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Blacklisted</p>
+                    <h3 class="text-2xl font-bold text-red-600">{{ data.stats.blacklisted }}</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bxs-x-circle text-2xl text-red-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supplier List -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Supplier Directory</h3>
+                <div class="flex space-x-3">
+                    <div class="relative">
+                        <input type="text" placeholder="Search suppliers..." 
+                               class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class='bx bx-search absolute left-3 top-2.5 text-gray-400'></i>
+                    </div>
+                    <button onclick="showModal('addSupplier')" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Add Supplier
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rating</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for i in range(5) %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="bg-gray-100 rounded-full p-2">
+                                            <i class='bx bxs-building text-xl text-gray-600'></i>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">Supplier #{{ loop.index }}</div>
+                                        <div class="text-sm text-gray-500">ID: SUP{{ loop.index }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                IT Equipment
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">John Doe</div>
+                                <div class="text-sm text-gray-500">john@supplier{{ loop.index }}.com</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    {% for star in range(5) %}
+                                    <i class='bx bxs-star text-yellow-400'></i>
+                                    {% endfor %}
+                                    <span class="ml-2 text-sm text-gray-600">5.0</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if loop.index % 3 == 0 %}bg-yellow-100 text-yellow-800
+                                    {% elif loop.index % 2 == 0 %}bg-green-100 text-green-800
+                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {% if loop.index % 3 == 0 %}Pending
+                                    {% elif loop.index % 2 == 0 %}Active
+                                    {% else %}New{% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button class="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                                <button class="text-green-600 hover:text-green-900 mr-3">Edit</button>
+                                <button class="text-red-600 hover:text-red-900">Block</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Supplier Modal -->
+<div id="addSupplier" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-2/3 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Supplier</h3>
+            <form id="supplierForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Company Name</label>
+                        <input type="text" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Category</label>
+                        <select required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="">Select Category</option>
+                            <option value="it">IT Equipment</option>
+                            <option value="office">Office Supplies</option>
+                            <option value="vehicles">Vehicles</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Contact Person</label>
+                        <input type="text" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Email</label>
+                        <input type="email" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Phone</label>
+                        <input type="tel" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Payment Terms</label>
+                        <select required class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="">Select Terms</option>
+                            <option value="immediate">Immediate</option>
+                            <option value="net15">Net 15</option>
+                            <option value="net30">Net 30</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Address</label>
+                    <textarea required class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm" rows="3"></textarea>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideModal('addSupplier')" 
+                            class="px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Add Supplier
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal functions
+    window.showModal = function(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+    }
+    
+    window.hideModal = function(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+    
+    // Form submission
+    const supplierForm = document.getElementById('supplierForm');
+    if (supplierForm) {
+        supplierForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            fetch('/procurement/suppliers/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(Object.fromEntries(new FormData(this)))
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    hideModal('addSupplier');
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

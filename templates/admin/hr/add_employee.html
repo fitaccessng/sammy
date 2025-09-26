@@ -1,0 +1,86 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Add New Staff | SammyA{% endblock %}
+{% block header %}Add New Staff{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto p-8 bg-white rounded-lg shadow">
+    <h2 class="text-2xl font-bold mb-6">Add New Staff</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="mb-4 px-4 py-2 rounded text-white {{ 'bg-green-600' if category == 'success' else 'bg-red-600' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% if form %}
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <h2 class="text-xl font-semibold mb-4">Personal Details</h2>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Full Name <span class="text-red-500">*</span></label>
+            {{ form.name(class="w-full px-3 py-2 border rounded", placeholder="Enter full name") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Date of Birth <span class="text-red-500">*</span></label>
+            {{ form.dob(class="w-full px-3 py-2 border rounded", type="date") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Email <span class="text-red-500">*</span></label>
+            {{ form.email(class="w-full px-3 py-2 border rounded", placeholder="Enter email") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Department <span class="text-red-500">*</span></label>
+            {{ form.department(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Position <span class="text-red-500">*</span></label>
+            {{ form.position(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Date of Employment <span class="text-red-500">*</span></label>
+            {{ form.date_of_employment(class="w-full px-3 py-2 border rounded", type="date") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Employment Letter</label>
+            {{ form.employment_letter(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Next of Kin Relationship</label>
+            {{ form.next_of_kin_relationship(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <!-- Optional fields below -->
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Current Address</label>
+            {{ form.current_address(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Permanent Address</label>
+            {{ form.permanent_address(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Phone</label>
+            {{ form.phone(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Next of Kin</label>
+            {{ form.next_of_kin(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Next of Kin Address</label>
+            {{ form.next_of_kin_address(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Next of Kin Phone</label>
+            {{ form.next_of_kin_phone(class="w-full px-3 py-2 border rounded") }}
+        </div>
+        <!-- ...other optional fields as before... -->
+        <div class="flex justify-end">
+            <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded">Add Staff</button>
+        </div>
+    </form>
+    {% else %}
+      <div class="mb-4 px-4 py-2 rounded text-white bg-red-600">Error: Form could not be loaded. Please try again later.</div>
+    {% endif %}
+</div>
+{% endblock %}

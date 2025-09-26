@@ -1,0 +1,125 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Attendance Management | SammyA{% endblock %}
+{% block header %}Attendance Management{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Date Selection, Site Filter, and Department Filter -->
+    <div class="flex space-x-4 items-center">
+        <div class="bg-white rounded-lg shadow px-4 py-2 flex items-center space-x-2">
+            <i class='bx bx-calendar text-gray-500'></i>
+            <input type="date" class="outline-none" name="date" value="{{ request.args.get('date', '') }}">
+        </div>
+        <form method="get" class="inline">
+            <select name="site" class="bg-white rounded-lg shadow px-4 py-2 outline-none" onchange="this.form.submit()">
+                <option {% if not request.args.get('site') or request.args.get('site') == 'All Sites' %}selected{% endif %}>All Sites</option>
+                {% for site in sites %}
+                <option {% if request.args.get('site') == site %}selected{% endif %}>{{ site }}</option>
+                {% endfor %}
+            </select>
+            <select name="department" class="bg-white rounded-lg shadow px-4 py-2 outline-none ml-2" onchange="this.form.submit()">
+                <option {% if not request.args.get('department') or request.args.get('department') == 'All Departments' %}selected{% endif %}>All Departments</option>
+                {% for dept in departments %}
+                <option {% if request.args.get('department') == dept %}selected{% endif %}>{{ dept }}</option>
+                {% endfor %}
+            </select>
+        </form>
+    </div>
+
+    <!-- Attendance Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Present</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ present }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-user-check text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Absent</p>
+                    <h3 class="text-2xl font-bold text-red-600">{{ absent }}</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bx-user-x text-2xl text-red-600'></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Late</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ late }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-time-five text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">On Leave</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ on_leave }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-calendar-check text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Attendance List -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <!-- Search Form -->
+        <div class="flex justify-between items-center mb-4">
+            <form method="get" class="flex space-x-2">
+                <input type="text" name="search" placeholder="Search staff by name..." value="{{ request.args.get('search', '') }}" class="px-4 py-2 rounded-lg border" />
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg">Search</button>
+            </form>
+        </div>
+
+        <!-- Attendance Table -->
+        <table class="table-auto w-full">
+            <thead>
+                <tr>
+                    <th>Staff Name</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Clock In</th>
+                    <th>Clock Out</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attendance in attendance_records %}
+                <tr>
+                    <td><a href="{{ url_for('admin.view_employee', employee_id=attendance.employee_id) }}">{{ attendance.employee.name }}</a></td>
+                    <td>{{ attendance.date }}</td>
+                    <td>{{ attendance.status }}</td>
+                    <td>{{ attendance.clock_in }}</td>
+                    <td>{{ attendance.clock_out }}</td>
+                    <td>
+                        <form method="post" action="{{ url_for('admin.clock_in', employee_id=attendance.employee_id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-success btn-sm">Clock In</button>
+                        </form>
+                        <form method="post" action="{{ url_for('admin.clock_out', employee_id=attendance.employee_id) }}" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm">Clock Out</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Export Button -->
+    <a href="{{ url_for('admin.export_attendance') }}" class="btn btn-outline-primary mb-4">Export Attendance CSV</a>
+</div>
+{% endblock %}

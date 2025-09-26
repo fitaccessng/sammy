@@ -1,0 +1,47 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Project | SammyA{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-[70vh] bg-gray-50">
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-10 border border-gray-100">
+    <div class="flex items-center mb-8">
+      <div class="bg-yellow-100 p-3 rounded-full mr-4">
+        <i class='bx bx-edit-alt text-3xl text-yellow-600'></i>
+      </div>
+      <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Edit Project</h2>
+    </div>
+    <form method="POST" action="{{ url_for('admin.edit_project', project_id=project.id) }}" enctype="multipart/form-data" class="space-y-7">
+      {{ form.hidden_tag() }}
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">Project Name</label>
+        {{ form.name(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-yellow-500") }}
+      </div>
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">Description</label>
+        {{ form.description(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-yellow-500") }}
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-gray-700 font-semibold mb-2">Start Date</label>
+          {{ form.start_date(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-yellow-500", type="date") }}
+        </div>
+        <div>
+          <label class="block text-gray-700 font-semibold mb-2">End Date</label>
+          {{ form.end_date(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-yellow-500", type="date") }}
+        </div>
+      </div>
+      <div>
+        <label class="block text-gray-700 font-semibold mb-2">Status</label>
+        {{ form.status(class="select p-2 border select-bordered w-full focus:ring-2 focus:ring-yellow-500") }}
+      </div>
+      <button type="submit" class="w-full py-3 px-6 bg-yellow-600 text-white font-bold rounded-lg shadow hover:bg-yellow-700 transition-all flex items-center justify-center gap-2">
+        <i class='bx bx-save text-xl'></i> Save Changes
+      </button>
+    </form>
+    <div class="mt-6">
+      <a href="{{ url_for('admin.projects') }}" class="btn btn-secondary">Back to Projects</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

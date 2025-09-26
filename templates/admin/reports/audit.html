@@ -1,0 +1,115 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Audit Reports | SammyA{% endblock %}
+{% block header %}Audit Reports{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Audit Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Audits</p>
+                    <h3 class="text-2xl font-bold text-gray-900">124</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-list-check text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending Reviews</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">7</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-time text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Critical Issues</p>
+                    <h3 class="text-2xl font-bold text-red-600">3</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bx-error-circle text-2xl text-red-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <p class="text-gray-500 text-sm">Compliance Rate</p>
+                    <h3 class="text-2xl font-bold text-green-600">94%</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-check-circle text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audit Reports Table -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <div class="flex space-x-4">
+                <select class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-2">
+                    <option>All Sites</option>
+                    <option>Marina Heights</option>
+                    <option>Central Park</option>
+                    <option>Industrial Zone</option>
+                </select>
+                <select class="bg-gray-50 border border-gray-300 rounded-lg px-4 py-2">
+                    <option>All Types</option>
+                    <option>Safety Audit</option>
+                    <option>Quality Audit</option>
+                    <option>Financial Audit</option>
+                </select>
+            </div>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                <i class='bx bx-export'></i>
+                <span>Export Reports</span>
+            </button>
+        </div>
+
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Audit ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">AUD-2025-042</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Safety Audit</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Marina Heights</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Sep 1, 2025</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                            Pending Review
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button class="text-blue-600 hover:text-blue-900">View</button>
+                            <button class="text-green-600 hover:text-green-900">Approve</button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

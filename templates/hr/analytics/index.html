@@ -1,0 +1,162 @@
+{% extends "hr/base.html" %}
+
+{% block title %}HR Analytics | SammyA HR{% endblock %}
+{% block header %}HR Analytics{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Main Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Attendance Rate</p>
+                    <h3 class="text-2xl font-bold text-green-600">94%</h3>
+                    <p class="text-xs text-gray-500">+2.5% from last month</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-user-check text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Leave Utilization</p>
+                    <h3 class="text-2xl font-bold text-blue-600">65%</h3>
+                    <p class="text-xs text-gray-500">Annual leave taken</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-calendar text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Performance Rating</p>
+                    <h3 class="text-2xl font-bold text-purple-600">3.8/5</h3>
+                    <p class="text-xs text-gray-500">Company average</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-line-chart text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Attendance Trends -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Attendance Trends</h3>
+            <div class="relative" style="min-height: 300px">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Leave Distribution -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Leave Distribution</h3>
+            <div class="relative" style="min-height: 300px">
+                <canvas id="leaveChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Department Stats -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Department Analytics</h3>
+        </div>
+        <div class="p-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% for dept in analytics.department_stats %}
+                <div class="border rounded-lg p-4">
+                    <h4 class="font-medium text-gray-900 mb-2">{{ dept.name }}</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Staff Count</span>
+                            <span class="font-medium">{{ dept.staff_count }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Attendance Rate</span>
+                            <span class="font-medium">{{ dept.attendance_rate }}%</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-500">Leave Usage</span>
+                            <span class="font-medium">{{ dept.leave_usage }} days avg.</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Chart options
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                position: 'bottom'
+            }
+        }
+    };
+
+    // Attendance Trends Chart
+    const attendanceCtx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(attendanceCtx, {
+        type: 'line',
+        data: {
+            labels: {{ analytics.attendance_trends.labels|tojson|safe }},
+            datasets: [{
+                label: 'Present',
+                data: {{ analytics.attendance_trends.present|tojson|safe }},
+                borderColor: '#22c55e',
+                tension: 0.1
+            }, {
+                label: 'Absent',
+                data: {{ analytics.attendance_trends.absent|tojson|safe }},
+                borderColor: '#ef4444',
+                tension: 0.1
+            }, {
+                label: 'Late',
+                data: {{ analytics.attendance_trends.late|tojson|safe }},
+                borderColor: '#f59e0b',
+                tension: 0.1
+            }]
+        },
+        options: chartOptions
+    });
+
+    // Leave Distribution Chart
+    const leaveCtx = document.getElementById('leaveChart').getContext('2d');
+    new Chart(leaveCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Annual', 'Sick', 'Maternity', 'Study'],
+            datasets: [{
+                data: [
+                    {{ analytics.leave_distribution.annual }},
+                    {{ analytics.leave_distribution.sick }},
+                    {{ analytics.leave_distribution.maternity }},
+                    {{ analytics.leave_distribution.study }}
+                ],
+                backgroundColor: ['#3b82f6', '#ef4444', '#8b5cf6', '#f59e0b']
+            }]
+        },
+        options: chartOptions
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "projects/base.html" %}
+
+{% block title %}Create Project | SammyA{% endblock %}
+{% block header %}Create New Project{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <form id="createProjectForm" method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <!-- Project Name -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Project Name *</label>
+                    <input type="text" name="name" required
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm 
+                                  focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <!-- Project Manager -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Project Manager *</label>
+                    <input type="text" name="manager" required
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm 
+                                  focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+
+                <!-- Project Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status *</label>
+                    <select name="status" required
+                            class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm 
+                                   focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Select status...</option>
+                        <option value="Planning">Planning</option>
+                        <option value="Active">Active</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+                </div>
+
+                <!-- Description -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" rows="4"
+                              class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm 
+                                     focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex justify-end space-x-3">
+                    <a href="{{ url_for('project.project_home') }}" 
+                       class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                        Cancel
+                    </a>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        Create Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createProjectForm');
+    
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        try {
+            // Validate required fields
+            const name = form.querySelector('input[name="name"]').value.trim();
+            const manager = form.querySelector('input[name="manager"]').value.trim();
+            const status = form.querySelector('select[name="status"]').value;
+            
+            if (!name || !manager || !status) {
+                alert('Please fill in all required fields');
+                return;
+            }
+            
+            // Submit form if validation passes
+            form.submit();
+        } catch (error) {
+            console.error('Form submission error:', error);
+            alert('An error occurred while submitting the form. Please try again.');
+        }
+    });
+});
+</script>
+{% endblock %}

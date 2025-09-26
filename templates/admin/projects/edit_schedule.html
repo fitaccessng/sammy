@@ -1,0 +1,43 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Edit Project Schedule | SammyA{% endblock %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-[70vh] bg-gray-50">
+  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-10 border border-gray-100">
+    <div class="flex items-center mb-8 gap-4">
+      <div class="bg-blue-100 p-3 rounded-full">
+        <i class='bx bx-calendar-plus text-3xl text-blue-600'></i>
+      </div>
+      <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Edit Project Schedule</h2>
+    </div>
+    <form method="POST" action="" class="space-y-7">
+      {{ form.hidden_tag() }}
+      {% for item in form.items %}
+      <div class="bg-gray-50 rounded-lg p-6 mb-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">Title</label>
+            {{ item.title(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-blue-500") }}
+          </div>
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2">Date</label>
+            {{ item.date(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-blue-500", type="date") }}
+          </div>
+        </div>
+        <div class="mt-4">
+          <label class="block text-gray-700 font-semibold mb-2">Description</label>
+          {{ item.description if hasattr(item, 'description') else item }}
+        </div>
+      </div>
+      {% endfor %}
+      <button type="submit" class="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+        <i class='bx bx-save text-xl'></i> Save Schedule
+      </button>
+      <a href="{{ url_for('admin.view_project', project_id=project.id) }}" class="w-full mt-4 py-3 px-6 bg-gray-200 text-gray-800 font-bold rounded-lg shadow hover:bg-gray-300 transition-all flex items-center justify-center gap-2">
+        <i class='bx bx-arrow-back text-xl'></i> Back to Project
+      </a>
+    </form>
+  </div>
+</div>
+{% endblock %}

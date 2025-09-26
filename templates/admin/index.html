@@ -1,0 +1,143 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Construction Admin Dashboard | SammyA{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Key Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Active Projects -->
+        <div class="card bg-white p-6 metric-card border-l-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Active Projects</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ active_projects.count }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-building-house text-2xl text-blue-600'></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm">
+                <span class="text-green-500 flex items-center mr-2">
+                    <i class='bx bx-up-arrow-alt'></i>
+                    {{ active_projects.change }}
+                </span>
+                <span class="text-gray-500">from last month</span>
+            </div>
+        </div>
+        <!-- Site Workers -->
+        <div class="card bg-white p-6 metric-card border-l-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Workers</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ total_workers.count }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-hard-hat text-2xl text-green-600'></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm">
+                <span class="text-green-500 flex items-center mr-2">
+                    <i class='bx bx-up-arrow-alt'></i>
+                    {{ total_workers.attendance_percent }}%
+                </span>
+                <span class="text-gray-500">attendance today</span>
+            </div>
+        </div>
+        <!-- Equipment -->
+        <div class="card bg-white p-6 metric-card border-l-yellow-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Equipment</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ equipment_status.available }}/{{ equipment_status.total }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-traffic-cone text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm">
+                <span class="text-yellow-500 mr-2">{{ equipment_status.maintenance }}</span>
+                <span class="text-gray-500">under maintenance</span>
+            </div>
+        </div>
+        <!-- Material Orders -->
+        <div class="card bg-white p-6 metric-card border-l-red-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending Orders</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ pending_orders.count }}</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bx-package text-2xl text-red-600'></i>
+                </div>
+            </div>
+            <div class="mt-4 flex items-center text-sm">
+                <span class="text-red-500 mr-2">{{ pending_orders.urgent }}</span>
+                <span class="text-gray-500">urgent deliveries</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts and Progress Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Project Progress -->
+        <div class="card bg-white p-6 lg:col-span-2">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Progress</h3>
+            <div class="space-y-5">
+                {% for project in project_progress %}
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium text-gray-700">{{ project.name }}</span>
+                        <span class="text-sm text-gray-500">{{ project.percent }}%</span>
+                    </div>
+                    <div class="progress-bar bg-gray-200">
+                        <div class="h-full rounded-full {{ project.color }}" style="width: {{ project.percent }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <!-- Recent Activity -->
+        <div class="card bg-white p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
+            <div class="space-y-4">
+                {% for activity in recent_activity %}
+                <div class="flex items-start">
+                    <div class="{{ activity.bg }} p-2 rounded-lg mt-1">
+                        <i class='bx {{ activity.icon }} {{ activity.icon_color }}'></i>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm font-medium text-gray-800">{{ activity.title }}</p>
+                        <p class="text-sm text-gray-500">{{ activity.description }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ activity.time }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions Section -->
+    <div class="card bg-white p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {% for action in quick_actions %}
+            <a href="{{ action.url }}" class="flex flex-col items-center p-4 {{ action.bg }} rounded-lg {{ action.text }} hover:{{ action.hover }} transition-colors">
+                <i class='bx {{ action.icon }} text-2xl mb-2'></i>
+                <span class="text-sm text-center">{{ action.label }}</span>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Financial Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {% for item in financial_overview %}
+        <div class="card bg-white p-6">
+            <p class="text-gray-500 text-sm">{{ item.label }}</p>
+            <h3 class="text-2xl font-bold text-gray-800">{{ item.value }}</h3>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

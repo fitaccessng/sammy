@@ -1,0 +1,46 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Project Progress & Site Updates | SammyA{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Project Progress -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Progress</h3>
+            <div class="space-y-4">
+                {% for project in project_progress %}
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-sm font-medium text-gray-700">{{ project.name }}</span>
+                        <span class="text-sm text-gray-500">{{ project.percent }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="h-2 rounded-full {% if project.percent >= 80 %}bg-green-500{% elif project.percent >= 50 %}bg-blue-500{% elif project.percent >= 30 %}bg-yellow-500{% else %}bg-red-500{% endif %}" style="width: {{ project.percent }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Recent Site Updates -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Site Updates</h3>
+            <div class="space-y-4">
+                {% for update in site_updates %}
+                <div class="flex items-start space-x-4">
+                    <div class="bg-{{ update.color }}-100 p-2 rounded-lg mt-1">
+                        <i class='bx {{ update.icon }} text-{{ update.color }}-600'></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">{{ update.title }}</p>
+                        <p class="text-sm text-gray-500">{{ update.desc }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ update.time }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

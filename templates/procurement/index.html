@@ -1,0 +1,176 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}Dashboard | SammyA Procurement{% endblock %}
+{% block header %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Assets</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ summary.total_assets }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bxs-box text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Pending Requests</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ summary.pending_requests }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bxs-time text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Maintenance Due</p>
+                    <h3 class="text-2xl font-bold text-red-600">{{ summary.maintenance_due }}</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bxs-wrench text-2xl text-red-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Overview -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold text-gray-800">Budget Utilization</h3>
+            <span class="text-sm text-gray-500">{{ summary.budget_utilized }}% utilized</span>
+        </div>
+        <div class="relative pt-1">
+            <div class="overflow-hidden h-2 text-xs flex rounded bg-blue-100">
+                <div style="width: {{ summary.budget_utilized }}%" 
+                     class="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-600">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Recent Purchases -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Purchases</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for i in range(3) %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-blue-100 p-2 rounded-full">
+                                <i class='bx bxs-cart text-blue-600'></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Purchase Order #{{ loop.index }}</p>
+                                <p class="text-xs text-gray-500">Supplier Name</p>
+                            </div>
+                        </div>
+                        <span class="text-sm text-gray-500">Today</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Maintenance Schedule -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Upcoming Maintenance</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for i in range(3) %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="bg-yellow-100 p-2 rounded-full">
+                                <i class='bx bxs-wrench text-yellow-600'></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">Asset #{{ loop.index }}</p>
+                                <p class="text-xs text-gray-500">Due in {{ loop.index }} days</p>
+                            </div>
+                        </div>
+                        <button class="text-sm text-blue-600 hover:text-blue-800">Schedule</button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <button onclick="location.href='{{ url_for('procurement.assets') }}'"
+                class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center space-x-3">
+                <div class="bg-blue-100 p-2 rounded-full">
+                    <i class='bx bxs-plus-circle text-xl text-blue-600'></i>
+                </div>
+                <span class="text-sm font-medium text-gray-700">New Asset</span>
+            </div>
+        </button>
+        
+        <button onclick="location.href='{{ url_for('procurement.purchases') }}'"
+                class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center space-x-3">
+                <div class="bg-green-100 p-2 rounded-full">
+                    <i class='bx bxs-cart-add text-xl text-green-600'></i>
+                </div>
+                <span class="text-sm font-medium text-gray-700">New Purchase</span>
+            </div>
+        </button>
+        
+        <button onclick="location.href='{{ url_for('procurement.suppliers') }}'"
+                class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center space-x-3">
+                <div class="bg-purple-100 p-2 rounded-full">
+                    <i class='bx bxs-business text-xl text-purple-600'></i>
+                </div>
+                <span class="text-sm font-medium text-gray-700">Add Supplier</span>
+            </div>
+        </button>
+        
+        <button onclick="location.href='{{ url_for('procurement.reports') }}'"
+                class="p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow">
+            <div class="flex items-center space-x-3">
+                <div class="bg-orange-100 p-2 rounded-full">
+                    <i class='bx bxs-report text-xl text-orange-600'></i>
+                </div>
+                <span class="text-sm font-medium text-gray-700">Generate Report</span>
+            </div>
+        </button>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Load notifications
+    fetch('/procurement/api/notifications')
+        .then(response => response.json())
+        .then(data => {
+            // Update notification badge
+            const notificationCount = data.length;
+            if (notificationCount > 0) {
+                document.querySelector('.notification-badge').textContent = notificationCount;
+            }
+        })
+        .catch(error => console.error('Error fetching notifications:', error));
+});
+</script>
+{% endblock %}
+{% endblock %}

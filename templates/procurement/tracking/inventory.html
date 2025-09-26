@@ -1,0 +1,273 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}Inventory Tracking | SammyA Procurement{% endblock %}
+{% block header %}Inventory Tracking{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@latest/iconfont/tabler-icons.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Inventory Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Items</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ data.stats.total_items }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class="ti ti-packages text-2xl text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Low Stock</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ data.stats.low_stock }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class="ti ti-alert-triangle text-2xl text-yellow-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Out of Stock</p>
+                    <h3 class="text-2xl font-bold text-red-600">{{ data.stats.out_of_stock }}</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class="ti ti-box-off text-2xl text-red-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Pending Orders</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ data.stats.pending_orders }}</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class="ti ti-truck-delivery text-2xl text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inventory Management -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Inventory Management</h3>
+                <div class="flex space-x-3">
+                    <div class="relative">
+                        <input type="text" id="searchInventory" placeholder="Search inventory..." 
+                               class="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <i class="ti ti-search absolute left-3 top-2.5 text-gray-400"></i>
+                    </div>
+                    <button onclick="showModal('addInventoryModal')" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Add Item
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for item in data.inventory %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm font-medium text-gray-900">{{ item.code }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="h-10 w-10 flex-shrink-0">
+                                        <img class="h-10 w-10 rounded-full" src="{{ item.image }}" alt="">
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ item.name }}</div>
+                                        <div class="text-sm text-gray-500">{{ item.description }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-900">{{ item.category }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <span class="text-sm text-gray-900 mr-2">{{ item.quantity }}</span>
+                                    {% if item.quantity <= item.reorder_point %}
+                                    <span class="flex-shrink-0 inline-block px-2 py-0.5 text-xs font-medium bg-red-100 text-red-800 rounded-full">
+                                        Low Stock
+                                    </span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="text-sm text-gray-900">{{ item.location }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                    {% if item.status == 'In Stock' %}bg-green-100 text-green-800
+                                    {% elif item.status == 'Low Stock' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ item.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="viewItem('{{ item.code }}')" 
+                                        class="text-blue-600 hover:text-blue-900 mr-3">View</button>
+                                <button onclick="adjustStock('{{ item.code }}')" 
+                                        class="text-green-600 hover:text-green-900 mr-3">Adjust</button>
+                                <button onclick="trackMovement('{{ item.code }}')" 
+                                        class="text-purple-600 hover:text-purple-900">Track</button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Inventory Modal -->
+<div id="addInventoryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add Inventory Item</h3>
+            <form id="addInventoryForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Item Name</label>
+                    <input type="text" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Category</label>
+                    <select required class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="">Select Category</option>
+                        {% for category in data.categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Initial Quantity</label>
+                        <input type="number" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Reorder Point</label>
+                        <input type="number" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Location</label>
+                    <input type="text" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideModal('addInventoryModal')" 
+                            class="px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Add Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Modal functions
+    window.showModal = function(modalId) {
+        document.getElementById(modalId).classList.remove('hidden');
+    }
+    
+    window.hideModal = function(modalId) {
+        document.getElementById(modalId).classList.add('hidden');
+    }
+    
+    // Search functionality
+    const searchInput = document.getElementById('searchInventory');
+    if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchTerm) ? '' : 'none';
+            });
+        });
+    }
+    
+    // Form submission
+    const addInventoryForm = document.getElementById('addInventoryForm');
+    if (addInventoryForm) {
+        addInventoryForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            // Add form submission logic here
+            fetch('/procurement/inventory/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(Object.fromEntries(new FormData(this)))
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    hideModal('addInventoryModal');
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+    
+    // Item management functions
+    window.viewItem = function(itemCode) {
+        // Add view item logic
+        console.log('Viewing item:', itemCode);
+    }
+    
+    window.adjustStock = function(itemCode) {
+        // Add stock adjustment logic
+        console.log('Adjusting stock for:', itemCode);
+    }
+    
+    window.trackMovement = function(itemCode) {
+        // Add movement tracking logic
+        console.log('Tracking movement for:', itemCode);
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Analytics Dashboard | SammyA{% endblock %}
+{% block header %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Date Range Selector -->
+    <div class="flex justify-between items-center">
+        <div class="flex space-x-4">
+            <select class="bg-white rounded-lg shadow px-4 py-2">
+                <option>Last 7 Days</option>
+                <option>Last 30 Days</option>
+                <option>Last Quarter</option>
+                <option>Last Year</option>
+            </select>
+            <select class="bg-white rounded-lg shadow px-4 py-2">
+                <option>All Projects</option>
+                <option>Marina Heights</option>
+                <option>Central Park</option>
+                <option>Industrial Zone</option>
+            </select>
+        </div>
+        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+            <i class='bx bx-download'></i>
+            <span>Download Report</span>
+        </button>
+    </div>
+
+    <!-- Performance Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Project Progress -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Progress</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Marina Heights</span>
+                    <span class="text-sm font-medium text-blue-600">75%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: 75%"></div>
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Central Park</span>
+                    <span class="text-sm font-medium text-blue-600">45%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: 45%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Analysis -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Budget Analysis</h3>
+            <div class="space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-sm text-gray-500">Total Budget</p>
+                        <p class="text-2xl font-bold text-gray-900">$12.4M</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Spent</p>
+                        <p class="text-2xl font-bold text-blue-600">$8.2M</p>
+                    </div>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: 66%"></div>
+                </div>
+                <p class="text-sm text-gray-500">66% of budget utilized</p>
+            </div>
+        </div>
+
+        <!-- Resource Utilization -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Resource Utilization</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Equipment</span>
+                    <span class="text-sm font-medium text-green-600">92%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-600 h-2 rounded-full" style="width: 92%"></div>
+                </div>
+
+                <div class="flex items-center justify-between">
+                    <span class="text-sm text-gray-600">Workforce</span>
+                    <span class="text-sm font-medium text-green-600">88%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-600 h-2 rounded-full" style="width: 88%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Trends and Insights -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Risk Assessment -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Risk Assessment</h3>
+            <div class="space-y-4">
+                <div class="flex items-center space-x-4">
+                    <div class="bg-red-100 p-3 rounded-full">
+                        <i class='bx bx-error text-2xl text-red-600'></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">High Risk Areas</p>
+                        <p class="text-sm text-gray-500">3 items require immediate attention</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <i class='bx bx-shield-quarter text-2xl text-yellow-600'></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">Safety Compliance</p>
+                        <p class="text-sm text-gray-500">92% compliance rate</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Analysis -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Cost Analysis</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-500">Labor</p>
+                        <p class="text-lg font-semibold text-gray-900">$3.2M</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Materials</p>
+                        <p class="text-lg font-semibold text-gray-900">$4.1M</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Equipment</p>
+                        <p class="text-lg font-semibold text-gray-900">$0.9M</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

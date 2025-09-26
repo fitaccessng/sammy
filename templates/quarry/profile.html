@@ -1,0 +1,140 @@
+{% extends "quarry/base.html" %}
+
+{% block title %}Profile | SammyA Quarry{% endblock %}
+{% block header %}User Profile{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Profile Overview -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <div class="flex items-center space-x-6">
+                <div class="flex-shrink-0">
+                    <div class="h-24 w-24 bg-stone-100 rounded-full flex items-center justify-center">
+                        <i class="bx bxs-user text-5xl text-stone-600"></i>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">{{ profile.name }}</h2>
+                    <p class="text-sm text-gray-500">{{ profile.role }}</p>
+                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                        <i class="bx bx-envelope mr-2"></i>
+                        {{ profile.email }}
+                    </div>
+                    <div class="mt-1 flex items-center text-sm text-gray-500">
+                        <i class="bx bx-phone mr-2"></i>
+                        {{ profile.phone }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Details -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Account Information -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Account Information</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Joined Date</label>
+                    <p class="mt-1 text-sm text-gray-900">{{ profile.joined }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Last Login</label>
+                    <p class="mt-1 text-sm text-gray-900">{{ profile.last_login }}</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-500">Access Level</label>
+                    <p class="mt-1 text-sm text-gray-900">Quarry Manager</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Activity Overview</h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm text-gray-500">Reports Generated</p>
+                        <p class="mt-1 text-2xl font-semibold text-gray-900">24</p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm text-gray-500">Orders Processed</p>
+                        <p class="mt-1 text-2xl font-semibold text-gray-900">156</p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm text-gray-500">Safety Logs</p>
+                        <p class="mt-1 text-2xl font-semibold text-gray-900">45</p>
+                    </div>
+                    <div class="p-4 bg-gray-50 rounded-lg">
+                        <p class="text-sm text-gray-500">Equipment Updates</p>
+                        <p class="mt-1 text-2xl font-semibold text-gray-900">89</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Account Actions</h3>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                <button class="w-full flex items-center justify-between px-4 py-2 border rounded-lg hover:bg-gray-50">
+                    <span class="flex items-center">
+                        <i class="bx bx-key text-gray-400 mr-2"></i>
+                        <span class="text-sm font-medium text-gray-700">Change Password</span>
+                    </span>
+                    <i class="bx bx-chevron-right text-gray-400"></i>
+                </button>
+                <button class="w-full flex items-center justify-between px-4 py-2 border rounded-lg hover:bg-gray-50">
+                    <span class="flex items-center">
+                        <i class="bx bx-bell text-gray-400 mr-2"></i>
+                        <span class="text-sm font-medium text-gray-700">Notification Preferences</span>
+                    </span>
+                    <i class="bx bx-chevron-right text-gray-400"></i>
+                </button>
+                <button class="w-full flex items-center justify-between px-4 py-2 border rounded-lg hover:bg-gray-50">
+                    <span class="flex items-center">
+                        <i class="bx bx-history text-gray-400 mr-2"></i>
+                        <span class="text-sm font-medium text-gray-700">Activity Log</span>
+                    </span>
+                    <i class="bx bx-chevron-right text-gray-400"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers for action buttons
+    document.querySelectorAll('.p-6 button').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.querySelector('span.text-sm').textContent;
+            switch(action) {
+                case 'Change Password':
+                    window.location.href = "{{ url_for('quarry.settings') }}#password";
+                    break;
+                case 'Notification Preferences':
+                    window.location.href = "{{ url_for('quarry.settings') }}#notifications";
+                    break;
+                case 'Activity Log':
+                    // Add activity log view logic here
+                    break;
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

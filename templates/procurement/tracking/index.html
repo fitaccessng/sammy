@@ -1,0 +1,124 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}Asset Tracking | SammyA{% endblock %}
+{% block header %}Asset Tracking{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Tracked</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ data.stats.total_tracked }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-radar text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">In Use</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ data.stats.in_use }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-check-circle text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">In Transit</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ data.stats.in_transit }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-transfer text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">In Maintenance</p>
+                    <h3 class="text-2xl font-bold text-red-600">{{ data.stats.in_maintenance }}</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bx-wrench text-2xl text-red-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Asset Tracking Map -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Asset Location Map</h3>
+                <div class="flex space-x-2">
+                    <select class="rounded-md border-gray-300 shadow-sm">
+                        <option value="all">All Assets</option>
+                        <option value="vehicles">Vehicles</option>
+                        <option value="equipment">Equipment</option>
+                    </select>
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="p-6">
+            <div id="assetMap" class="h-96 w-full bg-gray-100 rounded-lg">
+                <!-- Map will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Movement History -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Movements</h3>
+        </div>
+        <div class="p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">From</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">To</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <!-- Movement history rows will be dynamically populated -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Google Maps
+    const map = new google.maps.Map(document.getElementById('assetMap'), {
+        center: { lat: 9.0820, lng: 8.6753 }, // Nigeria center
+        zoom: 6
+    });
+    
+    // Add your map markers and tracking logic here
+});
+</script>
+{% endblock %}
+{% endblock %}

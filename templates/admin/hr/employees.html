@@ -1,0 +1,146 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Employee Database | SammyA{% endblock %}
+{% block header %}Employee Database{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Top Actions -->
+    <div class="flex justify-between items-center">
+        <div class="flex space-x-4">
+            <a href="{{ url_for('admin.add_employee') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                <i class='bx bx-plus'></i>
+                <span>Add Employee</span>
+            </a>
+            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center space-x-2" onclick="document.getElementById('filterModal').classList.remove('hidden')">
+                <i class='bx bx-filter-alt'></i>
+                <span>Filters</span>
+            </button>
+        </div>
+        <div class="flex items-center bg-white rounded-lg px-3 py-2 w-64 border">
+            <i class='bx bx-search text-gray-400'></i>
+            <input type="text" placeholder="Search employees..." class="ml-2 flex-1 outline-none">
+        </div>
+    </div>
+
+    <!-- Employee Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date of Employment</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for employee in employees %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10">
+                                <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name={{ employee.name|replace(' ', '+') }}" alt="">
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">{{ employee.name }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ employee.email }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ employee.department }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ employee.role }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ employee.date_of_employment.strftime('%Y-%m-%d') if employee.date_of_employment else '' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ employee.site }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                            {{ employee.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex space-x-2">
+                            <button class="text-blue-600 hover:text-blue-900">Edit</button>
+                            <button class="text-red-600 hover:text-red-900">Delete</button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">No employees found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination (optional, can be made dynamic) -->
+    <div class="flex items-center justify-between bg-white px-4 py-3 border-t border-gray-200 sm:px-6 rounded-lg">
+        <div class="flex-1 flex justify-between sm:hidden">
+            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Previous
+            </a>
+            <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                Next
+            </a>
+        </div>
+        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+            <div>
+                <p class="text-sm text-gray-700">
+                    Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">97</span> results
+                </p>
+            </div>
+            <div>
+                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        Previous
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        1
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        2
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        3
+                    </a>
+                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                        Next
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Modal -->
+<div id="filterModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg p-8 w-full max-w-md shadow-lg">
+        <h2 class="text-xl font-bold mb-4">Filter Employees</h2>
+        <form method="get" action="">
+            <input type="number" name="year_of_join" placeholder="Year of Join" class="w-full mb-3 px-3 py-2 border rounded">
+            <input type="text" name="role" placeholder="Role" class="w-full mb-3 px-3 py-2 border rounded">
+            <input type="text" name="department" placeholder="Department" class="w-full mb-3 px-3 py-2 border rounded">
+            <input type="text" name="site" placeholder="Site" class="w-full mb-3 px-3 py-2 border rounded">
+            <div class="flex justify-end space-x-2 mt-4">
+                <button type=
+                "button" class="px-4 py-2 bg-gray-200 rounded" onclick="document.getElementById('filterModal').classList.add('hidden')">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Apply</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

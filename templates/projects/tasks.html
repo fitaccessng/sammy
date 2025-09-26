@@ -1,0 +1,177 @@
+{% extends "projects/base.html" %}
+
+{% block title %}Tasks | SammyA Projects{% endblock %}
+{% block header %}Project Tasks{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <div class="flex space-x-3">
+            <button id="addTaskBtn" 
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                Add Task
+            </button>
+        </div>
+        <div class="flex space-x-3">
+            <select id="filterTasks" class="px-4 py-2 border rounded-lg">
+                <option value="">All Tasks</option>
+                <option value="pending">Pending</option>
+                <option value="in_progress">In Progress</option>
+                <option value="completed">Completed</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Kanban Board -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Pending Tasks -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Pending</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                {% for task in tasks.pending %}
+                <div class="bg-white border rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <h4 class="text-md font-medium text-gray-900">{{ task.title }}</h4>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
+                            Pending
+                        </span>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-500">
+                        <p>Due: {{ task.due_date }}</p>
+                        <p>Assigned to: {{ task.assigned_to }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- In Progress Tasks -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">In Progress</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                {% for task in tasks.in_progress %}
+                <div class="bg-white border rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <h4 class="text-md font-medium text-gray-900">{{ task.title }}</h4>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
+                            In Progress
+                        </span>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-500">
+                        <p>Due: {{ task.due_date }}</p>
+                        <p>Assigned to: {{ task.assigned_to }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Completed Tasks -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">Completed</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                {% for task in tasks.completed %}
+                <div class="bg-white border rounded-lg p-4 shadow-sm">
+                    <div class="flex justify-between items-start">
+                        <h4 class="text-md font-medium text-gray-900">{{ task.title }}</h4>
+                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                            Completed
+                        </span>
+                    </div>
+                    <div class="mt-2 text-sm text-gray-500">
+                        <p>Due: {{ task.due_date }}</p>
+                        <p>Assigned to: {{ task.assigned_to }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Task Modal -->
+<div id="addTaskModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Add Task</h3>
+            <form id="addTaskForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Task Title</label>
+                    <input type="text" name="title" required 
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Due Date</label>
+                    <input type="date" name="due_date" required 
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Assigned To</label>
+                    <input type="text" name="assigned_to" required 
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <select name="status" required class="mt-1 p-2 border block w-full rounded-md border-gray-300">
+                        <option value="pending">Pending</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="closeModal px-4 py-2 bg-gray-200 text-gray-800 rounded-md">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">
+                        Add Task
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('addTaskModal');
+    const openModal = document.getElementById('addTaskBtn');
+    const closeModal = document.querySelector('button.closeModal');
+    const form = document.getElementById('addTaskForm');
+
+    openModal.addEventListener('click', () => modal.classList.remove('hidden'));
+    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch('/projects/tasks/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify(Object.fromEntries(formData))
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+</script>
+{% endblock %}

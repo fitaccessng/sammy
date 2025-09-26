@@ -1,0 +1,92 @@
+{% extends "finance/base.html" %}
+
+{% block title %}Bank Reconciliation | SammyA Finance{% endblock %}
+{% block header %}Bank Reconciliation{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Bank Balance</p>
+                    <h3 class="text-2xl font-bold text-gray-800">₦24.5M</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-bank text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Book Balance</p>
+                    <h3 class="text-2xl font-bold text-gray-800">₦24.3M</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-book text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Difference</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">₦200K</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-dollar-circle text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reconciliation Table -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Transactions</h3>
+            <div class="flex space-x-2">
+                <button class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+                    Import Statement
+                </button>
+                <button class="bg-green-600 text-white px-4 py-2 rounded-lg">
+                    Reconcile
+                </button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reference</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-09-02</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">Supplier Payment</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">REF-001</td>
+                        <td class="px-6 py-4 text-sm text-red-600">-₦500,000</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                Pending
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900">Match</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

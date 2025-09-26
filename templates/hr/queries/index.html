@@ -1,0 +1,172 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Staff Queries | SammyA HR{% endblock %}
+{% block header %}Staff Queries Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Query Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Queries</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ stats.total_queries }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-message-dots text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ stats.pending }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-time text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">In Progress</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ stats.in_progress }}</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-loader text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Resolved</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ stats.resolved }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-check-circle text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Query Management -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- New Query Form -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Register New Query</h3>
+            <form id="queryForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Staff Member</label>
+                    <select class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                        <option>Select Staff</option>
+                        <option>John Doe</option>
+                        <option>Jane Smith</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Query Type</label>
+                    <select class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                        <option>Salary</option>
+                        <option>Benefits</option>
+                        <option>Work Environment</option>
+                        <option>Performance Review</option>
+                        <option>Other</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Priority</label>
+                    <select class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                        <option>Low</option>
+                        <option>Medium</option>
+                        <option>High</option>
+                        <option>Urgent</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea rows="4" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    Submit Query
+                </button>
+            </form>
+        </div>
+
+        <!-- Query Feed -->
+        <div class="bg-white rounded-lg shadow p-6 col-span-2">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Queries</h3>
+                <div class="flex space-x-2">
+                    <select class="rounded-md p-2 border border-gray-300 shadow-sm text-sm">
+                        <option>All Status</option>
+                        <option>Pending</option>
+                        <option>In Progress</option>
+                        <option>Resolved</option>
+                    </select>
+                    <select class="rounded-md p-2 border border-gray-300 shadow-sm text-sm">
+                        <option>All Types</option>
+                        <option>Salary</option>
+                        <option>Benefits</option>
+                        <option>Work Environment</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="space-y-4">
+                {% for query in queries %}
+                <div class="border rounded-lg p-4">
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-start space-x-4">
+                            <img class="h-10 w-10 rounded-full" 
+                                 src="https://ui-avatars.com/api/?name={{ query.staff_name }}" 
+                                 alt="{{ query.staff_name }}">
+                            <div>
+                                <h4 class="text-sm font-medium text-gray-900">{{ query.staff_name }}</h4>
+                                <p class="text-sm text-gray-500">{{ query.query_type }}</p>
+                            </div>
+                        </div>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if query.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                            {% elif query.status == 'In Progress' %}bg-blue-100 text-blue-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {{ query.status }}
+                        </span>
+                    </div>
+                    <p class="mt-2 text-sm text-gray-600">{{ query.description }}</p>
+                    <div class="mt-3 flex justify-between items-center">
+                        <span class="text-xs text-gray-500">{{ query.created_at }}</span>
+                        <button class="text-sm text-blue-600 hover:text-blue-800">View Details</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const queryForm = document.getElementById('queryForm');
+    
+    if (queryForm) {
+        queryForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            // Add form submission logic here
+        });
+    }
+});
+</script>
+{% endblock %}

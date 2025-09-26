@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SammyA Projects{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Box Icons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="bg-indigo-800 text-white w-64 min-h-screen p-4">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold">SammyA Projects</h1>
+            </div>
+            
+            <nav class="space-y-6">
+                <!-- Dashboard -->
+                <div class="space-y-2">
+                    <a href="{{ url_for('project.project_home') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-dashboard text-xl'></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+
+                <!-- Project Management -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Project Management</h2>
+                    <a href="{{ url_for('project.create_project') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bx-plus-circle text-xl'></i>
+                        <span>Create Project</span>
+                    </a>
+                    <a href="{{ url_for('project.tasks') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bx-task text-xl'></i>
+                        <span>Tasks</span>
+                    </a>
+                    <a href="{{ url_for('project.calendar') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bx-calendar text-xl'></i>
+                        <span>Calendar</span>
+                    </a>
+                </div>
+
+                <!-- Resources -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Resources</h2>
+                    <a href="{{ url_for('project.equipment') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bx-wrench text-xl'></i>
+                        <span>Equipment</span>
+                    </a>
+                    <a href="{{ url_for('project.materials') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bx-package text-xl'></i>
+                        <span>Materials</span>
+                    </a>
+                    <a href="{{ url_for('project.staff') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bx-group text-xl'></i>
+                        <span>Staff</span>
+                    </a>
+                </div>
+
+                <!-- Reports -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports & Analytics</h2>
+                    <a href="{{ url_for('project.reports') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-report text-xl'></i>
+                        <span>Reports</span>
+                    </a>
+                    <a href="{{ url_for('project.analytics') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bx-line-chart text-xl'></i>
+                        <span>Analytics</span>
+                    </a>
+                    <a href="{{ url_for('project.documents') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bx-file text-xl'></i>
+                        <span>Documents</span>
+                    </a>
+                </div>
+            </nav>
+
+            <!-- Logout Section -->
+            
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1">
+            <!-- Top Navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h1 class="text-xl font-semibold text-gray-800">{% block header %}Dashboard{% endblock %}</h1>
+                    <div class="flex items-center space-x-4">
+                        <button class="text-gray-500 hover:text-gray-700">
+                            <i class='bx bxs-bell text-xl'></i>
+                        </button>
+                        <div class="relative">
+                            <button id="userMenuBtn" class="flex items-center space-x-2">
+                                <img src="https://ui-avatars.com/api/?name=Project&background=4F46E5&color=fff" 
+                                     alt="Profile" class="w-8 h-8 rounded-full">
+                                <span class="text-gray-700">Project Manager</span>
+                                <i class='bx bx-chevron-down text-gray-500'></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                                <a href="{{ url_for('project.settings') }}" 
+                                   class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                    Settings
+                                </a>
+                                <hr class="my-1 border-gray-200">
+                                <a href="{{ url_for('project.logout') }}"  class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="p-6">
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenuBtn && userDropdown) {
+                userMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!userMenuBtn.contains(e.target)) {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+                
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

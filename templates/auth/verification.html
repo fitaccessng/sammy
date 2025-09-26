@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-md w-full">
+        <!-- Logo/Brand Section -->
+        <div class="text-center mb-8">
+            <h2 class="text-3xl font-extrabold text-gray-900">Verify your email</h2>
+            <p class="mt-2 text-sm text-gray-600">
+                Enter the verification code sent to your email
+            </p>
+        </div>
+
+        <!-- Card Container -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <form method="POST" class="space-y-6">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                <!-- Email Address Input -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                    <input type="email" name="email" id="email" required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        placeholder="you@example.com">
+                </div>
+
+                <!-- Verification Code Input -->
+                <div>
+                    <label for="verification_code" class="block text-sm font-medium text-gray-700">Verification Code</label>
+                    <input type="text" name="verification_code" id="verification_code" required 
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500 tracking-widest text-center"
+                        placeholder="000000" maxlength="6" pattern="\d{6}">
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" 
+                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium 
+                        text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
+                        focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Verify Email
+                    </button>
+                </div>
+            </form>
+
+            <!-- Resend Code / Back to Login -->
+            <div class="mt-6 text-center">
+                <button onclick="window.location.href='{{ url_for('main.login') }}'" 
+                    class="text-sm font-medium text-blue-600 hover:text-blue-500">
+                    Back to login
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('verification_code').addEventListener('input', function(e) {
+    this.value = this.value.replace(/[^0-9]/g, '');
+    if (this.value.length > 6) {
+        this.value = this.value.slice(0, 6);
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Dashboard | SammyA HR{% endblock %}
+{% block header %}HR Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Staff</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ summary.total_staff }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-group text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Active Leaves</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ summary.active_leaves }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-calendar text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending Queries</p>
+                    <h3 class="text-2xl font-bold text-red-600">{{ summary.pending_queries }}</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bx-message-square-detail text-2xl text-red-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Today's Attendance</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ summary.attendance_today }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-check-circle text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending Tasks</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ summary.pending_tasks }}</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-task text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending Payroll</p>
+                    <h3 class="text-xl font-bold text-gray-800">₦{{ '{:,}'.format(summary.pending_payroll) }}</h3>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-full">
+                    <i class='bx bx-money text-2xl text-gray-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Recent Activities -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+            <div class="grid grid-cols-2 gap-4">
+                <button class="p-3 bg-blue-50 rounded-lg text-blue-700 hover:bg-blue-100 transition-colors">
+                    <i class='bx bx-user-plus mb-1'></i>
+                    <span class="block text-sm">Add Staff</span>
+                </button>
+                <button class="p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors">
+                    <i class='bx bx-calendar-plus mb-1'></i>
+                    <span class="block text-sm">Process Leave</span>
+                </button>
+                <button class="p-3 bg-yellow-50 rounded-lg text-yellow-700 hover:bg-yellow-100 transition-colors">
+                    <i class='bx bx-task-plus mb-1'></i>
+                    <span class="block text-sm">Assign Task</span>
+                </button>
+                <button class="p-3 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors">
+                    <i class='bx bx-file mb-1'></i>
+                    <span class="block text-sm">Generate Report</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Activities -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activities</h3>
+            <div class="space-y-4">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-blue-100 p-2 rounded-full">
+                        <i class='bx bx-user-plus text-blue-600'></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">New Staff Added</p>
+                        <p class="text-xs text-gray-500">2 hours ago</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <div class="bg-green-100 p-2 rounded-full">
+                        <i class='bx bx-calendar-check text-green-600'></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-800">Leave Approved</p>
+                        <p class="text-xs text-gray-500">3 hours ago</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Announcements -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Announcements</h3>
+            <div class="space-y-4">
+                <div class="p-4 bg-blue-50 rounded-lg">
+                    <h4 class="font-medium text-blue-800">Monthly Meeting</h4>
+                    <p class="text-sm text-blue-600 mt-1">Staff meeting scheduled for next week</p>
+                    <p class="text-xs text-blue-500 mt-2">Sept 10, 2025</p>
+                </div>
+                <div class="p-4 bg-yellow-50 rounded-lg">
+                    <h4 class="font-medium text-yellow-800">Payroll Processing</h4>
+                    <p class="text-sm text-yellow-600 mt-1">September payroll processing starts tomorrow</p>
+                    <p class="text-xs text-yellow-500 mt-2">Sept 25, 2025</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

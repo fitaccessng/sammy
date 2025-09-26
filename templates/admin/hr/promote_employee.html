@@ -1,0 +1,10 @@
+<!-- ...existing code... -->
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <h2>Promotion Details</h2>
+    {{ form.position.label }} {{ form.position() }}<br>
+    {{ form.job_description_upgrade.label }} {{ form.job_description_upgrade() }}<br>
+    {{ form.present_academic_qualification.label }} {{ form.present_academic_qualification() }}<br>
+    <button type="submit" class="btn btn-success">Promote</button>
+</form>
+<!-- ...existing code... -->

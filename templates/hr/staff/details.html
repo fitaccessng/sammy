@@ -1,0 +1,219 @@
+{% extends "hr/base.html" %}
+
+{% block title %}{{ staff.name }} | Staff Details{% endblock %}
+{% block header %}Staff Details{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Staff Header -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <img class="h-16 w-16 rounded-full" 
+                         src="{{ staff.avatar_url }}" 
+                         alt="{{ staff.name }}">
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">{{ staff.name }}</h2>
+                        <p class="text-gray-600">{{ staff.position }} - {{ staff.department }}</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="px-3 py-1 rounded-full text-sm font-semibold
+                        {% if staff.status == 'Active' %}bg-green-100 text-green-800
+                        {% elif staff.status == 'On Leave' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ staff.status }}
+                    </span>
+                    <button onclick="showModal('editStaffModal')" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Edit Profile
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Staff Information -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Personal Info -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Employee ID</p>
+                        <p class="text-gray-900">{{ staff.employee_id }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Email</p>
+                        <p class="text-gray-900">{{ staff.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Phone</p>
+                        <p class="text-gray-900">{{ staff.phone }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Date of Birth</p>
+                        <p class="text-gray-900">{{ staff.dob }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Address</p>
+                        <p class="text-gray-900">{{ staff.address }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Emergency Contact</p>
+                        <p class="text-gray-900">{{ staff.emergency_contact_name }}</p>
+                        <p class="text-gray-600 text-sm">{{ staff.emergency_contact_phone }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employment Info -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Employment Details</h3>
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-500">Date Joined</p>
+                        <p class="text-gray-900">{{ staff.date_joined }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Department</p>
+                        <p class="text-gray-900">{{ staff.department }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Position</p>
+                        <p class="text-gray-900">{{ staff.position }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Employment Type</p>
+                        <p class="text-gray-900">{{ staff.employment_type }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Reports To</p>
+                        <div class="flex items-center mt-1">
+                            <img class="h-8 w-8 rounded-full" 
+                                 src="{{ staff.manager.avatar_url }}" 
+                                 alt="{{ staff.manager.name }}">
+                            <p class="ml-2 text-gray-900">{{ staff.manager.name }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="space-y-4">
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <button class="p-3 bg-blue-50 rounded-lg text-blue-700 hover:bg-blue-100">
+                        <i class='bx bx-calendar mb-1 text-2xl'></i>
+                        <span class="block text-sm">Leave Request</span>
+                    </button>
+                    <button class="p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100">
+                        <i class='bx bx-task mb-1 text-2xl'></i>
+                        <span class="block text-sm">Assign Task</span>
+                    </button>
+                    <button class="p-3 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100">
+                        <i class='bx bx-file mb-1 text-2xl'></i>
+                        <span class="block text-sm">Documents</span>
+                    </button>
+                    <button class="p-3 bg-yellow-50 rounded-lg text-yellow-700 hover:bg-yellow-100">
+                        <i class='bx bx-message-square-dots mb-1 text-2xl'></i>
+                        <span class="block text-sm">Send Message</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Status Updates -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
+                <div class="space-y-4">
+                    {% for activity in staff.recent_activities %}
+                    <div class="flex items-start space-x-3">
+                        <div class="bg-gray-100 p-2 rounded-full">
+                            <i class='bx {{ activity.icon }} text-gray-600'></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-900">{{ activity.description }}</p>
+                            <p class="text-xs text-gray-500">{{ activity.timestamp }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs Section -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="border-b border-gray-200">
+            <nav class="flex -mb-px">
+                <button class="px-6 py-4 text-blue-600 border-b-2 border-blue-600 font-medium">
+                    Leave History
+                </button>
+                <button class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                    Attendance
+                </button>
+                <button class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                    Tasks
+                </button>
+                <button class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                    Documents
+                </button>
+                <button class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                    Performance
+                </button>
+            </nav>
+        </div>
+        <div class="p-6">
+            <!-- Tab Content -->
+            <div id="leaveHistory" class="space-y-4">
+                {% for leave in staff.leave_history %}
+                <div class="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                        <p class="font-medium text-gray-900">{{ leave.type }}</p>
+                        <p class="text-sm text-gray-500">{{ leave.start_date }} - {{ leave.end_date }}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full
+                        {% if leave.status == 'Approved' %}bg-green-100 text-green-800
+                        {% elif leave.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-red-100 text-red-800{% endif %}">
+                        {{ leave.status }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Staff Modal -->
+<div id="editStaffModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <!-- Modal content here -->
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Tab switching logic
+    const tabButtons = document.querySelectorAll('nav button');
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active state from all tabs
+            tabButtons.forEach(btn => {
+                btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
+                btn.classList.add('text-gray-500');
+            });
+            // Add active state to clicked tab
+            this.classList.remove('text-gray-500');
+            this.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+        });
+    });
+});
+</script>
+{% endblock %}

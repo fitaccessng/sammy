@@ -1,0 +1,109 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}Profile | SammyA Procurement{% endblock %}
+{% block header %}User Profile{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Profile Overview -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <div class="flex items-center space-x-6">
+                <div class="flex-shrink-0">
+                    <div class="h-24 w-24 bg-blue-100 rounded-full flex items-center justify-center">
+                        <i class="bx bxs-user text-5xl text-blue-600"></i>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">{{ data.user.name }}</h2>
+                    <p class="text-sm text-gray-500">{{ data.user.role }} | {{ data.user.department }}</p>
+                    <div class="mt-2 flex items-center text-sm text-gray-500">
+                        <i class="bx bx-envelope mr-2"></i>
+                        {{ data.user.email }}
+                    </div>
+                    <div class="mt-1 flex items-center text-sm text-gray-500">
+                        <i class="bx bx-calendar mr-2"></i>
+                        Joined {{ data.user.joined_date }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Purchases Initiated</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ data.stats.purchases_initiated }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class="bx bx-cart text-2xl text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Assets Managed</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ data.stats.assets_managed }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class="bx bx-box text-2xl text-green-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Suppliers Handled</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ data.stats.suppliers_handled }}</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class="bx bx-building-house text-2xl text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Reports Generated</p>
+                    <h3 class="text-2xl font-bold text-orange-600">{{ data.stats.reports_generated }}</h3>
+                </div>
+                <div class="bg-orange-100 p-3 rounded-full">
+                    <i class="bx bx-file text-2xl text-orange-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Activity</h3>
+        </div>
+        <div class="p-6">
+            <div class="space-y-4">
+                {% for activity in data.recent_activity %}
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="bg-gray-100 p-2 rounded-full">
+                            <i class="bx bx-history text-gray-600"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ activity.action }}</p>
+                            <p class="text-xs text-gray-500">Ref: {{ activity.reference }}</p>
+                        </div>
+                    </div>
+                    <span class="text-sm text-gray-500">{{ activity.timestamp }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

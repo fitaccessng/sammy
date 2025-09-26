@@ -1,0 +1,114 @@
+{% extends "quarry/base.html" %}
+
+{% block title %}Dashboard | SammyA Quarry{% endblock %}
+{% block header %}Quarry Dashboard{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Overview Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <!-- Equipment Stats -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Active Equipment</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ summary.active_equipment }}</h3>
+                    <p class="text-xs text-red-500">Inactive: {{ summary.inactive_equipment }}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class="bx bxs-truck text-2xl text-green-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Worker Stats -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Workers</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ summary.total_workers }}</h3>
+                    <p class="text-xs text-gray-500">Shifts Today: {{ summary.shifts_today }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class="bx bxs-user-badge text-2xl text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Material Stats -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Materials Extracted</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ summary.materials_extracted }}</h3>
+                    <p class="text-xs text-gray-500">Dispatched: {{ summary.materials_dispatched }}</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class="bx bxs-layer text-2xl text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Safety Stats -->
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Safety Incidents</p>
+                    <h3 class="text-2xl font-bold {% if summary.safety_incidents == 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                        {{ summary.safety_incidents }}
+                    </h3>
+                    <p class="text-xs text-gray-500">Orders Pending: {{ summary.pending_orders }}</p>
+                </div>
+                <div class="bg-{% if summary.safety_incidents == 0 %}green{% else %}red{% endif %}-100 p-3 rounded-full">
+                    <i class="bx bxs-shield text-2xl text-{% if summary.safety_incidents == 0 %}green{% else %}red{% endif %}-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Equipment Status -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Equipment Status</h3>
+            <div class="space-y-4">
+                <a href="{{ url_for('quarry.equipment') }}" 
+                   class="block p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">View Equipment Status</span>
+                        <i class="bx bx-right-arrow-alt text-gray-400"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Shift Overview -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Current Shift</h3>
+            <div class="space-y-4">
+                <a href="{{ url_for('quarry.workers') }}" 
+                   class="block p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">View Shift Details</span>
+                        <i class="bx bx-right-arrow-alt text-gray-400"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Material Orders -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Material Orders</h3>
+            <div class="space-y-4">
+                <a href="{{ url_for('quarry.materials') }}" 
+                   class="block p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm font-medium text-gray-700">View Orders</span>
+                        <i class="bx bx-right-arrow-alt text-gray-400"></i>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

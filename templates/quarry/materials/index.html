@@ -1,0 +1,93 @@
+{% extends "quarry/base.html" %}
+
+{% block title %}Materials | SammyA Quarry{% endblock %}
+{% block header %}Material Production & Orders{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <div class="flex space-x-3">
+            <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                New Order
+            </button>
+            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                Update Stock
+            </button>
+        </div>
+        <div class="flex space-x-3">
+            <select class="px-4 py-2 border rounded-lg">
+                <option value="">Filter by Type</option>
+                <option value="granite">Granite</option>
+                <option value="sand">Sand</option>
+                <option value="limestone">Limestone</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Materials Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {% for material in materials %}
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">{{ material.type }}</h3>
+                <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                      {% if material.stock > 400 %}bg-green-100 text-green-800
+                      {% elif material.stock > 200 %}bg-yellow-100 text-yellow-800
+                      {% else %}bg-red-100 text-red-800{% endif %}">
+                    In Stock
+                </span>
+            </div>
+            <div class="space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-500">Current Stock:</span>
+                    <span class="font-medium">{{ material.stock }} {{ material.unit }}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" 
+                         style="width: {{ (material.stock / 1000) * 100 }}%"></div>
+                </div>
+                <div class="flex justify-end mt-4">
+                    <button class="text-sm text-blue-600 hover:text-blue-900">View Details</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recent Orders -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Orders</h3>
+        </div>
+        <div class="p-6">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Order ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Material</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">ORD-2025-001</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Granite</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">250 tons</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                Completed
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900">View</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

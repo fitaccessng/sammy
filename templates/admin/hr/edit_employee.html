@@ -1,0 +1,42 @@
+<form method="POST" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+    <h2>Personal Details</h2>
+    {{ form.name.label }} {{ form.name() }}<br>
+    {{ form.dob.label }} {{ form.dob() }}<br>
+    {{ form.current_address.label }} {{ form.current_address() }}<br>
+    {{ form.permanent_address.label }} {{ form.permanent_address() }}<br>
+    {{ form.phone.label }} {{ form.phone() }}<br>
+    {{ form.email.label }} {{ form.email() }}<br>
+    {{ form.next_of_kin.label }} {{ form.next_of_kin() }}<br>
+    {{ form.next_of_kin_relationship.label }} {{ form.next_of_kin_relationship() }}<br>
+    {{ form.next_of_kin_address.label }} {{ form.next_of_kin_address() }}<br>
+    {{ form.next_of_kin_phone.label }} {{ form.next_of_kin_phone() }}<br>
+    <h2>Educational Background</h2>
+    {{ form.degree.label }} {{ form.degree() }}<br>
+    {{ form.institution.label }} {{ form.institution() }}<br>
+    {{ form.current_certification.label }} {{ form.current_certification() }}<br>
+    <h2>Work Experience</h2>
+    {{ form.present_assignment.label }} {{ form.present_assignment() }}<br>
+    {{ form.sectional_head.label }} {{ form.sectional_head() }}<br>
+    {{ form.job_title.label }} {{ form.job_title() }}<br>
+    {{ form.employment_dates.label }} {{ form.employment_dates() }}<br>
+    {{ form.job_description.label }} {{ form.job_description() }}<br>
+    {{ form.past_job_title.label }} {{ form.past_job_title() }}<br>
+    {{ form.past_employer_dates.label }} {{ form.past_employer_dates() }}<br>
+    {{ form.past_accomplishments.label }} {{ form.past_accomplishments() }}<br>
+    {{ form.technical_skills.label }} {{ form.technical_skills() }}<br>
+    {{ form.soft_skills.label }} {{ form.soft_skills() }}<br>
+    {{ form.certifications.label }} {{ form.certifications() }}<br>
+    <h2>HR/Upgrade Section</h2>
+    {{ form.department.label }} {{ form.department() }}<br>
+    {{ form.team_info.label }} {{ form.team_info() }}<br>
+    {{ form.employment_letter.label }} {{ form.employment_letter() }}<br>
+    {{ form.notes.label }} {{ form.notes() }}<br>
+    {{ form.position.label }} {{ form.position() }}<br>
+    {{ form.date_of_employment.label }} {{ form.date_of_employment() }}<br>
+    {{ form.sectional_head_upgrade.label }} {{ form.sectional_head_upgrade() }}<br>
+    {{ form.job_description_upgrade.label }} {{ form.job_description_upgrade() }}<br>
+    {{ form.academic_qualification_at_employment.label }} {{ form.academic_qualification_at_employment() }}<br>
+    {{ form.present_academic_qualification.label }} {{ form.present_academic_qualification() }}<br>
+    <button type="submit" class="btn btn-primary">Update</button>
+</form>

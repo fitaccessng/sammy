@@ -1,0 +1,131 @@
+{% extends "projects/base.html" %}
+
+{% block title %}Documents | SammyA Projects{% endblock %}
+{% block header %}Project Documents{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <div class="flex space-x-3">
+            <button id="uploadDocBtn" 
+                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                Upload Document
+            </button>
+        </div>
+        <div class="flex space-x-3">
+            <select id="filterCategory" class="px-4 py-2 border rounded-lg">
+                <option value="">All Categories</option>
+                {% for category in data.categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- Documents Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for doc in data.recent_documents %}
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <div class="flex-shrink-0">
+                            <i class="bx bxs-file-pdf text-3xl text-red-500"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">{{ doc.title }}</h3>
+                            <p class="text-sm text-gray-500">{{ doc.category }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4 text-sm text-gray-500">
+                    <p>Uploaded by: {{ doc.uploaded_by }}</p>
+                    <p>Date: {{ doc.upload_date }}</p>
+                    <p>Size: {{ doc.size }}</p>
+                </div>
+                <div class="mt-4 flex justify-end space-x-3">
+                    <button class="text-indigo-600 hover:text-indigo-900">Download</button>
+                    <button class="text-red-600 hover:text-red-900">Delete</button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Upload Document Modal -->
+<div id="uploadDocModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Upload Document</h3>
+            <form id="uploadDocForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Document Title</label>
+                    <input type="text" name="title" required 
+                           class="mt-1 block w-full rounded-md border-gray-300">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Category</label>
+                    <select name="category" required class="mt-1 block w-full rounded-md border-gray-300">
+                        {% for category in data.categories %}
+                        <option value="{{ category }}">{{ category }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">File</label>
+                    <input type="file" name="document" required 
+                           class="mt-1 block w-full text-sm text-gray-500
+                                  file:mr-4 file:py-2 file:px-4
+                                  file:rounded-full file:border-0
+                                  file:text-sm file:font-semibold
+                                  file:bg-indigo-50 file:text-indigo-700
+                                  hover:file:bg-indigo-100">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" class="closeModal px-4 py-2 bg-gray-200 text-gray-800 rounded-md">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">
+                        Upload
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('uploadDocModal');
+    const openModal = document.getElementById('uploadDocBtn');
+    const closeModal = document.querySelector('button.closeModal');
+    const form = document.getElementById('uploadDocForm');
+
+    openModal.addEventListener('click', () => modal.classList.remove('hidden'));
+    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch('/projects/documents/upload', {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                window.location.reload();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    });
+});
+</script>
+{% endblock %}

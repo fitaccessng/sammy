@@ -1,0 +1,12 @@
+[2025-09-26 10:30:18,643] ERROR in finance: Finance dashboard error: type object 'Expense' has no attribute 'status'
+[2025-09-26 10:31:12,227] ERROR in finance: Finance dashboard error: type object 'Expense' has no attribute 'status'
+[2025-09-26 10:37:42,184] ERROR in finance: Finance dashboard error: type object 'Document' has no attribute 'size'
+[2025-09-26 10:37:49,865] ERROR in finance: Finance dashboard error: type object 'Document' has no attribute 'size'
+[2025-09-26 10:41:55,178] ERROR in finance: Finance dashboard error: name 'case' is not defined
+[2025-09-26 10:42:05,474] ERROR in finance: Finance dashboard error: name 'case' is not defined
+[2025-09-26 10:42:19,942] ERROR in finance: Finance dashboard error: name 'case' is not defined
+[2025-09-26 10:52:23,024] ERROR in finance: Finance dashboard error: The "whens" argument to case(), when referring to a sequence of items, is now passed as a series of positional elements, rather than as a list. 
+[2025-09-26 12:09:39,851] ERROR in finance: Finance dashboard error: type object 'Expense' has no attribute 'category'
+[2025-09-26 12:12:08,874] ERROR in finance: Finance dashboard error: Could not build url for endpoint 'finance.bank_reconciliation'. Did you mean 'finance.expense_receipt' instead?
+[2025-09-26 12:17:13,155] ERROR in finance: Finance dashboard error: Could not build url for endpoint 'finance.settings'. Did you mean 'finance.reports' instead?
+[2025-09-26 12:21:48,751] ERROR in finance: Finance dashboard error: Could not build url for endpoint 'finance.logout'. Did you mean 'finance.log_audit' instead?

@@ -1,0 +1,128 @@
+{% extends "quarry/base.html" %}
+
+{% block title %}Reports | SammyA Quarry{% endblock %}
+{% block header %}Quarry Reports{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Report Generator -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Generate Report</h3>
+        <form id="reportForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+                <select id="reportType" required class="w-full p-2 border rounded-lg">
+                    <option value="production">Production Report</option>
+                    <option value="equipment">Equipment Report</option>
+                    <option value="safety">Safety Report</option>
+                    <option value="workers">Workers Report</option>
+                </select>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Date Range</label>
+                <input type="text" id="dateRange" required 
+                       class="w-full p-2 border rounded-lg"
+                       placeholder="Select date range">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Format</label>
+                <select id="exportFormat" required class="w-full p-2 border rounded-lg">
+                    <option value="excel">Excel</option>
+                    <option value="pdf">PDF</option>
+                    <option value="csv">CSV</option>
+                </select>
+            </div>
+            
+            <div class="flex items-end">
+                <button type="submit" 
+                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Generate Report
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Recent Reports -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Recent Reports</h3>
+        </div>
+        <div class="p-6">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead>
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Report ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Generated On</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Format</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">RPT-2025-001</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Production Report</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">2025-09-03</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Excel</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <button class="text-blue-600 hover:text-blue-900">Download</button>
+                            <button class="ml-3 text-red-600 hover:text-red-900">Delete</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize date range picker
+    $('#dateRange').daterangepicker({
+        opens: 'left',
+        locale: {
+            format: 'YYYY-MM-DD'
+        }
+    });
+
+    // Handle form submission
+    $('#reportForm').on('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        // Show loading state
+        const submitBtn = this.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-2"></i>Generating...';
+
+        fetch('/quarry/reports/generate', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.href = data.report_url;
+            } else {
+                alert('Error generating report: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error generating report');
+        })
+        .finally(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalText;
+        });
+    });
+});
+</script>
+{% endblock %}

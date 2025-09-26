@@ -1,0 +1,239 @@
+from datetime import datetime, timedelta
+from flask import Blueprint, render_template, jsonify, request, flash, current_app, redirect, url_for, send_file, session
+from utils.decorators import role_required
+from utils.constants import Roles
+import pandas as pd
+from io import BytesIO
+import os
+
+quarry_bp = Blueprint('quarry', __name__, url_prefix='/quarry')
+
+# Dashboard Home
+@quarry_bp.route('/')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def quarry_home():
+    try:
+        summary = {
+            'active_equipment': 18,
+            'inactive_equipment': 4,
+            'total_workers': 95,
+            'shifts_today': 3,
+            'materials_extracted': "1,250 tons",
+            'materials_dispatched': "940 tons",
+            'pending_orders': 12,
+            'safety_incidents': 0
+        }
+        return render_template('quarry/index.html', summary=summary)
+    except Exception as e:
+        current_app.logger.error(f"Quarry dashboard error: {str(e)}")
+        flash("Error loading quarry dashboard", "error")
+        return render_template('error.html'), 500
+
+
+# Equipment Management
+@quarry_bp.route('/equipment')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def equipment():
+    try:
+        equipment_data = [
+            {'id': 1, 'name': 'Excavator A1', 'status': 'Active', 'last_service': '2025-08-28'},
+            {'id': 2, 'name': 'Crusher C2', 'status': 'Under Maintenance', 'last_service': '2025-08-15'},
+        ]
+        return render_template('quarry/equipment/index.html', equipment=equipment_data)
+    except Exception as e:
+        current_app.logger.error(f"Equipment error: {str(e)}")
+        return render_template('error.html'), 500
+
+
+@quarry_bp.route('/equipment/add', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def add_equipment():
+    from flask_wtf import FlaskForm
+    from wtforms import StringField, SelectField, DateField
+    from wtforms.validators import DataRequired, Length
+
+    class AddEquipmentForm(FlaskForm):
+        name = StringField('Equipment Name', validators=[DataRequired(), Length(max=100)])
+        status = SelectField('Status', choices=[('Active', 'Active'), ('Under Maintenance', 'Under Maintenance'), ('Inactive', 'Inactive')], validators=[DataRequired()])
+        last_service = DateField('Last Service Date', format='%Y-%m-%d', validators=[DataRequired()])
+
+    form = AddEquipmentForm()
+    if form.validate_on_submit():
+        # Replace with actual DB logic
+        equipment = {
+            'id': 3,  # Example, should be auto-increment from DB
+            'name': form.name.data,
+            'status': form.status.data,
+            'last_service': form.last_service.data.strftime('%Y-%m-%d')
+        }
+        # Here you would add to DB, e.g. db.session.add(equipment_model) and db.session.commit()
+        flash('Equipment added successfully!', 'success')
+        return redirect(url_for('quarry.equipment'))
+
+    return render_template('quarry/equipment/add.html', form=form)
+
+
+# Worker & Shift Management
+@quarry_bp.route('/workers')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def workers():
+    try:
+        workers = [
+            {'id': 1, 'name': 'John Doe', 'role': 'Loader Operator', 'shift': 'Morning'},
+            {'id': 2, 'name': 'Jane Smith', 'role': 'Supervisor', 'shift': 'Evening'},
+        ]
+        return render_template('quarry/workers/index.html', workers=workers)
+    except Exception as e:
+        return render_template('error.html'), 500
+
+
+# Material Production & Orders
+@quarry_bp.route('/materials')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def materials():
+    try:
+        materials = [
+            {'type': 'Granite', 'stock': 550, 'unit': 'tons'},
+            {'type': 'Sand', 'stock': 320, 'unit': 'tons'},
+            {'type': 'Limestone', 'stock': 380, 'unit': 'tons'},
+        ]
+        return render_template('quarry/materials/index.html', materials=materials)
+    except Exception as e:
+        return render_template('error.html'), 500
+
+
+# Safety & Compliance
+@quarry_bp.route('/safety')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def safety():
+    try:
+        safety_data = {
+            'stats': {
+                'days_without_incident': 45,
+                'pending_inspections': 3,
+                'safety_score': 98,
+                'active_alerts': 0
+            },
+            'logs': [
+                {
+                    'id': 1,
+                    'timestamp': datetime.now(),
+                    'incident': 'Protective gear inspection',
+                    'status': 'Completed',
+                    'type': 'inspection'
+                },
+                {
+                    'id': 2,
+                    'timestamp': datetime.now() - timedelta(days=1),
+                    'incident': 'Dust control monitoring',
+                    'status': 'Ongoing',
+                    'type': 'monitoring'
+                }
+            ]
+        }
+        return render_template('quarry/safety/index.html', data=safety_data)
+    except Exception as e:
+        current_app.logger.error(f"Safety page error: {str(e)}")
+        flash("Error loading safety information", "error")
+        return render_template('error.html'), 500
+
+
+# Reports & Analytics
+@quarry_bp.route('/reports')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def reports():
+    try:
+        return render_template('quarry/reports/index.html')
+    except Exception as e:
+        return render_template('error.html'), 500
+
+
+@quarry_bp.route('/reports/generate', methods=['POST'])
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def generate_report():
+    try:
+        report_type = request.form.get('type')
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+
+        # Mock report data
+        report_data = [
+            {"Date": "2025-09-01", "Material": "Granite", "Quantity": 250, "Unit": "tons"},
+            {"Date": "2025-09-01", "Material": "Sand", "Quantity": 120, "Unit": "tons"},
+        ]
+
+        df = pd.DataFrame(report_data)
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='Quarry Report', index=False)
+        output.seek(0)
+
+        report_id = f"quarry_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        report_path = os.path.join(current_app.config['UPLOAD_FOLDER'], f"{report_id}.xlsx")
+
+        with open(report_path, 'wb') as f:
+            f.write(output.getvalue())
+
+        return jsonify({'status': 'success', 'report_url': url_for('quarry.download_report', report_id=report_id)})
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
+
+
+@quarry_bp.route('/reports/download/<report_id>')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def download_report(report_id):
+    try:
+        return send_file('path_to_report', as_attachment=True)
+    except Exception as e:
+        return redirect(url_for('quarry.reports'))
+
+# Settings
+@quarry_bp.route('/settings')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def settings():
+    try:
+        user_settings = {
+            'notifications_enabled': True,
+            'default_unit': 'tons',
+            'report_format': 'Excel',
+            'theme': 'dark'
+        }
+        return render_template('quarry/settings.html', settings=user_settings)
+    except Exception as e:
+        current_app.logger.error(f"Settings error: {str(e)}")
+        flash("Error loading settings", "error")
+        return render_template('error.html'), 500
+
+
+# Profile
+@quarry_bp.route('/profile')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def profile():
+    try:
+        profile_data = {
+            'name': 'Michael Johnson',
+            'role': 'Quarry Manager',
+            'email': 'michael.johnson@quarry.com',
+            'phone': '+234 800 123 4567',
+            'joined': '2024-02-10',
+            'last_login': datetime.now().strftime('%Y-%m-%d %H:%M')
+        }
+        return render_template('quarry/profile.html', profile=profile_data)
+    except Exception as e:
+        current_app.logger.error(f"Profile error: {str(e)}")
+        flash("Error loading profile", "error")
+        return render_template('error.html'), 500
+
+
+# Logout
+@quarry_bp.route('/logout')
+@role_required([Roles.SUPER_HQ, Roles.QUARRY_MANAGER])
+def logout():
+    try:
+        session.clear()
+        flash("Successfully logged out", "success")
+        return redirect(url_for('auth.login'))
+    except Exception as e:
+        current_app.logger.error(f"Logout error: {str(e)}")
+        flash("Error during logout", "error")
+        return redirect(url_for('quarry.quarry_home'))

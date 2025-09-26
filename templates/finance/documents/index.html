@@ -1,0 +1,131 @@
+{% extends "finance/base.html" %}
+
+{% block title %}Document Manager | SammyA Finance{% endblock %}
+{% block header %}Document Management System{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Document Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Documents</p>
+                    <h3 class="text-2xl font-bold text-gray-800">1,248</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-file text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Recent Uploads</p>
+                    <h3 class="text-2xl font-bold text-gray-800">24</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-upload text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Storage Used</p>
+                    <h3 class="text-2xl font-bold text-gray-800">4.2GB</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-data text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending Review</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">8</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-time text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Document Management -->
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <!-- Folder Structure -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Folders</h3>
+            <div class="space-y-2">
+                <a href="#" class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg">
+                    <i class='bx bx-folder text-yellow-500'></i>
+                    <span class="text-sm">Invoices</span>
+                </a>
+                <a href="#" class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg">
+                    <i class='bx bx-folder text-yellow-500'></i>
+                    <span class="text-sm">Payroll Documents</span>
+                </a>
+                <a href="#" class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg">
+                    <i class='bx bx-folder text-yellow-500'></i>
+                    <span class="text-sm">Contracts</span>
+                </a>
+                <a href="#" class="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded-lg">
+                    <i class='bx bx-folder text-yellow-500'></i>
+                    <span class="text-sm">Reports</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Document List -->
+        <div class="lg:col-span-3">
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+                    <div class="flex items-center space-x-2">
+                        <h3 class="text-lg font-semibold text-gray-800">Documents</h3>
+                        <span class="text-sm text-gray-500">(124 files)</span>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
+                            <i class='bx bx-upload'></i>
+                            <span>Upload</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-1 gap-4">
+                        <!-- Document Item -->
+                        <div class="flex items-center justify-between p-4 hover:bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-4">
+                                <div class="bg-blue-100 p-3 rounded-lg">
+                                    <i class='bx bxs-file-pdf text-2xl text-blue-600'></i>
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-medium text-gray-900">Q3_Financial_Report.pdf</h4>
+                                    <p class="text-xs text-gray-500">2.4 MB • Updated 2 days ago</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button class="p-2 text-gray-500 hover:text-blue-600">
+                                    <i class='bx bx-download'></i>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-blue-600">
+                                    <i class='bx bx-share'></i>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-red-600">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </div>
+                        </div>
+                        <!-- More document items... -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
