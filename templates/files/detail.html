@@ -1,0 +1,462 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}{{ file.filename }} - File Details{% endblock %}
+
+{% block header %}File Details{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .file-detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .file-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        margin-bottom: 2rem;
+    }
+
+    .file-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .file-icon {
+        width: 64px;
+        height: 64px;
+        background: var(--primary-light);
+        border-radius: var(--border-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary-color);
+        font-size: 2rem;
+    }
+
+    .file-info h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0 0 0.5rem 0;
+        word-break: break-word;
+    }
+
+    .file-meta {
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .file-meta span {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .file-actions {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #3730a3 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary:hover {
+        background: var(--gray-50);
+    }
+
+    .btn-danger {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+        transform: translateY(-2px);
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .detail-item {
+        background: var(--gray-50);
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--gray-200);
+    }
+
+    .detail-label {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+
+    .detail-value {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .tags-section {
+        margin-top: 2rem;
+    }
+
+    .tags-form {
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+        margin-top: 1rem;
+    }
+
+    .tag {
+        display: inline-block;
+        background: var(--primary-light);
+        color: var(--primary-color);
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        margin-right: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group {
+        flex: 1;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .file-header {
+            flex-direction: column;
+            text-align: center;
+        }
+        
+        .file-actions {
+            justify-content: center;
+        }
+        
+        .tags-form {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">File Details</h2>
+        <p class="text-gray-600">View and manage file information</p>
+    </div>
+    <a href="{{ url_for('files.search_files') }}" class="btn-secondary btn-modern">
+        <i class='bx bx-arrow-back'></i>
+        Back to Files
+    </a>
+</div>
+
+<div class="file-detail-container">
+    <!-- File Information Card -->
+    <div class="file-card">
+        <div class="file-header">
+            <div class="file-icon">
+                {% if file.file_type and 'image' in file.file_type %}
+                    <i class='bx bx-image'></i>
+                {% elif file.file_type and 'pdf' in file.file_type %}
+                    <i class='bx bxs-file-pdf'></i>
+                {% elif file.file_type and ('word' in file.file_type or 'document' in file.file_type) %}
+                    <i class='bx bxs-file-doc'></i>
+                {% elif file.file_type and ('excel' in file.file_type or 'sheet' in file.file_type) %}
+                    <i class='bx bx-table'></i>
+                {% else %}
+                    <i class='bx bx-file'></i>
+                {% endif %}
+            </div>
+            <div class="file-info">
+                <h1>{{ file.filename or file.name }}</h1>
+                <div class="file-meta">
+                    {% if file.file_size %}
+                    <span>
+                        <i class='bx bx-data'></i>
+                        {{ "%.1f"|format(file.file_size / 1024) }} KB
+                    </span>
+                    {% endif %}
+                    <span>
+                        <i class='bx bx-calendar'></i>
+                        {{ file.uploaded_at.strftime('%Y-%m-%d %H:%M') }}
+                    </span>
+                    {% if file.uploader %}
+                    <span>
+                        <i class='bx bx-user'></i>
+                        {{ file.uploader.username }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- File Actions -->
+        <div class="file-actions">
+            <a href="{{ url_for('files.download_file', file_id=file.id) }}" 
+               class="btn-primary btn-modern">
+                <i class='bx bx-download'></i>
+                Download
+            </a>
+            <button onclick="shareFile()" class="btn-secondary btn-modern">
+                <i class='bx bx-share'></i>
+                Share
+            </button>
+            <button onclick="previewFile()" class="btn-secondary btn-modern">
+                <i class='bx bx-show'></i>
+                Preview
+            </button>
+            {% if current_user.is_authenticated and (current_user.role.name in ['SUPER_HQ', 'HQ'] or file.uploaded_by == current_user.id) %}
+            <button onclick="deleteFile()" class="btn-danger btn-modern">
+                <i class='bx bx-trash'></i>
+                Delete
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- File Details Grid -->
+    <div class="file-card">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">File Information</h3>
+        <div class="detail-grid">
+            <div class="detail-item">
+                <div class="detail-label">Display Name</div>
+                <div class="detail-value">{{ file.name or 'N/A' }}</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">File Name</div>
+                <div class="detail-value">{{ file.filename or 'N/A' }}</div>
+            </div>
+            {% if file.folder %}
+            <div class="detail-item">
+                <div class="detail-label">Folder</div>
+                <div class="detail-value">{{ file.folder }}</div>
+            </div>
+            {% endif %}
+            {% if file.file_type %}
+            <div class="detail-item">
+                <div class="detail-label">File Type</div>
+                <div class="detail-value">{{ file.file_type }}</div>
+            </div>
+            {% endif %}
+            <div class="detail-item">
+                <div class="detail-label">Upload Date</div>
+                <div class="detail-value">{{ file.uploaded_at.strftime('%B %d, %Y at %I:%M %p') }}</div>
+            </div>
+            {% if file.uploader %}
+            <div class="detail-item">
+                <div class="detail-label">Uploaded By</div>
+                <div class="detail-value">{{ file.uploader.username }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tags Section -->
+    <div class="file-card">
+        <div class="tags-section">
+            <h3 class="text-lg font-semibold text-gray-800 mb-2">Tags</h3>
+            
+            {% if file.tags %}
+            <div class="mb-4">
+                {% for tag in file.tags.split(',') %}
+                    <span class="tag">{{ tag.strip() }}</span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 mb-4">No tags assigned</p>
+            {% endif %}
+
+            <!-- Update Tags Form -->
+            {% if current_user.is_authenticated and (current_user.role.name in ['SUPER_HQ', 'HQ'] or file.uploaded_by == current_user.id) %}
+            <form method="POST" class="tags-form">
+                <div class="form-group">
+                    <label class="form-label" for="tags">Update Tags</label>
+                    <input type="text" 
+                           id="tags" 
+                           name="tags" 
+                           value="{{ file.tags or '' }}" 
+                           placeholder="Enter tags separated by commas" 
+                           class="form-input">
+                </div>
+                <button type="submit" class="btn-primary btn-modern">
+                    <i class='bx bx-save'></i>
+                    Update Tags
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+function shareFile() {
+    const shareUrl = window.location.href;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: '{{ file.name or file.filename }}',
+            text: 'Check out this file',
+            url: shareUrl
+        }).catch(console.error);
+    } else {
+        // Fallback for browsers that don't support Web Share API
+        navigator.clipboard.writeText(shareUrl).then(() => {
+            alert('File link copied to clipboard!');
+        }).catch(() => {
+            prompt('Copy this link:', shareUrl);
+        });
+    }
+}
+
+function previewFile() {
+    const fileType = '{{ file.file_type or "" }}';
+    const downloadUrl = '{{ url_for("files.download_file", file_id=file.id) }}';
+    
+    if (fileType.includes('image')) {
+        // Open image in new tab
+        window.open(downloadUrl, '_blank');
+    } else if (fileType.includes('pdf')) {
+        // Open PDF in new tab
+        window.open(downloadUrl, '_blank');
+    } else {
+        // For other file types, just download
+        window.location.href = downloadUrl;
+    }
+}
+
+function deleteFile() {
+    if (confirm('Are you sure you want to delete this file? This action cannot be undone.')) {
+        fetch(window.location.href, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('File deleted successfully');
+                window.location.href = '{{ url_for("files.search_files") }}';
+            } else {
+                alert('Error deleting file. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting file. Please try again.');
+        });
+    }
+}
+
+// Auto-select tags input for easy editing
+document.addEventListener('DOMContentLoaded', function() {
+    const tagsInput = document.getElementById('tags');
+    if (tagsInput) {
+        tagsInput.addEventListener('focus', function() {
+            this.select();
+        });
+    }
+});
+</script>
+{% endblock %}

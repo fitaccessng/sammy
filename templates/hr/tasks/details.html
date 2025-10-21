@@ -1,0 +1,214 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Task Details | SammyA HR{% endblock %}
+{% block header %}Task Details{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Task Header -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800">{{ task.title }}</h2>
+                <p class="text-sm text-gray-500 mt-1">Task #{{ task.id }}</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full 
+                    {% if task.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                    {% elif task.status == 'In Progress' %}bg-blue-100 text-blue-800
+                    {% elif task.status == 'Completed' %}bg-green-100 text-green-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ task.status }}
+                </span>
+                <span class="px-3 py-1 inline-flex text-sm leading-5 font-medium rounded-full 
+                    {% if task.priority == 'Urgent' %}bg-red-100 text-red-800
+                    {% elif task.priority == 'High' %}bg-orange-100 text-orange-800
+                    {% elif task.priority == 'Medium' %}bg-yellow-100 text-yellow-800
+                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ task.priority }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Task Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Assignee Information -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Assignee Information</h3>
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                    <img class="h-12 w-12 rounded-full" 
+                         src="https://ui-avatars.com/api/?name={{ task.assignee|urlencode }}&background=random" 
+                         alt="{{ task.assignee }}">
+                    <div>
+                        <p class="font-medium text-gray-900">{{ task.assignee }}</p>
+                        <p class="text-sm text-gray-500">{{ task.department }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Details -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Task Details</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Due Date</label>
+                    <p class="text-gray-900">{{ task.due_date }}</p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Created At</label>
+                    <p class="text-gray-900">{{ task.created_at }}</p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Last Updated</label>
+                    <p class="text-gray-900">{{ task.updated_at }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Section -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Progress</h3>
+        <div class="space-y-4">
+            <div>
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-sm font-medium text-gray-700">Task Progress</span>
+                    <span class="text-sm text-gray-500">{{ task.progress }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-blue-500 h-3 rounded-full" style="width: {{ task.progress }}%"></div>
+                </div>
+            </div>
+            
+            {% if task.description %}
+            <div>
+                <label class="text-sm font-medium text-gray-500">Description</label>
+                <p class="text-gray-700 mt-1">{{ task.description }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Task Actions -->
+    {% if task.status != 'Completed' %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Update Task</h3>
+        <form id="taskUpdateForm" method="POST" action="{{ url_for('hr.update_task_status', task_id=task.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <select name="status" class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="Pending" {% if task.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="In Progress" {% if task.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                        <option value="Completed" {% if task.status == 'Completed' %}selected{% endif %}>Completed</option>
+                    </select>
+                </div>
+                
+                {% if task.status == 'In Progress' %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Progress (%)</label>
+                    <input type="number" name="progress" min="0" max="100" value="{{ task.progress }}"
+                           class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                {% endif %}
+                
+                <div class="flex items-end">
+                    <button type="submit" 
+                            class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Update Task
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <a href="{{ url_for('hr.tasks') }}" 
+           class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+            <i class='bx bx-arrow-back'></i> Back to Tasks
+        </a>
+        
+        {% if task.status != 'Completed' %}
+        <div class="flex space-x-2">
+            {% if task.status == 'Pending' %}
+            <button onclick="quickUpdateStatus('In Progress')" 
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                <i class='bx bx-play'></i> Start Task
+            </button>
+            {% elif task.status == 'In Progress' %}
+            <button onclick="quickUpdateStatus('Completed')" 
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                <i class='bx bx-check'></i> Mark Complete
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const updateForm = document.getElementById('taskUpdateForm');
+    
+    if (updateForm) {
+        updateForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(updateForm);
+            
+            fetch(updateForm.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect back to tasks list
+                    window.location.href = "{{ url_for('hr.tasks') }}";
+                } else {
+                    alert('Error updating task');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Network error');
+            });
+        });
+    }
+});
+
+// Quick status update function
+async function quickUpdateStatus(newStatus) {
+    try {
+        const response = await fetch('{{ url_for("hr.update_task_status", task_id=task.id) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                status: newStatus,
+                progress: newStatus === 'Completed' ? 100 : undefined,
+                csrf_token: '{{ csrf_token }}'
+            })
+        });
+        
+        if (response.ok) {
+            // Redirect back to tasks
+            window.location.href = "{{ url_for('hr.tasks') }}";
+        } else {
+            alert('Error updating task status');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Network error');
+    }
+}
+</script>
+{% endblock %}

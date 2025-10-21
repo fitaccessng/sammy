@@ -1,0 +1,401 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Suppliers - Construction Management System{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<style>
+    .modern-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        border-radius: 12px;
+        transition: all 0.3s;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .status-active { background: #ecfdf5; color: #10b981; }
+    .status-inactive { background: #fef2f2; color: #ef4444; }
+
+    .rating-stars {
+        color: #fbbf24;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+    }
+
+    .modal:target,
+    .modal.show {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content-large {
+        background-color: #fefefe;
+        margin: 0;
+        padding: 30px;
+        border: 1px solid #888;
+        border-radius: 8px;
+        width: 95%;
+        max-width: 800px;
+        position: relative;
+        animation: modalFadeIn 0.3s;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-50px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .modal-close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        text-decoration: none;
+        line-height: 1;
+    }
+
+    .modal-close:hover {
+        color: #000;
+    }
+
+    .modal-body {
+        margin-bottom: 20px;
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .btn-modal {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: 500;
+    }
+
+    .btn-modal-secondary {
+        background-color: #6b7280;
+        color: white;
+    }
+
+    .btn-modal-secondary:hover {
+        background-color: #4b5563;
+    }
+
+    .btn-modal-primary {
+        background-color: #3b82f6;
+        color: white;
+    }
+
+    .btn-modal-primary:hover {
+        background-color: #2563eb;
+    }
+</style>
+
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Suppliers</h1>
+            <p class="text-gray-600">Manage construction suppliers and vendor relationships</p>
+        </div>
+        <a href="{{ url_for('admin.add_supplier') }}" class="btn-modern btn-primary-modern mt-4 sm:mt-0">
+            <i class='bx bx-plus'></i>
+            Add New Supplier
+        </a>
+    </div>
+
+    <!-- Suppliers Table -->
+    <div class="modern-card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Rating</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for supplier in suppliers %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">{{ supplier.name }}</div>
+                                {% if supplier.address %}
+                                <div class="text-sm text-gray-500">{{ supplier.address[:50] }}{% if supplier.address|length > 50 %}...{% endif %}</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div>
+                                {% if supplier.contact_person %}
+                                <div class="text-sm font-medium text-gray-900">{{ supplier.contact_person }}</div>
+                                {% endif %}
+                                {% if supplier.email %}
+                                <div class="text-sm text-blue-600">{{ supplier.email }}</div>
+                                {% endif %}
+                                {% if supplier.phone %}
+                                <div class="text-sm text-gray-500">{{ supplier.phone }}</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                            {% if supplier.rating %}
+                            <div class="flex items-center">
+                                <span class="rating-stars">
+                                    {% for i in range(5) %}
+                                        {% if i < supplier.rating %}
+                                            <i class='bx bxs-star'></i>
+                                        {% else %}
+                                            <i class='bx bx-star'></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                                <span class="ml-2 text-sm text-gray-600">({{ supplier.rating }})</span>
+                            </div>
+                            {% else %}
+                            <span class="text-gray-400">Not rated</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="status-badge status-{{ supplier.status.lower() }}">{{ supplier.status }}</span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex gap-2">
+                                <a href="{{ url_for('admin.suppliers', view_supplier=supplier.id) }}" class="text-blue-600 hover:text-blue-900">
+                                    <i class='bx bx-show'></i> View
+                                </a>
+                                <a href="{{ url_for('admin.edit_supplier', supplier_id=supplier.id) }}" class="text-green-600 hover:text-green-900">
+                                    <i class='bx bx-edit'></i> Edit
+                                </a>
+                                <button class="text-red-600 hover:text-red-900">
+                                    <i class='bx bx-trash'></i> Delete
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="px-4 py-8 text-center text-gray-500">
+                            <i class='bx bx-building text-4xl mb-2'></i>
+                            <p>No suppliers found</p>
+                            <a href="{{ url_for('admin.add_supplier') }}" class="text-blue-600 hover:text-blue-800 underline">Add your first supplier</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- View Supplier Modal (Server-side triggered) -->
+{% if view_supplier %}
+<div class="modal show" id="view-supplier-modal">
+    <div class="modal-content-large">
+        <div class="modal-header">
+            <h3 class="modal-title">Supplier Details</h3>
+            <a href="{{ url_for('admin.suppliers') }}" class="modal-close">&times;</a>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Basic Information -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-800 border-b pb-2">Basic Information</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Company Name:</span>
+                            <span class="font-medium">{{ view_supplier.name }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Status:</span>
+                            <span class="px-2 py-1 text-xs rounded-full 
+                                {% if view_supplier.status == 'Active' %}bg-green-100 text-green-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ view_supplier.status }}
+                            </span>
+                        </div>
+                        {% if view_supplier.rating %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Rating:</span>
+                            <div class="flex items-center">
+                                <span class="rating-stars mr-2">
+                                    {% for i in range(5) %}
+                                        {% if i < view_supplier.rating %}
+                                            <i class='bx bxs-star'></i>
+                                        {% else %}
+                                            <i class='bx bx-star'></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </span>
+                                <span class="text-sm text-gray-600">({{ view_supplier.rating }}/5)</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% if view_supplier.payment_terms %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Payment Terms:</span>
+                            <span class="font-medium">{{ view_supplier.payment_terms }}</span>
+                        </div>
+                        {% endif %}
+                        {% if view_supplier.created_at %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Added:</span>
+                            <span class="font-medium">{{ view_supplier.created_at.strftime('%Y-%m-%d') }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Contact Information -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-800 border-b pb-2">Contact Information</h4>
+                    <div class="space-y-2">
+                        {% if view_supplier.contact_person %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Contact Person:</span>
+                            <span class="font-medium">{{ view_supplier.contact_person }}</span>
+                        </div>
+                        {% endif %}
+                        {% if view_supplier.email %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Email:</span>
+                            <span class="font-medium text-blue-600">{{ view_supplier.email }}</span>
+                        </div>
+                        {% endif %}
+                        {% if view_supplier.phone %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Phone:</span>
+                            <span class="font-medium">{{ view_supplier.phone }}</span>
+                        </div>
+                        {% endif %}
+                        {% if view_supplier.website %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Website:</span>
+                            <span class="font-medium">
+                                <a href="{{ view_supplier.website }}" target="_blank" class="text-blue-600 hover:text-blue-800">
+                                    {{ view_supplier.website }}
+                                </a>
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Address -->
+            {% if view_supplier.address %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Address</h4>
+                <p class="text-gray-700">{{ view_supplier.address }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Description -->
+            {% if view_supplier.description %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Description</h4>
+                <p class="text-gray-700">{{ view_supplier.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Products/Services -->
+            {% if view_supplier.products_services %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Products & Services</h4>
+                <p class="text-gray-700">{{ view_supplier.products_services }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            {% if view_supplier.notes %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Notes</h4>
+                <p class="text-gray-700">{{ view_supplier.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <a href="{{ url_for('admin.suppliers') }}" class="btn-modal btn-modal-secondary">Close</a>
+            <a href="{{ url_for('admin.edit_supplier', supplier_id=view_supplier.id) }}" class="btn-modal btn-modal-primary">
+                <i class='bx bx-edit'></i> Edit Supplier
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

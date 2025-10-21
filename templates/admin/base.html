@@ -2,11 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Construction Admin Dashboard | SammyA{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1                            <a href="{{ url_for('admin.reporting_lines_view') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-group mr-3'></i>
+                                <span>Reporting Lines</span>>                            <a href="{{ url_for('admin.approval_hierarchy_view') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-network-chart mr-3'></i>
+                                <span>Approval Hierarchy</span>   <title>{% block title %}Construction Admin Dashboard | SammyA{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
     <style>
         :root {
             --primary: #2563eb;
@@ -126,59 +131,58 @@
                             <i :class="open.dashboard ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
                         </button>
                         <div x-show="open.dashboard" class="space-y-1">
-                            <a href="{{ url_for('admin.index') }}" class="nav-item flex items-center p-3 rounded-lg relative">
+                            <a href="{{ url_for('admin.dashboard') }}" class="nav-item flex items-center p-3 rounded-lg relative">
                                 <i class='bx bxs-dashboard mr-3'></i>
                                 <span>Overview</span>
                                 <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">3</span>
                             </a>
-                            <a href="{{ url_for('admin.dashboard_data') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('admin.oversight_reports_view') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-data mr-3'></i>
-                                <span>Dashboard Data</span>
+                                <span>Reports</span>
                             </a>
-                            <a href="{{ url_for('admin.dashboard_upload') }}" class="nav-item flex items-center p-3 rounded-lg">
-                                <i class='bx bxs-cloud-upload mr-3'></i>
-                                <span>Upload</span>
+                            <a href="{{ url_for('admin.roles_view') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-user-account mr-3'></i>
+                                <span>Roles</span>
                             </a>
-                            <a href="{{ url_for('admin.dashboard_action_log') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('admin.reporting_lines_view') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-notepad mr-3'></i>
-                                <span>Action Log</span>
+                                <span>Reporting Lines</span>
                             </a>
-                            <a href="{{ url_for('admin.dashboard_progress') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('admin.approval_hierarchy_view') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bx-bar-chart-alt-2 mr-3'></i>
-                                <span>Project Progress</span>
+                                <span>Approval Hierarchy</span>
                             </a>
-                            <a href="{{ url_for('admin.custom_dashboard') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('admin.permissions_view') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-customize mr-3'></i>
-                                <span>Custom Dashboard</span>
+                                <span>Permissions</span>
                             </a>
                         </div>
-                    </div>
-                    <!-- HR Management Section -->
+                   
                     <div class="pt-2">
                         <button @click="open.hr = !open.hr" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
                             <span>HR Management</span>
                             <i :class="open.hr ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
                         </button>
                         <div x-show="open.hr" class="space-y-1">
-                            <a href="{{ url_for('admin.employees') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="#" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-user-detail mr-3'></i>
-                                <span>Employees</span>
+                                <span>Employees (Coming Soon)</span>
                             </a>
-                            <a href="{{ url_for('admin.attendance') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="#" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-time-five mr-3'></i>
-                                <span>Attendance</span>
+                                <span>Attendance (Coming Soon)</span>
                             </a>
-                            <a href="{{ url_for('admin.payroll') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="#" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-credit-card mr-3'></i>
-                                <span>Payroll</span>
+                                <span>Payroll (Coming Soon)</span>
                             </a>
-                            <a href="{{ url_for('admin.add_employee') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="#" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-user-plus mr-3'></i>
-                                <span>Add Employee</span>
+                                <span>Add Employee (Coming Soon)</span>
                             </a>
                         </div>
                     </div>
-                    <!-- Project Management Section -->
+                 
                     <div class="pt-2">
                         <button @click="open.projects = !open.projects" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
                             <span>Projects</span>
@@ -203,7 +207,7 @@
                             </a>
                         </div>
                     </div>
-                    <!-- Inventory & Assets Section -->
+                   
                     <div class="pt-2">
                         <button @click="open.inventory = !open.inventory" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
                             <span>Inventory</span>
@@ -236,7 +240,7 @@
                             </a>
                         </div>
                     </div>
-                    <!-- Orders & Purchases Section -->
+                   
                     <div class="pt-2">
                         <button @click="open.orders = !open.orders" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
                             <span>Orders & Purchases</span>
@@ -253,7 +257,7 @@
                             </a>
                         </div>
                     </div>
-                    <!-- Monitoring Section -->
+                  
                     <div class="pt-2">
                         <button @click="open.monitoring = !open.monitoring" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
                             <span>Monitoring</span>
@@ -280,7 +284,6 @@
                             </a>
                         </div>
                     </div>
-                    <!-- Scheduling Section -->
                     <div class="pt-2">
                         <button @click="open.scheduling = !open.scheduling" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
                             <span>Scheduling</span>
@@ -297,7 +300,6 @@
                             </a>
                         </div>
                     </div>
-                    <!-- Analytics Section -->
                     <div class="pt-2">
                         <button @click="open.analytics = !open.analytics" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
                             <span>Analytics</span>
@@ -314,7 +316,6 @@
                             </a>
                         </div>
                     </div>
-                    <!-- File Management Section -->
                     <div class="pt-2">
                         <button @click="open.files = !open.files" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
                             <span>File Management</span>
@@ -327,7 +328,6 @@
                             </a>
                         </div>
                     </div>
-                    <!-- User Section -->
                     <div class="pt-2">
                         <button @click="open.user = !open.user" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
                             <span>User</span>
@@ -349,9 +349,7 @@
             </nav>
            
         </aside>
-        <!-- Main Content -->
         <div class="main-content flex-1">
-            <!-- Top Navigation -->
             <header class="bg-white shadow-sm">
                 <div class="flex items-center justify-between px-6 py-4">
                     <div class="flex items-center">
@@ -378,7 +376,6 @@
                     </div>
                 </div>
             </header>
-            <!-- Page Content -->
             <div class="p-6 space-y-6">
                 {% block content %}{% endblock %}
             </div>

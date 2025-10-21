@@ -1,0 +1,444 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Stock Management - Admin Dashboard{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/tailwind.css">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Stock Management</h1>
+        <a href="{{ url_for('admin.add_stock') }}" 
+           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class='bx bx-plus mr-2'></i>
+            Add New Stock Item
+        </a>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg bg-{{ 'red-100' if category == 'danger' or category == 'error' else 'green-100' }} text-{{ 'red-700' if category == 'danger' or category == 'error' else 'green-700' }} border border-{{ 'red-200' if category == 'danger' or category == 'error' else 'green-200' }}">
+                    <i class='bx {{ 'bx-error' if category == 'danger' or category == 'error' else 'bx-check-circle' }} mr-2'></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Stock Statistics Cards -->
+    {% if stock_stats %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Items</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ stock_stats.total_items }}</p>
+                </div>
+                <i class='bx bx-package text-3xl text-blue-500'></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Low Stock</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ stock_stats.low_stock_items }}</p>
+                </div>
+                <i class='bx bx-error text-3xl text-yellow-500'></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Out of Stock</p>
+                    <p class="text-2xl font-bold text-red-600">{{ stock_stats.out_of_stock }}</p>
+                </div>
+                <i class='bx bx-x-circle text-3xl text-red-500'></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Available Items</p>
+                    <p class="text-2xl font-bold text-green-600">{{ stock_stats.available_items }}</p>
+                </div>
+                <i class='bx bx-check-circle text-3xl text-green-500'></i>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Stock Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Unit</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Low Stock Alert</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for item in stock_items %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-200 {{ 'bg-red-50' if item.quantity == 0 else 'bg-yellow-50' if item.quantity <= item.low_stock_threshold else '' }}">
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class='bx bx-package text-xl text-gray-400 mr-3'></i>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ item.name }}</div>
+                                    <div class="text-sm text-gray-500 sm:hidden">
+                                        {{ item.quantity }} {{ item.unit or 'units' }} | {{ item.status or 'Available' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <span class="text-sm font-medium text-gray-900">{{ item.quantity }}</span>
+                                {% if item.quantity == 0 %}
+                                <i class='bx bx-x-circle text-red-500 ml-2'></i>
+                                {% elif item.quantity <= item.low_stock_threshold %}
+                                <i class='bx bx-error text-yellow-500 ml-2'></i>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 hidden sm:table-cell">
+                            {{ item.unit or 'units' }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                {% if item.quantity == 0 %}bg-red-100 text-red-800
+                                {% elif item.quantity <= item.low_stock_threshold %}bg-yellow-100 text-yellow-800
+                                {% elif item.status == 'Available' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {% if item.quantity == 0 %}Out of Stock
+                                {% elif item.quantity <= item.low_stock_threshold %}Low Stock
+                                {% else %}{{ item.status or 'Available' }}{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 hidden lg:table-cell">
+                            <span class="{% if item.quantity <= item.low_stock_threshold %}text-red-600 font-medium{% else %}text-gray-600{% endif %}">
+                                {{ item.low_stock_threshold }} {{ item.unit or 'units' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                                <button onclick="viewStockItem({{ item.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors duration-200">
+                                    <i class='bx bx-show text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">View</span>
+                                </button>
+                                <button onclick="editStockItem({{ item.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors duration-200">
+                                    <i class='bx bx-edit text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">Edit</span>
+                                </button>
+                                <button onclick="adjustStock({{ item.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors duration-200">
+                                    <i class='bx bx-plus-minus text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">Adjust</span>
+                                </button>
+                                {% if item.quantity <= item.low_stock_threshold %}
+                                <button onclick="reorderStock({{ item.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors duration-200">
+                                    <i class='bx bx-cart text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">Reorder</span>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            <i class='bx bx-package text-4xl text-gray-300 mb-2 block'></i>
+                            <p class="text-lg font-medium">No stock items found</p>
+                            <p class="text-sm">Start by adding your first stock item.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Item View Modal -->
+<div id="stockViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Stock Item Details</h3>
+                <button onclick="closeStockModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            
+            <div id="modalContent" class="space-y-4">
+                <!-- Content will be loaded here -->
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button onclick="closeStockModal()" 
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors duration-200">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div id="stockAdjustModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-1/2 lg:w-1/3 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Adjust Stock Quantity</h3>
+                <button onclick="closeAdjustModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            
+            <form id="stockAdjustForm">
+                <input type="hidden" id="adjustStockId" value="">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Current Quantity</label>
+                        <input type="text" id="currentQuantity" class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Adjustment Type</label>
+                        <select id="adjustmentType" class="w-full px-3 py-2 border border-gray-300 rounded-md">
+                            <option value="add">Add Stock</option>
+                            <option value="remove">Remove Stock</option>
+                            <option value="set">Set Quantity</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                        <input type="number" id="adjustmentQuantity" class="w-full px-3 py-2 border border-gray-300 rounded-md" min="0" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Reason (Optional)</label>
+                        <textarea id="adjustmentReason" class="w-full px-3 py-2 border border-gray-300 rounded-md" rows="3" placeholder="Enter reason for adjustment..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end gap-3 mt-6">
+                    <button type="button" onclick="closeAdjustModal()" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors duration-200">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors duration-200">
+                        Adjust Stock
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewStockItem(id) {
+    // Show loading state
+    document.getElementById('modalTitle').textContent = 'Loading...';
+    document.getElementById('modalContent').innerHTML = '<div class="text-center py-4"><i class="bx bx-loader-alt animate-spin text-2xl"></i></div>';
+    document.getElementById('stockViewModal').classList.remove('hidden');
+    
+    // Fetch stock item data
+    fetch(`/admin/stock/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayStockDetails(data.stock_item);
+            } else {
+                showError('Failed to load stock item details: ' + data.message);
+            }
+        })
+        .catch(error => {
+            showError('Error loading stock item details: ' + error.message);
+        });
+}
+
+function displayStockDetails(item) {
+    document.getElementById('modalTitle').textContent = item.name;
+    
+    const content = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <i class='bx bx-tag text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Name:</span>
+                    <span class="ml-2 text-gray-900">${item.name}</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-package text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Quantity:</span>
+                    <span class="ml-2 text-gray-900 font-medium">${item.quantity} ${item.unit || 'units'}</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-check-circle text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Status:</span>
+                    <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStockStatusColor(item)}">
+                        ${getStockStatusText(item)}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <i class='bx bx-error text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Low Stock Alert:</span>
+                    <span class="ml-2 text-gray-900">${item.low_stock_threshold} ${item.unit || 'units'}</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-calendar text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Created:</span>
+                    <span class="ml-2 text-gray-900">${item.created_at || 'N/A'}</span>
+                </div>
+            </div>
+        </div>
+        
+        ${item.quantity <= item.low_stock_threshold ? `
+        <div class="mt-4 p-3 bg-${item.quantity == 0 ? 'red' : 'yellow'}-50 rounded-lg border border-${item.quantity == 0 ? 'red' : 'yellow'}-200">
+            <div class="flex items-center">
+                <i class='bx bx-${item.quantity == 0 ? 'x-circle text-red' : 'error text-yellow'}-500 mr-2'></i>
+                <span class="font-medium text-${item.quantity == 0 ? 'red' : 'yellow'}-700">
+                    ${item.quantity == 0 ? 'Out of Stock' : 'Low Stock Alert'}
+                </span>
+            </div>
+            <p class="text-${item.quantity == 0 ? 'red' : 'yellow'}-600 text-sm mt-1">
+                ${item.quantity == 0 ? 'This item is completely out of stock.' : 'Stock level is below the threshold.'}
+            </p>
+        </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('modalContent').innerHTML = content;
+}
+
+function getStockStatusColor(item) {
+    if (item.quantity == 0) return 'bg-red-100 text-red-800';
+    if (item.quantity <= item.low_stock_threshold) return 'bg-yellow-100 text-yellow-800';
+    return 'bg-green-100 text-green-800';
+}
+
+function getStockStatusText(item) {
+    if (item.quantity == 0) return 'Out of Stock';
+    if (item.quantity <= item.low_stock_threshold) return 'Low Stock';
+    return item.status || 'Available';
+}
+
+function showError(message) {
+    document.getElementById('modalTitle').textContent = 'Error';
+    document.getElementById('modalContent').innerHTML = `
+        <div class="text-center py-4">
+            <i class='bx bx-error-circle text-4xl text-red-500 mb-2'></i>
+            <p class="text-red-600">${message}</p>
+        </div>
+    `;
+}
+
+function closeStockModal() {
+    document.getElementById('stockViewModal').classList.add('hidden');
+}
+
+function editStockItem(id) {
+    window.location.href = `/admin/edit-stock/${id}`;
+}
+
+function adjustStock(id) {
+    // Get current stock data first
+    fetch(`/admin/stock/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('adjustStockId').value = id;
+                document.getElementById('currentQuantity').value = `${data.stock_item.quantity} ${data.stock_item.unit || 'units'}`;
+                document.getElementById('adjustmentQuantity').value = '';
+                document.getElementById('adjustmentReason').value = '';
+                document.getElementById('stockAdjustModal').classList.remove('hidden');
+            }
+        });
+}
+
+function closeAdjustModal() {
+    document.getElementById('stockAdjustModal').classList.add('hidden');
+}
+
+function reorderStock(id) {
+    if (confirm('Create a reorder notification for this item?')) {
+        alert('Reorder functionality to be implemented for stock ID: ' + id);
+    }
+}
+
+// Handle stock adjustment form submission
+document.getElementById('stockAdjustForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const stockId = document.getElementById('adjustStockId').value;
+    const adjustmentType = document.getElementById('adjustmentType').value;
+    const quantity = document.getElementById('adjustmentQuantity').value;
+    const reason = document.getElementById('adjustmentReason').value;
+    
+    fetch(`/admin/adjust-stock/${stockId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+        },
+        body: JSON.stringify({
+            adjustment_type: adjustmentType,
+            quantity: parseInt(quantity),
+            reason: reason
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error adjusting stock: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error adjusting stock: ' + error.message);
+    });
+});
+
+// Close modals when clicking outside
+document.getElementById('stockViewModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeStockModal();
+    }
+});
+
+document.getElementById('stockAdjustModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAdjustModal();
+    }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeStockModal();
+        closeAdjustModal();
+    }
+});
+</script>
+{% endblock %}

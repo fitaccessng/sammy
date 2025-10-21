@@ -8,7 +8,23 @@ dashboard_bp = Blueprint('dashboard', __name__)
 @dashboard_bp.route('/super-hq')
 @role_required([Roles.SUPER_HQ])
 def super_hq_dashboard():
-    return render_template('admin/index.html')
+    from datetime import datetime
+    from models import Role, Employee, Project, PurchaseOrder
+    
+    # Get summary data for the dashboard
+    current_datetime = datetime.now()
+    
+    # Calculate summary statistics
+    summary = {
+        'total_roles': Role.query.count(),
+        'total_employees': Employee.query.count(),
+        'total_projects': Project.query.count(),
+        'total_orders': PurchaseOrder.query.count()
+    }
+    
+    return render_template('admin/index.html', 
+                         current_datetime=current_datetime,
+                         summary=summary)
 
 # HQ Dashboards
 @dashboard_bp.route('/hq-finance')

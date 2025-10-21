@@ -1,0 +1,7 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Staff Management | SammyA HR{% endblock title %}
+
+{% block content %}
+<!-- Your staff management page content goes here -->
+{% endblock content %}

@@ -1,0 +1,344 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Asset Management - Admin Dashboard{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/tailwind.css">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Asset Management</h1>
+        <a href="{{ url_for('admin.add_asset') }}" 
+           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class='bx bx-plus mr-2'></i>
+            Add New Asset
+        </a>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg bg-{{ 'red-100' if category == 'danger' or category == 'error' else 'green-100' }} text-{{ 'red-700' if category == 'danger' or category == 'error' else 'green-700' }} border border-{{ 'red-200' if category == 'danger' or category == 'error' else 'green-200' }}">
+                    <i class='bx {{ 'bx-error' if category == 'danger' or category == 'error' else 'bx-check-circle' }} mr-2'></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Asset Statistics Cards -->
+    {% if asset_stats %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Assets</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ asset_stats.total_assets }}</p>
+                </div>
+                <i class='bx bx-buildings text-3xl text-blue-500'></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Active</p>
+                    <p class="text-2xl font-bold text-green-600">{{ asset_stats.active_assets }}</p>
+                </div>
+                <i class='bx bx-check-circle text-3xl text-green-500'></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Retired</p>
+                    <p class="text-2xl font-bold text-red-600">{{ asset_stats.retired_assets }}</p>
+                </div>
+                <i class='bx bx-x-circle text-3xl text-red-500'></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Asset Types</p>
+                    <p class="text-2xl font-bold text-purple-600">{{ asset_stats.asset_types.keys()|length }}</p>
+                </div>
+                <i class='bx bx-category text-3xl text-purple-500'></i>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Asset Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Location</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Purchase Date</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for asset in assets %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class='bx bx-buildings text-xl text-gray-400 mr-3'></i>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ asset.name }}</div>
+                                    <div class="text-sm text-gray-500 sm:hidden">
+                                        {{ asset.type or 'Unknown' }} | {{ asset.location or 'No location' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ asset.type or 'Unknown' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                {% if asset.status == 'Active' %}bg-green-100 text-green-800
+                                {% elif asset.status == 'Retired' %}bg-red-100 text-red-800
+                                {% elif asset.status == 'Maintenance' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ asset.status or 'Unknown' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 hidden sm:table-cell">
+                            {{ asset.location or 'Not specified' }}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                            {% if asset.purchase_date %}
+                                <span class="text-gray-600">{{ asset.purchase_date.strftime('%Y-%m-%d') }}</span>
+                            {% else %}
+                                <span class="text-gray-400">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                                <button onclick="viewAsset({{ asset.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors duration-200">
+                                    <i class='bx bx-show text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">View</span>
+                                </button>
+                                <button onclick="editAsset({{ asset.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors duration-200">
+                                    <i class='bx bx-edit text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">Edit</span>
+                                </button>
+                                {% if asset.status != 'Retired' %}
+                                <button onclick="retireAsset({{ asset.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors duration-200">
+                                    <i class='bx bx-archive text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">Retire</span>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            <i class='bx bx-buildings text-4xl text-gray-300 mb-2 block'></i>
+                            <p class="text-lg font-medium">No assets found</p>
+                            <p class="text-sm">Start by adding your first asset.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Asset View Modal -->
+<div id="assetViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Asset Details</h3>
+                <button onclick="closeAssetModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            
+            <div id="modalContent" class="space-y-4">
+                <!-- Content will be loaded here -->
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button onclick="closeAssetModal()" 
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors duration-200">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewAsset(id) {
+    // Show loading state
+    document.getElementById('modalTitle').textContent = 'Loading...';
+    document.getElementById('modalContent').innerHTML = '<div class="text-center py-4"><i class="bx bx-loader-alt animate-spin text-2xl"></i></div>';
+    document.getElementById('assetViewModal').classList.remove('hidden');
+    
+    // Fetch asset data
+    fetch(`/admin/asset/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayAssetDetails(data.asset);
+            } else {
+                showError('Failed to load asset details: ' + data.message);
+            }
+        })
+        .catch(error => {
+            showError('Error loading asset details: ' + error.message);
+        });
+}
+
+function displayAssetDetails(asset) {
+    document.getElementById('modalTitle').textContent = asset.name;
+    
+    const content = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <i class='bx bx-tag text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Name:</span>
+                    <span class="ml-2 text-gray-900">${asset.name}</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-category text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Type:</span>
+                    <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                        ${asset.type || 'Unknown'}
+                    </span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-check-circle text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Status:</span>
+                    <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getAssetStatusColor(asset.status)}">
+                        ${asset.status || 'Unknown'}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <i class='bx bx-map text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Location:</span>
+                    <span class="ml-2 text-gray-900">${asset.location || 'Not specified'}</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-calendar text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Purchase Date:</span>
+                    <span class="ml-2 text-gray-900">${asset.purchase_date || 'N/A'}</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-calendar-minus text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Created:</span>
+                    <span class="ml-2 text-gray-900">${asset.created_at || 'N/A'}</span>
+                </div>
+            </div>
+        </div>
+        
+        ${asset.retired_date ? `
+        <div class="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
+            <div class="flex items-center">
+                <i class='bx bx-archive text-red-400 mr-2'></i>
+                <span class="font-medium text-red-700">Retired Date:</span>
+                <span class="ml-2 text-red-900">${asset.retired_date}</span>
+            </div>
+        </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('modalContent').innerHTML = content;
+}
+
+function getAssetStatusColor(status) {
+    switch(status) {
+        case 'Active':
+            return 'bg-green-100 text-green-800';
+        case 'Maintenance':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'Retired':
+            return 'bg-red-100 text-red-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function showError(message) {
+    document.getElementById('modalTitle').textContent = 'Error';
+    document.getElementById('modalContent').innerHTML = `
+        <div class="text-center py-4">
+            <i class='bx bx-error-circle text-4xl text-red-500 mb-2'></i>
+            <p class="text-red-600">${message}</p>
+        </div>
+    `;
+}
+
+function closeAssetModal() {
+    document.getElementById('assetViewModal').classList.add('hidden');
+}
+
+function editAsset(id) {
+    window.location.href = `/admin/edit-asset/${id}`;
+}
+
+function retireAsset(id) {
+    if (confirm('Are you sure you want to retire this asset?')) {
+        fetch(`/admin/retire-asset/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('input[name="csrf_token"]')?.value || ''
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error retiring asset: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error retiring asset: ' + error.message);
+        });
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('assetViewModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeAssetModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAssetModal();
+    }
+});
+</script>
+{% endblock %}

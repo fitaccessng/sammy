@@ -1,3 +1,31 @@
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from flask import current_app
+
+def send_email(to_email, subject, body):
+    smtp_server = current_app.config.get('SMTP_SERVER', 'smtp.example.com')
+    smtp_port = current_app.config.get('SMTP_PORT', 587)
+    smtp_user = current_app.config.get('SMTP_USER', 'noreply@example.com')
+    smtp_password = current_app.config.get('SMTP_PASSWORD', '')
+    from_email = smtp_user
+
+    msg = MIMEMultipart()
+    msg['From'] = from_email
+    msg['To'] = to_email
+    msg['Subject'] = subject
+    msg.attach(MIMEText(body, 'plain'))
+
+    try:
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(from_email, to_email, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Email send error: {str(e)}")
+        return False
 from flask import current_app
 from flask_mail import Message
 from extensions import mail

@@ -1,0 +1,514 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Create Alert - Construction Management System{% endblock %}
+
+{% block header %}Create New Alert{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .form-container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .form-header h2 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-header p {
+        opacity: 0.9;
+        font-size: 0.875rem;
+    }
+
+    .form-body {
+        padding: 2rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .form-label.required::after {
+        content: ' *';
+        color: var(--danger-color);
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        transition: var(--transition);
+    }
+
+    .form-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        resize: vertical;
+        min-height: 120px;
+        font-family: inherit;
+        transition: var(--transition);
+    }
+
+    .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        letter-spacing: 0.025em;
+        gap: 0.5rem;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #3730a3 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-warning-modern {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+        color: white;
+    }
+
+    .btn-warning-modern:hover {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-secondary-modern {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary-modern:hover {
+        background: var(--gray-200);
+        color: var(--gray-800);
+        transform: translateY(-1px);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--gray-200);
+        justify-content: flex-end;
+    }
+
+    .type-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .type-option {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 2px solid var(--gray-200);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .type-option:hover {
+        border-color: var(--primary-color);
+        background: var(--primary-light);
+    }
+
+    .type-option input[type="radio"] {
+        margin-right: 0.5rem;
+    }
+
+    .type-option.system { border-color: var(--primary-color); }
+    .type-option.security { border-color: var(--danger-color); }
+    .type-option.maintenance { border-color: var(--warning-color); }
+    .type-option.general { border-color: var(--gray-400); }
+
+    .type-option input[type="radio"]:checked + .type-label {
+        font-weight: 600;
+    }
+
+    .severity-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.75rem;
+    }
+
+    .severity-option {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem;
+        border: 2px solid var(--gray-200);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .severity-option:hover {
+        border-color: var(--primary-color);
+        background: var(--primary-light);
+    }
+
+    .severity-option input[type="radio"] {
+        margin-right: 0.5rem;
+    }
+
+    .severity-option.critical { border-color: var(--danger-color); }
+    .severity-option.high { border-color: #d97706; }
+    .severity-option.medium { border-color: #7c3aed; }
+    .severity-option.low { border-color: var(--gray-400); }
+
+    .severity-option input[type="radio"]:checked + .severity-label {
+        font-weight: 600;
+    }
+
+    .form-help {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        margin-top: 0.25rem;
+        line-height: 1.4;
+    }
+
+    @media (max-width: 768px) {
+        .form-container {
+            margin: 1rem;
+        }
+        
+        .form-body {
+            padding: 1.5rem;
+        }
+        
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .form-actions {
+            flex-direction: column;
+        }
+        
+        .type-options,
+        .severity-options {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- Back Navigation -->
+<div class="mb-6">
+    <a href="{{ url_for('admin.alerts') }}" class="text-primary-color hover:text-primary-dark transition-colors inline-flex items-center gap-2">
+        <i class='bx bx-arrow-back'></i>
+        Back to Alerts
+    </a>
+</div>
+
+<!-- Form Container -->
+<div class="form-container">
+    <!-- Form Header -->
+    <div class="form-header">
+        <h2>Create System Alert</h2>
+        <p>Create a new alert to notify users about important events or issues</p>
+    </div>
+
+    <!-- Form Body -->
+    <div class="form-body">
+        <form method="POST" action="{{ url_for('admin.add_alert') }}">
+            <!-- Basic Information -->
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="title" class="form-label required">Alert Title</label>
+                    <input type="text" id="title" name="title" class="form-input" 
+                           placeholder="Brief description of the alert" required>
+                    <div class="form-help">Provide a clear, concise title for the alert</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="status" class="form-label">Status</label>
+                    <select id="status" name="status" class="form-select">
+                        <option value="Active" selected>Active</option>
+                        <option value="Resolved">Resolved</option>
+                        <option value="Dismissed">Dismissed</option>
+                    </select>
+                    <div class="form-help">Current status of the alert</div>
+                </div>
+            </div>
+
+            <!-- Alert Details -->
+            <div class="form-group full-width">
+                <label for="description" class="form-label required">Alert Description</label>
+                <textarea id="description" name="description" class="form-textarea" 
+                          placeholder="Provide a detailed description of the alert..." required></textarea>
+                <div class="form-help">Include details about the issue, impact, and any recommended actions</div>
+            </div>
+
+            <!-- Alert Type Selection -->
+            <div class="form-group">
+                <label class="form-label required">Alert Type</label>
+                <div class="type-options">
+                    <label class="type-option system">
+                        <input type="radio" name="type" value="System" required>
+                        <span class="type-label">
+                            <strong>System</strong><br>
+                            <small>System-related notifications</small>
+                        </span>
+                    </label>
+                    <label class="type-option security">
+                        <input type="radio" name="type" value="Security" required>
+                        <span class="type-label">
+                            <strong>Security</strong><br>
+                            <small>Security-related alerts</small>
+                        </span>
+                    </label>
+                    <label class="type-option maintenance">
+                        <input type="radio" name="type" value="Maintenance" required>
+                        <span class="type-label">
+                            <strong>Maintenance</strong><br>
+                            <small>Maintenance notifications</small>
+                        </span>
+                    </label>
+                    <label class="type-option general">
+                        <input type="radio" name="type" value="General" required>
+                        <span class="type-label">
+                            <strong>General</strong><br>
+                            <small>General information alerts</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Severity Selection -->
+            <div class="form-group">
+                <label class="form-label required">Severity Level</label>
+                <div class="severity-options">
+                    <label class="severity-option critical">
+                        <input type="radio" name="severity" value="Critical" required>
+                        <span class="severity-label">
+                            <strong>Critical</strong><br>
+                            <small>Immediate attention required</small>
+                        </span>
+                    </label>
+                    <label class="severity-option high">
+                        <input type="radio" name="severity" value="High" required>
+                        <span class="severity-label">
+                            <strong>High</strong><br>
+                            <small>Important but not urgent</small>
+                        </span>
+                    </label>
+                    <label class="severity-option medium">
+                        <input type="radio" name="severity" value="Medium" required>
+                        <span class="severity-label">
+                            <strong>Medium</strong><br>
+                            <small>Standard priority alert</small>
+                        </span>
+                    </label>
+                    <label class="severity-option low">
+                        <input type="radio" name="severity" value="Low" required>
+                        <span class="severity-label">
+                            <strong>Low</strong><br>
+                            <small>Informational only</small>
+                        </span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <a href="{{ url_for('admin.alerts') }}" class="btn-secondary-modern">
+                    <i class='bx bx-x'></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn-warning-modern">
+                    <i class='bx bx-plus'></i>
+                    Create Alert
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Form validation and UX enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    const typeOptions = document.querySelectorAll('input[name="type"]');
+    const severityOptions = document.querySelectorAll('input[name="severity"]');
+    
+    // Handle type selection styling
+    typeOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            // Remove selected class from all options
+            document.querySelectorAll('.type-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selected class to current option
+            if (this.checked) {
+                this.closest('.type-option').classList.add('selected');
+            }
+        });
+    });
+    
+    // Handle severity selection styling
+    severityOptions.forEach(option => {
+        option.addEventListener('change', function() {
+            // Remove selected class from all options
+            document.querySelectorAll('.severity-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            // Add selected class to current option
+            if (this.checked) {
+                this.closest('.severity-option').classList.add('selected');
+            }
+        });
+    });
+    
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const type = document.querySelector('input[name="type"]:checked');
+        const severity = document.querySelector('input[name="severity"]:checked');
+        
+        if (!title || !description || !type || !severity) {
+            e.preventDefault();
+            alert('Please fill in all required fields.');
+            return false;
+        }
+        
+        if (description.length < 10) {
+            e.preventDefault();
+            alert('Please provide a more detailed description of the alert.');
+            return false;
+        }
+        
+        // Confirm submission for critical alerts
+        if (severity.value === 'Critical') {
+            if (!confirm('This is marked as a CRITICAL alert. Are you sure you want to create it?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+});
+</script>
+
+<style>
+.type-option.selected,
+.severity-option.selected {
+    border-color: var(--primary-color);
+    background: var(--primary-light);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+</style>
+{% endblock %}

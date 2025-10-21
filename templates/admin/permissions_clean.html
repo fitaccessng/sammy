@@ -1,0 +1,655 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Permissions Management - Construction Management System{% endblock %}
+
+{% block header %}Permissions Management{% endblock %}
+
+{% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --indigo-color: #6366f1;
+        --indigo-light: #eef2ff;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Modern Card Styling */
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+    }
+
+    .modern-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    /* Button Styles */
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+    .btn-primary-modern {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        background: var(--primary-dark);
+        color: white;
+    }
+
+    .btn-danger-modern {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .btn-danger-modern:hover {
+        background: #dc2626;
+    }
+
+    .btn-sm-modern {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    /* Form Styles */
+    .form-input-modern {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .form-input-modern:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .badge-role {
+        background: var(--primary-light);
+        color: var(--primary-dark);
+    }
+
+    .badge-resource {
+        background: var(--success-light);
+        color: #065f46;
+    }
+
+    .badge-action {
+        background: var(--warning-light);
+        color: #92400e;
+    }
+
+    .badge-view { background: var(--success-light); color: #065f46; }
+    .badge-create { background: var(--primary-light); color: var(--primary-dark); }
+    .badge-edit { background: var(--warning-light); color: #92400e; }
+    .badge-delete { background: var(--danger-light); color: #dc2626; }
+    .badge-approve { background: var(--indigo-light); color: var(--indigo-color); }
+
+    /* Table Styles */
+    .table-modern {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table-modern th {
+        background: var(--gray-50);
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .table-modern td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: middle;
+    }
+
+    .table-modern tbody tr:hover {
+        background: var(--gray-50);
+    }
+
+    /* Permission Matrix Styles */
+    .permission-matrix {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .permission-icon {
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        font-weight: bold;
+    }
+
+    /* Action specific colors */
+    .action-view { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+    .action-create { background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; }
+    .action-edit { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+    .action-delete { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+    .action-approve { background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .mobile-hidden {
+            display: none;
+        }
+        
+        .mobile-stack {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .mobile-full {
+            width: 100%;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Permissions Management</h2>
+    <p class="text-gray-600">Define granular access control for roles and resources</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <!-- Total Permissions Card -->
+    <div class="modern-card p-6 border-l-4 border-blue-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Permissions</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ permission_data|length }}</h3>
+                <p class="text-blue-500 text-sm mt-2">
+                    <i class='bx bx-shield-check'></i>
+                    Access rules
+                </p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-full">
+                <i class='bx bxs-shield-check text-2xl text-blue-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resources Card -->
+    <div class="modern-card p-6 border-l-4 border-green-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Protected Resources</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">
+                    {% set unique_resources = permission_data | map(attribute='resource') | list | unique | list %}
+                    {{ unique_resources | length }}
+                </h3>
+                <p class="text-green-500 text-sm mt-2">
+                    <i class='bx bx-lock-alt'></i>
+                    System modules
+                </p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-full">
+                <i class='bx bxs-lock-alt text-2xl text-green-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Card -->
+    <div class="modern-card p-6 border-l-4 border-purple-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Action Types</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">
+                    {% set unique_actions = permission_data | map(attribute='action') | list | unique | list %}
+                    {{ unique_actions | length }}
+                </h3>
+                <p class="text-purple-500 text-sm mt-2">
+                    <i class='bx bx-cog'></i>
+                    Permission levels
+                </p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-full">
+                <i class='bx bxs-cog text-2xl text-purple-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roles with Permissions Card -->
+    <div class="modern-card p-6 border-l-4 border-orange-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Roles with Access</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">
+                    {% set unique_roles = permission_data | map(attribute='role_id') | list | unique | list %}
+                    {{ unique_roles | length }}
+                </h3>
+                <p class="text-orange-500 text-sm mt-2">
+                    <i class='bx bx-user-check'></i>
+                    Authorized roles
+                </p>
+            </div>
+            <div class="bg-orange-100 p-3 rounded-full">
+                <i class='bx bxs-user-check text-2xl text-orange-600'></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Permissions List -->
+    <div class="lg:col-span-2">
+        <div class="modern-card">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class='bx bxs-shield-check mr-2 text-blue-600'></i>
+                        Access Control Matrix
+                    </h3>
+                    <div class="flex space-x-2">
+                        <select id="filterResource" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Resources</option>
+                            {% for resource in permission_data | map(attribute='resource') | list | unique %}
+                            <option value="{{ resource }}">{{ resource|title }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" id="searchPermissions" placeholder="Search permissions..." 
+                               class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="table-modern" id="permissionsTable">
+                        <thead>
+                            <tr>
+                                <th>Role</th>
+                                <th>Resource</th>
+                                <th>Action</th>
+                                <th class="mobile-hidden">Permission Level</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            {% for permission in permission_data %}
+                            <tr class="permission-row hover:bg-gray-50 transition-colors" 
+                                data-role="{{ permission.role_name|lower }}" 
+                                data-resource="{{ permission.resource|lower }}"
+                                data-action="{{ permission.action|lower }}">
+                                <td>
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-semibold text-sm mr-3">
+                                            {{ permission.role_name[:2].upper() }}
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">{{ permission.role_name }}</div>
+                                            <div class="text-xs text-gray-500">
+                                                <span class="status-badge badge-role">Role</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center">
+                                        <div class="w-8 h-8 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-xs mr-3">
+                                            <i class='bx bx-lock-alt'></i>
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">{{ permission.resource|title }}</div>
+                                            <div class="text-xs text-gray-500">
+                                                <span class="status-badge badge-resource">Resource</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex items-center">
+                                        <div class="permission-icon action-{{ permission.action }} mr-3">
+                                            {% if permission.action == 'view' %}
+                                                <i class='bx bx-show'></i>
+                                            {% elif permission.action == 'create' %}
+                                                <i class='bx bx-plus'></i>
+                                            {% elif permission.action == 'edit' %}
+                                                <i class='bx bx-edit'></i>
+                                            {% elif permission.action == 'delete' %}
+                                                <i class='bx bx-trash'></i>
+                                            {% elif permission.action == 'approve' %}
+                                                <i class='bx bx-check'></i>
+                                            {% else %}
+                                                <i class='bx bx-cog'></i>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <div class="text-sm font-medium text-gray-900">{{ permission.action|title }}</div>
+                                            <div class="text-xs text-gray-500">
+                                                <span class="status-badge badge-{{ permission.action }}">{{ permission.action }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="mobile-hidden">
+                                    <div class="permission-matrix text-sm text-gray-500">
+                                        <i class='bx bx-user text-gray-400'></i>
+                                        <i class='bx bx-right-arrow-alt text-gray-400'></i>
+                                        <span class="text-blue-600 font-medium">{{ permission.action }}</span>
+                                        <i class='bx bx-right-arrow-alt text-gray-400'></i>
+                                        <span class="text-green-600 font-medium">{{ permission.resource }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    <button onclick="deletePermission({{ permission.id }}, '{{ permission.role_name }}', '{{ permission.resource }}', '{{ permission.action }}')" 
+                                            class="btn-danger-modern btn-sm-modern" 
+                                            title="Remove Permission">
+                                        <i class='bx bx-trash mr-1'></i>
+                                        Remove
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    
+                    {% if not permission_data %}
+                    <div class="text-center py-12">
+                        <i class='bx bx-shield-check text-6xl text-gray-300 mb-4'></i>
+                        <h3 class="text-lg font-medium text-gray-900 mb-2">No permissions found</h3>
+                        <p class="text-gray-500">Create your first permission rule using the form on the right.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Permission Panel -->
+    <div class="lg:col-span-1">
+        <div class="modern-card">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class='bx bxs-plus-square mr-2 text-green-600'></i>
+                    Grant Permission
+                </h3>
+            </div>
+            <div class="p-6">
+                <form id="addPermissionForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="roleId" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-user-check text-blue-600 mr-1'></i>
+                                Select Role
+                            </label>
+                            <select id="roleId" name="role_id" required class="form-input-modern">
+                                <option value="">Choose role...</option>
+                                {% for role in roles %}
+                                <option value="{{ role.id }}">{{ role.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="resource" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-lock-alt text-green-600 mr-1'></i>
+                                Resource/Module
+                            </label>
+                            <select id="resource" name="resource" required class="form-input-modern">
+                                <option value="">Choose resource...</option>
+                                <option value="employees">👥 Employees</option>
+                                <option value="payroll">💰 Payroll</option>
+                                <option value="procurement">📦 Procurement</option>
+                                <option value="projects">🏗️ Projects</option>
+                                <option value="finance">💳 Finance</option>
+                                <option value="reports">📊 Reports</option>
+                                <option value="admin">⚙️ Admin</option>
+                                <option value="assets">🏢 Assets</option>
+                                <option value="inventory">📋 Inventory</option>
+                                <option value="safety">🦺 Safety</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label for="action" class="block text-sm font-medium text-gray-700 mb-2">
+                                <i class='bx bx-cog text-purple-600 mr-1'></i>
+                                Permission Level
+                            </label>
+                            <select id="action" name="action" required class="form-input-modern">
+                                <option value="">Choose action...</option>
+                                <option value="view">👁️ View - Read access only</option>
+                                <option value="create">➕ Create - Add new records</option>
+                                <option value="edit">✏️ Edit - Modify existing data</option>
+                                <option value="delete">🗑️ Delete - Remove records</option>
+                                <option value="approve">✅ Approve - Authorization rights</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Permission Preview -->
+                        <div id="permissionPreview" class="hidden bg-blue-50 p-4 rounded-lg border border-blue-200">
+                            <h4 class="text-sm font-medium text-blue-900 mb-2">Permission Preview:</h4>
+                            <div class="flex items-center text-sm text-blue-700">
+                                <span id="previewRole" class="font-medium bg-blue-200 px-2 py-1 rounded mr-2">Role</span>
+                                <span>can</span>
+                                <span id="previewAction" class="font-medium bg-green-200 px-2 py-1 rounded mx-2">action</span>
+                                <span id="previewResource" class="font-medium bg-purple-200 px-2 py-1 rounded">resource</span>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="w-full btn-primary-modern">
+                            <i class='bx bx-plus mr-2'></i>
+                            Grant Permission
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Permission Summary -->
+        <div class="modern-card mt-6">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class='bx bxs-bar-chart-alt-2 mr-2 text-purple-600'></i>
+                    Permission Summary
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">View Permissions</span>
+                        <span class="font-semibold text-gray-900">{{ permission_data | selectattr('action', 'equalto', 'view') | list | length }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Create Permissions</span>
+                        <span class="font-semibold text-gray-900">{{ permission_data | selectattr('action', 'equalto', 'create') | list | length }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Edit Permissions</span>
+                        <span class="font-semibold text-gray-900">{{ permission_data | selectattr('action', 'equalto', 'edit') | list | length }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Delete Permissions</span>
+                        <span class="font-semibold text-gray-900">{{ permission_data | selectattr('action', 'equalto', 'delete') | list | length }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-600">Approve Permissions</span>
+                        <span class="font-semibold text-gray-900">{{ permission_data | selectattr('action', 'equalto', 'approve') | list | length }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchPermissions').addEventListener('input', filterPermissions);
+document.getElementById('filterResource').addEventListener('change', filterPermissions);
+
+function filterPermissions() {
+    const searchTerm = document.getElementById('searchPermissions').value.toLowerCase();
+    const resourceFilter = document.getElementById('filterResource').value.toLowerCase();
+    const rows = document.querySelectorAll('.permission-row');
+    
+    rows.forEach(row => {
+        const role = row.dataset.role;
+        const resource = row.dataset.resource;
+        const action = row.dataset.action;
+        
+        const matchesSearch = role.includes(searchTerm) || resource.includes(searchTerm) || action.includes(searchTerm);
+        const matchesResource = !resourceFilter || resource === resourceFilter;
+        
+        if (matchesSearch && matchesResource) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Permission preview
+document.getElementById('roleId').addEventListener('change', updatePermissionPreview);
+document.getElementById('resource').addEventListener('change', updatePermissionPreview);
+document.getElementById('action').addEventListener('change', updatePermissionPreview);
+
+function updatePermissionPreview() {
+    const roleSelect = document.getElementById('roleId');
+    const resourceSelect = document.getElementById('resource');
+    const actionSelect = document.getElementById('action');
+    const preview = document.getElementById('permissionPreview');
+    const previewRole = document.getElementById('previewRole');
+    const previewResource = document.getElementById('previewResource');
+    const previewAction = document.getElementById('previewAction');
+    
+    if (roleSelect.value && resourceSelect.value && actionSelect.value) {
+        const roleName = roleSelect.options[roleSelect.selectedIndex].text;
+        const resourceName = resourceSelect.options[resourceSelect.selectedIndex].text.split(' ')[1]; // Remove emoji
+        const actionName = actionSelect.options[actionSelect.selectedIndex].text.split(' ')[1]; // Remove emoji
+        
+        previewRole.textContent = roleName;
+        previewResource.textContent = resourceName;
+        previewAction.textContent = actionName;
+        preview.classList.remove('hidden');
+    } else {
+        preview.classList.add('hidden');
+    }
+}
+
+// Form submission
+document.getElementById('addPermissionForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    data.role_id = parseInt(data.role_id);
+    
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    fetch('/admin/permissions', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Permission granted successfully!');
+            location.reload();
+        } else {
+            alert('Error granting permission: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error granting permission');
+    });
+});
+
+// Delete permission
+function deletePermission(permissionId, roleName, resource, action) {
+    if (confirm(`Are you sure you want to remove ${action} permission for ${resource} from ${roleName}?`)) {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        
+        fetch(`/admin/permissions/${permissionId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('Permission removed successfully!');
+                location.reload();
+            } else {
+                alert('Error removing permission: ' + (data.message || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error removing permission. Please check if the DELETE endpoint is implemented.');
+        });
+    }
+}
+</script>
+{% endblock %}

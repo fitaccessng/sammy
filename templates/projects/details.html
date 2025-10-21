@@ -11,32 +11,124 @@
             <div class="flex items-center justify-between">
                 <div>
                     <h2 class="text-2xl font-bold text-gray-900">{{ project.name }}</h2>
-                    <p class="mt-1 text-sm text-gray-500">Created on {{ project.created_at }}</p>
+                    <p class="mt-1 text-sm text-gray-500">
+                        Created on {{ project.created_at.strftime('%B %d, %Y') }}
+                        {% if project.project_manager %}
+                        • Managed by {{ project.project_manager }}
+                        {% endif %}
+                    </p>
+                    {% if project.description %}
+                    <p class="mt-2 text-gray-600">{{ project.description }}</p>
+                    {% endif %}
                 </div>
                 <div class="flex space-x-3">
                     <a href="{{ url_for('project.edit_project', project_id=project.id) }}" 
                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                         Edit Project
                     </a>
-                    <button onclick="confirmDelete()" 
-                            class="px-4 py-2 border border-red-300 text-red-700 rounded-lg hover:bg-red-50">
-                        Delete Project
-                    </button>
                 </div>
             </div>
 
-            <!-- Status Badge -->
-            <div class="mt-4">
+            <!-- Status and Health Badges -->
+            <div class="mt-4 flex space-x-3">
                 <span class="px-3 py-1 text-sm font-semibold rounded-full 
                       {% if project.status == 'Active' %}bg-green-100 text-green-800
                       {% elif project.status == 'Planning' %}bg-yellow-100 text-yellow-800
+                      {% elif project.status == 'Completed' %}bg-blue-100 text-blue-800
                       {% else %}bg-gray-100 text-gray-800{% endif %}">
                     {{ project.status }}
                 </span>
+                
+                <span class="px-3 py-1 text-sm font-semibold rounded-full 
+                      {% if health_status == 'Good' %}bg-green-100 text-green-800
+                      {% elif health_status == 'Warning' %}bg-orange-100 text-orange-800
+                      {% elif health_status == 'Critical' %}bg-red-100 text-red-800
+                      {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    Health: {{ health_status }}
+                </span>
+                
+                {% if is_overdue %}
+                <span class="px-3 py-1 text-sm font-semibold rounded-full bg-red-100 text-red-800">
+                    Overdue by {{ days_remaining }} days
+                </span>
+                {% elif days_remaining is not none %}
+                <span class="px-3 py-1 text-sm font-semibold rounded-full bg-blue-100 text-blue-800">
+                    {{ days_remaining }} days remaining
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="mt-4">
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-600">Overall Progress</span>
+                    <span class="font-medium" data-progress-text>{{ progress }}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-indigo-600 h-3 rounded-full transition-all duration-300" 
+                         data-progress-bar
+                         style="width: {{ progress }}%"></div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Project Metrics Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Milestones</p>
+                    <h3 class="text-2xl font-bold text-gray-800" data-metric="milestones">{{ completed_milestones }}/{{ milestone_count }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-flag text-2xl text-blue-600'></i>
+                </div>
+            </div>
+            {% if overdue_milestones > 0 %}
+            <p class="text-xs text-red-600 mt-1">{{ overdue_milestones }} overdue</p>
+            {% endif %}
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Tasks</p>
+                    <h3 class="text-2xl font-bold text-gray-800" data-metric="tasks">{{ completed_tasks }}/{{ task_count }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-task text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Team Members</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ team_size }}</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-group text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Budget Used</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ budget_utilization }}%</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-wallet text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+            {% if budget_utilization > 80 %}
+            <p class="text-xs text-orange-600 mt-1">High utilization</p>
+            {% endif %}
+        </div>
+    </div>
     <!-- Project Details Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <!-- Staff Assignments -->
@@ -50,33 +142,175 @@
                     </button>
                 </div>
                 <div class="space-y-4">
-                    {% for role, name in project.staff.items() %}
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-sm font-medium text-gray-900">{{ role }}</p>
-                            <p class="text-sm text-gray-500">{{ name }}</p>
+                    {% if staff_assignments %}
+                        {% for assignment_data in staff_assignments %}
+                        {% set assignment = assignment_data.assignment %}
+                        {% set staff_name = assignment_data.staff_name %}
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="text-sm font-medium text-gray-900">{{ assignment.role }}</p>
+                                <p class="text-sm text-gray-500">{{ staff_name }}</p>
+                                <p class="text-xs text-gray-400">
+                                    Assigned {{ assignment.assigned_at.strftime('%B %d, %Y') }}
+                                </p>
+                            </div>
+                            <button class="text-sm text-gray-600 hover:text-gray-900 px-2 py-1 rounded border">
+                                <i class='bx bx-edit'></i>
+                            </button>
                         </div>
-                        <button class="text-sm text-gray-600 hover:text-gray-900">Change</button>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
+                        
+                        <!-- Role Summary -->
+                        {% if team_roles %}
+                        <div class="mt-4 pt-4 border-t">
+                            <h4 class="text-sm font-medium text-gray-700 mb-2">Team Composition</h4>
+                            <div class="space-y-1">
+                                {% for role, count in team_roles.items() %}
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">{{ role }}:</span>
+                                    <span class="font-medium">{{ count }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-gray-500 text-sm">No staff assigned yet</p>
+                            <button id="assignFirstStaffBtn" 
+                                    class="mt-2 text-sm text-indigo-600 hover:text-indigo-900">
+                                Assign First Staff Member
+                            </button>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
 
-        <!-- Quick Stats -->
+        <!-- Project Information -->
         <div class="bg-white rounded-lg shadow">
             <div class="p-6">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Stats</h3>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <p class="text-sm text-gray-500">Tasks Completed</p>
-                        <p class="mt-1 text-2xl font-semibold text-gray-900">12/24</p>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Information</h3>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Start Date</p>
+                            <p class="text-sm font-medium text-gray-900">
+                                {{ project.start_date.strftime('%B %d, %Y') if project.start_date else 'Not set' }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">End Date</p>
+                            <p class="text-sm font-medium {% if is_overdue %}text-red-600{% else %}text-gray-900{% endif %}">
+                                {{ project.end_date.strftime('%B %d, %Y') if project.end_date else 'Not set' }}
+                            </p>
+                        </div>
                     </div>
-                    <div class="p-4 bg-gray-50 rounded-lg">
-                        <p class="text-sm text-gray-500">Team Members</p>
-                        <p class="mt-1 text-2xl font-semibold text-gray-900">8</p>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Total Budget</p>
+                            <p class="text-sm font-medium text-gray-900">
+                                ₦{{ "{:,.0f}".format(total_budget) if total_budget else 'Not set' }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Amount Spent</p>
+                            <p class="text-sm font-medium text-gray-900">
+                                ₦{{ "{:,.0f}".format(spent_amount) }}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500">Remaining Budget</p>
+                            <p class="text-sm font-medium {% if remaining_budget < 0 %}text-red-600{% else %}text-gray-900{% endif %}">
+                                ₦{{ "{:,.0f}".format(remaining_budget) }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Budget Health</p>
+                            <p class="text-sm font-medium {% if budget_utilization > 90 %}text-red-600{% elif budget_utilization > 70 %}text-orange-600{% else %}text-green-600{% endif %}">
+                                {{ budget_utilization }}% utilized
+                            </p>
+                        </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Recent Milestones -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Milestones</h3>
+                {% if recent_milestones %}
+                <div class="space-y-3">
+                    {% for milestone in recent_milestones %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ milestone.title }}</p>
+                            <p class="text-xs text-gray-500">
+                                Due: {{ milestone.due_date.strftime('%B %d, %Y') }}
+                            </p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                              {% if milestone.status == 'Completed' %}bg-green-100 text-green-800
+                              {% elif milestone.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                              {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ milestone.status }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-gray-500 text-sm">No milestones defined</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Tasks -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Tasks</h3>
+                {% if recent_tasks %}
+                <div class="space-y-3">
+                    {% for task in recent_tasks %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
+                            <p class="text-xs text-gray-500">
+                                Updated: {{ task.updated_at.strftime('%B %d, %Y') }}
+                            </p>
+                            {% if task.percent_complete > 0 %}
+                            <div class="mt-1">
+                                <div class="w-full bg-gray-200 rounded-full h-1">
+                                    <div class="bg-blue-600 h-1 rounded-full" 
+                                         style="width: {{ task.percent_complete }}%"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                              {% if task.status == 'completed' %}bg-green-100 text-green-800
+                              {% elif task.status == 'in_progress' %}bg-blue-100 text-blue-800
+                              {% elif task.status == 'pending' %}bg-yellow-100 text-yellow-800
+                              {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ task.status.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-gray-500 text-sm">No tasks created</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -90,7 +324,7 @@
             <p class="mt-1 text-sm text-gray-500">View project milestones and timeline</p>
         </a>
 
-        <a href="{{ url_for('project.project_reports', project_id=project.id) }}" 
+        <a href="{{ url_for('project.reports') }}" 
            class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
             <i class="bx bx-file text-2xl text-indigo-600"></i>
             <h3 class="mt-2 text-lg font-medium text-gray-900">Reports</h3>
@@ -141,60 +375,148 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const projectId = {{ project.id }};
     const modal = document.getElementById('assignStaffModal');
     const openModal = document.getElementById('assignStaffBtn');
+    const openModalFirst = document.getElementById('assignFirstStaffBtn');
     const closeModal = document.querySelector('button.closeModal');
     const form = document.getElementById('assignStaffForm');
 
     // Modal controls
-    openModal.addEventListener('click', () => modal.classList.remove('hidden'));
-    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
+    if (openModal) {
+        openModal.addEventListener('click', () => modal.classList.remove('hidden'));
+    }
+    if (openModalFirst) {
+        openModalFirst.addEventListener('click', () => modal.classList.remove('hidden'));
+    }
+    if (closeModal) {
+        closeModal.addEventListener('click', () => modal.classList.add('hidden'));
+    }
     modal.addEventListener('click', (e) => {
         if (e.target === modal) modal.classList.add('hidden');
     });
 
     // Form submission
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        
-        try {
-            const response = await fetch(`/projects/${projectId}/assign-staff`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify(Object.fromEntries(formData))
-            });
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            try {
+                const response = await fetch(`/project/${projectId}/assign-staff`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content || '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({
+                        role: formData.get('role'),
+                        name: formData.get('name')
+                    })
+                });
 
-            const data = await response.json();
-            if (data.status === 'success') {
-                window.location.reload();
+                const data = await response.json();
+                if (data.status === 'success') {
+                    showNotification('Staff assigned successfully!', 'success');
+                    window.location.reload();
+                } else {
+                    showNotification('Error: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Error assigning staff: ' + error.message, 'error');
             }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    });
+        });
+    }
 
     // Delete confirmation
     window.confirmDelete = function() {
         if (confirm('Are you sure you want to delete this project?')) {
-            fetch(`/projects/${projectId}/delete`, {
+            fetch(`/project/${projectId}/delete`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content || '{{ csrf_token }}'
                 }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    window.location.href = '/projects';
+                    showNotification('Project deleted successfully!', 'success');
+                    window.location.href = '/project';
+                } else {
+                    showNotification('Error: ' + (data.error || 'Unknown error'), 'error');
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error deleting project: ' + error.message, 'error');
+            });
         }
     };
+
+    // Notification function
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500 text-white' : 
+            type === 'error' ? 'bg-red-500 text-white' : 
+            'bg-blue-500 text-white'
+        }`;
+        
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <i class='bx ${
+                    type === 'success' ? 'bx-check-circle' : 
+                    type === 'error' ? 'bx-error-circle' : 
+                    'bx-info-circle'
+                } mr-2'></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+
+    // Auto-refresh progress indicators every 30 seconds
+    setInterval(async function() {
+        try {
+            const response = await fetch(`/project/api/projects/${projectId}/progress`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.status === 'success') {
+                    // Update progress bar
+                    const progressBar = document.querySelector('[data-progress-bar]');
+                    const progressText = document.querySelector('[data-progress-text]');
+                    if (progressBar && progressText) {
+                        progressBar.style.width = data.progress + '%';
+                        progressText.textContent = data.progress + '%';
+                    }
+                    
+                    // Update metrics
+                    if (data.milestones_completed !== undefined) {
+                        const milestoneElement = document.querySelector('[data-metric="milestones"]');
+                        if (milestoneElement) {
+                            milestoneElement.textContent = `${data.milestones_completed}/${data.milestone_count}`;
+                        }
+                    }
+                    
+                    if (data.tasks_completed !== undefined) {
+                        const taskElement = document.querySelector('[data-metric="tasks"]');
+                        if (taskElement) {
+                            taskElement.textContent = `${data.tasks_completed}/${data.task_count}`;
+                        }
+                    }
+                }
+            }
+        } catch (error) {
+            // Silently fail - don't show notifications for background updates
+            console.debug('Progress update failed:', error);
+        }
+    }, 30000);
 });
 </script>
 {% endblock %}

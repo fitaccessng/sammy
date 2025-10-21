@@ -1,43 +1,114 @@
 {% extends "hr/base.html" %}
 
 {% block title %}HR Reports | SammyA HR{% endblock %}
-{% block header %}HR Reports{% endblock %}
+{% block header %}HR Reports & Analytics{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
+    <!-- Report Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Available Reports</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ reports.stats.total_reports }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-file text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Total Downloads</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ reports.stats.total_downloads }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-download text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Pending Reports</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ reports.stats.pending_reports }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-time text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Storage Used</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ reports.stats.storage_used }}</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-hdd text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Generate Report Section -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Generate Report</h3>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class='bx bx-plus-circle mr-2'></i>Generate New Report
+            </h3>
             <form id="generateReportForm" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Report Type</label>
-                    <select id="reportType" class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    <label class="block text-sm font-medium text-gray-700">Report Type *</label>
+                    <select id="reportType" name="type" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Report Type</option>
                         <option value="attendance">Attendance Report</option>
                         <option value="leave">Leave Statistics</option>
                         <option value="payroll">Payroll Summary</option>
+                        <option value="employee">Employee Directory</option>
                         <option value="performance">Performance Review</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Date Range</label>
+                    <label class="block text-sm font-medium text-gray-700">Department</label>
+                    <select id="departmentId" name="department_id" class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        {% for dept in reports.departments %}
+                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Date Range *</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <input type="date" id="startDate" class="block p-2 border w-full rounded-md border-gray-300 shadow-sm">
-                        <input type="date" id="endDate" class="block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                        <input type="date" id="startDate" name="start_date" required class="block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <input type="date" id="endDate" name="end_date" required class="block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Format</label>
-                    <select id="format" class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
-                        <option value="pdf">PDF</option>
-                        <option value="excel">Excel</option>
+                    <label class="block text-sm font-medium text-gray-700">Format *</label>
+                    <select id="format" name="format" required class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="PDF">PDF</option>
+                        <option value="Excel">Excel</option>
                     </select>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                    Generate Report
+                <button type="submit" id="generateBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50">
+                    <span id="generateText">
+                        <i class='bx bx-play mr-2'></i>Generate Report
+                    </span>
+                    <span id="generatingText" class="hidden">
+                        <i class='bx bx-loader bx-spin mr-2'></i>Generating...
+                    </span>
                 </button>
             </form>
         </div>
@@ -45,27 +116,69 @@
         <!-- Available Reports -->
         <div class="md:col-span-2 bg-white rounded-lg shadow">
             <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Available Reports</h3>
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class='bx bx-file-blank mr-2'></i>Available Reports
+                </h3>
             </div>
             <div class="p-6">
                 <div class="space-y-4">
+                    {% if reports.available_reports %}
                     {% for report in reports.available_reports %}
-                    <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-                        <div>
-                            <h4 class="text-sm font-medium text-gray-900">{{ report.title }}</h4>
-                            <p class="text-xs text-gray-500">Last generated: {{ report.last_generated }}</p>
+                    <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                        <div class="flex-1">
+                            <div class="flex items-center justify-between">
+                                <h4 class="text-sm font-medium text-gray-900">{{ report.title }}</h4>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                    {% if report.format == 'PDF' %}bg-red-100 text-red-800
+                                    {% elif report.format == 'Excel' %}bg-green-100 text-green-800
+                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {{ report.format }}
+                                </span>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                {{ report.description }}
+                            </p>
+                            <p class="text-xs text-gray-400 mt-1">
+                                <i class='bx bx-calendar mr-1'></i>Last generated: {{ report.last_generated }}
+                                {% if report.record_count %}
+                                <span class="ml-3">
+                                    <i class='bx bx-data mr-1'></i>{{ report.record_count }} records
+                                </span>
+                                {% endif %}
+                            </p>
                         </div>
-                        <div class="flex items-center space-x-2">
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
-                                {{ report.format }}
-                            </span>
-                            <button onclick="downloadReport({{ report.id }})" 
-                                    class="text-blue-600 hover:text-blue-800">
-                                <i class='bx bx-download'></i>
+                        <div class="flex items-center space-x-2 ml-4">
+                            <button data-report-id="{{ report.id }}" data-report-type="{{ report.type }}" 
+                                    class="view-details-btn text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-50 transition-colors"
+                                    title="View Report Details">
+                                <i class='bx bx-show text-lg'></i>
                             </button>
+                            <button data-report-id="{{ report.id }}" data-report-type="{{ report.type }}" 
+                                    class="download-report-btn text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-50 transition-colors"
+                                    title="Download Report">
+                                <i class='bx bx-download text-lg'></i>
+                            </button>
+                            <button data-report-id="{{ report.id }}" data-report-type="{{ report.type }}"
+                                    class="regenerate-report-btn text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-50 transition-colors"
+                                    title="Regenerate Report">
+                                <i class='bx bx-refresh text-lg'></i>
+                            </button>
+                            <button data-report-id="{{ report.id }}" data-report-type="{{ report.type }}"
+                                    class="send-admin-btn text-orange-600 hover:text-orange-800 p-2 rounded-full hover:bg-orange-50 transition-colors"
+                                    title="Send to Admin">
+                                <i class='bx bx-paper-plane text-lg'></i>
+                            </button>
+                        </div>
                         </div>
                     </div>
                     {% endfor %}
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class='bx bx-file text-4xl text-gray-400'></i>
+                        <p class="text-gray-500 mt-2">No reports available</p>
+                        <p class="text-sm text-gray-400">Generate your first report using the form above</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -74,27 +187,146 @@
     <!-- Recent Downloads -->
     <div class="bg-white rounded-lg shadow">
         <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Recent Downloads</h3>
+            <h3 class="text-lg font-semibold text-gray-800">
+                <i class='bx bx-history mr-2'></i>Recent Downloads
+            </h3>
         </div>
         <div class="p-6">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead>
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Report Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Downloaded By</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date & Time</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200">
-                    {% for download in reports.recent_downloads %}
-                    <tr>
-                        <td class="px-6 py-4 text-sm text-gray-900">{{ download.report_name }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900">{{ download.downloaded_by }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ download.downloaded_at }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            {% if reports.recent_downloads %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Downloaded By</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Size</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for download in reports.recent_downloads %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class='bx bx-file mr-2 text-gray-400'></i>
+                                    <span class="text-sm font-medium text-gray-900">{{ download.report_name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <i class='bx bx-user mr-2 text-gray-400'></i>
+                                    <span class="text-sm text-gray-900">{{ download.downloaded_by }}</span>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <i class='bx bx-time mr-1'></i>{{ download.downloaded_at }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {% if download.file_size %}
+                                <i class='bx bx-hdd mr-1'></i>{{ download.file_size }}
+                                {% else %}
+                                <span class="text-gray-400">--</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                <button class="text-blue-600 hover:text-blue-800 mr-2" title="Download Again">
+                                    <i class='bx bx-download'></i>
+                                </button>
+                                <button class="text-red-600 hover:text-red-800" title="Delete">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <i class='bx bx-download text-4xl text-gray-400'></i>
+                <p class="text-gray-500 mt-2">No recent downloads</p>
+                <p class="text-sm text-gray-400">Download history will appear here</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Report Generation Status Modal -->
+    <div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Report Generation Status</h3>
+                <button onclick="closeStatusModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-xl'></i>
+                </button>
+            </div>
+            <div id="statusContent" class="space-y-4">
+                <!-- Status content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Details Modal -->
+    <div id="reportDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Report Details</h3>
+                <button onclick="closeReportDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-xl'></i>
+                </button>
+            </div>
+            <div id="reportDetailsContent" class="space-y-4">
+                <!-- Report details content will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Send to Admin Modal -->
+    <div id="sendAdminModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Send Report to Admin</h3>
+                <button onclick="closeSendAdminModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-xl'></i>
+                </button>
+            </div>
+            <form id="sendAdminForm" class="space-y-4">
+                <input type="hidden" id="sendReportId" name="report_id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Report</label>
+                    <div id="sendReportInfo" class="mt-1 p-3 bg-gray-50 rounded-md text-sm text-gray-600">
+                        <!-- Report info will be populated -->
+                    </div>
+                </div>
+
+                <div>
+                    <label for="priority" class="block text-sm font-medium text-gray-700">Priority</label>
+                    <select id="priority" name="priority" class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label for="adminMessage" class="block text-sm font-medium text-gray-700">Message to Admin</label>
+                    <textarea id="adminMessage" name="message" rows="4" 
+                              class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              placeholder="Please provide any context or special instructions for this report..."></textarea>
+                </div>
+
+                <div class="flex space-x-3">
+                    <button type="submit" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                        <i class='bx bx-paper-plane mr-2'></i>Send to Admin
+                    </button>
+                    <button type="button" onclick="closeSendAdminModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Cancel
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -103,26 +335,47 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const generateReportForm = document.getElementById('generateReportForm');
+    const generateBtn = document.getElementById('generateBtn');
+    const generateText = document.getElementById('generateText');
+    const generatingText = document.getElementById('generatingText');
     
+    // Set default date range to current month
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    document.getElementById('startDate').value = firstDay.toISOString().split('T')[0];
+    document.getElementById('endDate').value = lastDay.toISOString().split('T')[0];
+    
+    // Form submission handling
     if (generateReportForm) {
         generateReportForm.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            const data = {
-                type: document.getElementById('reportType').value,
-                date_range: {
-                    start: document.getElementById('startDate').value,
-                    end: document.getElementById('endDate').value
-                },
-                format: document.getElementById('format').value
-            };
+            // Show loading state
+            generateBtn.disabled = true;
+            generateText.classList.add('hidden');
+            generatingText.classList.remove('hidden');
             
             try {
-                const response = await fetch('/hr/api/reports/generate', {
+                const formData = new FormData(generateReportForm);
+                
+                const data = {
+                    type: formData.get('type'),
+                    date_range: {
+                        start: formData.get('start_date'),
+                        end: formData.get('end_date')
+                    },
+                    format: formData.get('format'),
+                    department_id: formData.get('department_id'),
+                    csrf_token: formData.get('csrf_token')
+                };
+                
+                const response = await fetch('{{ url_for("hr.generate_report") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content
+                        'X-Requested-With': 'XMLHttpRequest'
                     },
                     body: JSON.stringify(data)
                 });
@@ -130,25 +383,443 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    alert('Report generation started. You will be notified when it\'s ready.');
+                    showNotification('Report generated successfully!', 'success');
+                    showReportStatus(result);
+                    
+                    // Reset form
+                    generateReportForm.reset();
+                    
+                    // Refresh page after a delay to show new report
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 3000);
                 } else {
-                    throw new Error(result.message);
+                    throw new Error(result.message || 'Unknown error occurred');
                 }
             } catch (error) {
-                alert('Error generating report: ' + error.message);
+                console.error('Error:', error);
+                showNotification('Error generating report: ' + error.message, 'error');
+            } finally {
+                // Reset button state
+                generateBtn.disabled = false;
+                generateText.classList.remove('hidden');
+                generatingText.classList.add('hidden');
             }
         });
     }
     
-    window.downloadReport = async function(reportId) {
-        try {
-            // Implement report download logic here
-            alert('Downloading report...');
-        } catch (error) {
-            alert('Error downloading report: ' + error.message);
+    // Download report functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.download-report-btn')) {
+            const btn = e.target.closest('.download-report-btn');
+            const reportId = btn.dataset.reportId;
+            const reportType = btn.dataset.reportType;
+            downloadReport(reportId, reportType);
         }
-    }
+        
+        if (e.target.closest('.regenerate-report-btn')) {
+            const btn = e.target.closest('.regenerate-report-btn');
+            const reportType = btn.dataset.reportType;
+            regenerateReport(reportType);
+        }
+        
+        if (e.target.closest('.view-details-btn')) {
+            const btn = e.target.closest('.view-details-btn');
+            const reportId = btn.dataset.reportId;
+            viewReportDetails(reportId);
+        }
+        
+        if (e.target.closest('.send-admin-btn')) {
+            const btn = e.target.closest('.send-admin-btn');
+            const reportId = btn.dataset.reportId;
+            // Get report title from the card
+            const reportCard = btn.closest('.flex.items-center.justify-between');
+            const reportTitle = reportCard.querySelector('h4').textContent;
+            openSendAdminModal(reportId, reportTitle);
+        }
+    });
+    
+    // Send to admin form submission
+    document.getElementById('sendAdminForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const reportId = formData.get('report_id');
+        
+        const data = {
+            message: formData.get('message'),
+            priority: formData.get('priority')
+        };
+        
+        await sendReportToAdmin(reportId, data);
+    });
 });
+
+// Download report function
+async function downloadReport(reportId, reportType) {
+    try {
+        showNotification('Preparing download...', 'info');
+        
+        // In a real system, this would use the job_id from report generation
+        // For now, we'll simulate a download
+        const response = await fetch(`/hr/api/reports/download/${reportId}`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        });
+        
+        if (response.ok) {
+            // Create download link
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `${reportType}_report_${new Date().toISOString().split('T')[0]}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showNotification('Report downloaded successfully!', 'success');
+        } else {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Download failed');
+        }
+    } catch (error) {
+        console.error('Download error:', error);
+        showNotification('Error downloading report: ' + error.message, 'error');
+    }
+}
+
+// Regenerate report function
+function regenerateReport(reportType) {
+    // Pre-fill the form with the report type
+    document.getElementById('reportType').value = reportType;
+    
+    // Scroll to form
+    document.getElementById('generateReportForm').scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'start'
+    });
+    
+    showNotification(`Form pre-filled for ${reportType} report. Adjust settings and click Generate.`, 'info');
+}
+
+// Show report generation status
+function showReportStatus(result) {
+    const statusContent = document.getElementById('statusContent');
+    
+    statusContent.innerHTML = `
+        <div class="flex items-center space-x-3">
+            <div class="flex-shrink-0">
+                <i class='bx bx-check-circle text-green-500 text-2xl'></i>
+            </div>
+            <div>
+                <h4 class="text-sm font-medium text-gray-900">Report Generated Successfully</h4>
+                <p class="text-sm text-gray-500">${result.message}</p>
+            </div>
+        </div>
+        
+        <div class="bg-gray-50 rounded-lg p-4">
+            <dl class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                <dt class="text-gray-500">Job ID:</dt>
+                <dd class="text-gray-900 font-mono">${result.job_id}</dd>
+                
+                <dt class="text-gray-500">Records:</dt>
+                <dd class="text-gray-900">${result.record_count.toLocaleString()}</dd>
+                
+                <dt class="text-gray-500">Est. Size:</dt>
+                <dd class="text-gray-900">${result.estimated_size}</dd>
+            </dl>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button onclick="closeStatusModal()" 
+                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400">
+                Close
+            </button>
+            <button onclick="downloadGeneratedReport('${result.job_id}')" 
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                <i class='bx bx-download mr-2'></i>Download Now
+            </button>
+        </div>
+    `;
+    
+    // Show modal
+    document.getElementById('statusModal').classList.remove('hidden');
+    document.getElementById('statusModal').classList.add('flex');
+}
+
+// Download generated report
+async function downloadGeneratedReport(jobId) {
+    try {
+        const response = await fetch(`/hr/api/reports/download/${jobId}`, {
+            method: 'GET'
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = `report_${jobId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showNotification('Report downloaded successfully!', 'success');
+            closeStatusModal();
+        } else {
+            throw new Error('Download failed');
+        }
+    } catch (error) {
+        showNotification('Error downloading report: ' + error.message, 'error');
+    }
+}
+
+// Close status modal
+function closeStatusModal() {
+    document.getElementById('statusModal').classList.add('hidden');
+    document.getElementById('statusModal').classList.remove('flex');
+}
+
+// View report details
+async function viewReportDetails(reportId) {
+    try {
+        const response = await fetch(`/hr/api/reports/${reportId}/view`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            displayReportDetails(result.report);
+            document.getElementById('reportDetailsModal').classList.remove('hidden');
+            document.getElementById('reportDetailsModal').classList.add('flex');
+        } else {
+            showNotification('Error loading report details: ' + result.error, 'error');
+        }
+    } catch (error) {
+        showNotification('Error loading report details: ' + error.message, 'error');
+    }
+}
+
+// Display report details in modal
+function displayReportDetails(report) {
+    const content = document.getElementById('reportDetailsContent');
+    
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN'
+        }).format(amount);
+    };
+    
+    content.innerHTML = `
+        <div class="space-y-6">
+            <!-- Report Header -->
+            <div class="border-b pb-4">
+                <div class="flex items-center justify-between">
+                    <h4 class="text-lg font-semibold text-gray-900">${report.title}</h4>
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full 
+                        ${report.format === 'PDF' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}">
+                        ${report.format}
+                    </span>
+                </div>
+                <p class="text-sm text-gray-600 mt-2">${report.details}</p>
+                <div class="flex items-center mt-2 text-xs text-gray-500">
+                    <i class='bx bx-calendar mr-1'></i>
+                    <span>Period: ${report.period}</span>
+                    <span class="mx-2">•</span>
+                    <i class='bx bx-time mr-1'></i>
+                    <span>Generated: ${new Date(report.generated_at).toLocaleString()}</span>
+                </div>
+            </div>
+
+            <!-- Report Summary -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <h5 class="text-sm font-semibold text-gray-800 mb-3">Summary Statistics</h5>
+                <div class="grid grid-cols-2 gap-4">
+                    ${Object.entries(report.summary).map(([key, value]) => {
+                        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        let formattedValue = value;
+                        
+                        // Format based on key type
+                        if (key.includes('pay') || key.includes('salary') || key.includes('deduction')) {
+                            formattedValue = formatCurrency(value);
+                        } else if (key.includes('rate') && typeof value === 'number') {
+                            formattedValue = value + '%';
+                        } else if (typeof value === 'number' && value > 1000) {
+                            formattedValue = value.toLocaleString();
+                        }
+                        
+                        return `
+                            <div class="text-center">
+                                <div class="text-lg font-semibold text-blue-600">${formattedValue}</div>
+                                <div class="text-xs text-gray-600">${formattedKey}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            </div>
+
+            <!-- Report Actions -->
+            <div class="flex space-x-3">
+                <button onclick="downloadReport(${report.id})" 
+                        class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    <i class='bx bx-download mr-2'></i>Download Report
+                </button>
+                <button onclick="openSendAdminModal(${report.id}, '${report.title}')" 
+                        class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                    <i class='bx bx-paper-plane mr-2'></i>Send to Admin
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+// Close report details modal
+function closeReportDetailsModal() {
+    document.getElementById('reportDetailsModal').classList.add('hidden');
+    document.getElementById('reportDetailsModal').classList.remove('flex');
+}
+
+// Open send to admin modal
+function openSendAdminModal(reportId, reportTitle) {
+    document.getElementById('sendReportId').value = reportId;
+    document.getElementById('sendReportInfo').innerHTML = `
+        <div class="flex items-center">
+            <i class='bx bx-file mr-2 text-blue-600'></i>
+            <span class="font-medium">${reportTitle}</span>
+        </div>
+    `;
+    
+    // Close details modal if open
+    closeReportDetailsModal();
+    
+    // Show send admin modal
+    document.getElementById('sendAdminModal').classList.remove('hidden');
+    document.getElementById('sendAdminModal').classList.add('flex');
+}
+
+// Close send to admin modal
+function closeSendAdminModal() {
+    document.getElementById('sendAdminModal').classList.add('hidden');
+    document.getElementById('sendAdminModal').classList.remove('flex');
+    document.getElementById('sendAdminForm').reset();
+}
+
+// Send report to admin
+async function sendReportToAdmin(reportId, formData) {
+    try {
+        const response = await fetch(`/hr/api/reports/${reportId}/send-to-admin`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        });
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            showNotification(result.message, 'success');
+            closeSendAdminModal();
+        } else {
+            showNotification('Error sending report: ' + result.error, 'error');
+        }
+    } catch (error) {
+        showNotification('Error sending report: ' + error.message, 'error');
+    }
+}
+
+// Notification function
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+    }`;
+    
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class='bx ${
+                type === 'success' ? 'bx-check-circle' : 
+                type === 'error' ? 'bx-error-circle' : 
+                'bx-info-circle'
+            } mr-2'></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 5000);
+}
+
+// Report type change handler
+document.getElementById('reportType').addEventListener('change', function() {
+    const reportType = this.value;
+    const departmentSelect = document.getElementById('departmentId');
+    
+    // Show/hide department filter based on report type
+    if (reportType === 'employee' || reportType === 'attendance') {
+        departmentSelect.parentElement.style.display = 'block';
+    } else {
+        departmentSelect.parentElement.style.display = 'block'; // Keep visible for all reports
+    }
+    
+    // Update date range suggestions based on report type
+    updateDateRangeSuggestions(reportType);
+});
+
+// Update date range suggestions
+function updateDateRangeSuggestions(reportType) {
+    const now = new Date();
+    let startDate, endDate;
+    
+    switch (reportType) {
+        case 'attendance':
+            // Current month
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            break;
+        case 'leave':
+            // Last 3 months
+            startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            break;
+        case 'payroll':
+            // Current month
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            break;
+        case 'performance':
+            // Last quarter
+            startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+            endDate = now;
+            break;
+        default:
+            // Current month
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    }
+    
+    document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+    document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+}
 </script>
 {% endblock %}
 {% endblock %}

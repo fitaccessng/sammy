@@ -1,9 +1,10 @@
+
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, current_app, flash, request, jsonify, url_for, redirect, send_file, session
 from flask_login import current_user, logout_user
 from utils.decorators import role_required
 from utils.constants import Roles
-from models import Payroll, Document, Audit, Expense, Report, BankReconciliation, Checkbook, Transaction, User
+from models import Payroll, Document, Audit, Expense, Report, BankReconciliation, Checkbook, Transaction, User, ChartOfAccount, PaymentRequest, Budget
 from sqlalchemy import func, desc, or_, and_, case
 from werkzeug.utils import secure_filename
 import os
@@ -990,9 +991,387 @@ def bank_reconciliation():
 def settings():
     return render_template('finance/settings.html')
 
+
 @finance_bp.route('/logout')
 @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
 def logout():
-    logout_user()
-    flash('You have been logged out.', 'success')
-    return redirect(url_for('login'))
+    try:
+        # Clear all session data
+        session.clear()
+        flash("Successfully logged out", "success")
+        return redirect(url_for('auth.login'))
+    except Exception as e:
+        current_app.logger.error(f"Logout error: {str(e)}")
+        flash("Error during logout", "error")
+        return redirect(url_for('finance.finance_home'))
+
+## --- Finance Report Generation Endpoints ---
+@finance_bp.route('/reports', methods=['GET'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def generate_finance_report():
+    report_type = request.args.get('type')
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    try:
+        if start_date:
+            start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        if end_date:
+            end_date = datetime.strptime(end_date, '%Y-%m-%d')
+    except Exception:
+        return jsonify({'error': 'Invalid date format. Use YYYY-MM-DD.'}), 400
+
+    if report_type == 'P&L':
+        # Income (credit transactions, revenue accounts)
+        income_query = db.session.query(
+            ChartOfAccount.name.label('account'),
+            func.sum(Transaction.amount).label('total')
+        ).join(Transaction, Transaction.checkbook_id == ChartOfAccount.id, isouter=True)
+        income_query = income_query.filter(ChartOfAccount.type == 'Revenue')
+        if start_date:
+            income_query = income_query.filter(Transaction.date >= start_date)
+        if end_date:
+            income_query = income_query.filter(Transaction.date <= end_date)
+        income_query = income_query.group_by(ChartOfAccount.name)
+        income = [
+            {'account': row.account, 'total': row.total or 0}
+            for row in income_query.all()
+        ]
+
+        # Expenses (debit transactions, expense accounts)
+        expense_query = db.session.query(
+            ChartOfAccount.name.label('account'),
+            func.sum(Transaction.amount).label('total')
+        ).join(Transaction, Transaction.checkbook_id == ChartOfAccount.id, isouter=True)
+        expense_query = expense_query.filter(ChartOfAccount.type == 'Expense')
+        if start_date:
+            expense_query = expense_query.filter(Transaction.date >= start_date)
+        if end_date:
+            expense_query = expense_query.filter(Transaction.date <= end_date)
+        expense_query = expense_query.group_by(ChartOfAccount.name)
+        expenses = [
+            {'account': row.account, 'total': row.total or 0}
+            for row in expense_query.all()
+        ]
+
+        total_income = sum(i['total'] for i in income)
+        total_expenses = sum(e['total'] for e in expenses)
+        net_profit = total_income - total_expenses
+        return jsonify({
+            'report': 'Profit & Loss',
+            'period': {'start': str(start_date) if start_date else None, 'end': str(end_date) if end_date else None},
+            'income': income,
+            'expenses': expenses,
+            'total_income': total_income,
+            'total_expenses': total_expenses,
+            'net_profit': net_profit
+        }), 200
+
+    elif report_type == 'BalanceSheet':
+        # Assets
+        assets_query = db.session.query(
+            ChartOfAccount.name.label('account'),
+            func.sum(Transaction.amount).label('total')
+        ).join(Transaction, Transaction.checkbook_id == ChartOfAccount.id, isouter=True)
+        assets_query = assets_query.filter(ChartOfAccount.type == 'Asset')
+        assets_query = assets_query.group_by(ChartOfAccount.name)
+        assets = [
+            {'account': row.account, 'total': row.total or 0}
+            for row in assets_query.all()
+        ]
+
+        # Liabilities
+        liabilities_query = db.session.query(
+            ChartOfAccount.name.label('account'),
+            func.sum(Transaction.amount).label('total')
+        ).join(Transaction, Transaction.checkbook_id == ChartOfAccount.id, isouter=True)
+        liabilities_query = liabilities_query.filter(ChartOfAccount.type == 'Liability')
+        liabilities_query = liabilities_query.group_by(ChartOfAccount.name)
+        liabilities = [
+            {'account': row.account, 'total': row.total or 0}
+            for row in liabilities_query.all()
+        ]
+
+        # Equity
+        equity_query = db.session.query(
+            ChartOfAccount.name.label('account'),
+            func.sum(Transaction.amount).label('total')
+        ).join(Transaction, Transaction.checkbook_id == ChartOfAccount.id, isouter=True)
+        equity_query = equity_query.filter(ChartOfAccount.type == 'Equity')
+        equity_query = equity_query.group_by(ChartOfAccount.name)
+        equity = [
+            {'account': row.account, 'total': row.total or 0}
+            for row in equity_query.all()
+        ]
+
+        total_assets = sum(a['total'] for a in assets)
+        total_liabilities = sum(l['total'] for l in liabilities)
+        total_equity = sum(e['total'] for e in equity)
+        return jsonify({
+            'report': 'Balance Sheet',
+            'assets': assets,
+            'liabilities': liabilities,
+            'equity': equity,
+            'total_assets': total_assets,
+            'total_liabilities': total_liabilities,
+            'total_equity': total_equity,
+            'assets_equals_liabilities_plus_equity': total_assets == (total_liabilities + total_equity)
+        }), 200
+
+    elif report_type == 'Invoices':
+        # List all expenses or transactions marked as invoices
+        invoices = []
+        # Try to get from Expense table if it has invoice info
+        expense_invoices = Expense.query.filter(Expense.category.ilike('%invoice%')).all()
+        for exp in expense_invoices:
+            invoices.append({
+                'id': exp.id,
+                'amount': exp.amount,
+                'description': exp.description,
+                'date': exp.date,
+                'user_id': exp.user_id,
+                'status': exp.status
+            })
+        # Optionally, add from Transaction if needed
+        transaction_invoices = Transaction.query.filter(Transaction.description.ilike('%invoice%')).all()
+        for t in transaction_invoices:
+            invoices.append({
+                'id': t.id,
+                'amount': t.amount,
+                'description': t.description,
+                'date': t.date,
+                'status': t.status
+            })
+        return jsonify({'report': 'Invoices', 'invoices': invoices}), 200
+    else:
+        return jsonify({'error': 'Invalid report type'}), 400
+## --- Project Budget Allocation Endpoints ---
+@finance_bp.route('/budgets', methods=['POST'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def allocate_budget():
+    data = request.get_json()
+    budget = Budget(
+        project_id=data.get('project_id'),
+        category=data.get('category'),
+        allocated_amount=data.get('allocated_amount'),
+        spent_amount=0.0
+    )
+    db.session.add(budget)
+    db.session.commit()
+    return jsonify({'message': 'Budget allocated', 'id': budget.id}), 201
+
+@finance_bp.route('/budgets/<int:project_id>', methods=['GET'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def get_project_budgets(project_id):
+    budgets = Budget.query.filter_by(project_id=project_id).all()
+    result = [
+        {
+            'id': b.id,
+            'category': b.category,
+            'allocated_amount': b.allocated_amount,
+            'spent_amount': b.spent_amount
+        } for b in budgets
+    ]
+    return jsonify(result)
+
+
+## --- Payroll Disbursement Endpoint ---
+@finance_bp.route('/payroll/<int:payroll_id>/disburse', methods=['POST'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def disburse_payroll(payroll_id):
+    payroll = Payroll.query.get_or_404(payroll_id)
+    if payroll.status != 'approved':
+        return jsonify({'error': 'Payroll not approved by management'}), 400
+    payroll.status = 'disbursed'
+    payroll.disbursed_by = current_user.id
+    payroll.disbursed_at = datetime.utcnow()
+    db.session.commit()
+    # TODO: Send email to HR/employee
+    return jsonify({'message': 'Payroll disbursed'})
+## --- Payment Request Workflow Endpoints ---
+@finance_bp.route('/payment-request', methods=['POST'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def create_payment_request():
+    data = request.get_json()
+    req = PaymentRequest(
+        department_id=data.get('department_id'),
+        amount=data.get('amount'),
+        status='pending',
+        requester_id=current_user.id
+    )
+    db.session.add(req)
+    db.session.commit()
+    # TODO: Send email to approver(s)
+    return jsonify({'message': 'Payment request created', 'id': req.id}), 201
+
+@finance_bp.route('/payment-request/<int:request_id>/approve', methods=['POST'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def approve_payment_request(request_id):
+    req = PaymentRequest.query.get_or_404(request_id)
+    if req.status != 'pending':
+        return jsonify({'error': 'Request not pending'}), 400
+    req.status = 'approved'
+    req.approved_by = current_user.id
+    db.session.commit()
+    # TODO: Send email to requester
+    return jsonify({'message': 'Payment request approved'})
+
+@finance_bp.route('/payment-request/<int:request_id>/disburse', methods=['POST'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def disburse_payment_request(request_id):
+    req = PaymentRequest.query.get_or_404(request_id)
+    if req.status != 'approved':
+        return jsonify({'error': 'Request not approved'}), 400
+    req.status = 'disbursed'
+    req.disbursed_by = current_user.id
+    db.session.commit()
+    # TODO: Send email to requester
+    return jsonify({'message': 'Payment request disbursed'})
+from flask_mail import Message
+from utils.email import send_email
+## --- Chart of Accounts Endpoints ---
+@finance_bp.route('/chart-of-accounts', methods=['GET'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def get_chart_of_accounts():
+    accounts = ChartOfAccount.query.all()
+    result = [
+        {
+            'id': acc.id,
+            'name': acc.name,
+            'type': acc.type,
+            'parent_id': acc.parent_id
+        } for acc in accounts
+    ]
+    return jsonify(result)
+
+@finance_bp.route('/chart-of-accounts', methods=['POST'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def create_chart_of_account():
+    data = request.get_json()
+    name = data.get('name')
+    acc_type = data.get('type')
+    parent_id = data.get('parent_id')
+    account = ChartOfAccount(name=name, type=acc_type, parent_id=parent_id)
+    db.session.add(account)
+    db.session.commit()
+    return jsonify({'message': 'Chart of account created', 'id': account.id}), 201
+
+@finance_bp.route('/chart-of-accounts/<int:account_id>', methods=['PUT'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def update_chart_of_account(account_id):
+    account = ChartOfAccount.query.get_or_404(account_id)
+    data = request.get_json()
+    account.name = data.get('name', account.name)
+    account.type = data.get('type', account.type)
+    account.parent_id = data.get('parent_id', account.parent_id)
+    db.session.commit()
+    return jsonify({'message': 'Chart of account updated'})
+
+@finance_bp.route('/chart-of-accounts/<int:account_id>', methods=['DELETE'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def delete_chart_of_account(account_id):
+    account = ChartOfAccount.query.get_or_404(account_id)
+    db.session.delete(account)
+    db.session.commit()
+    return jsonify({'message': 'Chart of account deleted'})
+
+# --- Payroll Finance Approval Routes ---
+@finance_bp.route('/payroll/pending')
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def pending_payroll_approvals():
+    """View payrolls pending finance approval"""
+    try:
+        from models import PayrollApproval, User
+        
+        # Get payrolls pending finance approval
+        pending_approvals = db.session.query(PayrollApproval, User).join(
+            User, PayrollApproval.submitted_by == User.id
+        ).filter(
+            PayrollApproval.status == 'pending_finance'
+        ).order_by(PayrollApproval.submitted_at.desc()).all()
+        
+        return render_template('finance/payroll/pending.html', 
+                             pending_approvals=pending_approvals)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading pending payroll approvals: {str(e)}")
+        flash("Error loading pending payroll approvals", "error")
+        return redirect(url_for('finance.finance_home'))
+
+@finance_bp.route('/payroll/<int:approval_id>/approve', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+def approve_payroll(approval_id):
+    """Process and approve/reject payroll from finance perspective"""
+    try:
+        from models import PayrollApproval, StaffPayroll, Employee
+        
+        approval = db.session.get(PayrollApproval, approval_id)
+        if not approval:
+            flash("Payroll approval not found", "error")
+            return redirect(url_for('finance.pending_payroll_approvals'))
+        
+        if approval.status != 'pending_finance':
+            flash("This payroll is no longer pending finance approval", "warning")
+            return redirect(url_for('finance.pending_payroll_approvals'))
+        
+        if request.method == 'POST':
+            action = request.form.get('action')
+            comments = request.form.get('comments', '')
+            
+            if action == 'approve':
+                approval.status = 'approved'
+                approval.finance_reviewer = session.get('user_id')
+                approval.finance_reviewed_at = datetime.now()
+                approval.finance_comments = comments
+                
+                # Update all related staff payrolls
+                year, month = map(int, approval.payroll_period.split('-'))
+                staff_payrolls = StaffPayroll.query.filter(
+                    StaffPayroll.period_year == year,
+                    StaffPayroll.period_month == month
+                ).all()
+                
+                for payroll in staff_payrolls:
+                    payroll.approval_status = 'approved'
+                    payroll.approved_by_finance = session.get('user_id')
+                    payroll.finance_approved_at = datetime.now()
+                
+                flash(f"Payroll for {approval.payroll_period} approved for payment", "success")
+                
+            elif action == 'reject':
+                approval.status = 'rejected'
+                approval.finance_reviewer = session.get('user_id')
+                approval.finance_reviewed_at = datetime.now()
+                approval.finance_comments = comments
+                
+                # Update all related staff payrolls
+                year, month = map(int, approval.payroll_period.split('-'))
+                staff_payrolls = StaffPayroll.query.filter(
+                    StaffPayroll.period_year == year,
+                    StaffPayroll.period_month == month
+                ).all()
+                
+                for payroll in staff_payrolls:
+                    payroll.approval_status = 'rejected'
+                
+                flash(f"Payroll for {approval.payroll_period} rejected", "warning")
+            
+            db.session.commit()
+            return redirect(url_for('finance.pending_payroll_approvals'))
+        
+        # Get payroll details for review
+        year, month = map(int, approval.payroll_period.split('-'))
+        staff_payrolls = db.session.query(StaffPayroll, Employee).join(
+            Employee, StaffPayroll.employee_id == Employee.id
+        ).filter(
+            StaffPayroll.period_year == year,
+            StaffPayroll.period_month == month
+        ).all()
+        
+        return render_template('finance/payroll/process.html',
+                             approval=approval,
+                             staff_payrolls=staff_payrolls)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error processing payroll: {str(e)}")
+        flash("Error processing payroll", "error")
+        return redirect(url_for('finance.pending_payroll_approvals'))

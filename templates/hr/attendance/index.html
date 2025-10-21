@@ -61,39 +61,42 @@
         <!-- Manual Entry -->
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Manual Attendance Entry</h3>
-            <form id="attendanceForm" class="space-y-4">
+            <form id="attendanceForm" action="{{ url_for('hr.record_attendance') }}" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Staff Member</label>
-                    <select class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
-                        <option>Select Staff</option>
-                        <option>John Doe</option>
-                        <option>Jane Smith</option>
+                    <select name="employee_id" required class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Staff</option>
+                        {% for employee in all_employees %}
+                        <option value="{{ employee.id }}">{{ employee.name }} {% if employee.staff_code %}({{ employee.staff_code }}){% endif %}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Date</label>
-                    <input type="date" class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
+                    <input type="date" name="date" required class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Check In</label>
-                        <input type="time" class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
+                        <input type="time" name="check_in" class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Check Out</label>
-                        <input type="time" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                        <input type="time" name="check_out" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Status</label>
-                    <select class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
-                        <option>Present</option>
-                        <option>Late</option>
-                        <option>Half Day</option>
-                        <option>Absent</option>
+                    <select name="status" required class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="Present">Present</option>
+                        <option value="Late">Late</option>
+                        <option value="Half Day">Half Day</option>
+                        <option value="Absent">Absent</option>
+                        <option value="On Leave">On Leave</option>
                     </select>
                 </div>
 

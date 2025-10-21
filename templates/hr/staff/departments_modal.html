@@ -1,0 +1,43 @@
+{% if message %}
+<div class="mb-4 p-2 bg-blue-100 text-blue-800 rounded">{{ message }}</div>
+{% endif %}
+<div class="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
+    <h3 class="text-lg font-semibold mb-4">Manage Departments</h3>
+    <form method="POST" class="space-y-4 mb-4">
+        <input type="hidden" name="action" value="add">
+        <input type="text" name="name" placeholder="Department Name" class="w-full p-2 border rounded" required>
+        <input type="text" name="description" placeholder="Description" class="w-full p-2 border rounded">
+        <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded">Add Department</button>
+    </form>
+    <hr class="my-4">
+    <h4 class="font-semibold mb-2">Existing Departments</h4>
+    <table class="w-full text-left mb-2">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for dept in departments %}
+            <tr>
+                <form method="POST">
+                    <input type="hidden" name="action" value="edit">
+                    <input type="hidden" name="dept_id" value="{{ dept.id }}">
+                    <td><input type="text" name="name" value="{{ dept.name }}" class="border rounded p-1 w-full"></td>
+                    <td><input type="text" name="description" value="{{ dept.description }}" class="border rounded p-1 w-full"></td>
+                    <td>
+                        <button type="submit" class="bg-green-500 text-white px-2 py-1 rounded">Save</button>
+                </form>
+                <form method="POST" style="display:inline">
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="dept_id" value="{{ dept.id }}">
+                    <button type="submit" class="bg-red-500 text-white px-2 py-1 rounded">Delete</button>
+                </form>
+                    </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>

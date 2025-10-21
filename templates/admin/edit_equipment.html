@@ -1,0 +1,562 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Edit Equipment - Construction Management System{% endblock %}
+
+{% block header %}Edit Equipment{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- Ensure BoxIcons is loaded -->
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Force BoxIcons to load properly */
+    @import url('https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css');
+    
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --indigo-color: #6366f1;
+        --indigo-light: #eef2ff;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Modern Card Styling */
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
+        border: 1px solid var(--gray-200);
+    }
+
+    /* Button System */
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        outline: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .btn-lg-modern {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #1e3a8a 100%);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary-modern {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary-modern:hover {
+        background: var(--gray-200);
+        color: var(--gray-800);
+        transform: translateY(-1px);
+    }
+
+    .btn-danger-modern {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .btn-danger-modern:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+    }
+
+    /* Form Styling */
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--gray-700);
+        font-size: 0.875rem;
+    }
+
+    .form-label.required::after {
+        content: " *";
+        color: var(--danger-color);
+    }
+
+    .form-input {
+        padding: 0.75rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .form-select {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    .form-error {
+        color: var(--danger-color);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Section Headers */
+    .section-header {
+        display: flex;
+        align-items: center;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+    /* Status Preview */
+    .status-preview {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-active {
+        background: var(--success-light);
+        color: var(--success-color);
+    }
+
+    .status-maintenance {
+        background: var(--warning-light);
+        color: var(--warning-color);
+    }
+
+    .status-retired {
+        background: var(--danger-light);
+        color: var(--danger-color);
+    }
+
+    /* Equipment Preview */
+    .equipment-preview {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+
+    .breadcrumb a {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .breadcrumb a:hover {
+        color: var(--primary-dark);
+        text-decoration: underline;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    /* Animation for form elements */
+    .form-group {
+        animation: fadeInUp 0.3s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Loading state */
+    .btn-modern:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    .loading-spinner {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{{ url_for('admin.dashboard') }}">
+            <i class='bx bx-home'></i>
+            Dashboard
+        </a>
+        <i class='bx bx-chevron-right'></i>
+        <a href="{{ url_for('admin.equipment') }}">Equipment</a>
+        <i class='bx bx-chevron-right'></i>
+        <span>Edit {{ equipment.name }}</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Edit Equipment</h1>
+            <p class="text-gray-600">Update equipment information and specifications</p>
+        </div>
+        <a href="{{ url_for('admin.equipment') }}" class="btn-modern btn-secondary-modern mt-4 sm:mt-0">
+            <i class='bx bx-arrow-back'></i>
+            Back to Equipment
+        </a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg bg-{{ 'red-100' if category == 'danger' or category == 'error' else 'green-100' }} text-{{ 'red-700' if category == 'danger' or category == 'error' else 'green-700' }} border border-{{ 'red-200' if category == 'danger' or category == 'error' else 'green-200' }}">
+                    <i class='bx {{ 'bx-error' if category == 'danger' or category == 'error' else 'bx-check-circle' }} mr-2'></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Edit Equipment Form -->
+    <div class="modern-card p-8">
+        <form method="POST" action="{{ url_for('admin.edit_equipment', equipment_id=equipment.id) }}" id="editEquipmentForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            
+            <!-- Basic Information Section -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-info-circle mr-2'></i>
+                    Basic Information
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name" class="form-label required">Equipment Name</label>
+                        <input type="text" 
+                               id="name" 
+                               name="name" 
+                               class="form-input" 
+                               placeholder="Enter equipment name"
+                               value="{{ equipment.name or '' }}"
+                               required
+                               maxlength="100">
+                        <div class="form-error" id="nameError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status" class="form-label">Status</label>
+                        <select id="status" name="status" class="form-input form-select" onchange="updateStatusPreview()">
+                            <option value="Active" {% if equipment.status == 'Active' %}selected{% endif %}>Active</option>
+                            <option value="Maintenance" {% if equipment.status == 'Maintenance' %}selected{% endif %}>Under Maintenance</option>
+                            <option value="Retired" {% if equipment.status == 'Retired' %}selected{% endif %}>Retired</option>
+                            <option value="Inactive" {% if equipment.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                            <option value="Out of Service" {% if equipment.status == 'Out of Service' %}selected{% endif %}>Out of Service</option>
+                        </select>
+                        <div id="statusPreview" class="mt-2">
+                            <span class="status-preview status-{{ 'active' if equipment.status == 'Active' else 'maintenance' if 'maintenance' in (equipment.status or '').lower() else 'retired' }}">
+                                {{ equipment.status or 'Active' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="remarks" class="form-label">Description/Remarks</label>
+                    <textarea id="remarks" 
+                              name="remarks" 
+                              class="form-input form-textarea" 
+                              placeholder="Enter equipment description, specifications, and notes"
+                              rows="4">{{ equipment.remarks or '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Equipment Details Section -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-wrench mr-2'></i>
+                    Equipment Details
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="machine_hours" class="form-label">Machine Hours</label>
+                        <input type="number" 
+                               id="machine_hours" 
+                               name="machine_hours" 
+                               class="form-input" 
+                               placeholder="0"
+                               value="{{ equipment.machine_hours or 0 }}"
+                               min="0"
+                               step="0.1">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="diesel_consumption" class="form-label">Diesel Consumption (Liters)</label>
+                        <input type="number" 
+                               id="diesel_consumption" 
+                               name="diesel_consumption" 
+                               class="form-input" 
+                               placeholder="0"
+                               value="{{ equipment.diesel_consumption or 0 }}"
+                               min="0"
+                               step="0.1">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="maintenance_due" class="form-label">Maintenance Due Date</label>
+                    <input type="date" 
+                           id="maintenance_due" 
+                           name="maintenance_due" 
+                           class="form-input"
+                           value="{{ equipment.maintenance_due.strftime('%Y-%m-%d') if equipment.maintenance_due else '' }}">
+                </div>
+            </div>
+
+            <!-- Equipment Preview -->
+            <div class="equipment-preview">
+                <h3 class="font-semibold text-gray-800 mb-3">
+                    <i class='bx bx-show mr-2'></i>
+                    Equipment Preview
+                </h3>
+                <div id="equipmentPreview" class="text-sm text-gray-600">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><strong>Name:</strong> <span id="previewName">{{ equipment.name or '-' }}</span></div>
+                        <div><strong>Status:</strong> <span id="previewStatus">{{ equipment.status or 'Active' }}</span></div>
+                        <div><strong>Machine Hours:</strong> <span id="previewMachineHours">{{ equipment.machine_hours or 0 }}</span></div>
+                        <div><strong>Diesel Consumption:</strong> <span id="previewDieselConsumption">{{ equipment.diesel_consumption or 0 }} L</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                <button type="submit" class="btn-modern btn-lg-modern btn-primary-modern flex-1 sm:flex-none" id="submitBtn">
+                    <i class='bx bx-save'></i>
+                    Update Equipment
+                </button>
+                <a href="{{ url_for('admin.equipment') }}" class="btn-modern btn-lg-modern btn-secondary-modern flex-1 sm:flex-none">
+                    <i class='bx bx-x'></i>
+                    Cancel
+                </a>
+                {% if equipment.id %}
+                <button type="button" onclick="deleteEquipment({{ equipment.id }})" class="btn-modern btn-lg-modern btn-danger-modern">
+                    <i class='bx bx-trash'></i>
+                    Delete
+                </button>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Real-time preview updates
+function updatePreview() {
+    const name = document.getElementById('name').value || '-';
+    const status = document.getElementById('status').value;
+    const machineHours = document.getElementById('machine_hours').value || '0';
+    const dieselConsumption = document.getElementById('diesel_consumption').value || '0';
+
+    document.getElementById('previewName').textContent = name;
+    document.getElementById('previewStatus').textContent = status;
+    document.getElementById('previewMachineHours').textContent = machineHours;
+    document.getElementById('previewDieselConsumption').textContent = dieselConsumption + ' L';
+}
+
+function updateStatusPreview() {
+    const status = document.getElementById('status').value;
+    const statusPreview = document.getElementById('statusPreview');
+    
+    let statusClass = 'status-active';
+    if (status === 'Maintenance' || status === 'Under Maintenance') {
+        statusClass = 'status-maintenance';
+    } else if (status === 'Retired' || status === 'Inactive' || status === 'Out of Service') {
+        statusClass = 'status-retired';
+    }
+    
+    statusPreview.innerHTML = `<span class="status-preview ${statusClass}">${status}</span>`;
+    updatePreview();
+}
+
+// Delete equipment function
+function deleteEquipment(equipmentId) {
+    if (confirm('Are you sure you want to delete this equipment? This action cannot be undone.')) {
+        // Create a form for deletion
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/delete-equipment/${equipmentId}`;
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Form validation
+function validateForm() {
+    const name = document.getElementById('name').value.trim();
+    const nameError = document.getElementById('nameError');
+    
+    if (!name) {
+        nameError.textContent = 'Equipment name is required';
+        return false;
+    }
+    
+    if (name.length > 100) {
+        nameError.textContent = 'Equipment name must be less than 100 characters';
+        return false;
+    }
+    
+    nameError.textContent = '';
+    return true;
+}
+
+// Form submission handling
+document.getElementById('editEquipmentForm').addEventListener('submit', function(e) {
+    if (!validateForm()) {
+        e.preventDefault();
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = document.getElementById('submitBtn');
+    const originalContent = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<div class="loading-spinner"></div> Updating...';
+    
+    // Re-enable button after a timeout in case form submission fails
+    setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalContent;
+    }, 5000);
+});
+
+// Add event listeners for real-time preview
+document.getElementById('name').addEventListener('input', updatePreview);
+document.getElementById('machine_hours').addEventListener('input', updatePreview);
+document.getElementById('diesel_consumption').addEventListener('input', updatePreview);
+
+// Initialize preview
+updatePreview();
+</script>
+{% endblock %}

@@ -59,7 +59,8 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    from extensions import db
+    return db.session.get(User, int(user_id))
 
 # Configure development settings
 if __name__ == "__main__":

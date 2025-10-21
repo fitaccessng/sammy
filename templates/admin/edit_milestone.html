@@ -1,0 +1,311 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Edit Milestone - {{ milestone.title }} - Construction Management System{% endblock %}
+
+{% block header %}Edit Milestone{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+    }
+
+    body {
+        background-color: var(--gray-50);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .form-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .form-header {
+        border-bottom: 1px solid var(--gray-200);
+        padding-bottom: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .form-title {
+        font-size: 1.875rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-subtitle {
+        color: var(--gray-600);
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--gray-200);
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        background-color: white;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        border: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .btn-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background-color: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-secondary {
+        background-color: var(--gray-200);
+        color: var(--gray-700);
+    }
+
+    .btn-secondary:hover {
+        background-color: var(--gray-300);
+        transform: translateY(-1px);
+    }
+
+    .form-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .project-info {
+        background: var(--primary-light);
+        border: 1px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .project-info h3 {
+        color: var(--primary-dark);
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .project-info p {
+        color: var(--gray-700);
+        margin: 0;
+    }
+
+    .required {
+        color: var(--danger-color);
+    }
+
+    .help-text {
+        font-size: 0.875rem;
+        color: var(--gray-500);
+        margin-top: 0.25rem;
+    }
+
+    @media (max-width: 640px) {
+        .form-container {
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .form-actions {
+            flex-direction: column;
+        }
+
+        .btn {
+            justify-content: center;
+            width: 100%;
+        }
+    }
+</style>
+
+<div class="container mx-auto px-4">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg mb-3 {% if category == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-green-50 text-green-700 border border-green-200{% endif %}">
+                    <i class="bx {% if category == 'error' %}bx-error{% else %}bx-check-circle{% endif %} mr-2"></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="form-container">
+        <div class="form-header">
+            <h1 class="form-title">Edit Milestone</h1>
+            <p class="form-subtitle">Update milestone details and track progress</p>
+        </div>
+
+        <!-- Project Information -->
+        <div class="project-info">
+            <h3><i class="bx bx-folder mr-2"></i>Project Information</h3>
+            <p><strong>Project:</strong> {{ project.name }}</p>
+            {% if project.description %}
+            <p><strong>Description:</strong> {{ project.description }}</p>
+            {% endif %}
+            <p><strong>Status:</strong> {{ project.status }}</p>
+            {% if project.project_manager %}
+            <p><strong>Manager:</strong> {{ project.project_manager }}</p>
+            {% endif %}
+        </div>
+
+        <form method="POST" action="{{ url_for('admin.edit_milestone', milestone_id=milestone.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            
+            <div class="form-group">
+                <label for="title" class="form-label">
+                    <i class="bx bx-target-lock mr-1"></i>
+                    Milestone Title <span class="required">*</span>
+                </label>
+                <input type="text" 
+                       id="title" 
+                       name="title" 
+                       class="form-input" 
+                       value="{{ milestone.title }}"
+                       placeholder="Enter milestone title"
+                       required>
+                <p class="help-text">Provide a clear, descriptive title for this milestone</p>
+            </div>
+
+            <div class="form-group">
+                <label for="due_date" class="form-label">
+                    <i class="bx bx-calendar mr-1"></i>
+                    Due Date <span class="required">*</span>
+                </label>
+                <input type="date" 
+                       id="due_date" 
+                       name="due_date" 
+                       class="form-input" 
+                       value="{{ milestone.due_date.strftime('%Y-%m-%d') if milestone.due_date else '' }}"
+                       required>
+                <p class="help-text">Set the target completion date for this milestone</p>
+            </div>
+
+            <div class="form-group">
+                <label for="status" class="form-label">
+                    <i class="bx bx-check-circle mr-1"></i>
+                    Status
+                </label>
+                <select id="status" name="status" class="form-input form-select">
+                    <option value="Pending" {% if milestone.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="In Progress" {% if milestone.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Completed" {% if milestone.status == 'Completed' %}selected{% endif %}>Completed</option>
+                    <option value="On Hold" {% if milestone.status == 'On Hold' %}selected{% endif %}>On Hold</option>
+                    <option value="Cancelled" {% if milestone.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+                <p class="help-text">Current status of the milestone</p>
+            </div>
+
+            <div class="form-actions">
+                <a href="{{ url_for('admin.milestones', project_id=project.id) }}" class="btn btn-secondary">
+                    <i class="bx bx-arrow-back mr-1"></i>
+                    Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bx bx-check mr-1"></i>
+                    Update Milestone
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const title = document.getElementById('title').value.trim();
+    const dueDate = document.getElementById('due_date').value;
+    
+    if (!title) {
+        e.preventDefault();
+        alert('Please enter a milestone title');
+        document.getElementById('title').focus();
+        return;
+    }
+    
+    if (!dueDate) {
+        e.preventDefault();
+        alert('Please select a due date');
+        document.getElementById('due_date').focus();
+        return;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,627 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Profile - Construction Management System{% endblock %}
+
+{% block header %}My Profile{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --indigo-color: #6366f1;
+        --indigo-light: #eef2ff;
+        --purple-color: #8b5cf6;
+        --purple-light: #f3f4f6;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Modern Card Styling */
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+    }
+
+    .modern-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    /* Enhanced Button Styles */
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.625rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        letter-spacing: 0.025em;
+        gap: 0.5rem;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+        color: white;
+        border: 1px solid transparent;
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #3730a3 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-secondary {
+        background: white;
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary:hover {
+        background: var(--gray-50);
+        color: var(--gray-800);
+    }
+
+    .btn-sm-modern {
+        padding: 0.4rem 0.875rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    /* Profile Layout */
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 2fr;
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Profile Card */
+    .profile-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        height: fit-content;
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--indigo-color) 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: 700;
+        margin: 0 auto 1rem auto;
+        box-shadow: var(--shadow-md);
+    }
+
+    .profile-name {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0 0 0.5rem 0;
+    }
+
+    .profile-role {
+        color: var(--primary-color);
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .profile-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.75rem;
+        background: var(--success-light);
+        color: var(--success-color);
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    /* Info Grid */
+    .info-grid {
+        display: grid;
+        gap: 1rem;
+        margin: 2rem 0;
+    }
+
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem;
+        background: var(--gray-50);
+        border-radius: 8px;
+        border: 1px solid var(--gray-200);
+    }
+
+    .info-label {
+        font-weight: 600;
+        color: var(--gray-600);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    /* Statistics Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        border-left: 4px solid;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.projects { border-left-color: var(--primary-color); }
+    .stat-card.incidents { border-left-color: var(--warning-color); }
+    .stat-card.activity { border-left-color: var(--success-color); }
+    .stat-card.account { border-left-color: var(--purple-color); }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stat-icon {
+        width: 20px;
+        height: 20px;
+        color: inherit;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+        font-family: 'Monaco', 'Menlo', monospace;
+    }
+
+    .stat-description {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    /* Activity Section */
+    .activity-section {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        margin-top: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 0 0 1.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: 8px;
+        border: 1px solid var(--gray-200);
+        margin-bottom: 1rem;
+        transition: var(--transition);
+    }
+
+    .activity-item:hover {
+        background: var(--gray-50);
+    }
+
+    .activity-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        color: white;
+    }
+
+    .activity-icon.login { background: var(--success-color); }
+    .activity-icon.created { background: var(--primary-color); }
+
+    .activity-content {
+        flex: 1;
+    }
+
+    .activity-title {
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0 0 0.25rem 0;
+    }
+
+    .activity-time {
+        font-size: 0.875rem;
+        color: var(--gray-500);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 968px) {
+        .profile-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 640px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .profile-card {
+            padding: 1.5rem;
+        }
+        
+        .profile-avatar {
+            width: 100px;
+            height: 100px;
+            font-size: 2.5rem;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">My Profile</h2>
+        <p class="text-gray-600">Manage your account settings and view activity</p>
+    </div>
+    <div class="flex gap-2">
+        <button class="btn-secondary btn-modern btn-sm-modern">
+            <i class='bx bx-edit'></i>
+            Edit Profile
+        </button>
+        <button class="btn-primary-modern btn-sm-modern">
+            <i class='bx bx-cog'></i>
+            Settings
+        </button>
+    </div>
+</div>
+
+<div class="profile-container">
+    <!-- Profile Grid -->
+    <div class="profile-grid">
+        <!-- Profile Information -->
+        <div class="profile-card">
+            <div class="profile-header">
+                <div class="profile-avatar">
+                    {{ user.name[0].upper() if user.name else user.username[0].upper() }}
+                </div>
+                <h1 class="profile-name">{{ user.name or user.username }}</h1>
+                <div class="profile-role">{{ user.role.name if user.role else 'Administrator' }}</div>
+                <div class="profile-status">
+                    <i class='bx bx-check-circle'></i>
+                    Active
+                </div>
+            </div>
+
+            <!-- User Information -->
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class='bx bx-user'></i>
+                        Username
+                    </div>
+                    <div class="info-value">{{ user.username }}</div>
+                </div>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class='bx bx-envelope'></i>
+                        Email
+                    </div>
+                    <div class="info-value">{{ user.email or 'Not provided' }}</div>
+                </div>
+                
+                {% if user.phone %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class='bx bx-phone'></i>
+                        Phone
+                    </div>
+                    <div class="info-value">{{ user.phone }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class='bx bx-shield'></i>
+                        Role
+                    </div>
+                    <div class="info-value">{{ user.role.name if user.role else 'User' }}</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mt-6 space-y-2">
+                <button class="btn-secondary btn-modern w-full">
+                    <i class='bx bx-lock'></i>
+                    Change Password
+                </button>
+                <button class="btn-secondary btn-modern w-full">
+                    <i class='bx bx-bell'></i>
+                    Notification Settings
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card projects">
+                <div class="stat-header">
+                    <div class="stat-title">
+                        <i class='bx bx-building stat-icon'></i>
+                        Projects
+                    </div>
+                </div>
+                <div class="stat-value">{{ user_stats.projects_managed or 0 }}</div>
+                <div class="stat-description">
+                    <i class='bx bx-trending-up'></i>
+                    Projects managed
+                </div>
+            </div>
+
+            <div class="stat-card incidents">
+                <div class="stat-header">
+                    <div class="stat-title">
+                        <i class='bx bx-error-circle stat-icon'></i>
+                        Incidents
+                    </div>
+                </div>
+                <div class="stat-value">{{ user_stats.incidents_reported or 0 }}</div>
+                <div class="stat-description">
+                    <i class='bx bx-shield-alt-2'></i>
+                    Incidents reported
+                </div>
+            </div>
+
+            <div class="stat-card activity">
+                <div class="stat-header">
+                    <div class="stat-title">
+                        <i class='bx bx-time stat-icon'></i>
+                        Last Login
+                    </div>
+                </div>
+                <div class="stat-value" style="font-size: 1rem;">
+                    {% if user_stats.last_login %}
+                        {{ user_stats.last_login.strftime('%Y-%m-%d') }}
+                    {% else %}
+                        Never
+                    {% endif %}
+                </div>
+                <div class="stat-description">
+                    <i class='bx bx-calendar'></i>
+                    Last activity
+                </div>
+            </div>
+
+            <div class="stat-card account">
+                <div class="stat-header">
+                    <div class="stat-title">
+                        <i class='bx bx-calendar-plus stat-icon'></i>
+                        Member Since
+                    </div>
+                </div>
+                <div class="stat-value" style="font-size: 1rem;">
+                    {% if user_stats.account_created %}
+                        {{ user_stats.account_created.strftime('%Y-%m-%d') }}
+                    {% else %}
+                        Unknown
+                    {% endif %}
+                </div>
+                <div class="stat-description">
+                    <i class='bx bx-user-plus'></i>
+                    Account created
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="activity-section">
+        <h3 class="section-title">
+            <i class='bx bx-history'></i>
+            Recent Activity
+        </h3>
+
+        <div class="activity-item">
+            <div class="activity-icon login">
+                <i class='bx bx-log-in'></i>
+            </div>
+            <div class="activity-content">
+                <div class="activity-title">Last Login</div>
+                <div class="activity-time">
+                    {% if user_stats.last_login %}
+                        {{ user_stats.last_login.strftime('%B %d, %Y at %I:%M %p') }}
+                    {% else %}
+                        No recent login recorded
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="activity-item">
+            <div class="activity-icon created">
+                <i class='bx bx-user-plus'></i>
+            </div>
+            <div class="activity-content">
+                <div class="activity-title">Account Created</div>
+                <div class="activity-time">
+                    {% if user_stats.account_created %}
+                        {{ user_stats.account_created.strftime('%B %d, %Y at %I:%M %p') }}
+                    {% else %}
+                        Account creation date not available
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        {% if user_stats.projects_managed > 0 %}
+        <div class="activity-item">
+            <div class="activity-icon" style="background: var(--primary-color);">
+                <i class='bx bx-building'></i>
+            </div>
+            <div class="activity-content">
+                <div class="activity-title">Project Management</div>
+                <div class="activity-time">Currently managing {{ user_stats.projects_managed }} project{{ 's' if user_stats.projects_managed != 1 else '' }}</div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if user_stats.incidents_reported > 0 %}
+        <div class="activity-item">
+            <div class="activity-icon" style="background: var(--warning-color);">
+                <i class='bx bx-error-circle'></i>
+            </div>
+            <div class="activity-content">
+                <div class="activity-title">Incident Reporting</div>
+                <div class="activity-time">Reported {{ user_stats.incidents_reported }} incident{{ 's' if user_stats.incidents_reported != 1 else '' }} to date</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Profile interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers for buttons
+    const editProfileBtn = document.querySelector('button:has(.bx-edit)');
+    const settingsBtn = document.querySelector('button:has(.bx-cog)');
+    const changePasswordBtn = document.querySelector('button:has(.bx-lock)');
+    const notificationBtn = document.querySelector('button:has(.bx-bell)');
+
+    if (editProfileBtn) {
+        editProfileBtn.addEventListener('click', function() {
+            // TODO: Implement edit profile functionality
+            alert('Edit profile functionality will be implemented soon!');
+        });
+    }
+
+    if (settingsBtn) {
+        settingsBtn.addEventListener('click', function() {
+            // TODO: Implement settings functionality
+            alert('Settings functionality will be implemented soon!');
+        });
+    }
+
+    if (changePasswordBtn) {
+        changePasswordBtn.addEventListener('click', function() {
+            // TODO: Implement change password functionality
+            alert('Change password functionality will be implemented soon!');
+        });
+    }
+
+    if (notificationBtn) {
+        notificationBtn.addEventListener('click', function() {
+            // TODO: Implement notification settings functionality
+            alert('Notification settings functionality will be implemented soon!');
+        });
+    }
+});
+</script>
+{% endblock %}

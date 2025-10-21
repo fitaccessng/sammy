@@ -1,0 +1,461 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Staff Roles Management - Construction Management System{% endblock %}
+
+{% block header %}Staff Roles Management{% endblock %}
+
+{% block content %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<!-- Page Header -->
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Staff Roles Management</h2>
+    <p class="text-gray-600">Manage staff members and assign roles within the construction management system</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <!-- Total Staff Card -->
+    <div class="card bg-white p-6 border-l-blue-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Staff</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ employees|length }}</h3>
+                <p class="text-blue-500 text-sm mt-2">
+                    <i class='bx bx-user'></i>
+                    All employees
+                </p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-full">
+                <i class='bx bxs-user-detail text-2xl text-blue-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Roles Card -->
+    <div class="card bg-white p-6 border-l-green-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Assigned Roles</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ employees | selectattr('current_role_id', 'ne', None) | list | length }}</h3>
+                <p class="text-green-500 text-sm mt-2">
+                    <i class='bx bx-check'></i>
+                    With roles
+                </p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-full">
+                <i class='bx bxs-user-check text-2xl text-green-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unassigned Staff Card -->
+    <div class="card bg-white p-6 border-l-yellow-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Unassigned</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ employees | selectattr('current_role_id', 'eq', None) | list | length }}</h3>
+                <p class="text-yellow-500 text-sm mt-2">
+                    <i class='bx bx-user-x'></i>
+                    Need roles
+                </p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-full">
+                <i class='bx bxs-user-x text-2xl text-yellow-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Roles Card -->
+    <div class="card bg-white p-6 border-l-purple-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Available Roles</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ roles|length }}</h3>
+                <p class="text-purple-500 text-sm mt-2">
+                    <i class='bx bx-user-badge'></i>
+                    System roles
+                </p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-full">
+                <i class='bx bxs-user-badge text-2xl text-purple-600'></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Staff Members List -->
+    <div class="lg:col-span-2">
+        <div class="card bg-white">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                        <i class='bx bxs-group mr-2 text-blue-600'></i>
+                        Staff Members
+                    </h3>
+                    <div class="flex space-x-2">
+                        <input type="text" id="searchStaff" placeholder="Search employees..." 
+                               class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <select id="filterRole" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Roles</option>
+                            <option value="unassigned">Unassigned</option>
+                            {% for role in roles %}
+                            <option value="{{ role.name }}">{{ role.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <select id="filterEmployee" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">All Employees</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.name|lower }}">{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200" id="staffTable">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff Member</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="staffTableBody">
+                            {% for employee in employees %}
+                            <tr class="staff-row" 
+                                data-name="{{ employee.name|lower }}" 
+                                data-department="{{ employee.department|lower }}" 
+                                data-role="{{ employee.current_role|lower }}">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-blue-500 flex items-center justify-center">
+                                                <span class="text-white font-medium text-sm">
+                                                    {{ employee.name[:2]|upper }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ employee.name }}</div>
+                                            <div class="text-sm text-gray-500">{{ employee.email }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ employee.department }}</div>
+                                    <div class="text-sm text-gray-500">{{ employee.position }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if employee.current_role_id %}
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                                        {{ employee.current_role }}
+                                    </span>
+                                    {% else %}
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                                        No Role Assigned
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                        {% if employee.status == 'Active' %}bg-green-100 text-green-800
+                                        {% else %}bg-red-100 text-red-800{% endif %}">
+                                        {{ employee.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button onclick="assignRole({{ employee.id }}, '{{ employee.name }}', {{ employee.current_role_id or 'null' }})" 
+                                            class="text-blue-600 hover:text-blue-900 mr-3">
+                                        <i class='bx bx-edit'></i> Assign Role
+                                    </button>
+                                    {% if employee.current_role_id %}
+                                    <button onclick="removeRole({{ employee.id }}, '{{ employee.name }}')" 
+                                            class="text-red-600 hover:text-red-900">
+                                        <i class='bx bx-user-x'></i> Remove Role
+                                    </button>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Role Management Panel -->
+    <div class="lg:col-span-1">
+        <!-- Quick Role Assignment -->
+        <div class="card bg-white mb-6">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class='bx bxs-user-plus mr-2 text-green-600'></i>
+                    Quick Role Assignment
+                </h3>
+            </div>
+            <div class="p-6">
+                <form id="quickAssignForm">
+                    <div class="space-y-4">
+                        <div>
+                            <label for="quickStaff" class="block text-sm font-medium text-gray-700">Select Staff Member</label>
+                            <select id="quickStaff" name="employee_id" required 
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Choose staff member...</option>
+                                {% for employee in employees %}
+                                <option value="{{ employee.id }}">{{ employee.name }} - {{ employee.department }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label for="quickRole" class="block text-sm font-medium text-gray-700">Select Role</label>
+                            <select id="quickRole" name="role_id" required 
+                                    class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                <option value="">Choose role...</option>
+                                {% for role in roles %}
+                                <option value="{{ role.id }}">{{ role.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class='bx bx-check mr-2'></i>
+                            Assign Role
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Available Roles -->
+        <div class="card bg-white">
+            <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                    <i class='bx bxs-user-badge mr-2 text-purple-600'></i>
+                    Available Roles
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    {% for role in roles %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <span class="text-sm font-medium text-gray-900">{{ role.name }}</span>
+                            <p class="text-xs text-gray-500">Role ID: {{ role.id }}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                {{ employees | selectattr('current_role', 'eq', role.name) | list | length }} assigned
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                <!-- Add New Role -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h4 class="text-sm font-medium text-gray-700 mb-3">Add New Role</h4>
+                    <form id="addRoleForm">
+                        <div class="flex space-x-2">
+                            <input type="text" id="newRoleName" name="name" placeholder="Role name..." required
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <button type="submit" class="px-4 py-2 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <i class='bx bx-plus'></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Assignment Modal -->
+<div id="roleModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4" id="modalTitle">Assign Role</h3>
+            <form id="modalRoleForm">
+                <input type="hidden" id="modalEmployeeId" name="employee_id">
+                <div class="mb-4">
+                    <label for="modalEmployeeName" class="block text-sm font-medium text-gray-700">Staff Member</label>
+                    <input type="text" id="modalEmployeeName" readonly 
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                </div>
+                <div class="mb-4">
+                    <label for="modalRoleSelect" class="block text-sm font-medium text-gray-700">Select Role</label>
+                    <select id="modalRoleSelect" name="role_id" required 
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Choose role...</option>
+                        {% for role in roles %}
+                        <option value="{{ role.id }}">{{ role.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal()" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Assign Role
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchStaff').addEventListener('input', function() {
+    filterTable();
+});
+
+document.getElementById('filterRole').addEventListener('change', function() {
+    filterTable();
+});
+
+document.getElementById('filterEmployee').addEventListener('change', function() {
+    filterTable();
+});
+
+function filterTable() {
+    const searchTerm = document.getElementById('searchStaff').value.toLowerCase();
+    const roleFilter = document.getElementById('filterRole').value.toLowerCase();
+    const employeeFilter = document.getElementById('filterEmployee').value.toLowerCase();
+    const rows = document.querySelectorAll('.staff-row');
+    
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const department = row.dataset.department;
+        const role = row.dataset.role;
+        
+        const matchesSearch = name.includes(searchTerm) || department.includes(searchTerm);
+        const matchesRole = !roleFilter || 
+                          (roleFilter === 'unassigned' && role === 'no role assigned') ||
+                          role.includes(roleFilter);
+        const matchesEmployee = !employeeFilter || name === employeeFilter;
+        
+        if (matchesSearch && matchesRole && matchesEmployee) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Role assignment functionality
+function assignRole(employeeId, employeeName, currentRoleId) {
+    document.getElementById('modalEmployeeId').value = employeeId;
+    document.getElementById('modalEmployeeName').value = employeeName;
+    document.getElementById('modalRoleSelect').value = currentRoleId || '';
+    document.getElementById('modalTitle').textContent = 'Assign Role to ' + employeeName;
+    document.getElementById('roleModal').classList.remove('hidden');
+}
+
+function removeRole(employeeId, employeeName) {
+    if (confirm(`Are you sure you want to remove the role from ${employeeName}?`)) {
+        assignRoleToEmployee(employeeId, null);
+    }
+}
+
+function closeModal() {
+    document.getElementById('roleModal').classList.add('hidden');
+}
+
+// Quick assign form
+document.getElementById('quickAssignForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const employeeId = formData.get('employee_id');
+    const roleId = formData.get('role_id');
+    
+    assignRoleToEmployee(employeeId, roleId);
+});
+
+// Modal assign form
+document.getElementById('modalRoleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const employeeId = formData.get('employee_id');
+    const roleId = formData.get('role_id');
+    
+    assignRoleToEmployee(employeeId, roleId);
+});
+
+// Add new role form
+document.getElementById('addRoleForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    fetch('/admin/roles', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Role added successfully!');
+            location.reload();
+        } else {
+            alert('Error adding role: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error adding role');
+    });
+});
+
+// Main role assignment function
+function assignRoleToEmployee(employeeId, roleId) {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+    
+    fetch('/admin/assign-role', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            employee_id: parseInt(employeeId),
+            role_id: roleId ? parseInt(roleId) : null
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert(data.message);
+            closeModal();
+            location.reload();
+        } else {
+            alert('Error: ' + (data.message || 'Unknown error'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error assigning role');
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('roleModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

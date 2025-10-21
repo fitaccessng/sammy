@@ -1,0 +1,718 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Edit Stock Item - Construction Management System{% endblock %}
+
+{% block header %}Edit Stock Item{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
+        border: 1px solid var(--gray-200);
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        outline: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .btn-lg-modern {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #1e3a8a 100%);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary-modern {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary-modern:hover {
+        background: var(--gray-200);
+        color: var(--gray-800);
+        transform: translateY(-1px);
+    }
+
+    .btn-warning-modern {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+        color: white;
+    }
+
+    .btn-warning-modern:hover {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+    }
+
+    .btn-danger-modern {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .btn-danger-modern:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--gray-700);
+        font-size: 0.875rem;
+    }
+
+    .form-label.required::after {
+        content: " *";
+        color: var(--danger-color);
+    }
+
+    .form-input {
+        padding: 0.75rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-select {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    .form-error {
+        color: var(--danger-color);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+    .status-preview {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-available {
+        background: var(--success-light);
+        color: var(--success-color);
+    }
+
+    .status-unavailable {
+        background: var(--danger-light);
+        color: var(--danger-color);
+    }
+
+    .status-reserved {
+        background: var(--warning-light);
+        color: var(--warning-color);
+    }
+
+    .stock-preview {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+
+    .breadcrumb a {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .breadcrumb a:hover {
+        color: var(--primary-dark);
+        text-decoration: underline;
+    }
+
+    .stock-summary {
+        background: linear-gradient(135deg, var(--primary-light) 0%, #dbeafe 100%);
+        border: 1px solid var(--primary-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .quantity-adjustments {
+        background: var(--warning-light);
+        border: 1px solid var(--warning-color);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .adjustment-buttons {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+    }
+
+    .adjustment-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        transition: var(--transition);
+    }
+
+    .adjustment-btn.add {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .adjustment-btn.remove {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .adjustment-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .adjustment-buttons {
+            flex-direction: column;
+        }
+    }
+
+    .form-group {
+        animation: fadeInUp 0.3s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .btn-modern:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    .loading-spinner {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .low-stock-alert {
+        background: var(--danger-light);
+        border: 1px solid var(--danger-color);
+        color: var(--danger-color);
+        padding: 0.75rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+</style>
+
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{{ url_for('admin.dashboard') }}">
+            <i class='bx bx-home'></i>
+            Dashboard
+        </a>
+        <i class='bx bx-chevron-right'></i>
+        <a href="{{ url_for('admin.stock') }}">Stock</a>
+        <i class='bx bx-chevron-right'></i>
+        <span>Edit {{ stock_item.name }}</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Edit Stock Item</h1>
+            <p class="text-gray-600">Update {{ stock_item.name }} information and quantity</p>
+        </div>
+        <div class="flex gap-2 mt-4 sm:mt-0">
+            <a href="{{ url_for('admin.view_stock_item', id=stock_item.id) }}" class="btn-modern btn-secondary-modern">
+                <i class='bx bx-show'></i>
+                View Details
+            </a>
+            <a href="{{ url_for('admin.stock') }}" class="btn-modern btn-secondary-modern">
+                <i class='bx bx-arrow-back'></i>
+                Back to Stock
+            </a>
+        </div>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg bg-{{ 'red-100' if category == 'danger' or category == 'error' else 'green-100' }} text-{{ 'red-700' if category == 'danger' or category == 'error' else 'green-700' }} border border-{{ 'red-200' if category == 'danger' or category == 'error' else 'green-200' }}">
+                    <i class='bx {{ 'bx-error' if category == 'danger' or category == 'error' else 'bx-check-circle' }} mr-2'></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Low Stock Alert -->
+    {% if stock_item.quantity <= stock_item.low_stock_threshold %}
+    <div class="low-stock-alert">
+        <i class='bx bx-error-circle'></i>
+        <strong>Low Stock Alert:</strong> Current quantity ({{ stock_item.quantity }}) is at or below the threshold ({{ stock_item.low_stock_threshold }})
+    </div>
+    {% endif %}
+
+    <!-- Current Stock Summary -->
+    <div class="stock-summary">
+        <h3 class="font-semibold text-gray-800 mb-3">
+            <i class='bx bx-info-circle mr-2'></i>
+            Current Stock Information
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div><strong>Current Quantity:</strong> {{ stock_item.quantity }} {{ stock_item.unit or 'units' }}</div>
+            <div><strong>Status:</strong> 
+                <span class="status-preview status-{{ stock_item.status.lower() }}">{{ stock_item.status }}</span>
+            </div>
+            <div><strong>Low Stock Threshold:</strong> {{ stock_item.low_stock_threshold or 0 }} {{ stock_item.unit or 'units' }}</div>
+        </div>
+    </div>
+
+    <!-- Quick Quantity Adjustment -->
+    <div class="quantity-adjustments">
+        <h3 class="font-semibold text-gray-800 mb-3">
+            <i class='bx bx-plus-minus mr-2'></i>
+            Quick Quantity Adjustment
+        </h3>
+        <p class="text-sm text-gray-600 mb-3">Make quick adjustments to stock quantity without editing the full form</p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 items-center">
+            <div class="flex items-center gap-2">
+                <label for="quickAdjustment" class="font-medium text-gray-700">Adjustment:</label>
+                <input type="number" 
+                       id="quickAdjustment" 
+                       class="form-input w-32"
+                       placeholder="0"
+                       min="-{{ stock_item.quantity }}">
+                <span class="text-gray-600">{{ stock_item.unit or 'units' }}</span>
+            </div>
+            <div class="adjustment-buttons">
+                <button class="adjustment-btn add" onclick="adjustStock('add')">
+                    <i class='bx bx-plus mr-1'></i>
+                    Add Stock
+                </button>
+                <button class="adjustment-btn remove" onclick="adjustStock('remove')">
+                    <i class='bx bx-minus mr-1'></i>
+                    Remove Stock
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Stock Form -->
+    <div class="modern-card p-8">
+        <form method="POST" action="{{ url_for('admin.edit_stock_item', id=stock_item.id) }}" id="editStockForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            
+            <!-- Basic Information Section -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-edit mr-2'></i>
+                    Edit Stock Information
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="name" class="form-label required">Item Name</label>
+                        <input type="text" 
+                               id="name" 
+                               name="name" 
+                               class="form-input" 
+                               value="{{ stock_item.name }}"
+                               placeholder="Enter item name"
+                               required
+                               maxlength="128">
+                        <div class="form-error" id="nameError"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="unit" class="form-label">Unit of Measurement</label>
+                        <select id="unit" name="unit" class="form-input form-select" onchange="updatePreview()">
+                            <option value="">Select unit</option>
+                            <option value="pieces" {{ 'selected' if stock_item.unit == 'pieces' }}>Pieces</option>
+                            <option value="kg" {{ 'selected' if stock_item.unit == 'kg' }}>Kilograms</option>
+                            <option value="grams" {{ 'selected' if stock_item.unit == 'grams' }}>Grams</option>
+                            <option value="liters" {{ 'selected' if stock_item.unit == 'liters' }}>Liters</option>
+                            <option value="meters" {{ 'selected' if stock_item.unit == 'meters' }}>Meters</option>
+                            <option value="feet" {{ 'selected' if stock_item.unit == 'feet' }}>Feet</option>
+                            <option value="boxes" {{ 'selected' if stock_item.unit == 'boxes' }}>Boxes</option>
+                            <option value="bags" {{ 'selected' if stock_item.unit == 'bags' }}>Bags</option>
+                            <option value="units" {{ 'selected' if stock_item.unit == 'units' }}>Units</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="quantity" class="form-label required">Current Quantity</label>
+                        <input type="number" 
+                               id="quantity" 
+                               name="quantity" 
+                               class="form-input" 
+                               value="{{ stock_item.quantity }}"
+                               placeholder="0"
+                               min="0"
+                               required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="low_stock_threshold" class="form-label">Low Stock Alert Threshold</label>
+                        <input type="number" 
+                               id="low_stock_threshold" 
+                               name="low_stock_threshold" 
+                               class="form-input" 
+                               value="{{ stock_item.low_stock_threshold or 10 }}"
+                               placeholder="10"
+                               min="0">
+                        <small class="text-gray-500">Alert when stock falls below this level</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="status" class="form-label">Status</label>
+                    <select id="status" name="status" class="form-input form-select" onchange="updateStatusPreview()">
+                        <option value="Available" {{ 'selected' if stock_item.status == 'Available' }}>Available</option>
+                        <option value="Reserved" {{ 'selected' if stock_item.status == 'Reserved' }}>Reserved</option>
+                        <option value="Unavailable" {{ 'selected' if stock_item.status == 'Unavailable' }}>Unavailable</option>
+                    </select>
+                    <div id="statusPreview" class="mt-2">
+                        <span class="status-preview status-{{ stock_item.status.lower() }}">{{ stock_item.status }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Preview -->
+            <div class="stock-preview">
+                <h3 class="font-semibold text-gray-800 mb-3">
+                    <i class='bx bx-show mr-2'></i>
+                    Updated Stock Preview
+                </h3>
+                <div id="stockPreview" class="text-sm text-gray-600">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div><strong>Name:</strong> <span id="previewName">{{ stock_item.name }}</span></div>
+                        <div><strong>Quantity:</strong> <span id="previewQuantity">{{ stock_item.quantity }}</span> <span id="previewUnit">{{ stock_item.unit or 'units' }}</span></div>
+                        <div><strong>Status:</strong> <span id="previewStatus">{{ stock_item.status }}</span></div>
+                        <div><strong>Low Stock Alert:</strong> <span id="previewThreshold">{{ stock_item.low_stock_threshold or 10 }}</span> <span id="previewThresholdUnit">{{ stock_item.unit or 'units' }}</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                <button type="submit" class="btn-modern btn-lg-modern btn-primary-modern flex-1 sm:flex-none" id="submitBtn">
+                    <i class='bx bx-save'></i>
+                    Update Stock Item
+                </button>
+                <a href="{{ url_for('admin.stock') }}" class="btn-modern btn-lg-modern btn-secondary-modern flex-1 sm:flex-none">
+                    <i class='bx bx-x'></i>
+                    Cancel
+                </a>
+                <button type="button" onclick="deleteStockItem()" class="btn-modern btn-lg-modern btn-danger-modern flex-1 sm:flex-none">
+                    <i class='bx bx-trash'></i>
+                    Delete Item
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function updatePreview() {
+    const name = document.getElementById('name').value || '-';
+    const quantity = document.getElementById('quantity').value || '0';
+    const unit = document.getElementById('unit').value || 'units';
+    const status = document.getElementById('status').value;
+    const threshold = document.getElementById('low_stock_threshold').value || '10';
+
+    document.getElementById('previewName').textContent = name;
+    document.getElementById('previewQuantity').textContent = quantity;
+    document.getElementById('previewUnit').textContent = unit;
+    document.getElementById('previewStatus').textContent = status;
+    document.getElementById('previewThreshold').textContent = threshold;
+    document.getElementById('previewThresholdUnit').textContent = unit;
+}
+
+function updateStatusPreview() {
+    const status = document.getElementById('status').value;
+    const statusPreview = document.getElementById('statusPreview');
+    
+    let statusClass = 'status-available';
+    if (status === 'Unavailable') {
+        statusClass = 'status-unavailable';
+    } else if (status === 'Reserved') {
+        statusClass = 'status-reserved';
+    }
+    
+    statusPreview.innerHTML = `<span class="status-preview ${statusClass}">${status}</span>`;
+    updatePreview();
+}
+
+function adjustStock(action) {
+    const adjustmentInput = document.getElementById('quickAdjustment');
+    const adjustment = parseInt(adjustmentInput.value) || 0;
+    
+    if (adjustment === 0) {
+        alert('Please enter an adjustment amount');
+        return;
+    }
+    
+    const currentQuantity = parseInt(document.getElementById('quantity').value) || 0;
+    let newQuantity;
+    
+    if (action === 'add') {
+        newQuantity = currentQuantity + Math.abs(adjustment);
+    } else {
+        newQuantity = currentQuantity - Math.abs(adjustment);
+        if (newQuantity < 0) {
+            alert('Cannot reduce stock below zero');
+            return;
+        }
+    }
+    
+    if (confirm(`${action === 'add' ? 'Add' : 'Remove'} ${Math.abs(adjustment)} units? New quantity will be ${newQuantity}`)) {
+        // Send AJAX request to adjust stock
+        fetch(`{{ url_for('admin.adjust_stock_quantity') }}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                stock_id: {{ stock_item.id }},
+                adjustment: action === 'add' ? Math.abs(adjustment) : -Math.abs(adjustment)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('quantity').value = data.new_quantity;
+                adjustmentInput.value = '';
+                updatePreview();
+                location.reload(); // Reload to update the summary section
+            } else {
+                alert('Error adjusting stock: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error adjusting stock quantity');
+        });
+    }
+}
+
+function deleteStockItem() {
+    if (confirm('Are you sure you want to delete this stock item? This action cannot be undone.')) {
+        fetch(`{{ url_for('admin.delete_stock_item', id=stock_item.id) }}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '{{ url_for("admin.stock") }}';
+            } else {
+                alert('Error deleting stock item: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting stock item');
+        });
+    }
+}
+
+function validateForm() {
+    const name = document.getElementById('name').value.trim();
+    const quantity = document.getElementById('quantity').value;
+    const nameError = document.getElementById('nameError');
+    
+    if (!name) {
+        nameError.textContent = 'Item name is required';
+        return false;
+    }
+    
+    if (name.length > 128) {
+        nameError.textContent = 'Item name must be less than 128 characters';
+        return false;
+    }
+    
+    if (!quantity || parseInt(quantity) < 0) {
+        nameError.textContent = 'Valid quantity is required';
+        return false;
+    }
+    
+    nameError.textContent = '';
+    return true;
+}
+
+document.getElementById('editStockForm').addEventListener('submit', function(e) {
+    if (!validateForm()) {
+        e.preventDefault();
+        return;
+    }
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const originalContent = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<div class="loading-spinner"></div> Updating...';
+    
+    setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalContent;
+    }, 5000);
+});
+
+// Add event listeners for real-time preview
+document.getElementById('name').addEventListener('input', updatePreview);
+document.getElementById('quantity').addEventListener('input', updatePreview);
+document.getElementById('unit').addEventListener('change', updatePreview);
+document.getElementById('low_stock_threshold').addEventListener('input', updatePreview);
+
+// Initialize preview
+updatePreview();
+</script>
+{% endblock %}

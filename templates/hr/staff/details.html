@@ -16,10 +16,11 @@
                     <div>
                         <h2 class="text-2xl font-bold text-gray-900">{{ staff.name }}</h2>
                         <p class="text-gray-600">{{ staff.position }} - {{ staff.department }}</p>
+                    <div>
+                        <label class="block text-xs text-gray-600">Period (Year)</label>
+                        <input type="number" name="period_year" class="w-full border rounded p-2 text-sm" />
                     </div>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <span class="px-3 py-1 rounded-full text-sm font-semibold
+                    <span class="px-2 py-1 text-xs font-semibold rounded-full
                         {% if staff.status == 'Active' %}bg-green-100 text-green-800
                         {% elif staff.status == 'On Leave' %}bg-yellow-100 text-yellow-800
                         {% else %}bg-red-100 text-red-800{% endif %}">
@@ -42,62 +43,77 @@
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Personal Information</h3>
                 <div class="space-y-4">
                     <div>
-                        <p class="text-sm text-gray-500">Employee ID</p>
-                        <p class="text-gray-900">{{ staff.employee_id }}</p>
+                        <p class="text-sm text-gray-500">Staff ID</p>
+                        <p class="text-gray-900">{{ staff.staff_code or 'Not set' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Email</p>
-                        <p class="text-gray-900">{{ staff.email }}</p>
+                        <p class="text-gray-900">{{ staff.email or 'None' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Phone</p>
-                        <p class="text-gray-900">{{ staff.phone }}</p>
+                        <p class="text-gray-900">{{ staff.phone or 'None' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Date of Birth</p>
-                        <p class="text-gray-900">{{ staff.dob }}</p>
+                        <p class="text-gray-900">{{ staff.dob.strftime('%B %d, %Y') if staff.dob else 'None' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Address</p>
-                        <p class="text-gray-900">{{ staff.address }}</p>
+                        <p class="text-gray-900">{{ staff.current_address or 'None' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Emergency Contact</p>
-                        <p class="text-gray-900">{{ staff.emergency_contact_name }}</p>
-                        <p class="text-gray-600 text-sm">{{ staff.emergency_contact_phone }}</p>
+                        <p class="text-gray-900">{{ staff.next_of_kin or 'None' }}</p>
+                        <p class="text-gray-600 text-sm">{{ staff.next_of_kin_phone or '' }}</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Employment Info -->
+        <!-- Employment Info + Role Assignment -->
         <div class="bg-white rounded-lg shadow">
             <div class="p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Employment Details</h3>
                 <div class="space-y-4">
                     <div>
                         <p class="text-sm text-gray-500">Date Joined</p>
-                        <p class="text-gray-900">{{ staff.date_joined }}</p>
+                        <p class="text-gray-900">{{ staff.date_of_employment.strftime('%B %d, %Y') if staff.date_of_employment else 'Not set' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Department</p>
-                        <p class="text-gray-900">{{ staff.department }}</p>
+                        <p class="text-gray-900">{{ staff.department or 'Not set' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Position</p>
-                        <p class="text-gray-900">{{ staff.position }}</p>
+                        <p class="text-gray-900">{{ staff.position or 'Not set' }}</p>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Employment Type</p>
-                        <p class="text-gray-900">{{ staff.employment_type }}</p>
+                        <p class="text-gray-900">{{ staff.employment_type or 'Not set' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500">Role</p>
+                        <form method="post" action="{{ url_for('hr.assign_role', staff_id=staff.id) }}" class="mt-1">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                            <div class="flex items-center space-x-2">
+                                <select name="role_id" class="border rounded p-2 text-sm flex-1" required>
+                                    <option value="">Select Role</option>
+                                    {% for role in roles %}
+                                    <option value="{{ role.id }}" {% if staff.role == role.name %}selected{% endif %}>{{ role.name }}</option>
+                                    {% endfor %}
+                                </select>
+                                <button type="submit" class="px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Assign</button>
+                            </div>
+                        </form>
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Reports To</p>
                         <div class="flex items-center mt-1">
-                            <img class="h-8 w-8 rounded-full" 
-                                 src="{{ staff.manager.avatar_url }}" 
-                                 alt="{{ staff.manager.name }}">
-                            <p class="ml-2 text-gray-900">{{ staff.manager.name }}</p>
+                            {% set mgr_name = (staff.manager.name if staff.manager and staff.manager.name else 'Not set') %}
+                            {% set mgr_avatar = 'https://ui-avatars.com/api/?name=' + (mgr_name if mgr_name != 'Not set' else 'Manager') %}
+                            <img class="h-8 w-8 rounded-full" src="{{ mgr_avatar }}" alt="{{ mgr_name }}">
+                            <p class="ml-2 text-gray-900">{{ mgr_name }}</p>
                         </div>
                     </div>
                 </div>
@@ -109,22 +125,30 @@
             <div class="bg-white rounded-lg shadow p-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
                 <div class="grid grid-cols-2 gap-4">
-                    <button class="p-3 bg-blue-50 rounded-lg text-blue-700 hover:bg-blue-100">
+                    <a href="{{ url_for('hr.leave_management') }}?employee_id={{ staff.id }}" class="p-3 bg-blue-50 rounded-lg text-blue-700 hover:bg-blue-100 text-center">
                         <i class='bx bx-calendar mb-1 text-2xl'></i>
-                        <span class="block text-sm">Leave Request</span>
-                    </button>
-                    <button class="p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100">
+                        <span class="block text-sm">Leave</span>
+                    </a>
+                    <a href="{{ url_for('hr.tasks') }}?assignee_id={{ staff.id }}&new=1" class="p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 text-center">
                         <i class='bx bx-task mb-1 text-2xl'></i>
                         <span class="block text-sm">Assign Task</span>
-                    </button>
-                    <button class="p-3 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100">
+                    </a>
+                    <a href="{{ url_for('hr.attendance') }}?employee_id={{ staff.id }}" class="p-3 bg-indigo-50 rounded-lg text-indigo-700 hover:bg-indigo-100 text-center">
+                        <i class='bx bx-user-check mb-1 text-2xl'></i>
+                        <span class="block text-sm">Attendance</span>
+                    </a>
+                    <a href="{{ url_for('hr.staff_documents', staff_id=staff.id) }}" class="p-3 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 text-center">
                         <i class='bx bx-file mb-1 text-2xl'></i>
                         <span class="block text-sm">Documents</span>
-                    </button>
-                    <button class="p-3 bg-yellow-50 rounded-lg text-yellow-700 hover:bg-yellow-100">
+                    </a>
+                    <a href="{{ url_for('hr.analytics') }}?employee_id={{ staff.id }}" class="p-3 bg-pink-50 rounded-lg text-pink-700 hover:bg-pink-100 text-center">
+                        <i class='bx bx-trending-up mb-1 text-2xl'></i>
+                        <span class="block text-sm">Performance</span>
+                    </a>
+                    <a href="mailto:{{ staff.email }}" class="p-3 bg-yellow-50 rounded-lg text-yellow-700 hover:bg-yellow-100 text-center">
                         <i class='bx bx-message-square-dots mb-1 text-2xl'></i>
                         <span class="block text-sm">Send Message</span>
-                    </button>
+                    </a>
                 </div>
             </div>
 
@@ -152,48 +176,495 @@
     <div class="bg-white rounded-lg shadow">
         <div class="border-b border-gray-200">
             <nav class="flex -mb-px">
-                <button class="px-6 py-4 text-blue-600 border-b-2 border-blue-600 font-medium">
+                <button class="tab-button px-6 py-4 text-blue-600 border-b-2 border-blue-600 font-medium" data-tab="leaveHistory">
                     Leave History
                 </button>
-                <button class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                <button class="tab-button px-6 py-4 text-gray-500 font-medium hover:text-gray-700" data-tab="attendance">
                     Attendance
                 </button>
-                <button class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                <button class="tab-button px-6 py-4 text-gray-500 font-medium hover:text-gray-700" data-tab="tasks">
                     Tasks
                 </button>
-                <button class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                <button class="tab-button px-6 py-4 text-gray-500 font-medium hover:text-gray-700" data-tab="documents">
                     Documents
                 </button>
-                <button class="px-6 py-4 text-gray-500 font-medium hover:text-gray-700">
+                <button class="tab-button px-6 py-4 text-gray-500 font-medium hover:text-gray-700" data-tab="performance">
                     Performance
                 </button>
             </nav>
         </div>
         <div class="p-6">
-            <!-- Tab Content -->
-            <div id="leaveHistory" class="space-y-4">
-                {% for leave in staff.leave_history %}
-                <div class="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                        <p class="font-medium text-gray-900">{{ leave.type }}</p>
-                        <p class="text-sm text-gray-500">{{ leave.start_date }} - {{ leave.end_date }}</p>
-                    </div>
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full
-                        {% if leave.status == 'Approved' %}bg-green-100 text-green-800
-                        {% elif leave.status == 'Pending' %}bg-yellow-100 text-yellow-800
-                        {% else %}bg-red-100 text-red-800{% endif %}">
-                        {{ leave.status }}
-                    </span>
+            <!-- Leave History Tab -->
+            <div id="leaveHistory" class="tab-content space-y-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-semibold text-gray-800">Leave Applications</h4>
+                    <a href="{{ url_for('hr.leave_management') }}?employee_id={{ staff.id }}&new=1" class="px-4 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700">Apply Leave</a>
                 </div>
-                {% endfor %}
+                {% if staff.leave_history %}
+                    {% for leave in staff.leave_history %}
+                    <div class="flex items-center justify-between p-4 border rounded-lg">
+                        <div>
+                            <p class="font-medium text-gray-900">{{ leave.type }}</p>
+                            <p class="text-sm text-gray-500">{{ leave.start_date }} - {{ leave.end_date }}</p>
+                            <p class="text-xs text-gray-400">{{ leave.days }} days</p>
+                        </div>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full
+                            {% if leave.status == 'Approved' %}bg-green-100 text-green-800
+                            {% elif leave.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ leave.status }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class='bx bx-calendar text-4xl mb-2'></i>
+                        <p>No leave applications found</p>
+                        <a href="{{ url_for('hr.leave_management') }}?employee_id={{ staff.id }}&new=1" class="text-blue-600 hover:underline text-sm">Apply for leave</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Attendance Tab -->
+            <div id="attendance" class="tab-content space-y-4 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-semibold text-gray-800">Attendance Records</h4>
+                    <a href="{{ url_for('hr.attendance') }}?employee_id={{ staff.id }}" class="px-4 py-2 bg-green-600 text-white rounded text-sm hover:bg-green-700">View All</a>
+                </div>
+                {% if staff.attendance_records %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for record in staff.attendance_records[:6] %}
+                        <div class="p-4 border rounded-lg">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm font-medium">{{ record.date.strftime('%B %d, %Y') }}</span>
+                                <span class="px-2 py-1 text-xs rounded-full
+                                    {% if record.status == 'Present' %}bg-green-100 text-green-800
+                                    {% elif record.status == 'Late' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {{ record.status }}
+                                </span>
+                            </div>
+                            <div class="text-xs text-gray-600">
+                                <p>Check-in: {{ record.check_in or 'N/A' }}</p>
+                                <p>Check-out: {{ record.check_out or 'N/A' }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class='bx bx-user-check text-4xl mb-2'></i>
+                        <p>No attendance records found</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Tasks Tab -->
+            <div id="tasks" class="tab-content space-y-4 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-semibold text-gray-800">Assigned Tasks</h4>
+                    <a href="{{ url_for('hr.tasks') }}?assignee_id={{ staff.id }}&new=1" class="px-4 py-2 bg-purple-600 text-white rounded text-sm hover:bg-purple-700">Assign Task</a>
+                </div>
+                {% if staff.tasks %}
+                    {% for task in staff.tasks %}
+                    <div class="p-4 border rounded-lg">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h5 class="font-medium text-gray-900">{{ task.title }}</h5>
+                                <p class="text-sm text-gray-600 mt-1">{{ task.description[:100] }}...</p>
+                                <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                                    <span>Due: {{ task.due_date.strftime('%B %d, %Y') if task.due_date else 'No deadline' }}</span>
+                                    <span>Priority: {{ task.priority }}</span>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full ml-4
+                                {% if task.status == 'Completed' %}bg-green-100 text-green-800
+                                {% elif task.status == 'In Progress' %}bg-blue-100 text-blue-800
+                                {% elif task.status == 'Overdue' %}bg-red-100 text-red-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ task.status }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class='bx bx-task text-4xl mb-2'></i>
+                        <p>No tasks assigned</p>
+                        <a href="{{ url_for('hr.tasks') }}?assignee_id={{ staff.id }}&new=1" class="text-blue-600 hover:underline text-sm">Assign a task</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Documents Tab -->
+            <div id="documents" class="tab-content space-y-4 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-semibold text-gray-800">Employee Documents</h4>
+                    <a href="{{ url_for('hr.upload_staff_document', staff_id=staff.id) }}" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">Upload Document</a>
+                </div>
+                {% if staff.documents %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% for doc in staff.documents %}
+                        <div class="p-4 border rounded-lg">
+                            <div class="flex items-start space-x-3">
+                                <div class="p-2 bg-gray-100 rounded">
+                                    {% set file_ext = doc.filename.split('.')[-1].lower() %}
+                                    {% if file_ext in ['pdf'] %}<i class='bx bxs-file-pdf text-red-600'></i>
+                                    {% elif file_ext in ['doc', 'docx'] %}<i class='bx bxs-file-doc text-blue-600'></i>
+                                    {% elif file_ext in ['jpg', 'jpeg', 'png'] %}<i class='bx bxs-image text-green-600'></i>
+                                    {% else %}<i class='bx bx-file text-gray-600'></i>{% endif %}
+                                </div>
+                                <div class="flex-1">
+                                    <h5 class="font-medium text-gray-900">{{ doc.name }}</h5>
+                                    <p class="text-sm text-gray-600">{{ doc.folder or 'General' }}</p>
+                                    <div class="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+                                        <span>{{ (doc.file_size / 1024 / 1024) | round(2) }} MB</span>
+                                        <span>{{ doc.uploaded_at.strftime('%B %d, %Y') }}</span>
+                                    </div>
+                                </div>
+                                <a href="{{ url_for('hr.download_staff_document', staff_id=staff.id, doc_id=doc.id) }}" class="text-blue-600 hover:text-blue-800">
+                                    <i class='bx bx-download'></i>
+                                </a>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class='bx bx-file text-4xl mb-2'></i>
+                        <p>No documents uploaded</p>
+                        <a href="{{ url_for('hr.upload_staff_document', staff_id=staff.id) }}" class="text-blue-600 hover:underline text-sm">Upload document</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Performance Tab -->
+            <div id="performance" class="tab-content space-y-4 hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="font-semibold text-gray-800">Performance Metrics</h4>
+                    <a href="{{ url_for('hr.analytics') }}?employee_id={{ staff.id }}" class="px-4 py-2 bg-pink-600 text-white rounded text-sm hover:bg-pink-700">View Details</a>
+                </div>
+                {% if staff.performance_reviews %}
+                    {% for review in staff.performance_reviews %}
+                    <div class="p-4 border rounded-lg">
+                        <div class="flex items-center justify-between mb-3">
+                            <h5 class="font-medium text-gray-900">{{ review.period }}</h5>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                {% if review.overall_rating >= 4 %}bg-green-100 text-green-800
+                                {% elif review.overall_rating >= 3 %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ review.overall_rating }}/5
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                            <div>
+                                <p class="text-gray-500">Quality</p>
+                                <p class="font-medium">{{ review.quality_rating }}/5</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">Productivity</p>
+                                <p class="font-medium">{{ review.productivity_rating }}/5</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">Teamwork</p>
+                                <p class="font-medium">{{ review.teamwork_rating }}/5</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">Communication</p>
+                                <p class="font-medium">{{ review.communication_rating }}/5</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class='bx bx-trending-up text-4xl mb-2'></i>
+                        <p>No performance reviews available</p>
+                        <a href="{{ url_for('hr.analytics') }}?employee_id={{ staff.id }}&new=1" class="text-blue-600 hover:underline text-sm">Create review</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Payroll Breakdown (Spreadsheet-like) -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-gray-800">Payroll Breakdown</h3>
+            <div class="space-x-2">
+                <a href="{{ url_for('hr.import_staff') }}" class="px-3 py-2 text-sm rounded bg-blue-600 text-white">Import Staff Data</a>
+                <button type="button" onclick="document.getElementById('addPayrollForm').classList.toggle('hidden')" class="px-3 py-2 text-sm rounded border">Add Payroll</button>
+            </div>
+        </div>
+        <div class="p-4">
+            <!-- Add Payroll Form -->
+            <form id="addPayrollForm" class="hidden mb-4 border rounded p-4 bg-gray-50" method="post" action="{{ url_for('hr.add_staff_payroll', staff_id=staff.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs text-gray-600">Period (Year)</label>
+                        <input type="number" name="period_year" value="" placeholder="YYYY" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Period (Month)</label>
+                        <input type="number" min="1" max="12" name="period_month" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Site</label>
+                        <input type="text" name="site" value="{{ staff.department }}" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Employment Date</label>
+                        <input type="date" name="employment_date" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Bank Name</label>
+                        <input type="text" name="bank_name" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Account Number</label>
+                        <input type="text" name="account_number" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Designation</label>
+                        <input type="text" name="designation" value="{{ staff.position }}" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Work Days</label>
+                        <input type="number" name="work_days" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Days Worked</label>
+                        <input type="number" name="days_worked" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Overtime Hours</label>
+                        <input type="number" step="0.1" name="overtime_hours" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Gross</label>
+                        <input type="number" step="0.01" name="gross" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Arrears</label>
+                        <input type="number" step="0.01" name="arrears" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Rice Contribution</label>
+                        <input type="number" step="0.01" name="rice_contribution" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Loan/Salary Advance</label>
+                        <input type="number" step="0.01" name="loan_or_salary_advance" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">JACO</label>
+                        <input type="number" step="0.01" name="jaco" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">MINNA PAYE</label>
+                        <input type="number" step="0.01" name="minna_paye" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Late Deduction</label>
+                        <input type="number" step="0.01" name="late_deduction" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                    <div>
+                        <label class="block text-xs text-gray-600">Balance Salary</label>
+                        <input type="number" step="0.01" name="balance_salary" class="w-full border rounded p-2 text-sm" />
+                    </div>
+                </div>
+                <div class="mt-3 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="document.getElementById('addPayrollForm').classList.add('hidden')" class="px-3 py-2 rounded border">Cancel</button>
+                    <button type="submit" class="px-3 py-2 rounded bg-green-600 text-white">Save</button>
+                </div>
+            </form>
+
+            <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-2 py-2 text-left">Site</th>
+                        <th class="px-2 py-2 text-left">Employment Date</th>
+                        <th class="px-2 py-2 text-left">Bank</th>
+                        <th class="px-2 py-2 text-left">Account No</th>
+                        <th class="px-2 py-2 text-left">Designation</th>
+                        <th class="px-2 py-2 text-right">Work Days</th>
+                        <th class="px-2 py-2 text-right">Days Worked</th>
+                        <th class="px-2 py-2 text-right">Overtime Hours</th>
+                        <th class="px-2 py-2 text-right">Gross</th>
+                        <th class="px-2 py-2 text-right">Arrears</th>
+                        <th class="px-2 py-2 text-right">Rice Contrib.</th>
+                        <th class="px-2 py-2 text-right">Loan/Advance</th>
+                        <th class="px-2 py-2 text-right">JACO</th>
+                        <th class="px-2 py-2 text-right">MINNA PAYE</th>
+                        <th class="px-2 py-2 text-right">Late Deduction</th>
+                        <th class="px-2 py-2 text-right">Balance Salary</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-100">
+                    {% for p in payrolls %}
+                    <tr>
+                        <td class="px-2 py-2">{{ p.site }}</td>
+                        <td class="px-2 py-2">{{ p.employment_date }}</td>
+                        <td class="px-2 py-2">{{ p.bank_name }}</td>
+                        <td class="px-2 py-2">{{ p.account_number }}</td>
+                        <td class="px-2 py-2">{{ p.designation }}</td>
+                        <td class="px-2 py-2 text-right">{{ p.work_days }}</td>
+                        <td class="px-2 py-2 text-right">{{ p.days_worked }}</td>
+                        <td class="px-2 py-2 text-right">{{ p.overtime_hours }}</td>
+                        <td class="px-2 py-2 text-right">₦{{ '{:,.2f}'.format(p.gross) }}</td>
+                        <td class="px-2 py-2 text-right">₦{{ '{:,.2f}'.format(p.arrears) }}</td>
+                        <td class="px-2 py-2 text-right">₦{{ '{:,.2f}'.format(p.rice_contribution) }}</td>
+                        <td class="px-2 py-2 text-right">₦{{ '{:,.2f}'.format(p.loan_or_salary_advance) }}</td>
+                        <td class="px-2 py-2 text-right">₦{{ '{:,.2f}'.format(p.jaco) }}</td>
+                        <td class="px-2 py-2 text-right">₦{{ '{:,.2f}'.format(p.minna_paye) }}</td>
+                        <td class="px-2 py-2 text-right">₦{{ '{:,.2f}'.format(p.late_deduction) }}</td>
+                        <td class="px-2 py-2 text-right">₦{{ '{:,.2f}'.format(p.balance_salary) }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="16" class="px-2 py-6 text-center text-gray-500">No payroll breakdown added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
             </div>
         </div>
     </div>
 </div>
 
 <!-- Edit Staff Modal -->
-<div id="editStaffModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-    <!-- Modal content here -->
+<div id="editStaffModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 m-4">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-gray-800">Edit Staff Information</h3>
+            <button type="button" class="text-gray-500 hover:text-gray-700" onclick="hideModal('editStaffModal')">
+                <i class='bx bx-x text-2xl'></i>
+            </button>
+        </div>
+        
+        <form method="post" action="{{ url_for('hr.edit_staff', staff_id=staff.id) }}" class="space-y-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <!-- Basic Information Section -->
+            <div class="border-b pb-4">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3">Basic Information</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Staff ID</label>
+                        <input type="text" name="staff_code" value="{{ staff.staff_code or '' }}" class="w-full border rounded p-2" placeholder="e.g. FA001">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Full Name *</label>
+                        <input type="text" name="name" value="{{ staff.name }}" class="w-full border rounded p-2" required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information Section -->
+            <div class="border-b pb-4">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3">Personal Information</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Email Address</label>
+                        <input type="email" name="email" value="{{ staff.email or '' }}" class="w-full border rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Phone Number</label>
+                        <input type="tel" name="phone" value="{{ staff.phone or '' }}" class="w-full border rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Date of Birth</label>
+                        <input type="date" name="dob" value="{{ staff.dob.strftime('%Y-%m-%d') if staff.dob else '' }}" class="w-full border rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Gender</label>
+                        <select name="gender" class="w-full border rounded p-2">
+                            <option value="">Select Gender</option>
+                            <option value="Male" {% if staff.gender == 'Male' %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if staff.gender == 'Female' %}selected{% endif %}>Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm text-gray-700 mb-1">Home Address</label>
+                    <textarea name="address" rows="2" class="w-full border rounded p-2">{{ staff.current_address or '' }}</textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Emergency Contact Name</label>
+                        <input type="text" name="emergency_contact_name" value="{{ staff.next_of_kin or '' }}" class="w-full border rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Emergency Contact Phone</label>
+                        <input type="tel" name="emergency_contact_phone" value="{{ staff.next_of_kin_phone or '' }}" class="w-full border rounded p-2">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employment Information Section -->
+            <div class="border-b pb-4">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3">Employment Information</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Employment Date</label>
+                        <input type="date" name="employment_date" value="{{ staff.date_of_employment.strftime('%Y-%m-%d') if staff.date_of_employment else '' }}" class="w-full border rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Employment Type</label>
+                        <select name="employment_type" class="w-full border rounded p-2">
+                            <option value="">Select Type</option>
+                            <option value="Full-time" {% if staff.employment_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                            <option value="Part-time" {% if staff.employment_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                            <option value="Contract" {% if staff.employment_type == 'Contract' %}selected{% endif %}>Contract</option>
+                            <option value="Intern" {% if staff.employment_type == 'Intern' %}selected{% endif %}>Intern</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Designation</label>
+                        <input type="text" name="designation" value="{{ staff.position or '' }}" class="w-full border rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Department/Site</label>
+                        <input type="text" name="site_department" value="{{ staff.department or '' }}" class="w-full border rounded p-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Status</label>
+                        <select name="status" class="w-full border rounded p-2">
+                            <option value="Active" {% if staff.status == 'Active' %}selected{% endif %}>Active</option>
+                            <option value="On Leave" {% if staff.status == 'On Leave' %}selected{% endif %}>On Leave</option>
+                            <option value="Resigned" {% if staff.status == 'Resigned' %}selected{% endif %}>Resigned</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information Section -->
+            <div class="pb-4">
+                <h4 class="text-sm font-semibold text-gray-800 mb-3">Additional Information</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Academic Qualification</label>
+                        <input type="text" name="academic_qualification" value="{{ staff.academic_qualification_at_employment or '' }}" class="w-full border rounded p-2" placeholder="e.g. BSc Computer Science">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-700 mb-1">Institution</label>
+                        <input type="text" name="institution" value="{{ staff.institution or '' }}" class="w-full border rounded p-2" placeholder="e.g. University of Lagos">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm text-gray-700 mb-1">Notes</label>
+                    <textarea name="notes" rows="3" class="w-full border rounded p-2" placeholder="Additional notes about the employee">{{ staff.notes or '' }}</textarea>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end space-x-3 pt-4 border-t">
+                <button type="button" onclick="hideModal('editStaffModal')" class="px-4 py-2 rounded border text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Update Staff</button>
+            </div>
+        </form>
+    </div>
 </div>
 {% endblock %}
 
@@ -201,19 +672,63 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Tab switching logic
-    const tabButtons = document.querySelectorAll('nav button');
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabContents = document.querySelectorAll('.tab-content');
+    
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
+            const targetTab = this.getAttribute('data-tab');
+            
             // Remove active state from all tabs
             tabButtons.forEach(btn => {
                 btn.classList.remove('text-blue-600', 'border-b-2', 'border-blue-600');
                 btn.classList.add('text-gray-500');
             });
+            
+            // Hide all tab contents
+            tabContents.forEach(content => {
+                content.classList.add('hidden');
+            });
+            
             // Add active state to clicked tab
             this.classList.remove('text-gray-500');
             this.classList.add('text-blue-600', 'border-b-2', 'border-blue-600');
+            
+            // Show target tab content
+            const targetContent = document.getElementById(targetTab);
+            if (targetContent) {
+                targetContent.classList.remove('hidden');
+            }
         });
     });
+});
+
+// Modal functions
+function showModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+}
+
+function hideModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('bg-opacity-50')) {
+        const modals = document.querySelectorAll('[id$="Modal"]');
+        modals.forEach(modal => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        });
+    }
 });
 </script>
 {% endblock %}

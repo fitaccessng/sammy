@@ -61,44 +61,56 @@
         <!-- New Task Form -->
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Assign New Task</h3>
-            <form id="taskForm" class="space-y-4">
+            <form id="taskForm" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Title</label>
-                    <input type="text" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                    <label class="block text-sm font-medium text-gray-700">Title *</label>
+                    <input type="text" name="title" required maxlength="128"
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                           placeholder="Enter task title">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Assignee</label>
-                    <select class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm">
-                        <option>Select Staff</option>
-                        {% for staff in staff_list %}
-                        <option value="{{ staff.id }}">{{ staff.name }}</option>
+                    <label class="block text-sm font-medium text-gray-700">Assignee *</label>
+                    <select name="assignee_id" required class="mt-1 block w-full rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Staff</option>
+                        {% for employee in all_employees %}
+                        <option value="{{ employee.id }}">{{ employee.name }}{% if employee.department %} - {{ employee.department }}{% endif %}</option>
                         {% endfor %}
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Priority</label>
-                    <select class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
-                        <option>Low</option>
-                        <option>Medium</option>
-                        <option>High</option>
-                        <option>Urgent</option>
+                    <label class="block text-sm font-medium text-gray-700">Priority *</label>
+                    <select name="priority" required class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Priority</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Due Date</label>
-                    <input type="date" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                    <label class="block text-sm font-medium text-gray-700">Due Date *</label>
+                    <input type="date" name="due_date" required
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea rows="3" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                    <textarea name="description" rows="3" 
+                              class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                              placeholder="Task description and requirements"></textarea>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                    Assign Task
+                <button type="submit" id="submitTaskBtn"
+                        class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50">
+                    <span id="submitTaskText">Assign Task</span>
+                    <span id="loadingTaskText" class="hidden">
+                        <i class='bx bx-loader bx-spin'></i> Assigning...
+                    </span>
                 </button>
             </form>
         </div>
@@ -108,15 +120,17 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Task Board</h3>
                 <div class="flex items-center space-x-3">
-                    <select class="rounded-md border-gray-300 shadow-sm text-sm">
-                        <option>All Tasks</option>
-                        <option>My Tasks</option>
-                        <option>Assigned Tasks</option>
+                    <select id="taskFilter" class="rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">All Tasks</option>
+                        <option value="my">My Tasks</option>
+                        <option value="assigned">Assigned Tasks</option>
                     </select>
-                    <select class="rounded-md border-gray-300 shadow-sm text-sm">
-                        <option>All Priority</option>
-                        <option>High Priority</option>
-                        <option>Urgent</option>
+                    <select id="priorityFilter" class="rounded-md border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">All Priority</option>
+                        <option value="Urgent">Urgent</option>
+                        <option value="High">High Priority</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
                     </select>
                 </div>
             </div>
@@ -124,50 +138,167 @@
             <div class="grid grid-cols-3 gap-4">
                 <!-- To Do -->
                 <div class="space-y-4">
-                    <h4 class="font-medium text-gray-800">To Do</h4>
-                    {% for task in tasks.todo %}
-                    <div class="p-4 bg-white border rounded-lg shadow-sm">
-                        <div class="flex justify-between items-start">
-                            <h5 class="text-sm font-medium text-gray-900">{{ task.title }}</h5>
-                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                                {% if task.priority == 'High' %}bg-red-100 text-red-800
-                                {% elif task.priority == 'Medium' %}bg-yellow-100 text-yellow-800
-                                {% else %}bg-blue-100 text-blue-800{% endif %}">
-                                {{ task.priority }}
-                            </span>
-                        </div>
-                        <p class="mt-2 text-sm text-gray-600">{{ task.description }}</p>
-                        <div class="mt-3 flex justify-between items-center">
-                            <div class="flex items-center">
-                                <img class="h-6 w-6 rounded-full" 
-                                     src="https://ui-avatars.com/api/?name={{ task.assignee }}" 
-                                     alt="{{ task.assignee }}">
-                                <span class="ml-2 text-xs text-gray-500">{{ task.assignee }}</span>
+                    <h4 class="font-medium text-gray-800 flex items-center">
+                        <i class='bx bx-list-ul mr-2'></i>
+                        To Do <span class="ml-2 bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">{{ tasks.todo|length }}</span>
+                    </h4>
+                    <div class="task-column" data-status="Pending" style="min-height: 300px;">
+                        {% for task in tasks.todo %}
+                        <div class="task-card p-4 bg-white border rounded-lg shadow-sm mb-3 cursor-pointer hover:shadow-md transition-shadow" 
+                             data-task-id="{{ task.id }}" data-priority="{{ task.priority }}" data-assignee="{{ task.assignee_id }}">
+                            <div class="flex justify-between items-start mb-2">
+                                <h5 class="text-sm font-medium text-gray-900">{{ task.title }}</h5>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                    {% if task.priority == 'Urgent' %}bg-red-100 text-red-800
+                                    {% elif task.priority == 'High' %}bg-orange-100 text-orange-800
+                                    {% elif task.priority == 'Medium' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {{ task.priority }}
+                                </span>
                             </div>
-                            <span class="text-xs text-gray-500">Due: {{ task.due_date }}</span>
+                            <p class="mt-2 text-sm text-gray-600">{{ task.description }}</p>
+                            <div class="mt-3 flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <img class="h-6 w-6 rounded-full" 
+                                         src="https://ui-avatars.com/api/?name={{ task.assignee|urlencode }}&background=random" 
+                                         alt="{{ task.assignee }}">
+                                    <span class="ml-2 text-xs text-gray-500">{{ task.assignee }}</span>
+                                </div>
+                                <span class="text-xs text-gray-500">
+                                    <i class='bx bx-calendar'></i> {{ task.due_date }}
+                                </span>
+                            </div>
+                            <div class="mt-2 flex justify-between items-center">
+                                <div class="flex space-x-1">
+                                    <button data-task-id="{{ task.id }}" data-new-status="In Progress" class="move-task-btn text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded hover:bg-blue-200">
+                                        Start
+                                    </button>
+                                    <button data-task-id="{{ task.id }}" class="view-task-btn text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">
+                                        View
+                                    </button>
+                                </div>
+                                <span class="text-xs text-gray-400">{{ task.progress }}%</span>
+                            </div>
                         </div>
+                        {% endfor %}
+                        {% if not tasks.todo %}
+                        <div class="text-center py-8 text-gray-400">
+                            <i class='bx bx-list-ul text-2xl'></i>
+                            <p class="text-sm mt-2">No pending tasks</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
 
                 <!-- In Progress -->
                 <div class="space-y-4">
-                    <h4 class="font-medium text-gray-800">In Progress</h4>
-                    {% for task in tasks.in_progress %}
-                    <div class="p-4 bg-white border rounded-lg shadow-sm">
-                        <!-- Same structure as To Do tasks -->
+                    <h4 class="font-medium text-gray-800 flex items-center">
+                        <i class='bx bx-loader mr-2'></i>
+                        In Progress <span class="ml-2 bg-blue-100 text-blue-600 px-2 py-1 rounded-full text-xs">{{ tasks.in_progress|length }}</span>
+                    </h4>
+                    <div class="task-column" data-status="In Progress" style="min-height: 300px;">
+                        {% for task in tasks.in_progress %}
+                        <div class="task-card p-4 bg-white border-l-4 border-blue-500 rounded-lg shadow-sm mb-3 cursor-pointer hover:shadow-md transition-shadow" 
+                             data-task-id="{{ task.id }}" data-priority="{{ task.priority }}" data-assignee="{{ task.assignee_id }}">
+                            <div class="flex justify-between items-start mb-2">
+                                <h5 class="text-sm font-medium text-gray-900">{{ task.title }}</h5>
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                    {% if task.priority == 'Urgent' %}bg-red-100 text-red-800
+                                    {% elif task.priority == 'High' %}bg-orange-100 text-orange-800
+                                    {% elif task.priority == 'Medium' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                    {{ task.priority }}
+                                </span>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-600">{{ task.description }}</p>
+                            <div class="mt-2">
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-blue-500 h-2 rounded-full" style="width: {{ task.progress }}%"></div>
+                                </div>
+                                <span class="text-xs text-gray-500 mt-1">Progress: {{ task.progress }}%</span>
+                            </div>
+                            <div class="mt-3 flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <img class="h-6 w-6 rounded-full" 
+                                         src="https://ui-avatars.com/api/?name={{ task.assignee|urlencode }}&background=random" 
+                                         alt="{{ task.assignee }}">
+                                    <span class="ml-2 text-xs text-gray-500">{{ task.assignee }}</span>
+                                </div>
+                                <span class="text-xs text-gray-500">
+                                    <i class='bx bx-calendar'></i> {{ task.due_date }}
+                                </span>
+                            </div>
+                            <div class="mt-2 flex justify-between items-center">
+                                <div class="flex space-x-1">
+                                    <button data-task-id="{{ task.id }}" data-new-status="Completed" class="move-task-btn text-xs bg-green-100 text-green-700 px-2 py-1 rounded hover:bg-green-200">
+                                        Complete
+                                    </button>
+                                    <button data-task-id="{{ task.id }}" class="view-task-btn text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">
+                                        View
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if not tasks.in_progress %}
+                        <div class="text-center py-8 text-gray-400">
+                            <i class='bx bx-loader text-2xl'></i>
+                            <p class="text-sm mt-2">No tasks in progress</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
 
                 <!-- Completed -->
                 <div class="space-y-4">
-                    <h4 class="font-medium text-gray-800">Completed</h4>
-                    {% for task in tasks.completed %}
-                    <div class="p-4 bg-white border rounded-lg shadow-sm opacity-75">
-                        <!-- Same structure as To Do tasks -->
+                    <h4 class="font-medium text-gray-800 flex items-center">
+                        <i class='bx bx-check-circle mr-2'></i>
+                        Completed <span class="ml-2 bg-green-100 text-green-600 px-2 py-1 rounded-full text-xs">{{ tasks.completed|length }}</span>
+                    </h4>
+                    <div class="task-column" data-status="Completed" style="min-height: 300px;">
+                        {% for task in tasks.completed %}
+                        <div class="task-card p-4 bg-white border-l-4 border-green-500 rounded-lg shadow-sm mb-3 opacity-75 cursor-pointer hover:opacity-100 transition-opacity" 
+                             data-task-id="{{ task.id }}" data-priority="{{ task.priority }}" data-assignee="{{ task.assignee_id }}">
+                            <div class="flex justify-between items-start mb-2">
+                                <h5 class="text-sm font-medium text-gray-900">{{ task.title }}</h5>
+                                <span class="px-2 py-1 text-xs font-semibold bg-green-100 text-green-800 rounded-full">
+                                    {{ task.priority }}
+                                </span>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-600">{{ task.description }}</p>
+                            <div class="mt-2">
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="bg-green-500 h-2 rounded-full" style="width: 100%"></div>
+                                </div>
+                                <span class="text-xs text-green-600 mt-1 font-medium">
+                                    <i class='bx bx-check'></i> Completed
+                                </span>
+                            </div>
+                            <div class="mt-3 flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <img class="h-6 w-6 rounded-full" 
+                                         src="https://ui-avatars.com/api/?name={{ task.assignee|urlencode }}&background=random" 
+                                         alt="{{ task.assignee }}">
+                                    <span class="ml-2 text-xs text-gray-500">{{ task.assignee }}</span>
+                                </div>
+                                <span class="text-xs text-gray-500">
+                                    <i class='bx bx-calendar'></i> {{ task.due_date }}
+                                </span>
+                            </div>
+                            <div class="mt-2 flex justify-end">
+                                <button data-task-id="{{ task.id }}" class="view-task-btn text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded hover:bg-gray-200">
+                                    View
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        {% if not tasks.completed %}
+                        <div class="text-center py-8 text-gray-400">
+                            <i class='bx bx-check-circle text-2xl'></i>
+                            <p class="text-sm mt-2">No completed tasks</p>
+                        </div>
+                        {% endif %}
                     </div>
-                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -179,17 +310,181 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const taskForm = document.getElementById('taskForm');
+    const submitTaskBtn = document.getElementById('submitTaskBtn');
+    const submitTaskText = document.getElementById('submitTaskText');
+    const loadingTaskText = document.getElementById('loadingTaskText');
+    const taskFilter = document.getElementById('taskFilter');
+    const priorityFilter = document.getElementById('priorityFilter');
     
+    // Form submission handling
     if (taskForm) {
         taskForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            // Add form submission logic here
+            
+            // Show loading state
+            submitTaskBtn.disabled = true;
+            submitTaskText.classList.add('hidden');
+            loadingTaskText.classList.remove('hidden');
+            
+            try {
+                const formData = new FormData(taskForm);
+                
+                const response = await fetch('{{ url_for("hr.tasks") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (response.ok) {
+                    // Show success message
+                    showNotification('Task assigned successfully!', 'success');
+                    taskForm.reset();
+                    
+                    // Refresh the page to show the new task
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    const errorData = await response.json();
+                    showNotification(errorData.error || 'Error assigning task', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Network error. Please try again.', 'error');
+            } finally {
+                // Reset button state
+                submitTaskBtn.disabled = false;
+                submitTaskText.classList.remove('hidden');
+                loadingTaskText.classList.add('hidden');
+            }
         });
     }
+    
+    // Task movement handling
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('move-task-btn')) {
+            const taskId = e.target.dataset.taskId;
+            const newStatus = e.target.dataset.newStatus;
+            moveTask(taskId, newStatus);
+        }
+        
+        if (e.target.classList.contains('view-task-btn')) {
+            const taskId = e.target.dataset.taskId;
+            viewTaskDetails(taskId);
+        }
+    });
+    
+    // Filter functionality
+    function filterTasks() {
+        const selectedFilter = taskFilter.value;
+        const selectedPriority = priorityFilter.value;
+        const taskCards = document.querySelectorAll('.task-card');
+        
+        taskCards.forEach(card => {
+            const priority = card.dataset.priority;
+            const assignee = card.dataset.assignee;
+            
+            let showCard = true;
+            
+            // Filter by priority
+            if (selectedPriority && priority !== selectedPriority) {
+                showCard = false;
+            }
+            
+            // Additional filters can be added here for "my tasks", etc.
+            
+            if (showCard) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        });
+    }
+    
+    // Add filter event listeners
+    if (taskFilter) {
+        taskFilter.addEventListener('change', filterTasks);
+    }
+    
+    if (priorityFilter) {
+        priorityFilter.addEventListener('change', filterTasks);
+    }
+});
 
-    // Add drag and drop functionality for tasks
-    // Add task status update functionality
-    // Add task filtering functionality
+// Move task function
+async function moveTask(taskId, newStatus) {
+    try {
+        const response = await fetch(`/hr/tasks/${taskId}/update`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                status: newStatus,
+                csrf_token: '{{ csrf_token }}'
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            showNotification(`Task moved to ${newStatus}`, 'success');
+            
+            // Refresh the page to show updated task board
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } else {
+            const errorData = await response.json();
+            showNotification(errorData.error || 'Error updating task', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Network error. Please try again.', 'error');
+    }
+}
+
+// View task details function
+function viewTaskDetails(taskId) {
+    // Redirect to task details page
+    window.location.href = `/hr/tasks/${taskId}`;
+}
+
+// Notification function
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+    }`;
+    notification.innerHTML = `
+        <div class="flex items-center">
+            <i class='bx ${type === 'success' ? 'bx-check-circle' : type === 'error' ? 'bx-error-circle' : 'bx-info-circle'} mr-2'></i>
+            <span>${message}</span>
+        </div>
+    `;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Set default due date to tomorrow
+document.addEventListener('DOMContentLoaded', function() {
+    const dueDateInput = document.querySelector('input[name="due_date"]');
+    if (dueDateInput) {
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        dueDateInput.value = tomorrow.toISOString().split('T')[0];
+    }
 });
 </script>
 {% endblock %}

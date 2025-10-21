@@ -67,7 +67,7 @@ def signup():
 def get_dashboard_route(role):
     dashboard_routes = {
         # HQ Level Routes
-        Roles.SUPER_HQ: 'admin.index',          # Fixed endpoint name
+        Roles.SUPER_HQ: 'admin.dashboard',      # Fixed endpoint name
         Roles.HQ_FINANCE: 'finance.finance_home',
         Roles.HQ_HR: 'hr.hr_home',
         Roles.HQ_PROCUREMENT: 'procurement.procurement_home',
@@ -213,4 +213,12 @@ def drop_db():
         db.session.rollback()
         flash(f'Error dropping database: {str(e)}', 'error')
     return redirect(url_for('main.main_home'))
+
+
+@main_bp.route('/logout')
+def logout():
+    from flask_login import logout_user
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('main.login'))
 

@@ -1,0 +1,329 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Equipment Management - Admin Dashboard{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="/static/css/tailwind.css">
+<link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-0">Equipment Management</h1>
+        <a href="{{ url_for('admin.add_equipment') }}" 
+           class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-md hover:shadow-lg">
+            <i class='bx bx-plus mr-2'></i>
+            Add New Equipment
+        </a>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg bg-{{ 'red-100' if category == 'danger' else 'green-100' }} text-{{ 'red-700' if category == 'danger' else 'green-700' }} border border-{{ 'red-200' if category == 'danger' else 'green-200' }}">
+                    <i class='bx {{ 'bx-error' if category == 'danger' else 'bx-check-circle' }} mr-2'></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Equipment Statistics Cards -->
+    {% if equipment_stats %}
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Equipment</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ equipment_stats.total_equipment }}</p>
+                </div>
+                <i class='bx bx-cog text-3xl text-blue-500'></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Active</p>
+                    <p class="text-2xl font-bold text-green-600">{{ equipment_stats.active_equipment }}</p>
+                </div>
+                <i class='bx bx-check-circle text-3xl text-green-500'></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Maintenance</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ equipment_stats.maintenance_equipment }}</p>
+                </div>
+                <i class='bx bx-wrench text-3xl text-yellow-500'></i>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-red-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Inactive</p>
+                    <p class="text-2xl font-bold text-red-600">{{ equipment_stats.inactive_equipment }}</p>
+                </div>
+                <i class='bx bx-x-circle text-3xl text-red-500'></i>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Equipment Table -->
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Machine Hours</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Diesel Consumption</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Maintenance Due</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for equip in equipment %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <i class='bx bx-cog text-xl text-gray-400 mr-3'></i>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ equip.name }}</div>
+                                    <div class="text-sm text-gray-500 sm:hidden">
+                                        {{ equip.machine_hours or 0 }} hrs | {{ equip.diesel_consumption or 0 }} L
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full
+                                {% if equip.status == 'Active' %}bg-green-100 text-green-800
+                                {% elif 'maintenance' in (equip.status or '').lower() %}bg-yellow-100 text-yellow-800
+                                {% elif equip.status in ['Inactive', 'Out of Service', 'Retired'] %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ equip.status or 'Unknown' }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 hidden sm:table-cell">
+                            {{ equip.machine_hours or 0 }} hrs
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 hidden md:table-cell">
+                            {{ equip.diesel_consumption or 0 }} L
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 hidden lg:table-cell">
+                            {% if equip.maintenance_due %}
+                                <span class="text-orange-600 font-medium">{{ equip.maintenance_due.strftime('%Y-%m-%d') }}</span>
+                            {% else %}
+                                <span class="text-gray-400">N/A</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex flex-col sm:flex-row gap-1 sm:gap-2">
+                                <button onclick="viewEquipment({{ equip.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors duration-200">
+                                    <i class='bx bx-show text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">View</span>
+                                </button>
+                                <button onclick="editEquipment({{ equip.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors duration-200">
+                                    <i class='bx bx-edit text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">Edit</span>
+                                </button>
+                                {% if equip.status != 'Maintenance' %}
+                                <button onclick="scheduleMaintenance({{ equip.id }})" 
+                                        class="inline-flex items-center px-2 py-1 text-xs bg-orange-100 text-orange-700 rounded hover:bg-orange-200 transition-colors duration-200">
+                                    <i class='bx bx-wrench text-sm mr-1'></i>
+                                    <span class="hidden sm:inline">Maintenance</span>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-500">
+                            <i class='bx bx-cog text-4xl text-gray-300 mb-2 block'></i>
+                            <p class="text-lg font-medium">No equipment found</p>
+                            <p class="text-sm">Start by adding your first piece of equipment.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Equipment View Modal -->
+<div id="equipmentViewModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900" id="modalTitle">Equipment Details</h3>
+                <button onclick="closeEquipmentModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            
+            <div id="modalContent" class="space-y-4">
+                <!-- Content will be loaded here -->
+            </div>
+            
+            <div class="flex justify-end mt-6">
+                <button onclick="closeEquipmentModal()" 
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors duration-200">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewEquipment(id) {
+    // Show loading state
+    document.getElementById('modalTitle').textContent = 'Loading...';
+    document.getElementById('modalContent').innerHTML = '<div class="text-center py-4"><i class="bx bx-loader-alt animate-spin text-2xl"></i></div>';
+    document.getElementById('equipmentViewModal').classList.remove('hidden');
+    
+    // Fetch equipment data
+    fetch(`/admin/equipment/${id}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                displayEquipmentDetails(data.equipment);
+            } else {
+                showError('Failed to load equipment details: ' + data.message);
+            }
+        })
+        .catch(error => {
+            showError('Error loading equipment details: ' + error.message);
+        });
+}
+
+function displayEquipmentDetails(equipment) {
+    document.getElementById('modalTitle').textContent = equipment.name;
+    
+    const content = `
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <i class='bx bx-tag text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Name:</span>
+                    <span class="ml-2 text-gray-900">${equipment.name}</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-check-circle text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Status:</span>
+                    <span class="ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(equipment.status)}">
+                        ${equipment.status || 'Unknown'}
+                    </span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-time text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Machine Hours:</span>
+                    <span class="ml-2 text-gray-900">${equipment.machine_hours || 0} hrs</span>
+                </div>
+            </div>
+            
+            <div class="space-y-3">
+                <div class="flex items-center">
+                    <i class='bx bx-gas-pump text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Diesel Consumption:</span>
+                    <span class="ml-2 text-gray-900">${equipment.diesel_consumption || 0} L</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-wrench text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Maintenance Due:</span>
+                    <span class="ml-2 text-gray-900">${equipment.maintenance_due || 'N/A'}</span>
+                </div>
+                
+                <div class="flex items-center">
+                    <i class='bx bx-calendar text-gray-400 mr-2'></i>
+                    <span class="font-medium text-gray-700">Created:</span>
+                    <span class="ml-2 text-gray-900">${equipment.created_at || 'N/A'}</span>
+                </div>
+            </div>
+        </div>
+        
+        ${equipment.remarks ? `
+        <div class="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div class="flex items-start">
+                <i class='bx bx-note text-gray-400 mr-2 mt-1'></i>
+                <div>
+                    <span class="font-medium text-gray-700">Remarks:</span>
+                    <p class="mt-1 text-gray-900">${equipment.remarks}</p>
+                </div>
+            </div>
+        </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('modalContent').innerHTML = content;
+}
+
+function getStatusColor(status) {
+    switch(status) {
+        case 'Active':
+            return 'bg-green-100 text-green-800';
+        case 'Maintenance':
+        case 'Under Maintenance':
+            return 'bg-yellow-100 text-yellow-800';
+        case 'Inactive':
+        case 'Out of Service':
+        case 'Retired':
+            return 'bg-red-100 text-red-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function showError(message) {
+    document.getElementById('modalTitle').textContent = 'Error';
+    document.getElementById('modalContent').innerHTML = `
+        <div class="text-center py-4">
+            <i class='bx bx-error-circle text-4xl text-red-500 mb-2'></i>
+            <p class="text-red-600">${message}</p>
+        </div>
+    `;
+}
+
+function closeEquipmentModal() {
+    document.getElementById('equipmentViewModal').classList.add('hidden');
+}
+
+function editEquipment(id) {
+    window.location.href = `/admin/edit-equipment/${id}`;
+}
+
+function scheduleMaintenance(id) {
+    if (confirm('Schedule maintenance for this equipment?')) {
+        // You can implement maintenance scheduling here
+        alert('Maintenance scheduling functionality to be implemented for equipment ID: ' + id);
+    }
+}
+
+// Close modal when clicking outside
+document.getElementById('equipmentViewModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEquipmentModal();
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeEquipmentModal();
+    }
+});
+</script>
+{% endblock %}

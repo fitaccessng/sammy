@@ -1,1433 +1,3749 @@
-from flask import Blueprint, render_template, redirect, url_for, session, flash, request, current_app
+from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, session, send_file, current_app
+from flask_login import current_user, login_required
+from datetime import datetime, timedelta
+import csv
+import io
+import os
+from werkzeug.utils import secure_filename
+from sqlalchemy import func
+from extensions import db
+from models import (Role, ReportingLine, ApprovalHierarchy, Permission, Payroll, Employee, 
+                   Project, Asset, Stock, PurchaseOrder, PurchaseOrderLineItem, Supplier, 
+                   Incident, Alert, Schedule, Milestone, User, Budget, Expense, Task, Equipment, 
+                   Document, StaffAssignment, BOQItem, ProjectActivity, ProjectDocument)
 from utils.decorators import role_required
 from utils.constants import Roles
-from werkzeug.utils import secure_filename
-from extensions import db
-import os
-import uuid
-from flask_wtf import FlaskForm, CSRFProtect
-from wtforms import StringField, FileField, SelectField, DateField
-from wtforms.validators import DataRequired, Length
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-from mimetypes import guess_type
-from datetime import datetime, timedelta
-from flask_login import login_required, current_user
+from utils.email import send_verification_email
 from flask_mail import Message
-from models import User, Employee, Project, db, Attendance, Equipment, PurchaseOrder, Payroll, Checkbook, Expense, Task, Audit, Inspection, PayrollHistory, EmployeeSalaryHistory, PayrollTransaction, MonthlyPayrollSummary
+from extensions import mail
 
-# Import blueprints
-from .hr import hr_bp
-from .project import project_bp
-from .finance import finance_bp
-from .files import files_bp
+def send_order_notification(user_email, order_number, status, reason=None):
+    """Send email notification for purchase order status changes"""
+    try:
+        subject = f"Purchase Order {order_number} - Status Update"
+        
+        if status == 'Approved':
+            body = f"""
+Dear User,
 
-csrf = CSRFProtect()
-limiter = Limiter(key_func=get_remote_address)
+Your Purchase Order {order_number} has been APPROVED.
 
-admin_bp = Blueprint('admin', __name__)
+The order is now approved and will proceed to the next stage in the procurement process.
 
-# Register blueprints (to be done in app.py or wsgi.py)
-# app.register_blueprint(admin_bp)
-# app.register_blueprint(hr_bp)
-# app.register_blueprint(projects_bp)
-# app.register_blueprint(finance_bp)
-# app.register_blueprint(files_bp)
+Best regards,
+Construction Management Team
+            """
+        elif status == 'Rejected':
+            body = f"""
+Dear User,
 
+Your Purchase Order {order_number} has been REJECTED.
+
+Reason: {reason or 'No specific reason provided'}
+
+Please review the rejection reason and resubmit the order with necessary corrections if required.
+
+Best regards,
+Construction Management Team
+            """
+        
+        msg = Message(subject,
+                     sender=current_app.config['MAIL_DEFAULT_SENDER'],
+                     recipients=[user_email])
+        msg.body = body
+        
+        mail.send(msg)
+        return True
+    except Exception as e:
+        current_app.logger.error(f"Failed to send order notification: {str(e)}")
+        return False
+
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+
+# Dashboard Route
 @admin_bp.route('/')
 @role_required([Roles.SUPER_HQ])
-def index():
+def dashboard():
     try:
-        # Key Metrics
-        # Active projects change: compare current count to last month's
-        today = datetime.today()
-        first_of_month = today.replace(day=1)
-        last_month = first_of_month - timedelta(days=1)
-        first_of_last_month = last_month.replace(day=1)
-        last_of_last_month = last_month.replace(day=last_month.day)
-        current_active = Project.query.filter_by(status='Active').count()
-        last_month_active = Project.query.filter(Project.status=='Active', Project.created_at >= first_of_last_month, Project.created_at <= last_of_last_month).count()
-        active_projects = {
-            "count": current_active,
-            "change": current_active - last_month_active
+        # Get summary stats for dashboard
+        total_roles = Role.query.count()
+        total_reporting_lines = ReportingLine.query.count()
+        total_approval_hierarchies = ApprovalHierarchy.query.count()
+        total_permissions = Permission.query.count()
+        total_employees = Employee.query.count()
+        
+        summary = {
+            'total_roles': total_roles,
+            'total_reporting_lines': total_reporting_lines,
+            'total_approval_hierarchies': total_approval_hierarchies,
+            'total_permissions': total_permissions,
+            'total_employees': total_employees
         }
-        # Attendance percent: percent of present employees today
-        today_date = today.date()
-        attendance_records = Attendance.query.filter_by(date=today_date).all()
-        present = sum(1 for a in attendance_records if a.status == 'Present')
-        total_attendance = len(attendance_records) if attendance_records else Employee.query.count()
-        attendance_percent = int((present / total_attendance) * 100) if total_attendance else 0
-        total_workers = {
-            "count": Employee.query.count(),
-            "attendance_percent": attendance_percent
-        }
-        equipment_status = {
-            "available": Equipment.query.filter_by(status='Active').count(),
-            "total": Equipment.query.count(),
-            "maintenance": Equipment.query.filter_by(status='Maintenance').count()
-        }
-        pending_orders = {
-            "count": PurchaseOrder.query.filter_by(status='Pending').count(),
-            "urgent": PurchaseOrder.query.filter_by(status='Urgent').count()
-        }
-
-        # Project Progress
-        project_progress = [
-            {
-                "name": p.name,
-                "percent": int(p.progress or 0),
-                "color": "bg-green-500" if p.progress and p.progress > 70 else "bg-blue-500" if p.progress and p.progress > 50 else "bg-yellow-500" if p.progress and p.progress > 30 else "bg-red-500"
-            }
-            for p in Project.query.all()
-        ]
-
-        # Recent Activity (example, adjust for your models)
-        recent_activity = [
-            {
-                "bg": "bg-blue-100",
-                "icon": "bx-task",
-                "icon_color": "text-blue-600",
-                "title": "Task Completed",
-                "description": "Foundation work for Tower B",
-                "time": "2 hours ago"
-            },
-            # TODO: Add more from your models
-        ]
-
-        # Quick Actions
-        quick_actions = [
-            {
-                "url": url_for('admin.add_project'),
-                "bg": "bg-blue-50",
-                "text": "text-blue-700",
-                "hover": "bg-blue-100",
-                "icon": "bx-plus-circle",
-                "label": "New Project"
-            },
-            {
-                "url": url_for('admin.add_employee'),
-                "bg": "bg-green-50",
-                "text": "text-green-700",
-                "hover": "bg-green-100",
-                "icon": "bx-user-plus",
-                "label": "Add Worker"
-            },
-            {
-                "url": url_for('admin.dashboard_upload'),
-                "bg": "bg-yellow-50",
-                "text": "text-yellow-700",
-                "hover": "bg-yellow-100",
-                "icon": "bx-file",
-                "label": "Upload File"
-            },
-            {
-                "url": url_for('admin.payroll'),
-                "bg": "bg-purple-50",
-                "text": "text-purple-700",
-                "hover": "bg-purple-100",
-                "icon": "bx-credit-card",
-                "label": "Payroll"
-            },
-            {
-                "url": url_for('admin.orders'),
-                "bg": "bg-red-50",
-                "text": "text-red-700",
-                "hover": "bg-red-100",
-                "icon": "bx-cart",
-                "label": "Orders"
-            }
-        ]
-
-        # Financial Overview
-        financial_overview = [
-            {
-                "label": "Bank Balance",
-                "value": f"${Checkbook.query.with_entities(db.func.sum(Checkbook.balance)).scalar() or 0:,.2f}"
-            },
-            {
-                "label": "Monthly Expenses",
-                "value": f"${Expense.query.with_entities(db.func.sum(Expense.amount)).scalar() or 0:,.2f}"
-            },
-            {
-                "label": "Pending Payroll",
-                "value": f"${Payroll.query.filter_by(status='Generated').with_entities(db.func.sum(Payroll.amount)).scalar() or 0:,.2f}"
-            },
-            {
-                "label": "Outstanding Payments",
-                "value": f"${PurchaseOrder.query.filter_by(status='Pending').with_entities(db.func.sum(PurchaseOrder.total_amount)).scalar() or 0:,.2f}"
-            }
-        ]
-
-        return render_template(
-            'admin/index.html',
-            active_projects=active_projects,
-            total_workers=total_workers,
-            equipment_status=equipment_status,
-            pending_orders=pending_orders,
-            project_progress=project_progress,
-            recent_activity=recent_activity,
-            quick_actions=quick_actions,
-            financial_overview=financial_overview
-        )
+        
+        return render_template('admin/dashboard.html', summary=summary)
     except Exception as e:
-        flash(f'Error loading dashboard: {str(e)}', 'danger')
-        # Pass default values for all expected template variables
-        return render_template(
-            'admin/index.html',
-            active_projects={"count": 0, "change": 0},
-            total_workers={"count": 0, "attendance_percent": 0},
-            equipment_status={"available": 0, "total": 0, "maintenance": 0},
-            pending_orders={"count": 0, "urgent": 0},
-            project_progress=[],
-            recent_activity=[],
-            quick_actions=[],
-            financial_overview=[]
-        )
+        flash(f'Error loading dashboard: {str(e)}', 'error')
+        return render_template('error.html'), 500
 
-@admin_bp.route('/profile', methods=['GET', 'POST'])
+# Roles Management Views
+@admin_bp.route('/roles-view')
 @role_required([Roles.SUPER_HQ])
-def profile():
+def roles_view():
     try:
-        if request.method == 'POST':
-            flash('Profile updated!', 'success')
-            return redirect(url_for('admin.profile'))
-        return render_template('admin/profile.html')
-    except Exception as e:
-        flash(f'Error updating profile: {str(e)}', 'danger')
-        return render_template('admin/profile.html')
-
-@admin_bp.route('/logout')
-def logout():
-    session.clear()
-    flash('You have been logged out successfully', 'success')
-    return redirect(url_for('main.login'))
-
-@admin_bp.route('/dashboard/data')
-@role_required([Roles.SUPER_HQ])
-def dashboard_data():
-    try:
-        # Example: Fetch data from other blueprints' models/services
-        hr_data = current_app.hr_service.get_all_employees() if hasattr(current_app, 'hr_service') else []
-        projects_data = current_app.projects_service.get_all_projects() if hasattr(current_app, 'projects_service') else []
-        finance_data = current_app.finance_service.get_all_financials() if hasattr(current_app, 'finance_service') else []
-        files_data = current_app.files_service.get_all_files() if hasattr(current_app, 'files_service') else []
-        return render_template('admin/dashboard_data.html', hr=hr_data, projects=projects_data, finance=finance_data, files=files_data)
-    except Exception as e:
-        flash(f'Error fetching dashboard data: {str(e)}', 'danger')
-        return render_template('admin/dashboard_data.html', hr=[], projects=[], finance=[], files=[])
-
-@admin_bp.route('/dashboard/upload', methods=['GET', 'POST'])
-@role_required([Roles.SUPER_HQ])
-def dashboard_upload():
-    class UploadForm(FlaskForm):
-        file = FileField('File', validators=[DataRequired()])
-    form = UploadForm()
-    if form.validate_on_submit():
-        file = form.file.data
-        filename = secure_filename(file.filename)
-        file.save(os.path.join(current_app.config['UPLOAD_FOLDER'], filename))
-        flash('File uploaded successfully!', 'success')
-        return redirect(url_for('admin.dashboard_upload'))
-    return render_template('admin/dashboard_upload.html', form=form)
-
-@admin_bp.route('/dashboard/decision', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def dashboard_decision():
-    try:
-        data_id = request.form.get('data_id')
-        action = request.form.get('action')
-        data_type = request.form.get('data_type')  # e.g., 'project', 'employee', 'file', 'finance'
-        result = None
-        # Decision logic for each data type
-        if data_type == 'project':
-            if action == 'approve':
-                result = current_app.projects_service.approve_project(data_id)
-            elif action == 'archive':
-                result = current_app.projects_service.archive_project(data_id)
-            elif action == 'delete':
-                result = current_app.projects_service.delete_project(data_id)
-        elif data_type == 'employee':
-            if action == 'approve':
-                result = current_app.hr_service.approve_employee(data_id)
-            elif action == 'reject':
-                result = current_app.hr_service.reject_employee(data_id)
-            elif action == 'assign':
-                site = request.form.get('site')
-                result = current_app.hr_service.assign_employee_to_site(data_id, site)
-            elif action == 'delete':
-                result = current_app.hr_service.delete_employee(data_id)
-        elif data_type == 'file':
-            if action == 'archive':
-                result = current_app.files_service.archive_file(data_id)
-            elif action == 'delete':
-                result = current_app.files_service.delete_file(data_id)
-        elif data_type == 'finance':
-            if action == 'approve':
-                result = current_app.finance_service.approve_transaction(data_id)
-            elif action == 'reject':
-                result = current_app.finance_service.reject_transaction(data_id)
-        # Log the action for audit
-        try:
-            if hasattr(current_app, 'audit_service'):
-                current_app.audit_service.log_action(
-                    user=session.get('user'),
-                    action=action,
-                    data_type=data_type,
-                    data_id=data_id
-                )
-        except Exception:
-            pass  # Don't block main action if audit fails
-        flash(f'Action {action} on {data_type} performed successfully!', 'success')
-    except Exception as e:
-        flash(f'Error performing action: {str(e)}', 'danger')
-    return redirect(url_for('admin.dashboard_data'))
-
-@admin_bp.route('/dashboard/action-log', methods=['GET'])
-@role_required([Roles.SUPER_HQ])
-def dashboard_action_log():
-    try:
-        user = request.args.get('user', '').strip()
-        action = request.args.get('action', '').strip()
-        data_type = request.args.get('data_type', '').strip()
-        page = request.args.get('page', 1, type=int)
-        per_page = 20
-        logs_query = current_app.audit_service.get_action_log_query() if hasattr(current_app, 'audit_service') else None
-        if logs_query:
-            if user:
-                logs_query = logs_query.filter_by(user=user)
-            if action:
-                logs_query = logs_query.filter_by(action=action)
-            if data_type:
-                logs_query = logs_query.filter_by(data_type=data_type)
-            logs = logs_query.order_by('timestamp desc').paginate(page=page, per_page=per_page, error_out=False)
-            return render_template('admin/action_log.html', logs=logs.items, page=page, pages=logs.pages, user=user, action=action, data_type=data_type)
-        else:
-            return render_template('admin/action_log.html', logs=[], page=page, pages=0, user=user, action=action, data_type=data_type)
-    except Exception as e:
-        flash(f'Error loading action log: {str(e)}', 'danger')
-        return render_template('admin/action_log.html', logs=[], page=1, pages=0, user='', action='', data_type='')
-
-# Advanced File Management
-@admin_bp.route('/files/move', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def move_files():
-    try:
-        file_ids = request.form.getlist('file_ids')
-        target_folder = request.form.get('target_folder')
-        if not file_ids or not target_folder:
-            flash('File IDs and target folder are required.', 'danger')
-            return redirect(url_for('files.search_files'))
-        for file_id in file_ids:
-            current_app.files_service.move_file(file_id, target_folder)
-        flash('Files moved successfully!', 'success')
-    except Exception as e:
-        flash(f'Error moving files: {str(e)}', 'danger')
-    return redirect(url_for('files.search_files'))
-
-@admin_bp.route('/files/bulk-delete', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def bulk_delete_files():
-    try:
-        file_ids = request.form.getlist('file_ids')
-        if not file_ids:
-            flash('No files selected for deletion.', 'danger')
-            return redirect(url_for('files.search_files'))
-        for file_id in file_ids:
-            current_app.files_service.delete_file(file_id)
-        flash('Files deleted successfully!', 'success')
-    except Exception as e:
-        flash(f'Error deleting files: {str(e)}', 'danger')
-    return redirect(url_for('files.search_files'))
-
-@admin_bp.route('/files/download/<int:file_id>', methods=['GET'])
-@role_required([Roles.SUPER_HQ])
-def download_file(file_id):
-    try:
-        file_record = current_app.files_service.get_file(file_id)
-        if not file_record:
-            flash('File not found.', 'danger')
-            return redirect(url_for('files.search_files'))
-        return current_app.send_static_file(file_record.path)
-    except Exception as e:
-        flash(f'Error downloading file: {str(e)}', 'danger')
-        return redirect(url_for('files.search_files'))
-
-@admin_bp.route('/files/bulk-tag', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def bulk_tag_files():
-    try:
-        file_ids = request.form.getlist('file_ids')
-        tags = request.form.get('tags', '').strip()
-        if not file_ids or not tags:
-            flash('File IDs and tags are required.', 'danger')
-            return redirect(url_for('files.search_files'))
-        for file_id in file_ids:
-            current_app.files_service.tag_file(file_id, tags)
-        flash('Tags updated for selected files!', 'success')
-    except Exception as e:
-        flash(f'Error tagging files: {str(e)}', 'danger')
-    return redirect(url_for('files.search_files'))
-
-# Advanced Analytics
-@admin_bp.route('/analytics/custom', methods=['GET'])
-@role_required([Roles.SUPER_HQ])
-def analytics_custom():
-    try:
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        data_type = request.args.get('data_type')
-        user = request.args.get('user')
-        results = current_app.analytics_service.custom_query(start_date, end_date, data_type, user) if hasattr(current_app, 'analytics_service') else []
-        return render_template('admin/analytics_custom.html', results=results, start_date=start_date, end_date=end_date, data_type=data_type, user=user)
-    except Exception as e:
-        flash(f'Error running custom analytics: {str(e)}', 'danger')
-        return render_template('admin/analytics_custom.html', results=[], start_date=None, end_date=None, data_type=None, user=None)
-
-@admin_bp.route('/analytics/export-csv', methods=['GET'])
-@role_required([Roles.SUPER_HQ])
-def analytics_export_csv():
-    try:
-        start_date = request.args.get('start_date')
-        end_date = request.args.get('end_date')
-        data_type = request.args.get('data_type')
-        user = request.args.get('user')
-        csv_data = current_app.analytics_service.export_csv(start_date, end_date, data_type, user) if hasattr(current_app, 'analytics_service') else ''
-        return render_template('admin/analytics_export_csv.html', csv_data=csv_data)
-    except Exception as e:
-        flash(f'Error exporting analytics: {str(e)}', 'danger')
-        return render_template('admin/analytics_export_csv.html', csv_data=None)
-
-# Custom Dashboard
-@admin_bp.route('/dashboard/custom', methods=['GET'])
-@role_required([Roles.SUPER_HQ])
-def custom_dashboard():
-    try:
-        widgets = current_app.dashboard_service.get_widgets(session.get('user')) if hasattr(current_app, 'dashboard_service') else []
-        return render_template('admin/custom_dashboard.html', widgets=widgets)
-    except Exception as e:
-        flash(f'Error loading custom dashboard: {str(e)}', 'danger')
-        return render_template('admin/custom_dashboard.html', widgets=[])
-
-@admin_bp.route('/dashboard/save-layout', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def save_dashboard_layout():
-    try:
-        layout = request.form.get('layout')
-        current_app.dashboard_service.save_layout(session.get('user'), layout)
-        flash('Dashboard layout saved!', 'success')
-    except Exception as e:
-        flash(f'Error saving dashboard layout: {str(e)}', 'danger')
-    return redirect(url_for('admin.custom_dashboard'))
-
-@admin_bp.route('/attendance')
-@role_required([Roles.SUPER_HQ])
-def attendance():
-    try:
-        date = request.args.get('date')
-        site = request.args.get('site')
-        # Get all unique sites from Employee table
-        sites = [e.site for e in Employee.query.distinct(Employee.site).all() if e.site]
-        query = Attendance.query
-        if date:
-            query = query.filter_by(date=date)
-        if site and site != 'All Sites':
-            query = query.join(Employee).filter(Employee.site == site)
-        attendance_records = query.all()
-        present = sum(1 for a in attendance_records if a.status == 'Present')
-        absent = sum(1 for a in attendance_records if a.status == 'Absent')
-        late = sum(1 for a in attendance_records if a.status == 'Late')
-        on_leave = sum(1 for a in attendance_records if a.status == 'On Leave')
-        return render_template(
-            'admin/hr/attendance.html',
-            attendance_records=attendance_records,
-            present=present,
-            absent=absent,
-            late=late,
-            on_leave=on_leave,
-            sites=sites
-        )
-    except Exception as e:
-        flash(f'Error loading attendance: {str(e)}', 'danger')
-        return render_template('admin/hr/attendance.html', attendance_records=[], present=0, absent=0, late=0, on_leave=0, sites=[])
-
-@admin_bp.route('/employees')
-@role_required([Roles.SUPER_HQ])
-def employees():
-    try:
+        # Get all employees
         employees = Employee.query.all()
-        departments = [e.department for e in Employee.query.distinct(Employee.department).all() if e.department]
-        return render_template('admin/hr/employees.html', employees=employees, departments=departments)
-    except Exception as e:
-        flash(f'Error loading employees: {str(e)}', 'danger')
-        return render_template('admin/hr/employees.html', employees=[], departments=[])
-
-@admin_bp.route('/payroll')
-@role_required([Roles.SUPER_HQ])
-def payroll():
-    try:
-        month = request.args.get('month', default=datetime.now().month, type=int)
-        department = request.args.get('department', default='', type=str)
-        current_year = datetime.now().year
-
-        # Get all employees and departments
-        employees_query = Employee.query
-        if department:
-            employees_query = employees_query.filter_by(department=department)
-        employees = employees_query.all()
-        total_staff = len(employees)
-        departments = [e.department for e in Employee.query.distinct(Employee.department).all() if e.department]
-
-        # Get payrolls for selected month and year
-        payrolls_query = Payroll.query.filter(
-            db.extract('month', Payroll.period_end) == month,
-            db.extract('year', Payroll.period_end) == current_year
-        )
-        if department:
-            payrolls_query = payrolls_query.join(Employee).filter(Employee.department == department)
-        payrolls = payrolls_query.all()
-        staff_being_paid = len(set([p.employee_id for p in payrolls]))
-
-        # Calculate total payroll for selected month
-        total_payroll = sum([getattr(p, 'amount', 0) + getattr(p, 'overtime', 0) if hasattr(p, 'overtime') else 0 - getattr(p, 'deductions', 0) for p in payrolls])
-
-        # Get the set total salary for the selected month
-        month_total_salary = None
-        payroll_record = Payroll.query.filter(
-            db.extract('month', Payroll.period_end) == month,
-            db.extract('year', Payroll.period_end) == current_year
-        ).order_by(Payroll.id.desc()).first()
-        if payroll_record and payroll_record.amount:
-            month_total_salary = payroll_record.amount
-
-        # Pair payrolls with employees for table
-        payroll_employee_pairs = []
-        for p in payrolls:
-            emp = Employee.query.get(p.employee_id)
-            if emp:
-                payroll_employee_pairs.append((p, emp))
-
-        # Fetch payroll history
-        payroll_histories = PayrollHistory.query.order_by(PayrollHistory.created_at.desc()).limit(10).all()
-        # Fetch salary history (last 10 records)
-        salary_histories = EmployeeSalaryHistory.query.order_by(EmployeeSalaryHistory.created_at.desc()).limit(10).all()
-        # Fetch transaction history (last 10 records)
-        transaction_histories = PayrollTransaction.query.order_by(PayrollTransaction.transaction_date.desc()).limit(10).all()
-
-        return render_template(
-            'admin/hr/payroll.html',
-            payrolls=payroll_employee_pairs,
-            total_payroll=total_payroll,
-            total_staff=total_staff,
-            staff_being_paid=staff_being_paid,
-            next_payday=datetime.now().strftime('%B %d, %Y'),
-            departments=departments,
-            selected_department=department,
-            current_month=month,
-            payroll_histories=payroll_histories,
-            salary_histories=salary_histories,
-            transaction_histories=transaction_histories,
-            employees=employees,
-            month_total_salary=month_total_salary,
-            payroll={'amount': month_total_salary or 0}
-        )
-    except Exception as e:
-        flash(f'Error loading payroll: {str(e)}', 'danger')
-        return render_template('admin/hr/payroll.html', payrolls=[], total_payroll=0, total_staff=0, staff_being_paid=0, next_payday=None, departments=[], selected_department='', current_month=datetime.now().month, employees=[], month_total_salary=None, payroll={'amount': 0})
-
-@admin_bp.route('/dashboard/progress')
-@role_required([Roles.SUPER_HQ])
-def dashboard_progress():
-    try:
-        # Fetch actual project progress from Project model
-        projects = Project.query.all()
-        project_progress = [
-            {"name": p.name, "percent": int(p.progress or 0)} for p in projects
+        
+        # Get system roles from the Role model
+        system_roles = Role.query.all()
+        
+        # Get available system roles from constants for role assignment
+        from utils.constants import Roles
+        available_roles = [
+            {'id': 1, 'value': Roles.SUPER_HQ, 'name': 'Super HQ Admin'},
+            {'id': 2, 'value': Roles.HQ_FINANCE, 'name': 'HQ Finance Manager'},
+            {'id': 3, 'value': Roles.HQ, 'name': 'HQ Manager'},
+            {'id': 4, 'value': Roles.HQ_HR, 'name': 'HQ HR Manager'},
+            {'id': 5, 'value': Roles.HQ_PROCUREMENT, 'name': 'HQ Procurement Manager'},
+            {'id': 6, 'value': Roles.QUARRY_MANAGER, 'name': 'Quarry Manager'},
+            {'id': 7, 'value': Roles.PROJECT_MANAGER, 'name': 'Project Manager'},
+            {'id': 8, 'value': Roles.HQ_COST_CONTROL, 'name': 'HQ Cost Control Manager'},
+            {'id': 9, 'value': Roles.FINANCE_STAFF, 'name': 'Finance Staff'},
+            {'id': 10, 'value': Roles.HR_STAFF, 'name': 'HR Staff'},
+            {'id': 11, 'value': Roles.PROCUREMENT_STAFF, 'name': 'Procurement Staff'},
+            {'id': 12, 'value': Roles.PROCUREMENT_OFFICER, 'name': 'Procurement Officer'},
+            {'id': 13, 'value': Roles.QUARRY_STAFF, 'name': 'Quarry Staff'},
+            {'id': 14, 'value': Roles.PROJECT_STAFF, 'name': 'Project Staff'},
         ]
-        # Fetch recent site updates (example: last 3 tasks, audits, or inspections)
-        recent_tasks = Task.query.order_by(Task.updated_at.desc()).limit(3).all()
-        site_updates = []
-        for t in recent_tasks:
-            site_updates.append({
-                "type": "task",
-                "title": t.title,
-                "desc": f"Task for project {t.project.name}",
-                "time": t.updated_at.strftime('%b %d, %H:%M') if t.updated_at else "",
-                "icon": "bx-task",
-                "color": "blue"
+        
+        # Role display names mapping
+        role_names = {
+            'super_hq': 'Super HQ Admin',
+            'hq_finance': 'HQ Finance Manager',
+            'hr': 'HQ Manager',
+            'hq_hr': 'HQ HR Manager',
+            'hq_procurement': 'HQ Procurement Manager',
+            'hq_quarry': 'Quarry Manager',
+            'hq_project': 'Project Manager',
+            'hq_cost_control': 'HQ Cost Control Manager',
+            'finance_staff': 'Finance Staff',
+            'hr_staff': 'HR Staff',
+            'procurement_staff': 'Procurement Staff',
+            'procurement_officer': 'Procurement Officer',
+            'quarry_staff': 'Quarry Staff',
+            'project_staff': 'Project Staff',
+        }
+        
+        # Create employee data with current role information
+        employee_data = []
+        for emp in employees:
+            current_role_name = role_names.get(emp.role, emp.role or 'No Role Assigned')
+            
+            # Find role ID if employee has a role
+            current_role_id = None
+            if emp.role:
+                # Try to find matching role from available roles
+                for role in available_roles:
+                    if role['value'] == emp.role:
+                        current_role_id = role['id']  # Use the proper role ID
+                        break
+            
+            employee_data.append({
+                'id': emp.id,
+                'name': emp.name,
+                'email': getattr(emp, 'email', 'N/A'),
+                'department': getattr(emp, 'department', 'N/A'),
+                'position': getattr(emp, 'position', 'N/A'),
+                'current_role': current_role_name,
+                'current_role_value': emp.role,
+                'current_role_id': current_role_id,  # Add current_role_id for template
+                'status': getattr(emp, 'status', 'Active'),
+                'is_verified': True,
+                'created_at': emp.created_at.strftime('%Y-%m-%d') if emp.created_at else 'N/A'
             })
-        recent_audits = Audit.query.order_by(Audit.date.desc()).limit(1).all()
-        for a in recent_audits:
-            site_updates.append({
-                "type": "audit",
-                "title": "Audit Completed" if a.status == "Approved" else "Audit Pending",
-                "desc": a.name,
-                "time": a.date.strftime('%b %d'),
-                "icon": "bx-clipboard",
-                "color": "green" if a.status == "Approved" else "yellow"
-            })
-        recent_inspections = Inspection.query.order_by(Inspection.date.desc()).limit(1).all()
-        for i in recent_inspections:
-            site_updates.append({
-                "type": "inspection",
-                "title": "Inspection Scheduled",
-                "desc": i.site,
-                "time": i.date.strftime('%b %d'),
-                "icon": "bx-search",
-                "color": "purple"
-            })
-        # Only show up to 3 updates
-        site_updates = site_updates[:3]
+        
+        # Count employees by role and get employee lists
+        role_counts = {}
+        role_users = {}
+        
+        for role in available_roles:
+            employees_with_role = Employee.query.filter_by(role=role['value']).all()
+            count = len(employees_with_role)
+            role_counts[role['value']] = count
+            role_users[role['value']] = [{'id': emp.id, 'name': emp.name, 'email': emp.email} for emp in employees_with_role]
+        
+        # Also count employees with no role
+        unassigned_employees = Employee.query.filter(
+            (Employee.role == None) | 
+            (Employee.role == '') | 
+            (~Employee.role.in_([role['value'] for role in available_roles]))
+        ).all()
+        
+        role_counts['no_role'] = len(unassigned_employees)
+        role_users['no_role'] = [{'id': emp.id, 'name': emp.name, 'email': emp.email} for emp in unassigned_employees]
 
-        return render_template('admin/dashboard_progress.html', project_progress=project_progress, site_updates=site_updates)
+        return render_template('admin/roles.html', 
+                             available_roles=available_roles,
+                             roles=available_roles,  # Provide roles for template compatibility
+                             employees=employee_data,
+                             users=employee_data,  # Alias for template compatibility
+                             role_counts=role_counts,
+                             role_users=role_users)
     except Exception as e:
-        flash(f'Error loading project progress: {str(e)}', 'danger')
-        return render_template('admin/dashboard_progress.html', project_progress=[], site_updates=[])
-
-@admin_bp.route('/employees/<int:employee_id>/edit', methods=['GET', 'POST'])
-@role_required([Roles.SUPER_HQ])
-def edit_employee(employee_id):
-    try:
-        employee = Employee.query.get_or_404(employee_id)
-        class EditEmployeeForm(FlaskForm):
-            name = StringField('Name', validators=[DataRequired(), Length(max=100)])
-            department = StringField('Department', validators=[DataRequired(), Length(max=50)])
-            role = StringField('Role', validators=[DataRequired(), Length(max=50)])
-        form = EditEmployeeForm(obj=employee)
-        if form.validate_on_submit():
-            employee.name = form.name.data
-            employee.department = form.department.data
-            employee.role = form.role.data
-            db.session.commit()
-            flash('Employee updated successfully!', 'success')
-            return redirect(url_for('admin.employees'))
-        return render_template('admin/hr/edit_employee.html', form=form, employee=employee)
+        flash(f'Error loading roles: {str(e)}', 'error')
+        return render_template('error.html'), 500
     except Exception as e:
-        flash(f'Error editing employee: {str(e)}', 'danger')
-        return render_template('admin/hr/edit_employee.html', form=None, employee=None)
+        flash(f'Error loading roles: {str(e)}', 'error')
+        return render_template('error.html'), 500
 
-@admin_bp.route('/employees/<int:employee_id>/delete', methods=['POST'])
+@admin_bp.route('/assign-role', methods=['POST'])
 @role_required([Roles.SUPER_HQ])
-def delete_employee(employee_id):
+def assign_role():
     try:
-        employee = Employee.query.get_or_404(employee_id)
-        db.session.delete(employee)
+        current_app.logger.info("=== ASSIGN ROLE DEBUG START ===")
+        
+        data = request.get_json()
+        current_app.logger.info(f"Request data: {data}")
+        
+        employee_id = data.get('employee_id')
+        role_id = data.get('role_id')
+        
+        current_app.logger.info(f"Employee ID: {employee_id}, Role ID: {role_id}")
+        
+        # Get the employee
+        employee = Employee.query.get(employee_id)
+        if not employee:
+            current_app.logger.error(f"Employee not found with ID: {employee_id}")
+            return jsonify({'status': 'error', 'message': 'Employee not found'})
+        
+        current_app.logger.info(f"Found employee: {employee.name}")
+        
+        # Get available roles for validation
+        from utils.constants import Roles
+        available_roles = [
+            {'id': 1, 'value': Roles.SUPER_HQ, 'name': 'Super HQ Admin'},
+            {'id': 2, 'value': Roles.HQ_FINANCE, 'name': 'HQ Finance Manager'},
+            {'id': 3, 'value': Roles.HQ, 'name': 'HQ Manager'},
+            {'id': 4, 'value': Roles.HQ_HR, 'name': 'HQ HR Manager'},
+            {'id': 5, 'value': Roles.HQ_PROCUREMENT, 'name': 'HQ Procurement Manager'},
+            {'id': 6, 'value': Roles.QUARRY_MANAGER, 'name': 'Quarry Manager'},
+            {'id': 7, 'value': Roles.PROJECT_MANAGER, 'name': 'Project Manager'},
+            {'id': 8, 'value': Roles.HQ_COST_CONTROL, 'name': 'HQ Cost Control Manager'},
+            {'id': 9, 'value': Roles.FINANCE_STAFF, 'name': 'Finance Staff'},
+            {'id': 10, 'value': Roles.HR_STAFF, 'name': 'HR Staff'},
+            {'id': 11, 'value': Roles.PROCUREMENT_STAFF, 'name': 'Procurement Staff'},
+            {'id': 12, 'value': Roles.PROCUREMENT_OFFICER, 'name': 'Procurement Officer'},
+            {'id': 13, 'value': Roles.QUARRY_STAFF, 'name': 'Quarry Staff'},
+            {'id': 14, 'value': Roles.PROJECT_STAFF, 'name': 'Project Staff'},
+        ]
+        
+        # Find the role by ID
+        selected_role = None
+        if role_id:
+            for role in available_roles:
+                if role['id'] == role_id:
+                    selected_role = role
+                    break
+            
+            if not selected_role:
+                current_app.logger.error(f"Invalid role ID: {role_id}")
+                return jsonify({'status': 'error', 'message': 'Invalid role selected'})
+        
+        current_app.logger.info(f"Selected role: {selected_role}")
+        
+        # Update employee role
+        old_role = employee.role
+        old_role_name = 'No Role' if not old_role else old_role
+        
+        if selected_role:
+            employee.role = selected_role['value']
+            new_role_name = selected_role['name']
+            message = f"Role assigned successfully! {employee.name} is now assigned as {new_role_name}."
+        else:
+            employee.role = None
+            new_role_name = 'No Role'
+            message = f"Role removed successfully! {employee.name} no longer has an assigned role."
+        
+        current_app.logger.info(f"About to commit changes: {employee.name} -> {new_role_name}")
         db.session.commit()
-        flash('Employee deleted successfully!', 'success')
+        current_app.logger.info(f"Changes committed successfully")
+        
+        # Log the role change
+        current_app.logger.info(f"Role assignment: {employee.name} (ID: {employee.id}) - {old_role_name} → {new_role_name}")
+        current_app.logger.info("=== ASSIGN ROLE DEBUG END ===")
+        
+        return jsonify({
+            'status': 'success',
+            'message': message,
+            'employee_id': employee.id,
+            'old_role': old_role,
+            'new_role': employee.role,
+            'new_role_name': new_role_name
+        })
+    
     except Exception as e:
-        flash(f'Error deleting employee: {str(e)}', 'danger')
-    return redirect(url_for('admin.employees'))
+        db.session.rollback()
+        current_app.logger.error(f"Error in assign_role: {str(e)}")
+        current_app.logger.error(f"Exception type: {type(e)}")
+        import traceback
+        current_app.logger.error(f"Traceback: {traceback.format_exc()}")
+        return jsonify({'status': 'error', 'message': f'Error assigning role: {str(e)}'})
 
-@admin_bp.route('/employees/<int:employee_id>')
+@admin_bp.route('/assign-employee-role', methods=['POST'])
+@role_required([Roles.SUPER_HQ])  
+def assign_employee_role():
+    # Legacy endpoint - redirect to new assign_role endpoint
+    return assign_role()
+
+@admin_bp.route('/remove-employee-role', methods=['POST'])
 @role_required([Roles.SUPER_HQ])
-def view_employee(employee_id):
+def remove_employee_role():
     try:
-        employee = Employee.query.get_or_404(employee_id)
-        payroll_history = employee.payrolls.order_by(Payroll.date.desc()).all() if hasattr(employee, 'payrolls') else []
-        attendance_history = employee.attendances.order_by(Attendance.date.desc()).all() if hasattr(employee, 'attendances') else []
-        return render_template('admin/hr/view_employee.html', employee=employee, payroll_history=payroll_history, attendance_history=attendance_history)
+        data = request.get_json()
+        employee_id = data.get('employee_id')
+        
+        # Get the employee
+        employee = Employee.query.get(employee_id)
+        if not employee:
+            return jsonify({'status': 'error', 'message': 'Employee not found'})
+        
+        # Remove employee role
+        old_role = employee.role
+        employee.role = None
+        db.session.commit()
+        
+        # Send notification email if employee has email
+        try:
+            if employee.email:
+                from utils.email import send_email
+                subject = "Role Removal Notification"
+                body = f"""Dear {employee.name},
+
+Your role assignment has been removed from the Construction Management System.
+
+Previous Role: {old_role or 'No Role'}
+Current Status: No Role Assigned
+
+Please contact your administrator if you believe this is an error.
+
+Best regards,
+Construction Management Team"""
+                
+                send_email(employee.email, subject, body)
+        except Exception as email_error:
+            current_app.logger.warning(f'Failed to send role removal email to {employee.email}: {str(email_error)}')
+        
+        return jsonify({
+            'status': 'success', 
+            'message': f'Role removed successfully for {employee.name}',
+            'employee_id': employee_id
+        })
+        
     except Exception as e:
-        flash(f'Error loading employee details: {str(e)}', 'danger')
-        return render_template('admin/hr/view_employee.html', employee=None, payroll_history=[], attendance_history=[])
+        db.session.rollback()
+        current_app.logger.error(f'Error removing role: {str(e)}')
+        return jsonify({'status': 'error', 'message': f'Error removing role: {str(e)}'})
+
+# Reporting Lines Management Views
+@admin_bp.route('/reporting-lines-view')
+@role_required([Roles.SUPER_HQ])
+def reporting_lines_view():
+    try:
+        lines = ReportingLine.query.all()
+        employees = Employee.query.all()
+        # Create a list with manager and staff names
+        reporting_data = []
+        for line in lines:
+            manager = Employee.query.get(line.manager_id)
+            staff = Employee.query.get(line.staff_id)
+            reporting_data.append({
+                'id': line.id,
+                'manager_id': line.manager_id,
+                'staff_id': line.staff_id,
+                'manager_name': manager.name if manager else 'Unknown',
+                'staff_name': staff.name if staff else 'Unknown'
+            })
+        return render_template('admin/reporting_lines.html', 
+                             reporting_data=reporting_data, 
+                             employees=employees)
+    except Exception as e:
+        flash(f'Error loading reporting lines: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+# Approval Hierarchy Management Views
+@admin_bp.route('/approval-hierarchy-view')
+@role_required([Roles.SUPER_HQ])
+def approval_hierarchy_view():
+    try:
+        hierarchies = ApprovalHierarchy.query.all()
+        roles = Role.query.all()
+        # Create hierarchy data with role names
+        hierarchy_data = []
+        for h in hierarchies:
+            role = Role.query.get(h.role_id)
+            hierarchy_data.append({
+                'id': h.id,
+                'process': h.process,
+                'level': h.level,
+                'role_id': h.role_id,
+                'role_name': role.name if role else 'Unknown'
+            })
+        return render_template('admin/approval_hierarchy.html', 
+                             hierarchy_data=hierarchy_data, 
+                             roles=roles)
+    except Exception as e:
+        flash(f'Error loading approval hierarchy: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+# Permissions Management Views
+@admin_bp.route('/permissions-view')
+@role_required([Roles.SUPER_HQ])
+def permissions_view():
+    try:
+        permissions = Permission.query.all()
+        roles = Role.query.all()
+        # Create permissions data with role names
+        permission_data = []
+        for p in permissions:
+            role = Role.query.get(p.role_id)
+            permission_data.append({
+                'id': p.id,
+                'role_id': p.role_id,
+                'resource': p.resource,
+                'action': p.action,
+                'role_name': role.name if role else 'Unknown'
+            })
+        return render_template('admin/permissions.html', 
+                             permission_data=permission_data, 
+                             roles=roles)
+    except Exception as e:
+        flash(f'Error loading permissions: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+# Oversight Reports View
+@admin_bp.route('/oversight-reports-view')
+@role_required([Roles.SUPER_HQ])
+def oversight_reports_view():
+    try:
+        # Get actual business metrics from database
+        project_count = Project.query.count() or 0
+        active_projects = Project.query.filter(
+            Project.status.in_(['Active', 'In Progress', 'Ongoing'])
+        ).count() or 0
+        employee_count = Employee.query.count() or 0
+        
+        # Get incident data
+        open_incidents = Incident.query.filter_by(status='Open').count() or 0
+        total_incidents_this_month = Incident.query.filter(
+            Incident.date_reported >= datetime.now().replace(day=1).date()
+        ).count() or 0
+        
+        # Calculate actual budget metrics
+        total_budget = db.session.query(db.func.sum(Project.budget)).scalar() or 0
+        
+        # Get equipment/asset counts
+        active_equipment = Asset.query.filter_by(status='Active').count() or 0
+        maintenance_equipment = Asset.query.filter(
+            Asset.status.in_(['Maintenance', 'Under Maintenance'])
+        ).count() or 0
+        inactive_equipment = Asset.query.filter(
+            Asset.status.in_(['Retired', 'Inactive', 'Out of Service'])
+        ).count() or 0
+        
+        # Calculate equipment utilization
+        total_equipment = active_equipment + maintenance_equipment + inactive_equipment
+        equipment_utilization = round(
+            (active_equipment / total_equipment * 100) if total_equipment > 0 else 0, 1
+        )
+        
+        # Get purchase order data
+        pending_orders_value = db.session.query(
+            db.func.sum(PurchaseOrder.total_amount)
+        ).filter_by(status='Pending').scalar() or 0
+        
+        # Calculate spent amount from completed orders
+        spent_amount = db.session.query(
+            db.func.sum(PurchaseOrder.total_amount)
+        ).filter(PurchaseOrder.status.in_(['Completed', 'Delivered'])).scalar() or 0
+        
+        # Calculate budget utilization percentage
+        budget_percentage = round(
+            (spent_amount / total_budget * 100) if total_budget > 0 else 0, 1
+        )
+        
+        # Get recent submissions from multiple sources
+        recent_submissions = []
+        
+        # Add recent projects
+        recent_projects = Project.query.order_by(Project.created_at.desc()).limit(3).all()
+        for project in recent_projects:
+            recent_submissions.append({
+                'type': 'project',
+                'title': f"Project: {project.name}",
+                'department': 'Construction',
+                'date': project.created_at.strftime('%Y-%m-%d') if project.created_at else 'N/A',
+                'status': project.status or 'Active'
+            })
+        
+        # Add recent incidents
+        recent_incidents = Incident.query.order_by(Incident.date_reported.desc()).limit(2).all()
+        for incident in recent_incidents:
+            recent_submissions.append({
+                'type': 'incident',
+                'title': f"Safety Report: {incident.title}",
+                'department': 'Safety',
+                'date': incident.date_reported.strftime('%Y-%m-%d') if incident.date_reported else 'N/A',
+                'status': incident.status or 'Open'
+            })
+        
+        # Add recent purchase orders
+        recent_orders = PurchaseOrder.query.order_by(PurchaseOrder.created_at.desc()).limit(2).all()
+        for order in recent_orders:
+            recent_submissions.append({
+                'type': 'order',
+                'title': f"Purchase Order: {order.order_number}",
+                'department': 'Procurement',
+                'date': order.created_at.strftime('%Y-%m-%d') if order.created_at else 'N/A',
+                'status': order.status or 'Pending'
+            })
+        
+        # Get project progress data for active projects
+        project_progress = []
+        active_project_list = Project.query.filter(
+            Project.status.in_(['Active', 'In Progress', 'Ongoing'])
+        ).limit(5).all()
+        
+        for project in active_project_list:
+            # Calculate progress based on timeline if dates are available
+            progress = project.progress if hasattr(project, 'progress') and project.progress else 0
+            
+            if not progress and project.start_date and project.end_date:
+                total_days = (project.end_date - project.start_date).days
+                if total_days > 0:
+                    days_elapsed = (datetime.now().date() - project.start_date).days
+                    progress = min(100, max(0, round((days_elapsed / total_days * 100))))
+                else:
+                    progress = 50  # Default for same-day projects
+            elif not progress:
+                progress = 25  # Default progress for projects without timeline
+            
+            project_progress.append({
+                'name': project.name,
+                'progress': progress,
+                'due_date': project.end_date.strftime('%Y-%m-%d') if project.end_date else None,
+                'budget': project.budget
+            })
+        
+        # Calculate safety metrics
+        recent_incident = Incident.query.order_by(Incident.date_reported.desc()).first()
+        days_since_incident = 0
+        if recent_incident and recent_incident.date_reported:
+            if isinstance(recent_incident.date_reported, datetime):
+                days_since_incident = (datetime.now().date() - recent_incident.date_reported.date()).days
+            else:
+                days_since_incident = (datetime.now().date() - recent_incident.date_reported).days
+        
+        # Mock safety calculations (could be improved with actual training data)
+        safety_training_completion = max(50, 100 - (total_incidents_this_month * 10))
+        safety_score = max(40, 100 - (total_incidents_this_month * 8))
+        
+        # Get recent business activities
+        recent_activities = []
+        
+        # Add recent project activities
+        for project in recent_projects[:2]:
+            recent_activities.append({
+                'type': 'project',
+                'description': f'Project created: {project.name}',
+                'department': f'Construction - {project.project_manager}' if project.project_manager else 'Construction',
+                'timestamp': project.created_at.strftime('%Y-%m-%d %H:%M') if project.created_at else 'N/A',
+                'priority': 'High' if project.budget and project.budget > 1000000 else 'Medium'
+            })
+        
+        # Add recent safety activities
+        for incident in recent_incidents[:2]:
+            recent_activities.append({
+                'type': 'safety',
+                'description': f'Incident reported: {incident.title}',
+                'department': f'Safety - {incident.reported_by}' if incident.reported_by else 'Safety',
+                'timestamp': incident.date_reported.strftime('%Y-%m-%d') if incident.date_reported else 'N/A',
+                'priority': incident.severity if incident.severity else 'Medium'
+            })
+        
+        # Add recent financial activities
+        for order in recent_orders[:2]:
+            recent_activities.append({
+                'type': 'financial',
+                'description': f'Purchase order: {order.order_number}',
+                'department': f'Procurement - {order.supplier}' if order.supplier else 'Procurement',
+                'timestamp': order.created_at.strftime('%Y-%m-%d %H:%M') if order.created_at else 'N/A',
+                'priority': 'High' if order.total_amount and order.total_amount > 500000 else 'Low'
+            })
+        
+        # Generate comprehensive business oversight report
+        report_data = {
+            # Key metrics for the dashboard cards
+            'project_count': project_count,
+            'pending_reports': open_incidents,  # Using open incidents as pending reports
+            'budget_percentage': budget_percentage,
+            'incident_count': total_incidents_this_month,
+            'active_equipment': active_equipment,
+            
+            # Equipment metrics
+            'maintenance_equipment': maintenance_equipment,
+            'inactive_equipment': inactive_equipment,
+            'equipment_utilization': equipment_utilization,
+            
+            # Financial metrics
+            'total_budget': total_budget,
+            'spent_amount': spent_amount,
+            'pending_orders_value': pending_orders_value,
+            
+            # Safety metrics
+            'days_since_incident': days_since_incident,
+            'safety_training_completion': safety_training_completion,
+            'safety_score': safety_score,
+            
+            # Data lists
+            'recent_submissions': recent_submissions,
+            'project_progress': project_progress,
+            'recent_activities': recent_activities
+        }
+        
+        return render_template('admin/oversight_reports.html', report=report_data)
+    except Exception as e:
+        current_app.logger.error(f'Error in oversight_reports_view: {str(e)}')
+        flash(f'Error loading oversight reports: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+# POST/GET /admin/roles
+@admin_bp.route('/roles', methods=['POST', 'GET'])
+def manage_roles():
+    if request.method == 'POST':
+        data = request.get_json()
+        role = Role(name=data.get('name'))
+        db.session.add(role)
+        db.session.commit()
+        return jsonify({'status': 'success', 'id': role.id})
+    roles = Role.query.all()
+    return jsonify([{'id': r.id, 'name': r.name} for r in roles])
+
+# POST/GET /admin/reporting-lines
+@admin_bp.route('/reporting-lines', methods=['POST', 'GET'])
+def manage_reporting_lines():
+    if request.method == 'POST':
+        try:
+            data = request.get_json()
+            manager_id = data.get('manager_id')
+            staff_id = data.get('staff_id')
+            
+            # Validation
+            if not manager_id or not staff_id:
+                return jsonify({'status': 'error', 'message': 'Both manager and staff must be selected'}), 400
+                
+            if manager_id == staff_id:
+                return jsonify({'status': 'error', 'message': 'An employee cannot report to themselves'}), 400
+                
+            # Check if reporting line already exists
+            existing = ReportingLine.query.filter_by(manager_id=manager_id, staff_id=staff_id).first()
+            if existing:
+                return jsonify({'status': 'error', 'message': 'This reporting relationship already exists'}), 400
+            
+            rl = ReportingLine(manager_id=manager_id, staff_id=staff_id)
+            db.session.add(rl)
+            db.session.commit()
+            
+            # Notify manager and staff
+            from models import Employee
+            from utils.email import send_email
+            manager = Employee.query.get(manager_id)
+            staff = Employee.query.get(staff_id)
+            if manager and hasattr(manager, 'email') and manager.email:
+                subject = "Reporting Line Assigned"
+                body = f"Dear {manager.name},\nYou are now the manager for {staff.name if staff else 'staff member'}."
+                send_email(manager.email, subject, body)
+            if staff and hasattr(staff, 'email') and staff.email:
+                subject = "Reporting Line Assigned"
+                body = f"Dear {staff.name},\nYou now report to {manager.name if manager else 'your manager'}."
+                send_email(staff.email, subject, body)
+                
+            current_app.logger.info(f"Reporting line created: {staff.name if staff else staff_id} reports to {manager.name if manager else manager_id}")
+            return jsonify({'status': 'success', 'id': rl.id, 'message': 'Reporting line created successfully'})
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating reporting line: {str(e)}")
+            return jsonify({'status': 'error', 'message': f'Error creating reporting line: {str(e)}'}), 500
+            
+    lines = ReportingLine.query.all()
+    return jsonify([{'id': l.id, 'manager_id': l.manager_id, 'staff_id': l.staff_id} for l in lines])
+
+# DELETE /admin/reporting-lines/<id>
+@admin_bp.route('/reporting-lines/<int:line_id>', methods=['DELETE'])
+def delete_reporting_line(line_id):
+    try:
+        reporting_line = ReportingLine.query.get_or_404(line_id)
+        
+        # Get employee details for logging before deletion
+        from models import Employee
+        manager = Employee.query.get(reporting_line.manager_id)
+        staff = Employee.query.get(reporting_line.staff_id)
+        
+        db.session.delete(reporting_line)
+        db.session.commit()
+        
+        current_app.logger.info(f"Reporting line deleted: {staff.name if staff else reporting_line.staff_id} no longer reports to {manager.name if manager else reporting_line.manager_id}")
+        
+        return jsonify({
+            'status': 'success', 
+            'message': 'Reporting line removed successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting reporting line {line_id}: {str(e)}")
+        return jsonify({
+            'status': 'error', 
+            'message': f'Error removing reporting line: {str(e)}'
+        }), 500
+
+# POST/GET /admin/approval-hierarchy
+@admin_bp.route('/approval-hierarchy', methods=['POST', 'GET'])
+def manage_approval_hierarchy():
+    if request.method == 'POST':
+        data = request.get_json()
+        ah = ApprovalHierarchy(process=data.get('process'), level=data.get('level'), role_id=data.get('role_id'))
+        db.session.add(ah)
+        db.session.commit()
+        # Notify the user(s) in this role
+        from models import Employee, Role
+        from utils.email import send_email
+        role = Role.query.get(data.get('role_id'))
+        if role:
+            # Find all employees with this role
+            employees = Employee.query.filter_by(role=role.name).all() if hasattr(Employee, 'role') else []
+            for emp in employees:
+                if hasattr(emp, 'email') and emp.email:
+                    subject = f"Approval Level Assigned: {ah.process}"
+                    body = f"Dear {emp.name},\nYou have been assigned as an approver for {ah.process} at level {ah.level}."
+                    send_email(emp.email, subject, body)
+        return jsonify({'status': 'success', 'id': ah.id})
+    hierarchy = ApprovalHierarchy.query.all()
+    return jsonify([{'id': h.id, 'process': h.process, 'level': h.level, 'role_id': h.role_id} for h in hierarchy])
+
+# POST/GET /admin/permissions
+@admin_bp.route('/permissions', methods=['POST', 'GET'])
+def manage_permissions():
+    if request.method == 'POST':
+        data = request.get_json()
+        perm = Permission(role_id=data.get('role_id'), resource=data.get('resource'), action=data.get('action'))
+        db.session.add(perm)
+        db.session.commit()
+        # Notify users in this role
+        from models import Employee, Role
+        from utils.email import send_email
+        role = Role.query.get(data.get('role_id'))
+        if role:
+            employees = Employee.query.filter_by(role=role.name).all() if hasattr(Employee, 'role') else []
+            for emp in employees:
+                if hasattr(emp, 'email') and emp.email:
+                    subject = f"Permission Assigned: {perm.resource}"
+                    body = f"Dear {emp.name},\nYou have been granted {perm.action} permission for {perm.resource}."
+                    send_email(emp.email, subject, body)
+        return jsonify({'status': 'success', 'id': perm.id})
+    perms = Permission.query.all()
+    return jsonify([{'id': p.id, 'role_id': p.role_id, 'resource': p.resource, 'action': p.action} for p in perms])
+
+# GET /admin/oversight-reports
+@admin_bp.route('/oversight-reports', methods=['GET'])
+def oversight_reports():
+    # Example: count of roles, reporting lines, approval levels, permissions
+    report = {
+        'role_count': Role.query.count(),
+        'reporting_line_count': ReportingLine.query.count(),
+        'approval_hierarchy_count': ApprovalHierarchy.query.count(),
+        'permission_count': Permission.query.count()
+    }
+    return jsonify({'status': 'success', 'report': report})
+
+# ==================== PROJECT MANAGEMENT ENDPOINTS ====================
 
 @admin_bp.route('/projects')
 @role_required([Roles.SUPER_HQ])
 def projects():
+    """Display all projects with comprehensive project management dashboard"""
     try:
-        projects = Project.query.all()
-        statuses = [p.status for p in Project.query.distinct(Project.status).all() if p.status]
-        return render_template('admin/projects/projects.html', projects=projects, statuses=statuses)
+        projects = Project.query.order_by(Project.created_at.desc()).all()
+        
+        # Calculate project statistics
+        total_projects = len(projects)
+        active_projects = len([p for p in projects if p.status in ['Active', 'In Progress']])
+        completed_projects = len([p for p in projects if p.status == 'Completed'])
+        total_budget = sum([p.budget or 0 for p in projects])
+        
+        project_stats = {
+            'total_projects': total_projects,
+            'active_projects': active_projects,
+            'completed_projects': completed_projects,
+            'total_budget': total_budget
+        }
+        
+        # Pass current date for template calculations
+        from datetime import date
+        current_date_obj = date.today()
+        
+        return render_template('admin/projects.html', 
+                             projects=projects, 
+                             project_stats=project_stats,
+                             current_date_obj=current_date_obj)
     except Exception as e:
-        flash(f'Error loading projects: {str(e)}', 'danger')
-        return render_template('admin/projects/projects.html', projects=[], statuses=[])
+        flash(f'Error loading projects: {str(e)}', 'error')
+        return render_template('error.html'), 500
 
-@admin_bp.route('/projects/add', methods=['GET', 'POST'])
-@login_required
-@role_required([Roles.SUPER_HQ, Roles.HQ])
+@admin_bp.route('/add-project', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
 def add_project():
-    try:
-        class AddProjectForm(FlaskForm):
-            name = StringField('Name', validators=[DataRequired(), Length(max=100)])
-            description = StringField('Description', validators=[Length(max=255)])
-            budget = StringField('Budget', validators=[DataRequired()])
-            start_date = DateField('Start Date', format='%Y-%m-%d')
-            end_date = DateField('End Date', format='%Y-%m-%d')
-            status = SelectField('Status', choices=[
-                ('Active', 'Active'),
-                ('Pending', 'Pending'),
-                ('Completed', 'Completed'),
-                ('On Hold', 'On Hold'),
-                ('Cancelled', 'Cancelled')
-            ], validators=[DataRequired()])
-            image = FileField('Project Image')
-            project_manager = SelectField('Project Manager', coerce=int, choices=[], validators=[DataRequired()])
-            staff = SelectField('Assign Staff', coerce=int, choices=[], validators=[DataRequired()])
-        form = AddProjectForm()
-        form.project_manager.choices = [(u.id, u.name) for u in User.query.filter_by(role=Roles.PROJECT_MANAGER).all()]
-        form.staff.choices = [(e.id, e.name) for e in Employee.query.all()]
-        if form.validate_on_submit():
-            # Handle image upload
-            image_file = form.image.data
-            if image_file:
-                filename = secure_filename(image_file.filename)
-                image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'projects', 'images', filename)
-                os.makedirs(os.path.dirname(image_path), exist_ok=True)
-                image_file.save(image_path)
-            else:
-                filename = 'placeholder.png'
-                image_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'projects', 'images', filename)
-            # Create project
+    """Add new construction project"""
+    form_data = {}  # Initialize empty form data
+    
+    if request.method == 'POST':
+        try:
+            data = request.form
+            form_data = data.to_dict()  # Store form data for repopulation
+            
+            # Validate required fields
+            if not data.get('name'):
+                flash('Project name is required', 'error')
+                employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+                return render_template('admin/create_project.html', employees=employees, form_data=form_data)
+            
+            # Handle date parsing with validation
+            start_date = None
+            end_date = None
+            
+            if data.get('start_date'):
+                try:
+                    start_date = datetime.strptime(data.get('start_date'), '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Invalid start date format', 'error')
+                    employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+                    return render_template('admin/create_project.html', employees=employees, form_data=form_data)
+            
+            if data.get('end_date'):
+                try:
+                    end_date = datetime.strptime(data.get('end_date'), '%Y-%m-%d').date()
+                except ValueError:
+                    flash('Invalid end date format', 'error')
+                    employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+                    return render_template('admin/create_project.html', employees=employees, form_data=form_data)
+            
+            # Validate date logic
+            if start_date and end_date and end_date < start_date:
+                flash('End date cannot be before start date', 'error')
+                employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+                return render_template('admin/create_project.html', employees=employees, form_data=form_data)
+            
+            # Handle budget parsing
+            budget = 0.0
+            if data.get('budget'):
+                try:
+                    budget = float(data.get('budget'))
+                    if budget < 0:
+                        flash('Budget cannot be negative', 'error')
+                        employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+                        return render_template('admin/create_project.html', employees=employees, form_data=form_data)
+                except ValueError:
+                    flash('Invalid budget amount', 'error')
+                    employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+                    return render_template('admin/create_project.html', employees=employees, form_data=form_data)
+            
+            # Handle contingency budget
+            contingency_budget = 0.0
+            if data.get('contingency_budget'):
+                try:
+                    contingency_budget = float(data.get('contingency_budget'))
+                except ValueError:
+                    contingency_budget = 0.0
+            
+            # Create new project with enhanced fields
             project = Project(
-                name=form.name.data,
-                description=form.description.data,
-                budget=float(form.budget.data),
-                start_date=form.start_date.data,
-                end_date=form.end_date.data,
-                status=form.status.data,
-                project_manager_id=form.project_manager.data,
-                image=filename
+                name=data.get('name').strip(),
+                description=data.get('description', '').strip(),
+                start_date=start_date,
+                end_date=end_date,
+                status=data.get('status', 'Planning'),
+                project_manager=data.get('project_manager', '').strip(),
+                budget=budget,
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
+                # Enhanced fields
+                project_type=data.get('project_type', '').strip(),
+                priority=data.get('priority', 'Medium'),
+                client_name=data.get('client_name', '').strip(),
+                site_location=data.get('site_location', '').strip(),
+                funding_source=data.get('funding_source', '').strip(),
+                risk_level=data.get('risk_level', 'Low'),
+                safety_requirements=data.get('safety_requirements', 'Standard'),
+                regulatory_requirements=data.get('regulatory_requirements', '').strip()
             )
+            
             db.session.add(project)
             db.session.commit()
-            # Assign staff with role
-            staff_member = Employee.query.get(form.staff.data)
-            staff_role = request.form.get('staff_role', 'Assigned')
-            if staff_member:
-                from models import ProjectStaff
-                assignment = ProjectStaff(project_id=project.id, staff_id=staff_member.id, role=staff_role)
-                db.session.add(assignment)
+            
+            # Create initial budget entries
+            if budget > 0:
+                # Main project budget
+                budget_entry = Budget(
+                    project_id=project.id,
+                    category='Total Project Budget',
+                    allocated_amount=budget,
+                    spent_amount=0.0,
+                    created_at=datetime.utcnow()
+                )
+                db.session.add(budget_entry)
+                
+                # Contingency budget if specified
+                if contingency_budget > 0:
+                    contingency_entry = Budget(
+                        project_id=project.id,
+                        category='Contingency Fund',
+                        allocated_amount=contingency_budget,
+                        spent_amount=0.0,
+                        created_at=datetime.utcnow()
+                    )
+                    db.session.add(contingency_entry)
+                
                 db.session.commit()
-                # Email to staff
-                if staff_member.email:
-                    msg = Message("Project Assignment", sender="noreply@yourdomain.com", recipients=[staff_member.email])
-                    msg.body = f"You have been assigned to the project: {project.name} as {staff_role}."
-                    current_app.mail.send(msg)
-            # Email to project manager
-            manager = User.query.get(form.project_manager.data)
-            if manager and manager.email:
-                msg = Message("New Project Assigned", sender="noreply@yourdomain.com", recipients=[manager.email])
-                msg.body = f"You have been assigned as the manager for project: {project.name}."
-                current_app.mail.send(msg)
-            # Create project folder
-            project_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'projects', str(project.id))
-            os.makedirs(project_folder, exist_ok=True)
-            flash('Project created successfully!', 'success')
+            
+            flash(f'Project "{project.name}" created successfully!', 'success')
             return redirect(url_for('admin.projects'))
-        return render_template('Admin/create_project.html', form=form)
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f'Error creating project: {str(e)}')
+            flash(f'Error creating project: {str(e)}', 'error')
+            employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+            return render_template('admin/create_project.html', employees=employees, form_data=form_data)
+    
+    # GET request - show form
+    try:
+        employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+        return render_template('admin/create_project.html', employees=employees, form_data=form_data)
     except Exception as e:
-        flash(f'Error adding project: {str(e)}', 'danger')
-        return render_template('Admin/create_project.html', form=form)
+        current_app.logger.error(f'Error loading project form: {str(e)}')
+        flash(f'Error loading form: {str(e)}', 'error')
+        return redirect(url_for('admin.projects'))
 
-@admin_bp.route('/projects/<int:project_id>/edit', methods=['GET', 'POST'])
+
+@admin_bp.route('/milestones/<int:project_id>')
 @role_required([Roles.SUPER_HQ])
-def edit_project(project_id):
+def milestones(project_id):
+    """Display milestones for a specific project"""
     try:
         project = Project.query.get_or_404(project_id)
-        class EditProjectForm(FlaskForm):
-            name = StringField('Name', validators=[DataRequired(), Length(max=100)])
-            status = StringField('Status', validators=[DataRequired(), Length(max=50)])
-        form = EditProjectForm(obj=project)
-        if form.validate_on_submit():
-            project.name = form.name.data
-            project.status = form.status.data
-            db.session.commit()
-            flash('Project updated successfully!', 'success')
-            return redirect(url_for('admin.projects'))
-        return render_template('admin/projects/edit_project.html', form=form, project=project)
+        milestones = Milestone.query.filter_by(project_id=project_id).order_by(Milestone.due_date).all()
+        
+        # Calculate milestone statistics
+        total_milestones = len(milestones)
+        completed_milestones = len([m for m in milestones if m.status == 'Completed'])
+        overdue_milestones = len([m for m in milestones if m.due_date < datetime.now().date() and m.status != 'Completed'])
+        
+        milestone_stats = {
+            'total_milestones': total_milestones,
+            'completed_milestones': completed_milestones,
+            'overdue_milestones': overdue_milestones,
+            'completion_rate': (completed_milestones / total_milestones * 100) if total_milestones > 0 else 0
+        }
+        
+        # Pass current date for template calculations
+        from datetime import date
+        current_date_obj = date.today()
+        
+        return render_template('admin/projects/milestones.html', 
+                             project=project, 
+                             milestones=milestones, 
+                             milestone_stats=milestone_stats,
+                             current_date_obj=current_date_obj)
     except Exception as e:
-        flash(f'Error editing project: {str(e)}', 'danger')
-        return render_template('admin/projects/edit_project.html', form=None, project=None)
+        flash(f'Error loading milestones: {str(e)}', 'error')
+        return render_template('error.html'), 500
 
-@admin_bp.route('/projects/<int:project_id>/delete', methods=['POST'])
+@admin_bp.route('/add-milestone/<int:project_id>', methods=['GET', 'POST'])
 @role_required([Roles.SUPER_HQ])
-def delete_project(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        db.session.delete(project)
-        db.session.commit()
-        flash('Project deleted successfully!', 'success')
-    except Exception as e:
-        flash(f'Error deleting project: {str(e)}', 'danger')
-    return redirect(url_for('admin.projects'))
-
-@admin_bp.route('/projects/<int:project_id>')
-@login_required
-def view_project(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        from datetime import timedelta
-        schedule_items = project.schedules.order_by(Schedule.start_time.asc()).all() if hasattr(project, 'schedules') else []
-        # Attach schedule to project for template compatibility
-        project.schedule = [
-            {
-                'title': s.title,
-                'date': s.start_time.strftime('%Y-%m-%d'),
-                'description': s.description
-            } for s in schedule_items
-        ]
-        return render_template('admin/projects/view_project.html', project=project, timedelta=timedelta)
-    except Exception as e:
-        flash(f'Error loading project details: {str(e)}', 'danger')
-        return render_template('admin/projects/view_project.html', project=None)
-
-@admin_bp.route('/projects/<int:project_id>/assign-staff', methods=['GET', 'POST'])
-@login_required
-@role_required([Roles.SUPER_HQ, Roles.HQ])
-def assign_staff(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        class AssignStaffForm(FlaskForm):
-            employee_id = SelectField('Employee', coerce=int, validators=[DataRequired()])
-            role = StringField('Role', validators=[DataRequired(), Length(max=50)])
-        form = AssignStaffForm()
-        form.employee_id.choices = [(e.id, e.name) for e in Employee.query.all()]
-        if form.validate_on_submit():
-            employee = Employee.query.get(form.employee_id.data)
-            if employee:
-                project.staff.append(employee)
-                db.session.commit()
-                flash('Staff assigned to project successfully!', 'success')
-                # Send notification email (example)
-                msg = Message("Project Assignment",
-                              sender="noreply@yourdomain.com",
-                              recipients=[employee.email])
-                msg.body = f"You have been assigned to the project: {project.name} as {form.role.data}."
-                current_app.mail.send(msg)
-            else:
-                flash('Selected employee not found.', 'danger')
-            return redirect(url_for('admin.view_project', project_id=project_id))
-        return render_template('admin/projects/assign_staff.html', form=form, project=project)
-    except Exception as e:
-        flash(f'Error assigning staff: {str(e)}', 'danger')
-        return render_template('admin/projects/assign_staff.html', form=None, project=None)
-
-@admin_bp.route('/projects/<int:project_id>/add-schedule', methods=['GET', 'POST'])
-@login_required
-@role_required([Roles.SUPER_HQ, Roles.HQ, Roles.PROJECT_MANAGER])
-def add_schedule(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        class AddScheduleForm(FlaskForm):
-            title = StringField('Title', validators=[DataRequired(), Length(max=128)])
-            start_time = DateField('Start Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
-            end_time = DateField('End Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
-        form = AddScheduleForm()
-        if form.validate_on_submit():
-            schedule = Schedule(
-                title=form.title.data,
-                start_time=form.start_time.data,
-                end_time=form.end_time.data,
-                project=project
-            )
-            db.session.add(schedule)
-            db.session.commit()
-            flash('Schedule added to project successfully!', 'success')
-            return redirect(url_for('admin.view_project', project_id=project_id))
-        return render_template('admin/projects/add_schedule.html', form=form, project=project)
-    except Exception as e:
-        flash(f'Error adding schedule: {str(e)}', 'danger')
-        return render_template('admin/projects/add_schedule.html', form=None, project=None)
-
-@admin_bp.route('/projects/<int:project_id>/add-milestone', methods=['GET', 'POST'])
-@login_required
-@role_required([Roles.SUPER_HQ, Roles.HQ, Roles.PROJECT_MANAGER])
 def add_milestone(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        class AddMilestoneForm(FlaskForm):
-            name = StringField('Name', validators=[DataRequired(), Length(max=100)])
-            due_date = DateField('Due Date', format='%Y-%m-%d', validators=[DataRequired()])
-        form = AddMilestoneForm()
-        if form.validate_on_submit():
+    """Add milestone to specific project"""
+    project = Project.query.get_or_404(project_id)
+    
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
             milestone = Milestone(
-                name=form.name.data,
-                due_date=form.due_date.data,
-                project=project
+                project_id=project_id,
+                title=data.get('title'),
+                due_date=datetime.strptime(data.get('due_date'), '%Y-%m-%d').date(),
+                status=data.get('status', 'Pending')
             )
+            
             db.session.add(milestone)
             db.session.commit()
-            flash('Milestone added to project successfully!', 'success')
-            return redirect(url_for('admin.view_project', project_id=project_id))
-        return render_template('admin/projects/add_milestone.html', form=form, project=project)
-    except Exception as e:
-        flash(f'Error adding milestone: {str(e)}', 'danger')
-        return render_template('admin/projects/add_milestone.html', form=None, project=None)
+            
+            flash(f'Milestone "{milestone.title}" added successfully!', 'success')
+            return redirect(url_for('admin.milestones', project_id=project_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating milestone: {str(e)}', 'error')
+    
+    return render_template('admin/add_milestone.html', project=project)
 
-@admin_bp.route('/projects/<int:project_id>/upload-document', methods=['GET', 'POST'])
-@login_required
-@role_required([Roles.SUPER_HQ, Roles.HQ, Roles.HQ_FINANCE, Roles.HQ_PROCUREMENT, Roles.PROJECT_MANAGER])
-def upload_document(project_id):
+@admin_bp.route('/all-milestones')
+@role_required([Roles.SUPER_HQ])
+def all_milestones():
+    """Display all milestones across all projects"""
     try:
-        project = Project.query.get_or_404(project_id)
-        class UploadDocumentForm(FlaskForm):
-            file = FileField('File', validators=[DataRequired()])
-        form = UploadDocumentForm()
-        if form.validate_on_submit():
-            file = form.file.data
-            filename = secure_filename(file.filename)
-            # Save file to project-specific folder
-            upload_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'projects', str(project_id))
-            os.makedirs(upload_folder, exist_ok=True)
-            file.save(os.path.join(upload_folder, filename))
-            flash('Document uploaded successfully!', 'success')
-            return redirect(url_for('admin.view_project', project_id=project_id))
-        return render_template('admin/projects/upload_document.html', form=form, project=project)
-    except Exception as e:
-        flash(f'Error uploading document: {str(e)}', 'danger')
-        return render_template('admin/projects/upload_document.html', form=None, project=None)
-
-@admin_bp.route('/projects/<int:project_id>/expenses')
-@login_required
-@role_required([Roles.SUPER_HQ, Roles.HQ, Roles.HQ_FINANCE, Roles.HQ_COST_CONTROL, Roles.PROJECT_MANAGER, Roles.HQ_PROCUREMENT])
-def view_expenses(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        expenses = Expense.query.filter_by(project_id=project_id).all()
-        total_expenses = sum(e.amount for e in expenses)
-        # Budget exceedance alert
-        if project.budget and total_expenses > project.budget:
-            msg = Message("Budget Exceeded Alert",
-                          sender="noreply@yourdomain.com",
-                          recipients=[current_user.email])
-            msg.body = f"Project '{project.name}' has exceeded its budget. Total expenses: ${total_expenses:,.2f}."
-            current_app.mail.send(msg)
-        return render_template('admin/projects/view_expenses.html', project=project, expenses=expenses, total_expenses=total_expenses)
-    except Exception as e:
-        flash(f'Error loading expenses: {str(e)}', 'danger')
-        return render_template('admin/projects/view_expenses.html', project=None, expenses=[], total_expenses=0)
-
-@admin_bp.route('/projects/<int:project_id>/ledger')
-@login_required
-@role_required([Roles.SUPER_HQ, Roles.HQ, Roles.HQ_FINANCE])
-def view_ledger(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        ledger_entries = current_app.finance_service.get_ledger_entries(project_id) if hasattr(current_app, 'finance_service') else []
-        # Add summary: total credits/debits
-        total_credits = sum(e.amount for e in ledger_entries if getattr(e, 'type', None) == 'credit')
-        total_debits = sum(e.amount for e in ledger_entries if getattr(e, 'type', None) == 'debit')
-        return render_template('admin/projects/view_ledger.html', project=project, ledger_entries=ledger_entries, total_credits=total_credits, total_debits=total_debits)
-    except Exception as e:
-        flash(f'Error loading ledger: {str(e)}', 'danger')
-        return render_template('admin/projects/view_ledger.html', project=None, ledger_entries=[], total_credits=0, total_debits=0)
-
-@admin_bp.route('/projects/<int:project_id>/inventory')
-@login_required
-@role_required([Roles.SUPER_HQ, Roles.HQ, Roles.PROJECT_MANAGER, Roles.HQ_COST_CONTROL])
-def view_inventory(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        inventory_items = current_app.inventory_service.get_inventory_items(project_id) if hasattr(current_app, 'inventory_service') else []
-        low_stock_items = [item for item in inventory_items if item.quantity < 100]
-        low_stock_alert = bool(low_stock_items)
-        # Email alert for low inventory
-        if low_stock_alert:
-            msg = Message("Low Inventory Alert",
-                          sender="noreply@yourdomain.com",
-                          recipients=[current_user.email])
-            msg.body = f"Project '{project.name}' has items with low stock: " + ", ".join([item.name for item in low_stock_items])
-            current_app.mail.send(msg)
-        return render_template('admin/projects/view_inventory.html', project=project, inventory_items=inventory_items, low_stock_alert=low_stock_alert)
-    except Exception as e:
-        flash(f'Error loading inventory: {str(e)}', 'danger')
-        return render_template('admin/projects/view_inventory.html', project=None, inventory_items=[])
-
-@admin_bp.route('/projects/<int:project_id>/dashboard')
-@login_required
-def project_dashboard(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        tasks = Task.query.filter_by(project_id=project_id).all()
-        milestones = Milestone.query.filter_by(project_id=project_id).all()
-        expenses = Expense.query.filter_by(project_id=project_id).all()
-        total_expenses = sum(e.amount for e in expenses)
-        payrolls = Payroll.query.filter_by(project_id=project_id).all() if hasattr(Payroll, 'project_id') else []
-        total_payroll = sum(p.amount for p in payrolls)
-        documents = []
-        project_folder = os.path.join(current_app.config['UPLOAD_FOLDER'], 'projects', str(project.id))
-        if os.path.exists(project_folder):
-            documents = [f for f in os.listdir(project_folder) if os.path.isfile(os.path.join(project_folder, f))]
-        # Milestone update alert (example: if any milestone is due today)
-        today = datetime.today().date()
-        due_milestones = [m for m in milestones if m.due_date == today]
-        if due_milestones:
-            msg = Message("Milestone Due Alert",
-                          sender="noreply@yourdomain.com",
-                          recipients=[current_user.email])
-            msg.body = f"Project '{project.name}' has milestones due today: " + ", ".join([m.name for m in due_milestones])
-            current_app.mail.send(msg)
-        budget_remaining = project.budget - total_expenses if project.budget else None
-        return render_template('admin/projects/project_dashboard.html', project=project, tasks=tasks, milestones=milestones, expenses=expenses, total_expenses=total_expenses, payrolls=payrolls, total_payroll=total_payroll, documents=documents, budget_remaining=budget_remaining)
-    except Exception as e:
-        flash(f'Error loading project dashboard: {str(e)}', 'danger')
-        return render_template('admin/projects/project_dashboard.html', project=None, tasks=[], milestones=[], expenses=[], payrolls=[], documents=[], budget_remaining=None)
-
-@admin_bp.route('/projects/<int:project_id>/milestones')
-@login_required
-def milestones(project_id):
-    try:
-        project = Project.query.get_or_404(project_id)
-        milestones = Milestone.query.filter_by(project_id=project_id).order_by(Milestone.due_date.asc()).all()
-        # Calculate milestone progress and overdue status
+        # Get all milestones with their associated projects
+        milestones = Milestone.query.join(Project).order_by(Milestone.due_date.asc()).all()
+        
+        # Calculate comprehensive milestone statistics
+        total_milestones = len(milestones)
+        completed_milestones = len([m for m in milestones if m.status == 'Completed'])
+        pending_milestones = len([m for m in milestones if m.status == 'Pending' or m.status is None])
+        overdue_milestones = len([m for m in milestones if m.due_date and m.due_date < datetime.now().date() and m.status != 'Completed'])
+        
+        # Calculate milestones by project
+        project_milestones = {}
         for milestone in milestones:
-            milestone.is_overdue = milestone.due_date < datetime.today().date() if milestone.due_date else False
-            milestone.is_completed = getattr(milestone, 'status', None) == 'Completed'
-        return render_template('admin/projects/milestones.html', project=project, milestones=milestones)
+            project_name = milestone.project.name if milestone.project else 'Unknown Project'
+            if project_name not in project_milestones:
+                project_milestones[project_name] = {
+                    'total': 0,
+                    'completed': 0,
+                    'pending': 0,
+                    'overdue': 0,
+                    'project_id': milestone.project.id if milestone.project else None
+                }
+            
+            project_milestones[project_name]['total'] += 1
+            
+            if milestone.status == 'Completed':
+                project_milestones[project_name]['completed'] += 1
+            elif milestone.due_date and milestone.due_date < datetime.now().date() and milestone.status != 'Completed':
+                project_milestones[project_name]['overdue'] += 1
+            else:
+                project_milestones[project_name]['pending'] += 1
+        
+        # Calculate upcoming milestones (next 30 days)
+        next_month = datetime.now().date() + timedelta(days=30)
+        upcoming_milestones = [m for m in milestones if m.due_date and m.due_date <= next_month and m.status != 'Completed']
+        
+        milestone_stats = {
+            'total_milestones': total_milestones,
+            'completed_milestones': completed_milestones,
+            'pending_milestones': pending_milestones,
+            'overdue_milestones': overdue_milestones,
+            'completion_rate': (completed_milestones / total_milestones * 100) if total_milestones > 0 else 0,
+            'upcoming_count': len(upcoming_milestones),
+            'project_count': len(project_milestones)
+        }
+        
+        return render_template('admin/all_milestones.html', 
+                             milestones=milestones,
+                             milestone_stats=milestone_stats,
+                             project_milestones=project_milestones,
+                             upcoming_milestones=upcoming_milestones,
+                             today=datetime.now().date())
     except Exception as e:
-        flash(f'Error loading milestones: {str(e)}', 'danger')
-        return render_template('admin/projects/milestones.html', project=None, milestones=[])
+        flash(f'Error loading milestones: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+@admin_bp.route('/edit-milestone/<int:milestone_id>', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def edit_milestone(milestone_id):
+    """Edit milestone details"""
+    milestone = Milestone.query.get_or_404(milestone_id)
+    project = milestone.project
+    
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            milestone.title = data.get('title')
+            milestone.due_date = datetime.strptime(data.get('due_date'), '%Y-%m-%d').date()
+            milestone.status = data.get('status', 'Pending')
+            
+            db.session.commit()
+            
+            flash(f'Milestone "{milestone.title}" updated successfully!', 'success')
+            return redirect(url_for('admin.milestones', project_id=project.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating milestone: {str(e)}', 'error')
+    
+    return render_template('admin/edit_milestone.html', milestone=milestone, project=project)
+
+@admin_bp.route('/delete-milestone/<int:milestone_id>', methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def delete_milestone(milestone_id):
+    """Delete milestone"""
+    try:
+        milestone = Milestone.query.get_or_404(milestone_id)
+        project_id = milestone.project_id
+        title = milestone.title
+        
+        db.session.delete(milestone)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'Milestone "{title}" deleted successfully!'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False, 
+            'message': f'Error deleting milestone: {str(e)}'
+        }), 500
+
+# ==================== ASSET AND INVENTORY MANAGEMENT ====================
 
 @admin_bp.route('/assets')
 @role_required([Roles.SUPER_HQ])
 def assets():
+    """Display all construction assets"""
     try:
-        assets = Asset.query.all()
-        return render_template('admin/inventory/assets.html', assets=assets)
+        assets = Asset.query.order_by(Asset.created_at.desc()).all()
+        
+        # Calculate asset statistics
+        total_assets = len(assets)
+        active_assets = len([a for a in assets if a.status == 'Active'])
+        retired_assets = len([a for a in assets if a.status == 'Retired'])
+        
+        asset_stats = {
+            'total_assets': total_assets,
+            'active_assets': active_assets,
+            'retired_assets': retired_assets,
+            'asset_types': {}
+        }
+        
+        # Group by asset type
+        for asset in assets:
+            asset_type = asset.type or 'Unknown'
+            if asset_type not in asset_stats['asset_types']:
+                asset_stats['asset_types'][asset_type] = 0
+            asset_stats['asset_types'][asset_type] += 1
+        
+        return render_template('admin/assets.html', 
+                             assets=assets, 
+                             asset_stats=asset_stats)
     except Exception as e:
-        flash(f'Error loading assets: {str(e)}', 'danger')
-        return render_template('admin/inventory/assets.html', assets=[])
+        flash(f'Error loading assets: {str(e)}', 'error')
+        return render_template('error.html'), 500
 
-@admin_bp.route('/assets/add', methods=['GET', 'POST'])
+@admin_bp.route('/add-asset', methods=['GET', 'POST'])
 @role_required([Roles.SUPER_HQ])
 def add_asset():
-    class AddAssetForm(FlaskForm):
-        name = StringField('Asset Name', validators=[DataRequired(), Length(max=100)])
-        value = StringField('Value', validators=[DataRequired()])
-        location = StringField('Location', validators=[Length(max=100)])
-    form = AddAssetForm()
-    if form.validate_on_submit():
-        asset = Asset(name=form.name.data, value=form.value.data, location=form.location.data)
-        db.session.add(asset)
+    """Add new construction asset"""
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            asset = Asset(
+                name=data.get('name'),
+                type=data.get('type'),
+                status=data.get('status', 'Active'),
+                location=data.get('location'),
+                purchase_date=datetime.strptime(data.get('purchase_date'), '%Y-%m-%d').date() if data.get('purchase_date') else None
+            )
+            
+            db.session.add(asset)
+            db.session.commit()
+            
+            flash(f'Asset "{asset.name}" added successfully!', 'success')
+            return redirect(url_for('admin.assets'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating asset: {str(e)}', 'error')
+    
+    return render_template('admin/add_asset.html')
+
+@admin_bp.route('/asset/<int:asset_id>')
+@role_required([Roles.SUPER_HQ])
+def view_asset(asset_id):
+    """API endpoint to fetch individual asset data"""
+    try:
+        asset = Asset.query.get_or_404(asset_id)
+        
+        asset_data = {
+            'id': asset.id,
+            'name': asset.name,
+            'type': asset.type,
+            'status': asset.status,
+            'location': asset.location,
+            'purchase_date': asset.purchase_date.strftime('%Y-%m-%d') if asset.purchase_date else None,
+            'retired_date': asset.retired_date.strftime('%Y-%m-%d') if asset.retired_date else None,
+            'created_at': asset.created_at.strftime('%Y-%m-%d %H:%M') if asset.created_at else None
+        }
+        
+        return jsonify({
+            'success': True,
+            'asset': asset_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@admin_bp.route('/edit-asset/<int:asset_id>', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def edit_asset(asset_id):
+    """Edit existing asset"""
+    asset = Asset.query.get_or_404(asset_id)
+    
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            # Update asset fields
+            asset.name = data.get('name')
+            asset.type = data.get('type')
+            asset.status = data.get('status', 'Active')
+            asset.location = data.get('location')
+            
+            # Handle purchase date
+            purchase_date = data.get('purchase_date')
+            if purchase_date:
+                asset.purchase_date = datetime.strptime(purchase_date, '%Y-%m-%d').date()
+            else:
+                asset.purchase_date = None
+            
+            db.session.commit()
+            
+            flash(f'Asset "{asset.name}" updated successfully!', 'success')
+            return redirect(url_for('admin.assets'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating asset: {str(e)}', 'error')
+    
+    return render_template('admin/edit_asset.html', asset=asset)
+
+@admin_bp.route('/retire-asset/<int:asset_id>', methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def retire_asset(asset_id):
+    """Retire an asset"""
+    try:
+        asset = Asset.query.get_or_404(asset_id)
+        asset_name = asset.name
+        
+        asset.status = 'Retired'
+        asset.retired_date = datetime.utcnow().date()
+        
         db.session.commit()
-        flash('Asset added successfully!', 'success')
-        return redirect(url_for('admin.assets'))
-    return render_template('admin/inventory/add_asset.html', form=form)
+        
+        return jsonify({
+            'success': True,
+            'message': f'Asset "{asset_name}" retired successfully!'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@admin_bp.route('/delete-asset/<int:asset_id>', methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def delete_asset(asset_id):
+    """Delete asset"""
+    try:
+        asset = Asset.query.get_or_404(asset_id)
+        asset_name = asset.name
+        
+        db.session.delete(asset)
+        db.session.commit()
+        
+        flash(f'Asset "{asset_name}" deleted successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting asset: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.assets'))
 
 @admin_bp.route('/stock')
 @role_required([Roles.SUPER_HQ])
 def stock():
+    """Display stock/inventory management"""
     try:
-        stock_items = Stock.query.all()
-        return render_template('admin/inventory/stock.html', stock_items=stock_items)
+        stock_items = Stock.query.order_by(Stock.created_at.desc()).all()
+        
+        # Calculate stock statistics
+        total_items = len(stock_items)
+        low_stock_items = len([s for s in stock_items if s.quantity <= s.low_stock_threshold])
+        out_of_stock = len([s for s in stock_items if s.quantity == 0])
+        available_items = len([s for s in stock_items if s.status == 'Available'])
+        
+        stock_stats = {
+            'total_items': total_items,
+            'low_stock_items': low_stock_items,
+            'out_of_stock': out_of_stock,
+            'available_items': available_items
+        }
+        
+        return render_template('admin/stock.html', 
+                             stock_items=stock_items, 
+                             stock_stats=stock_stats)
     except Exception as e:
-        flash(f'Error loading stock: {str(e)}', 'danger')
-        return render_template('admin/inventory/stock.html', stock_items=[])
+        flash(f'Error loading stock: {str(e)}', 'error')
+        return render_template('error.html'), 500
 
-@admin_bp.route('/stock/add', methods=['GET', 'POST'])
+@admin_bp.route('/add-stock', methods=['GET', 'POST'])
 @role_required([Roles.SUPER_HQ])
 def add_stock():
-    class AddStockForm(FlaskForm):
-        name = StringField('Stock Name', validators=[DataRequired(), Length(max=100)])
-        quantity = StringField('Quantity', validators=[DataRequired()])
-        unit = StringField('Unit', validators=[Length(max=20)])
-    form = AddStockForm()
-    if form.validate_on_submit():
-        stock = Stock(name=form.name.data, quantity=form.quantity.data, unit=form.unit.data)
-        db.session.add(stock)
-        db.session.commit()
-        flash('Stock item added successfully!', 'success')
-        return redirect(url_for('admin.stock'))
-    return render_template('admin/inventory/add_stock.html', form=form)
+    """Add new stock item"""
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            stock_item = Stock(
+                name=data.get('name'),
+                quantity=int(data.get('quantity', 0)),
+                unit=data.get('unit'),
+                status=data.get('status', 'Available'),
+                low_stock_threshold=int(data.get('low_stock_threshold', 10))
+            )
+            
+            db.session.add(stock_item)
+            db.session.commit()
+            
+            flash(f'Stock item "{stock_item.name}" added successfully!', 'success')
+            return redirect(url_for('admin.stock'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating stock item: {str(e)}', 'error')
+    
+    return render_template('admin/add_stock.html')
 
-@admin_bp.route('/orders')
+@admin_bp.route('/stock/<int:stock_id>')
 @role_required([Roles.SUPER_HQ])
-def orders():
+def view_stock_item(stock_id):
+    """API endpoint to fetch individual stock item data"""
     try:
-        orders = PurchaseOrder.query.all()
-        return render_template('admin/orders/orders.html', orders=orders)
+        stock_item = Stock.query.get_or_404(stock_id)
+        
+        stock_data = {
+            'id': stock_item.id,
+            'name': stock_item.name,
+            'quantity': stock_item.quantity,
+            'unit': stock_item.unit,
+            'status': stock_item.status,
+            'low_stock_threshold': stock_item.low_stock_threshold,
+            'created_at': stock_item.created_at.strftime('%Y-%m-%d %H:%M') if stock_item.created_at else None
+        }
+        
+        return jsonify({
+            'success': True,
+            'stock_item': stock_data
+        })
     except Exception as e:
-        flash(f'Error loading orders: {str(e)}', 'danger')
-        return render_template('admin/orders/orders.html', orders=[])
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
 
-@admin_bp.route('/orders/add', methods=['GET', 'POST'])
+@admin_bp.route('/edit-stock/<int:stock_id>', methods=['GET', 'POST'])
 @role_required([Roles.SUPER_HQ])
-def add_order():
-    class AddOrderForm(FlaskForm):
-        supplier = StringField('Supplier', validators=[DataRequired(), Length(max=100)])
-        total_amount = StringField('Total Amount', validators=[DataRequired()])
-        status = SelectField('Status', choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Urgent', 'Urgent')], validators=[DataRequired()])
-    form = AddOrderForm()
-    if form.validate_on_submit():
-        order = PurchaseOrder(supplier=form.supplier.data, total_amount=form.total_amount.data, status=form.status.data)
-        db.session.add(order)
+def edit_stock_item(stock_id):
+    """Edit existing stock item"""
+    stock_item = Stock.query.get_or_404(stock_id)
+    
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            # Update stock item fields
+            stock_item.name = data.get('name')
+            stock_item.quantity = int(data.get('quantity', 0))
+            stock_item.unit = data.get('unit')
+            stock_item.status = data.get('status', 'Available')
+            stock_item.low_stock_threshold = int(data.get('low_stock_threshold', 10))
+            
+            db.session.commit()
+            
+            flash(f'Stock item "{stock_item.name}" updated successfully!', 'success')
+            return redirect(url_for('admin.stock'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating stock item: {str(e)}', 'error')
+    
+    return render_template('admin/edit_stock.html', stock_item=stock_item)
+
+@admin_bp.route('/adjust-stock/<int:stock_id>', methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def adjust_stock_quantity(stock_id):
+    """Adjust stock quantity"""
+    try:
+        stock_item = Stock.query.get_or_404(stock_id)
+        data = request.get_json()
+        
+        adjustment_type = data.get('adjustment_type')
+        quantity = int(data.get('quantity', 0))
+        reason = data.get('reason', '')
+        
+        old_quantity = stock_item.quantity
+        
+        if adjustment_type == 'add':
+            stock_item.quantity += quantity
+        elif adjustment_type == 'remove':
+            stock_item.quantity = max(0, stock_item.quantity - quantity)
+        elif adjustment_type == 'set':
+            stock_item.quantity = quantity
+        
         db.session.commit()
-        flash('Order added successfully!', 'success')
-        return redirect(url_for('admin.orders'))
-    return render_template('admin/orders/add_order.html', form=form)
+        
+        # Log the adjustment (you could create an audit table for this)
+        flash_message = f'Stock adjusted from {old_quantity} to {stock_item.quantity}'
+        if reason:
+            flash_message += f' (Reason: {reason})'
+        
+        return jsonify({
+            'success': True,
+            'message': flash_message,
+            'new_quantity': stock_item.quantity
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@admin_bp.route('/delete-stock/<int:stock_id>', methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def delete_stock_item(stock_id):
+    """Delete stock item"""
+    try:
+        stock_item = Stock.query.get_or_404(stock_id)
+        stock_name = stock_item.name
+        
+        db.session.delete(stock_item)
+        db.session.commit()
+        
+        flash(f'Stock item "{stock_name}" deleted successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting stock item: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.stock'))
+
+# ==================== EQUIPMENT MANAGEMENT ====================
+
+@admin_bp.route('/equipment')
+@role_required([Roles.SUPER_HQ])
+def equipment():
+    """Display all construction equipment"""
+    try:
+        equipment = Equipment.query.order_by(Equipment.id.desc()).all()
+        
+        # Calculate equipment statistics
+        total_equipment = len(equipment)
+        active_equipment = len([e for e in equipment if e.status == 'Active'])
+        maintenance_equipment = len([e for e in equipment if e.status in ['Maintenance', 'Under Maintenance']])
+        inactive_equipment = len([e for e in equipment if e.status in ['Retired', 'Inactive', 'Out of Service']])
+        
+        equipment_stats = {
+            'total_equipment': total_equipment,
+            'active_equipment': active_equipment,
+            'maintenance_equipment': maintenance_equipment,
+            'inactive_equipment': inactive_equipment,
+            'utilization_rate': (active_equipment / total_equipment * 100) if total_equipment > 0 else 0,
+            'equipment_by_status': {}
+        }
+        
+        # Group by equipment status
+        for equip in equipment:
+            equipment_status = equip.status or 'Unknown'
+            if equipment_status not in equipment_stats['equipment_by_status']:
+                equipment_stats['equipment_by_status'][equipment_status] = 0
+            equipment_stats['equipment_by_status'][equipment_status] += 1
+        
+        return render_template('admin/equipment.html', 
+                             equipment=equipment, 
+                             equipment_stats=equipment_stats)
+    except Exception as e:
+        flash(f'Error loading equipment: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+@admin_bp.route('/equipment/<int:equipment_id>')
+@role_required([Roles.SUPER_HQ])
+def view_equipment(equipment_id):
+    """API endpoint to fetch individual equipment data"""
+    try:
+        equipment = Equipment.query.get_or_404(equipment_id)
+        
+        equipment_data = {
+            'id': equipment.id,
+            'name': equipment.name,
+            'status': equipment.status,
+            'machine_hours': equipment.machine_hours,
+            'diesel_consumption': equipment.diesel_consumption,
+            'maintenance_due': equipment.maintenance_due.strftime('%Y-%m-%d') if equipment.maintenance_due else None,
+            'remarks': equipment.remarks,
+            'created_at': equipment.id  # Using id as a placeholder since there's no created_at field
+        }
+        
+        return jsonify({
+            'success': True,
+            'equipment': equipment_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@admin_bp.route('/add-equipment', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def add_equipment():
+    """Add new construction equipment"""
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            equipment = Equipment(
+                name=data.get('name'),
+                status=data.get('status', 'Active'),
+                remarks=data.get('description'),  # Map description to remarks
+                machine_hours=float(data.get('machine_hours', 0)) if data.get('machine_hours') else 0,
+                diesel_consumption=float(data.get('diesel_consumption', 0)) if data.get('diesel_consumption') else 0,
+                maintenance_due=datetime.strptime(data.get('last_maintenance_date'), '%Y-%m-%d').date() if data.get('last_maintenance_date') else None
+            )
+            
+            db.session.add(equipment)
+            db.session.commit()
+            
+            flash(f'Equipment "{equipment.name}" added successfully!', 'success')
+            return redirect(url_for('admin.equipment'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating equipment: {str(e)}', 'error')
+    
+    return render_template('admin/add_equipment.html')
+
+@admin_bp.route('/edit-equipment/<int:equipment_id>', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def edit_equipment(equipment_id):
+    """Edit existing equipment"""
+    equipment = Equipment.query.get_or_404(equipment_id)
+    
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            # Update equipment fields
+            equipment.name = data.get('name')
+            equipment.status = data.get('status', 'Active')
+            equipment.remarks = data.get('remarks')
+            equipment.machine_hours = float(data.get('machine_hours', 0)) if data.get('machine_hours') else 0
+            equipment.diesel_consumption = float(data.get('diesel_consumption', 0)) if data.get('diesel_consumption') else 0
+            
+            # Handle maintenance due date
+            maintenance_due = data.get('maintenance_due')
+            if maintenance_due:
+                equipment.maintenance_due = datetime.strptime(maintenance_due, '%Y-%m-%d').date()
+            else:
+                equipment.maintenance_due = None
+            
+            db.session.commit()
+            
+            flash(f'Equipment "{equipment.name}" updated successfully!', 'success')
+            return redirect(url_for('admin.equipment'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating equipment: {str(e)}', 'error')
+    
+    return render_template('admin/edit_equipment.html', equipment=equipment)
+
+@admin_bp.route('/delete-equipment/<int:equipment_id>', methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def delete_equipment(equipment_id):
+    """Delete equipment"""
+    try:
+        equipment = Equipment.query.get_or_404(equipment_id)
+        equipment_name = equipment.name
+        
+        db.session.delete(equipment)
+        db.session.commit()
+        
+        flash(f'Equipment "{equipment_name}" deleted successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting equipment: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.equipment'))
+
+# ==================== MONITORING ENDPOINTS ====================
 
 @admin_bp.route('/incidents')
 @role_required([Roles.SUPER_HQ])
 def incidents():
+    """Display all site incidents"""
     try:
-        incidents = Incident.query.all()
-        return render_template('admin/monitoring/incidents.html', incidents=incidents)
+        incidents = Incident.query.order_by(Incident.date_reported.desc()).all()
+        
+        # Calculate incident statistics
+        total_incidents = len(incidents)
+        open_incidents = len([i for i in incidents if i.status == 'Open'])
+        resolved_incidents = len([i for i in incidents if i.status == 'Resolved'])
+        critical_incidents = len([i for i in incidents if i.severity == 'Critical'])
+        
+        incident_stats = {
+            'total_incidents': total_incidents,
+            'open_incidents': open_incidents,
+            'resolved_incidents': resolved_incidents,
+            'critical_incidents': critical_incidents
+        }
+        
+        return render_template('admin/incidents.html', 
+                             incidents=incidents, 
+                             incident_stats=incident_stats)
     except Exception as e:
-        flash(f'Error loading incidents: {str(e)}', 'danger')
-        return render_template('admin/monitoring/incidents.html', incidents=[])
+        flash(f'Error loading incidents: {str(e)}', 'error')
+        return render_template('error.html'), 500
 
-@admin_bp.route('/incidents/add', methods=['GET', 'POST'])
+@admin_bp.route('/add-incident', methods=['GET', 'POST'])
 @role_required([Roles.SUPER_HQ])
 def add_incident():
-    class AddIncidentForm(FlaskForm):
-        title = StringField('Title', validators=[DataRequired(), Length(max=100)])
-        description = StringField('Description', validators=[Length(max=255)])
-        status = SelectField('Status', choices=[('Open', 'Open'), ('Closed', 'Closed')], validators=[DataRequired()])
-    form = AddIncidentForm()
-    if form.validate_on_submit():
-        incident = Incident(title=form.title.data, description=form.description.data, status=form.status.data)
-        db.session.add(incident)
-        db.session.commit()
-        flash('Incident added successfully!', 'success')
-        return redirect(url_for('admin.incidents'))
-    return render_template('admin/monitoring/add_incident.html', form=form)
+    """Report new safety incident"""
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            incident = Incident(
+                title=data.get('title'),
+                description=data.get('description'),
+                status=data.get('status', 'Open'),
+                reported_by=data.get('reported_by'),
+                severity=data.get('severity', 'Medium')
+            )
+            
+            db.session.add(incident)
+            db.session.commit()
+            
+            flash(f'Incident "{incident.title}" reported successfully!', 'success')
+            return redirect(url_for('admin.incidents'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error reporting incident: {str(e)}', 'error')
+    
+    employees = Employee.query.all()
+    return render_template('admin/add_incident.html', employees=employees)
 
 @admin_bp.route('/alerts')
 @role_required([Roles.SUPER_HQ])
 def alerts():
+    """Display all system alerts"""
     try:
-        alerts = Alert.query.all()
-        return render_template('admin/monitoring/alerts.html', alerts=alerts)
+        alerts = Alert.query.order_by(Alert.created_at.desc()).all()
+        
+        # Calculate alert statistics
+        total_alerts = len(alerts)
+        active_alerts = len([a for a in alerts if a.status == 'Active'])
+        critical_alerts = len([a for a in alerts if a.severity == 'Critical'])
+        
+        alert_stats = {
+            'total_alerts': total_alerts,
+            'active_alerts': active_alerts,
+            'critical_alerts': critical_alerts
+        }
+        
+        return render_template('admin/alerts.html', 
+                             alerts=alerts, 
+                             alert_stats=alert_stats)
     except Exception as e:
-        flash(f'Error loading alerts: {str(e)}', 'danger')
-        return render_template('admin/monitoring/alerts.html', alerts=[])
+        flash(f'Error loading alerts: {str(e)}', 'error')
+        return render_template('error.html'), 500
 
-@admin_bp.route('/alerts/add', methods=['GET', 'POST'])
+@admin_bp.route('/add-alert', methods=['GET', 'POST'])
 @role_required([Roles.SUPER_HQ])
 def add_alert():
-    class AddAlertForm(FlaskForm):
-        message = StringField('Message', validators=[DataRequired(), Length(max=255)])
-        level = SelectField('Level', choices=[('Info', 'Info'), ('Warning', 'Warning'), ('Critical', 'Critical')], validators=[DataRequired()])
-    form = AddAlertForm()
-    if form.validate_on_submit():
-        alert = Alert(message=form.message.data, level=form.level.data)
-        db.session.add(alert)
-        db.session.commit()
-        flash('Alert added successfully!', 'success')
-        return redirect(url_for('admin.alerts'))
-    return render_template('admin/monitoring/add_alert.html', form=form)
+    """Create new system alert"""
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            alert = Alert(
+                title=data.get('title'),
+                type=data.get('type'),
+                description=data.get('description'),
+                status=data.get('status', 'Active'),
+                severity=data.get('severity', 'Medium')
+            )
+            
+            db.session.add(alert)
+            db.session.commit()
+            
+            flash(f'Alert "{alert.title}" created successfully!', 'success')
+            return redirect(url_for('admin.alerts'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating alert: {str(e)}', 'error')
+    
+    return render_template('admin/add_alert.html')
+
+# ==================== SCHEDULING ENDPOINTS ====================
 
 @admin_bp.route('/schedules')
 @role_required([Roles.SUPER_HQ])
 def schedules():
+    """Display all project schedules with filtering and enhanced business logic"""
     try:
-        schedules = Schedule.query.all()
-        return render_template('admin/scheduling/schedules.html', schedules=schedules)
+        # Get filter parameters
+        project_filter = request.args.get('project', '')
+        status_filter = request.args.get('status', '')
+        type_filter = request.args.get('type', '')
+        view_schedule_id = request.args.get('view_schedule', '')
+        
+        # Base query with project relationship
+        schedules_query = Schedule.query.join(Project)
+        
+        # Apply filters
+        if project_filter:
+            schedules_query = schedules_query.filter(Schedule.project_id == project_filter)
+        if status_filter:
+            schedules_query = schedules_query.filter(Schedule.status == status_filter)
+        if type_filter:
+            schedules_query = schedules_query.filter(Schedule.type == type_filter)
+        
+        # Get schedules ordered by start time
+        schedules = schedules_query.order_by(Schedule.start_time.asc()).all()
+        
+        # Get all projects for filters
+        projects = Project.query.filter_by(status='Active').order_by(Project.name).all()
+        
+        # Get specific schedule for viewing if requested
+        view_schedule = None
+        if view_schedule_id:
+            try:
+                view_schedule = Schedule.query.get(int(view_schedule_id))
+            except (ValueError, TypeError):
+                pass
+        
+        # Enhanced schedule statistics with business logic
+        from datetime import datetime, timedelta
+        now = datetime.now()
+        today = now.date()
+        
+        # Categorize schedules
+        upcoming_schedules = [s for s in schedules if s.start_time.date() > today]
+        ongoing_schedules = [s for s in schedules if s.start_time.date() <= today <= s.end_time.date() and s.status not in ['Completed', 'Cancelled']]
+        overdue_schedules = [s for s in schedules if s.end_time.date() < today and s.status not in ['Completed', 'Cancelled']]
+        completed_schedules = [s for s in schedules if s.status == 'Completed']
+        
+        # This week's schedules
+        week_start = today - timedelta(days=today.weekday())
+        week_end = week_start + timedelta(days=6)
+        this_week_schedules = [s for s in schedules if week_start <= s.start_time.date() <= week_end]
+        
+        # Calculate project schedule health
+        project_schedule_health = {}
+        for project in projects:
+            project_schedules = [s for s in schedules if s.project_id == project.id]
+            if project_schedules:
+                total = len(project_schedules)
+                completed = len([s for s in project_schedules if s.status == 'Completed'])
+                overdue = len([s for s in project_schedules if s.end_time.date() < today and s.status not in ['Completed', 'Cancelled']])
+                
+                health_score = 100
+                if total > 0:
+                    completion_rate = (completed / total) * 100
+                    overdue_penalty = (overdue / total) * 50  # 50% penalty for overdue
+                    health_score = max(0, completion_rate - overdue_penalty)
+                
+                project_schedule_health[project.id] = {
+                    'health_score': round(health_score, 1),
+                    'total': total,
+                    'completed': completed,
+                    'overdue': overdue
+                }
+        
+        schedule_stats = {
+            'total_schedules': len(schedules),
+            'upcoming_schedules': len(upcoming_schedules),
+            'ongoing_schedules': len(ongoing_schedules),
+            'overdue_schedules': len(overdue_schedules),
+            'completed_schedules': len(completed_schedules),
+            'this_week_schedules': len(this_week_schedules),
+            'project_health': project_schedule_health
+        }
+        
+        # Schedule types for filtering
+        schedule_types = ['Planning', 'Construction', 'Inspection', 'Meeting', 'Delivery', 'Maintenance', 'Other']
+        schedule_statuses = ['Scheduled', 'In Progress', 'Completed', 'Cancelled', 'Postponed']
+        
+        return render_template('admin/schedules.html', 
+                             schedules=schedules, 
+                             projects=projects,
+                             schedule_stats=schedule_stats,
+                             project_health=project_schedule_health,
+                             schedule_types=schedule_types,
+                             schedule_statuses=schedule_statuses,
+                             project_filter=project_filter,
+                             status_filter=status_filter,
+                             type_filter=type_filter,
+                             view_schedule=view_schedule,
+                             upcoming_schedules=upcoming_schedules,
+                             ongoing_schedules=ongoing_schedules,
+                             overdue_schedules=overdue_schedules,
+                             this_week_schedules=this_week_schedules)
     except Exception as e:
-        flash(f'Error loading schedules: {str(e)}', 'danger')
-        return render_template('admin/scheduling/schedules.html', schedules=[])
+        flash(f'Error loading schedules: {str(e)}', 'error')
+        return render_template('error.html'), 500
 
-@admin_bp.route('/schedules/add', methods=['GET', 'POST'])
+@admin_bp.route('/add-general-schedule', methods=['GET', 'POST'])
 @role_required([Roles.SUPER_HQ])
 def add_general_schedule():
-    class AddScheduleForm(FlaskForm):
-        title = StringField('Title', validators=[DataRequired(), Length(max=128)])
-        start_time = DateField('Start Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
-        end_time = DateField('End Time', format='%Y-%m-%d %H:%M', validators=[DataRequired()])
-    form = AddScheduleForm()
-    if form.validate_on_submit():
-        schedule = Schedule(title=form.title.data, start_time=form.start_time.data, end_time=form.end_time.data)
-        db.session.add(schedule)
-        db.session.commit()
-        flash('Schedule added successfully!', 'success')
+    """Create new project schedule"""
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            schedule = Schedule(
+                project_id=int(data.get('project_id')),
+                title=data.get('title'),
+                type=data.get('type'),
+                description=data.get('description'),
+                start_time=datetime.strptime(data.get('start_time'), '%Y-%m-%dT%H:%M'),
+                end_time=datetime.strptime(data.get('end_time'), '%Y-%m-%dT%H:%M'),
+                status=data.get('status', 'Scheduled')
+            )
+            
+            db.session.add(schedule)
+            db.session.commit()
+            
+            flash(f'Schedule "{schedule.title}" created successfully!', 'success')
+            return redirect(url_for('admin.schedules'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating schedule: {str(e)}', 'error')
+    
+    projects = Project.query.all()
+    return render_template('admin/add_schedule.html', projects=projects)
+
+@admin_bp.route('/edit-schedule/<int:schedule_id>', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def edit_schedule(schedule_id):
+    """Edit existing schedule"""
+    try:
+        schedule = Schedule.query.get_or_404(schedule_id)
+        
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                # Update schedule fields
+                schedule.project_id = int(data.get('project_id'))
+                schedule.title = data.get('title')
+                schedule.type = data.get('type')
+                schedule.description = data.get('description')
+                schedule.start_time = datetime.strptime(data.get('start_time'), '%Y-%m-%dT%H:%M')
+                schedule.end_time = datetime.strptime(data.get('end_time'), '%Y-%m-%dT%H:%M')
+                schedule.status = data.get('status', 'Scheduled')
+                
+                db.session.commit()
+                
+                flash(f'Schedule "{schedule.title}" updated successfully!', 'success')
+                return redirect(url_for('admin.schedules'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error updating schedule: {str(e)}', 'error')
+        
+        projects = Project.query.all()
+        schedule_types = ['Planning', 'Construction', 'Inspection', 'Meeting', 'Delivery', 'Maintenance', 'Other']
+        schedule_statuses = ['Scheduled', 'In Progress', 'Completed', 'Cancelled', 'Postponed']
+        
+        return render_template('admin/edit_schedule.html', 
+                             schedule=schedule, 
+                             projects=projects,
+                             schedule_types=schedule_types,
+                             schedule_statuses=schedule_statuses)
+        
+    except Exception as e:
+        flash(f'Error loading schedule: {str(e)}', 'error')
         return redirect(url_for('admin.schedules'))
-    return render_template('admin/scheduling/add_schedule.html', form=form)
 
-@admin_bp.route('/employees/<int:employee_id>/promote', methods=['GET', 'POST'])
+@admin_bp.route('/delete-schedule/<int:schedule_id>', methods=['POST'])
 @role_required([Roles.SUPER_HQ])
-def promote_employee(employee_id):
+def delete_schedule(schedule_id):
+    """Delete a schedule"""
     try:
-        employee = Employee.query.get_or_404(employee_id)
-        class PromoteEmployeeForm(FlaskForm):
-            position = StringField('New Position', validators=[DataRequired(), Length(max=100)])
-            job_description_upgrade = StringField('New Job Description', validators=[Length(max=255)])
-            present_academic_qualification = StringField('Present Academic Qualification', validators=[Length(max=255)])
-        form = PromoteEmployeeForm(obj=employee)
-        if form.validate_on_submit():
-            employee.role = form.position.data
-            employee.job_description_upgrade = form.job_description_upgrade.data
-            employee.present_academic_qualification = form.present_academic_qualification.data
-            db.session.commit()
-            flash('Employee promoted successfully!', 'success')
-            return redirect(url_for('admin.view_employee', employee_id=employee.id))
-        return render_template('admin/hr/promote_employee.html', form=form, employee=employee)
-    except Exception as e:
-        flash(f'Error promoting employee: {str(e)}', 'danger')
-        return render_template('admin/hr/promote_employee.html', form=None, employee=None)
-
-@admin_bp.route('/employees/<int:employee_id>/clock-in', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def clock_in(employee_id):
-    try:
-        from datetime import datetime
-        attendance = Attendance(employee_id=employee_id, date=datetime.today().date(), clock_in=datetime.now(), status='Present')
-        db.session.add(attendance)
+        schedule = Schedule.query.get_or_404(schedule_id)
+        schedule_title = schedule.title
+        
+        db.session.delete(schedule)
         db.session.commit()
-        flash('Clock-in successful!', 'success')
-    except Exception as e:
-        flash(f'Error clocking in: {str(e)}', 'danger')
-    return redirect(url_for('admin.view_employee', employee_id=employee_id))
-
-@admin_bp.route('/employees/<int:employee_id>/clock-out', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def clock_out(employee_id):
-    try:
-        from datetime import datetime
-        attendance = Attendance.query.filter_by(employee_id=employee_id, date=datetime.today().date()).first()
-        if attendance:
-            attendance.clock_out = datetime.now()
-            db.session.commit()
-            flash('Clock-out successful!', 'success')
-        else:
-            flash('No clock-in record found for today.', 'danger')
-    except Exception as e:
-        flash(f'Error clocking out: {str(e)}', 'danger')
-    return redirect(url_for('admin.view_employee', employee_id=employee_id))
-
-@admin_bp.route('/employees/<int:employee_id>/add-payroll', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def add_payroll(employee_id):
-    try:
-        amount = request.form.get('amount')
-        status = request.form.get('status', 'Generated')
-        from datetime import datetime
-        payroll = Payroll(employee_id=employee_id, amount=amount, status=status, date=datetime.today().date())
-        db.session.add(payroll)
-        db.session.commit()
-        flash('Payroll added successfully!', 'success')
-    except Exception as e:
-        flash(f'Error adding payroll: {str(e)}', 'danger')
-    return redirect(url_for('admin.view_employee', employee_id=employee_id))
-
-@admin_bp.route('/payroll/export', methods=['GET'])
-@role_required([Roles.SUPER_HQ])
-def export_payroll():
-    import csv
-    from io import StringIO
-    payrolls = Payroll.query.join(Employee).add_entity(Employee).all()
-    si = StringIO()
-    cw = csv.writer(si)
-    cw.writerow(['Staff Name', 'Amount', 'Status', 'Date'])
-    for p, e in payrolls:
-        cw.writerow([e.name, p.amount, p.status, p.date])
-    output = si.getvalue()
-    return output, 200, {'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename=payroll.csv'}
-
-@admin_bp.route('/attendance/export', methods=['GET'])
-@role_required([Roles.SUPER_HQ])
-def export_attendance():
-    import csv
-    from io import StringIO
-    attendance_records = Attendance.query.join(Employee).add_entity(Employee).all()
-    si = StringIO()
-    cw = csv.writer(si)
-    cw.writerow(['Staff Name', 'Date', 'Status', 'Clock In', 'Clock Out'])
-    for a, e in attendance_records:
-        cw.writerow([e.name, a.date, a.status, a.clock_in, a.clock_out])
-    output = si.getvalue()
-    return output, 200, {'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename=attendance.csv'}
-
-@admin_bp.route('/payroll/analytics', methods=['GET'])
-@role_required([Roles.SUPER_HQ])
-def payroll_analytics():
-    from sqlalchemy import func
-    total_payroll = db.session.query(func.sum(Payroll.amount)).scalar() or 0
-    avg_payroll = db.session.query(func.avg(Payroll.amount)).scalar() or 0
-    count_payroll = db.session.query(func.count(Payroll.id)).scalar() or 0
-    return {
-        'total': total_payroll,
-        'average': avg_payroll,
-        'count': count_payroll
-    }
-
-@admin_bp.route('/attendance/analytics', methods=['GET'])
-@role_required([Roles.SUPER_HQ])
-def attendance_analytics():
-    from sqlalchemy import func
-    total_attendance = db.session.query(func.count(Attendance.id)).scalar() or 0
-    present_count = db.session.query(func.count(Attendance.id)).filter(Attendance.status=='Present').scalar() or 0
-    absent_count = db.session.query(func.count(Attendance.id)).filter(Attendance.status=='Absent').scalar() or 0
-    late_count = db.session.query(func.count(Attendance.id)).filter(Attendance.status=='Late').scalar() or 0
-    return {
-        'total': total_attendance,
-        'present': present_count,
-        'absent': absent_count,
-        'late': late_count
-    }
-
-@admin_bp.route('/generate_payroll', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def generate_payroll():
-    try:
-        # Get total payroll and deductions from form
-        total_payroll_input = request.form.get('total_payroll_input', type=float)
-        total_deductions_input = request.form.get('total_deductions_input', type=float)
-        month = request.args.get('month', default=datetime.now().month, type=int)
-        year = datetime.now().year
-        period_start = datetime(year, month, 1)
-        period_end = datetime(year, month, 28)
-
-        # Create PayrollHistory record
-        payroll_history = PayrollHistory(
-            period_start=period_start,
-            period_end=period_end,
-            total_payroll=total_payroll_input or 0,
-            total_deductions=total_deductions_input or 0,
-            generated_by=current_user.name if hasattr(current_user, 'name') else 'System'
-        )
-        db.session.add(payroll_history)
-        db.session.flush()  # Get payroll_history.id
-
-        employees = Employee.query.all()
-        total_employee_net = 0
-        for employee in employees:
-            salary = request.form.get(f'salary_{employee.id}', type=float)
-            deduction = request.form.get(f'deduction_{employee.id}', type=float)
-            net_salary = (salary or 0) - (deduction or 0)
-            total_employee_net += net_salary
-            # Save payroll record for employee
-            payroll = Payroll(
-                employee_id=employee.id,
-                period_start=period_start,
-                period_end=period_end,
-                amount=salary or 0,
-                deductions=deduction or 0,
-                status='Generated'
-            )
-            db.session.add(payroll)
-            # Save EmployeeSalaryHistory
-            salary_history = EmployeeSalaryHistory(
-                payroll_history_id=payroll_history.id,
-                employee_id=employee.id,
-                salary=salary or 0,
-                deduction=deduction or 0,
-                net_pay=net_salary
-            )
-            db.session.add(salary_history)
-            # Save PayrollTransaction
-            transaction = PayrollTransaction(
-                payroll_history_id=payroll_history.id,
-                employee_id=employee.id,
-                amount_paid=net_salary,
-                status='Completed'
-            )
-            db.session.add(transaction)
-        db.session.commit()
-
-        remaining_payroll = (total_payroll_input or 0) - total_employee_net - (total_deductions_input or 0)
-        flash(f'Payroll generated! Remaining payroll after payments and deductions: ₦{remaining_payroll:,.2f}', 'success')
+        
+        flash(f'Schedule "{schedule_title}" deleted successfully!', 'success')
+        return redirect(url_for('admin.schedules'))
+        
     except Exception as e:
         db.session.rollback()
-        flash(f'Error generating payroll: {str(e)}', 'danger')
-    return redirect(url_for('admin.payroll'))
+        flash(f'Error deleting schedule: {str(e)}', 'error')
+        return redirect(url_for('admin.schedules'))
 
-@admin_bp.route('/employees/add', methods=['GET', 'POST'])
+# ==================== ANALYTICS ENDPOINTS ====================
+
+@admin_bp.route('/analytics')
 @role_required([Roles.SUPER_HQ])
-def add_employee():
+def analytics():
+    """Analytics dashboard - redirect to comprehensive analytics"""
+    return redirect(url_for('admin.analytics_custom'))
+
+
+@admin_bp.route('/analytics-custom')
+@role_required([Roles.SUPER_HQ])
+def analytics_custom():
+    """Comprehensive analytics dashboard for all modules"""
     try:
-        class AddEmployeeForm(FlaskForm):
-            name = StringField('Full Name', validators=[DataRequired(), Length(max=100)])
-            dob = DateField('Date of Birth', format='%Y-%m-%d', validators=[DataRequired()])
-            email = StringField('Email', validators=[DataRequired(), Length(max=100)])
-            department = SelectField('Department', choices=[('HR', 'HR'), ('Finance', 'Finance'), ('Engineering', 'Engineering'), ('Procurement', 'Procurement'), ('Other', 'Other')], validators=[DataRequired()])
-            position = SelectField('Position', choices=[('Manager', 'Manager'), ('Staff', 'Staff'), ('Intern', 'Intern'), ('Other', 'Other')], validators=[DataRequired()])
-            date_of_employment = DateField('Date of Employment', format='%Y-%m-%d', validators=[DataRequired()])
-            employment_letter = SelectField('Employment Letter', choices=[('Yes', 'Yes'), ('No', 'No')])
-            next_of_kin_relationship = SelectField('Relationship', choices=[('Parent', 'Parent'), ('Sibling', 'Sibling'), ('Spouse', 'Spouse'), ('Other', 'Other')])
-            current_address = StringField('Current Address', validators=[Length(max=255)])
-            permanent_address = StringField('Permanent Address', validators=[Length(max=255)])
-            phone = StringField('Phone Number', validators=[Length(max=20)])
-            next_of_kin = StringField('Next of Kin', validators=[Length(max=100)])
-            next_of_kin_address = StringField('Next of Kin Address', validators=[Length(max=255)])
-            next_of_kin_phone = StringField('Next of Kin Phone', validators=[Length(max=20)])
-            degree = StringField('Degree (if any)', validators=[Length(max=100)])
-            institution = StringField('Institution(s) Attended', validators=[Length(max=255)])
-            current_certification = StringField('Current Degree/Certification', validators=[Length(max=100)])
-            present_assignment = StringField('Place of Present Assignment', validators=[Length(max=100)])
-            sectional_head = StringField('Sectional Head', validators=[Length(max=100)])
-            employment_dates = StringField('Employment Dates', validators=[Length(max=100)])
-            job_description = StringField('Job Description', validators=[Length(max=255)])
-            past_job_title = StringField('Past Job Title(s) and Role(s)', validators=[Length(max=100)])
-            past_employer_dates = StringField('Employer(s) and Dates', validators=[Length(max=255)])
-            past_accomplishments = StringField('Key Accomplishments and Responsibilities', validators=[Length(max=255)])
-            technical_skills = StringField('Technical Skills', validators=[Length(max=255)])
-            soft_skills = StringField('Soft Skills', validators=[Length(max=255)])
-            certifications = StringField('Relevant Certifications or Licenses', validators=[Length(max=255)])
-            team_info = StringField('Team Information', validators=[Length(max=100)])
-            notes = StringField('Notes', validators=[Length(max=255)])
-            sectional_head_upgrade = StringField('Name of Sectional Head', validators=[Length(max=100)])
-            job_description_upgrade = StringField('Job Description (Upgrade)', validators=[Length(max=255)])
-            academic_qualification_at_employment = StringField('Academic qualification as at time of employment', validators=[Length(max=255)])
-            present_academic_qualification = StringField('Present Academic qualification', validators=[Length(max=255)])
-        form = AddEmployeeForm()
-        if form.validate_on_submit():
-            employee = Employee(
-                name=form.name.data,
-                dob=form.dob.data,
-                email=form.email.data,
-                department=form.department.data,
-                role=form.position.data,
-                date_of_employment=form.date_of_employment.data,
-                employment_letter=form.employment_letter.data,
-                next_of_kin_relationship=form.next_of_kin_relationship.data,
-                current_address=form.current_address.data,
-                permanent_address=form.permanent_address.data,
-                phone=form.phone.data,
-                next_of_kin=form.next_of_kin.data,
-                next_of_kin_address=form.next_of_kin_address.data,
-                next_of_kin_phone=form.next_of_kin_phone.data,
-                degree=form.degree.data,
-                institution=form.institution.data,
-                current_certification=form.current_certification.data,
-                present_assignment=form.present_assignment.data,
-                sectional_head=form.sectional_head.data,
-                employment_dates=form.employment_dates.data,
-                job_description=form.job_description.data,
-                past_job_title=form.past_job_title.data,
-                past_employer_dates=form.past_employer_dates.data,
-                past_accomplishments=form.past_accomplishments.data,
-                technical_skills=form.technical_skills.data,
-                soft_skills=form.soft_skills.data,
-                certifications=form.certifications.data,
-                team_info=form.team_info.data,
-                notes=form.notes.data,
-                sectional_head_upgrade=form.sectional_head_upgrade.data,
-                job_description_upgrade=form.job_description_upgrade.data,
-                academic_qualification_at_employment=form.academic_qualification_at_employment.data,
-                present_academic_qualification=form.present_academic_qualification.data
+        from datetime import datetime, timedelta
+        from sqlalchemy import func, extract
+        
+        current_date = datetime.now()
+        current_month = current_date.replace(day=1)
+        last_month = (current_month - timedelta(days=1)).replace(day=1)
+        current_year = current_date.year
+        
+        # Comprehensive analytics data from all modules
+        analytics_data = {
+            # PROJECT ANALYTICS
+            'project_analytics': {
+                'total_projects': Project.query.count(),
+                'active_projects': Project.query.filter_by(status='Active').count(),
+                'completed_projects': Project.query.filter_by(status='Completed').count(),
+                'planning_projects': Project.query.filter_by(status='Planning').count(),
+                'on_hold_projects': Project.query.filter_by(status='On Hold').count(),
+                'total_budget': db.session.query(func.sum(Project.budget)).scalar() or 0,
+                'avg_budget': db.session.query(func.avg(Project.budget)).scalar() or 0,
+                'projects_this_month': Project.query.filter(Project.created_at >= current_month).count(),
+                'projects_last_month': Project.query.filter(
+                    Project.created_at >= last_month,
+                    Project.created_at < current_month
+                ).count()
+            },
+            
+            # FINANCIAL ANALYTICS
+            'financial_analytics': {
+                'total_orders': PurchaseOrder.query.count(),
+                'pending_orders': PurchaseOrder.query.filter_by(status='Pending').count(),
+                'approved_orders': PurchaseOrder.query.filter_by(status='Approved').count(),
+                'rejected_orders': PurchaseOrder.query.filter_by(status='Rejected').count(),
+                'total_order_value': db.session.query(func.sum(PurchaseOrder.total_amount)).scalar() or 0,
+                'pending_order_value': db.session.query(func.sum(PurchaseOrder.total_amount)).filter(
+                    PurchaseOrder.status == 'Pending'
+                ).scalar() or 0,
+                'approved_order_value': db.session.query(func.sum(PurchaseOrder.total_amount)).filter(
+                    PurchaseOrder.status == 'Approved'
+                ).scalar() or 0,
+                'orders_this_month': PurchaseOrder.query.filter(PurchaseOrder.created_at >= current_month).count(),
+                'total_expenses': db.session.query(func.sum(Expense.amount)).scalar() or 0,
+                'expenses_this_month': db.session.query(func.sum(Expense.amount)).filter(
+                    Expense.date >= current_month.date()
+                ).scalar() or 0,
+                'avg_order_value': db.session.query(func.avg(PurchaseOrder.total_amount)).scalar() or 0
+            },
+            
+            # PROCUREMENT ANALYTICS
+            'procurement_analytics': {
+                'total_suppliers': Supplier.query.count(),
+                'active_suppliers': Supplier.query.filter_by(status='Active').count(),
+                'inactive_suppliers': Supplier.query.filter_by(status='Inactive').count(),
+                'total_stock_items': Stock.query.count(),
+                'low_stock_items': Stock.query.filter(Stock.quantity <= 10).count(),
+                'out_of_stock_items': Stock.query.filter(Stock.quantity <= 0).count(),
+                'total_stock_quantity': db.session.query(func.sum(Stock.quantity)).scalar() or 0,
+                'suppliers_this_month': Supplier.query.filter(Supplier.created_at >= current_month).count()
+            },
+            
+            # HR ANALYTICS
+            'hr_analytics': {
+                'total_employees': Employee.query.count(),
+                'active_employees': Employee.query.filter_by(status='Active').count(),
+                'inactive_employees': Employee.query.filter_by(status='Inactive').count(),
+                'departments': db.session.query(func.count(func.distinct(Employee.department))).scalar() or 0,
+                'positions': db.session.query(func.count(func.distinct(Employee.position))).scalar() or 0,
+                'new_hires_this_month': Employee.query.filter(Employee.date_of_employment >= current_month.date()).count(),
+                'avg_salary': db.session.query(func.avg(Payroll.amount)).scalar() or 0,
+                'total_payroll': db.session.query(func.sum(Payroll.amount)).scalar() or 0
+            },
+            
+            # ASSET ANALYTICS
+            'asset_analytics': {
+                'total_assets': Asset.query.count(),
+                'active_assets': Asset.query.filter_by(status='Active').count(),
+                'retired_assets': Asset.query.filter_by(status='Retired').count(),
+                'maintenance_assets': Asset.query.filter_by(status='Under Maintenance').count(),
+                'assets_this_month': Asset.query.filter(Asset.created_at >= current_month).count()
+            },
+            
+            # EQUIPMENT ANALYTICS
+            'equipment_analytics': {
+                'total_equipment': Equipment.query.count(),
+                'active_equipment': Equipment.query.filter_by(status='Active').count(),
+                'maintenance_equipment': Equipment.query.filter_by(status='Under Maintenance').count(),
+                'retired_equipment': Equipment.query.filter_by(status='Retired').count(),
+                'avg_machine_hours': db.session.query(func.avg(Equipment.machine_hours)).scalar() or 0,
+                'total_diesel_consumption': db.session.query(func.sum(Equipment.diesel_consumption)).scalar() or 0
+            },
+            
+            # INCIDENT ANALYTICS
+            'incident_analytics': {
+                'total_incidents': Incident.query.count(),
+                'open_incidents': Incident.query.filter_by(status='Open').count(),
+                'closed_incidents': Incident.query.filter_by(status='Closed').count(),
+                'critical_incidents': Incident.query.filter_by(severity='Critical').count(),
+                'high_incidents': Incident.query.filter_by(severity='High').count(),
+                'medium_incidents': Incident.query.filter_by(severity='Medium').count(),
+                'low_incidents': Incident.query.filter_by(severity='Low').count(),
+                'incidents_this_month': Incident.query.filter(Incident.date_reported >= current_month.date()).count()
+            },
+            
+            # SCHEDULE ANALYTICS
+            'schedule_analytics': {
+                'total_schedules': Schedule.query.count(),
+                'active_schedules': Schedule.query.filter_by(status='active').count(),
+                'pending_schedules': Schedule.query.filter_by(status='pending').count(),
+                'completed_schedules': Schedule.query.filter_by(status='completed').count(),
+                'schedules_this_month': Schedule.query.filter(Schedule.created_at >= current_month).count(),
+                'overdue_schedules': Schedule.query.filter(
+                    Schedule.end_time < current_date,
+                    Schedule.status.notin_(['completed', 'cancelled'])
+                ).count()
+            },
+            
+            # DOCUMENT ANALYTICS
+            'document_analytics': {
+                'total_documents': Document.query.count(),
+                'documents_this_month': Document.query.filter(Document.uploaded_at >= current_month).count(),
+                'total_file_size': db.session.query(func.sum(Document.size)).scalar() or 0,
+                'avg_file_size': db.session.query(func.avg(Document.size)).scalar() or 0
+            }
+        }
+        
+        # Monthly trend data for charts (last 12 months)
+        monthly_data = []
+        for i in range(12):
+            month_start = datetime.now().replace(day=1) - timedelta(days=30*i)
+            month_end = month_start + timedelta(days=30)
+            
+            monthly_stats = {
+                'month': month_start.strftime('%Y-%m'),
+                'month_name': month_start.strftime('%B %Y'),
+                'projects': Project.query.filter(
+                    Project.created_at >= month_start,
+                    Project.created_at < month_end
+                ).count(),
+                'orders': PurchaseOrder.query.filter(
+                    PurchaseOrder.created_at >= month_start,
+                    PurchaseOrder.created_at < month_end
+                ).count(),
+                'order_value': db.session.query(func.sum(PurchaseOrder.total_amount)).filter(
+                    PurchaseOrder.created_at >= month_start,
+                    PurchaseOrder.created_at < month_end
+                ).scalar() or 0,
+                'expenses': db.session.query(func.sum(Expense.amount)).filter(
+                    Expense.date >= month_start.date(),
+                    Expense.date < month_end.date()
+                ).scalar() or 0,
+                'incidents': Incident.query.filter(
+                    Incident.date_reported >= month_start.date(),
+                    Incident.date_reported < month_end.date()
+                ).count(),
+                'new_employees': Employee.query.filter(
+                    Employee.date_of_employment >= month_start.date(),
+                    Employee.date_of_employment < month_end.date()
+                ).count(),
+                'schedules': Schedule.query.filter(
+                    Schedule.created_at >= month_start,
+                    Schedule.created_at < month_end
+                ).count()
+            }
+            monthly_data.append(monthly_stats)
+        
+        analytics_data['monthly_trends'] = list(reversed(monthly_data))
+        
+        # Calculate growth rates
+        analytics_data['growth_rates'] = {
+            'projects': calculate_growth_rate(
+                analytics_data['project_analytics']['projects_this_month'],
+                analytics_data['project_analytics']['projects_last_month']
+            ),
+            'orders': calculate_growth_rate(
+                analytics_data['financial_analytics']['orders_this_month'],
+                PurchaseOrder.query.filter(
+                    PurchaseOrder.created_at >= last_month,
+                    PurchaseOrder.created_at < current_month
+                ).count()
+            ),
+            'employees': calculate_growth_rate(
+                analytics_data['hr_analytics']['new_hires_this_month'],
+                Employee.query.filter(
+                    Employee.date_of_employment >= last_month.date(),
+                    Employee.date_of_employment < current_month.date()
+                ).count()
             )
-            db.session.add(employee)
+        }
+        
+        return render_template('admin/analytics.html', analytics=analytics_data)
+    except Exception as e:
+        flash(f'Error loading analytics: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+
+def calculate_growth_rate(current, previous):
+    """Calculate growth rate percentage"""
+    if previous == 0:
+        return 100 if current > 0 else 0
+    return round(((current - previous) / previous) * 100, 1)
+
+@admin_bp.route('/analytics-export-csv')
+@role_required([Roles.SUPER_HQ])
+def analytics_export_csv():
+    """Export analytics data as CSV"""
+    try:
+        # Create CSV data
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write headers
+        writer.writerow(['Report Type', 'Metric', 'Value', 'Generated At'])
+        
+        # Project metrics
+        writer.writerow(['Projects', 'Total Projects', Project.query.count(), datetime.now()])
+        writer.writerow(['Projects', 'Active Projects', Project.query.filter_by(status='Active').count(), datetime.now()])
+        writer.writerow(['Projects', 'Completed Projects', Project.query.filter_by(status='Completed').count(), datetime.now()])
+        
+        # Asset metrics
+        writer.writerow(['Assets', 'Total Assets', Asset.query.count(), datetime.now()])
+        writer.writerow(['Assets', 'Active Assets', Asset.query.filter_by(status='Active').count(), datetime.now()])
+        
+        # Employee metrics
+        writer.writerow(['Employees', 'Total Employees', Employee.query.count(), datetime.now()])
+        writer.writerow(['Employees', 'Active Employees', Employee.query.filter_by(status='Active').count(), datetime.now()])
+        
+        # Incident metrics
+        writer.writerow(['Incidents', 'Total Incidents', Incident.query.count(), datetime.now()])
+        writer.writerow(['Incidents', 'Open Incidents', Incident.query.filter_by(status='Open').count(), datetime.now()])
+        
+        # Create response
+        output.seek(0)
+        
+        # Create a bytes buffer
+        mem = io.BytesIO()
+        mem.write(output.getvalue().encode('utf-8'))
+        mem.seek(0)
+        
+        filename = f"construction_analytics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        
+        return send_file(
+            mem,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='text/csv'
+        )
+        
+    except Exception as e:
+        flash(f'Error exporting analytics: {str(e)}', 'error')
+        return redirect(url_for('admin.analytics_custom'))
+
+# ==================== USER MANAGEMENT ENDPOINTS ====================
+
+@admin_bp.route('/profile')
+@role_required([Roles.SUPER_HQ])
+def profile():
+    """Admin user profile management"""
+    try:
+        # Use Flask-Login current_user
+        from flask_login import current_user
+        
+        if not current_user.is_authenticated:
+            flash('Please log in to view profile', 'error')
+            return redirect(url_for('main.login'))
+        
+        user = current_user
+        
+        # Get user activity statistics
+        user_stats = {
+            'projects_managed': Project.query.filter_by(project_manager=user.name or user.username).count(),
+            'incidents_reported': Incident.query.filter_by(reported_by=user.name or user.username).count(),
+            'last_login': user.updated_at if hasattr(user, 'updated_at') else None,
+            'account_created': user.created_at if hasattr(user, 'created_at') else None
+        }
+        
+        return render_template('admin/profile.html', user=user, user_stats=user_stats)
+    except Exception as e:
+        flash(f'Error loading profile: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+@admin_bp.route('/logout')
+def logout():
+    """Admin logout functionality"""
+    try:
+        # Clear session
+        session.clear()
+        flash('You have been logged out successfully', 'success')
+        return redirect(url_for('main.login'))
+    except Exception as e:
+        flash(f'Error during logout: {str(e)}', 'error')
+        return redirect(url_for('admin.dashboard'))
+
+# Purchase Order Management Routes
+
+@admin_bp.route('/orders')
+@role_required([Roles.SUPER_HQ])
+def orders():
+    """Display purchase orders management"""
+    try:
+        # Get filter parameters
+        status_filter = request.args.get('status', '')
+        priority_filter = request.args.get('priority', '')
+        supplier_filter = request.args.get('supplier', '')
+        project_filter = request.args.get('project', '')
+        view_order_id = request.args.get('view_order', '')
+        
+        # Base query
+        orders_query = PurchaseOrder.query
+        
+        # Apply filters
+        if status_filter:
+            orders_query = orders_query.filter(PurchaseOrder.status == status_filter)
+        if priority_filter:
+            orders_query = orders_query.filter(PurchaseOrder.priority == priority_filter)
+        if supplier_filter:
+            orders_query = orders_query.filter(PurchaseOrder.supplier_name.ilike(f'%{supplier_filter}%'))
+        if project_filter:
+            orders_query = orders_query.filter(PurchaseOrder.project_id == project_filter)
+        
+        # Get orders with relationships
+        purchase_orders = orders_query.order_by(PurchaseOrder.created_at.desc()).all()
+        
+        # Get filter data
+        projects = Project.query.all()
+        suppliers = Supplier.query.filter_by(status='Active').all()
+        
+        # Calculate statistics
+        total_orders = PurchaseOrder.query.count()
+        pending_orders = PurchaseOrder.query.filter_by(status='Pending').count()
+        approved_orders = PurchaseOrder.query.filter_by(status='Approved').count()
+        total_value = db.session.query(func.sum(PurchaseOrder.total_amount)).filter_by(status='Approved').scalar() or 0
+        
+        order_stats = {
+            'total_orders': total_orders,
+            'pending_orders': pending_orders,
+            'approved_orders': approved_orders,
+            'total_value': total_value
+        }
+        
+        # Get specific order for viewing if requested
+        view_order = None
+        if view_order_id:
+            try:
+                view_order = PurchaseOrder.query.get(int(view_order_id))
+            except (ValueError, TypeError):
+                pass
+        
+        return render_template('admin/orders.html', 
+                             purchase_orders=purchase_orders,
+                             order_stats=order_stats,
+                             projects=projects,
+                             suppliers=suppliers,
+                             status_filter=status_filter,
+                             priority_filter=priority_filter,
+                             supplier_filter=supplier_filter,
+                             project_filter=project_filter,
+                             view_order=view_order)
+    except Exception as e:
+        flash(f'Error loading purchase orders: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+@admin_bp.route('/add-order', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def add_order():
+    """Add new purchase order"""
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            # Generate order number
+            from datetime import datetime
+            import random
+            order_number = f"PO-{datetime.now().strftime('%Y%m%d')}-{random.randint(1000, 9999)}"
+            
+            # Create purchase order
+            purchase_order = PurchaseOrder(
+                order_number=order_number,
+                supplier_name=data.get('supplier_name'),
+                supplier_contact=data.get('supplier_contact'),
+                supplier_email=data.get('supplier_email'),
+                supplier_phone=data.get('supplier_phone'),
+                project_id=int(data.get('project_id')) if data.get('project_id') else None,
+                priority=data.get('priority', 'Normal'),
+                description=data.get('description'),
+                expected_delivery=datetime.strptime(data.get('expected_delivery'), '%Y-%m-%d').date() if data.get('expected_delivery') else None,
+                delivery_address=data.get('delivery_address'),
+                notes=data.get('notes'),
+                status=data.get('status', 'Pending'),  # Handle status from form
+                requested_by=current_user.id  # Use current_user instead of session
+            )
+            
+            db.session.add(purchase_order)
+            db.session.flush()  # Get the ID
+            
+            # Process line items
+            item_names = request.form.getlist('item_name[]')
+            item_descriptions = request.form.getlist('item_description[]')
+            item_quantities = request.form.getlist('item_quantity[]')
+            item_units = request.form.getlist('item_unit[]')
+            item_prices = request.form.getlist('item_price[]')
+            
+            subtotal = 0
+            has_items = False
+            
+            for i in range(len(item_names)):
+                if item_names[i] and item_names[i].strip():  # Check for non-empty item name
+                    try:
+                        quantity = float(item_quantities[i]) if item_quantities[i] else 0
+                        unit_price = float(item_prices[i]) if item_prices[i] else 0
+                        
+                        if quantity > 0 and unit_price > 0:  # Only add items with valid quantity and price
+                            line_total = quantity * unit_price
+                            
+                            line_item = PurchaseOrderLineItem(
+                                purchase_order_id=purchase_order.id,
+                                item_name=item_names[i].strip(),
+                                description=item_descriptions[i].strip() if item_descriptions[i] else '',
+                                quantity=quantity,
+                                unit=item_units[i].strip() if item_units[i] else '',
+                                unit_price=unit_price,
+                                line_total=line_total
+                            )
+                            db.session.add(line_item)
+                            subtotal += line_total
+                            has_items = True
+                    except (ValueError, TypeError):
+                        # Skip invalid items
+                        continue
+            
+            if not has_items:
+                raise ValueError("At least one valid item with quantity and price is required")
+            
+            # Calculate totals
+            tax_rate = float(data.get('tax_rate', 0)) / 100
+            tax_amount = subtotal * tax_rate
+            total_amount = subtotal + tax_amount
+            
+            # Update purchase order totals
+            purchase_order.subtotal = subtotal
+            purchase_order.tax_rate = tax_rate * 100
+            purchase_order.tax_amount = tax_amount
+            purchase_order.total_amount = total_amount
+            
             db.session.commit()
-            flash('Employee added successfully!', 'success')
-            return redirect(url_for('admin.employees'))
-        elif request.method == 'POST':
-            flash('Please fill all required fields: Name, Email, Department, Position, Date of Birth, Date of Employment.', 'danger')
-        return render_template('admin/hr/add_employee.html', form=form)
-    except Exception as e:
-        flash(f'Error adding employee: {str(e)}', 'danger')
-        return render_template('admin/hr/add_employee.html', form=None)
-
-@admin_bp.route('/set_total_salary', methods=['POST'])
-@role_required([Roles.SUPER_HQ])
-def set_total_salary():
+            
+            flash(f'Purchase order {order_number} created successfully!', 'success')
+            return redirect(url_for('admin.orders'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating purchase order: {str(e)}', 'error')
+    
+    # GET request - show form
     try:
-        month = int(request.form.get('month'))
-        total_salary = float(request.form.get('total_salary'))
-        current_year = datetime.now().year
-        # Find or create a Payroll record for the month
-        payroll_record = Payroll.query.filter(
-            db.extract('month', Payroll.period_end) == month,
-            db.extract('year', Payroll.period_end) == current_year
-        ).first()
-        if payroll_record:
-            payroll_record.amount = total_salary
-            payroll_record.period_end = datetime(current_year, month, 28)  # Set to last day of month
-        else:
-            payroll_record = Payroll(
-                amount=total_salary,
-                period_end=datetime(current_year, month, 28)
-            )
-            db.session.add(payroll_record)
-        db.session.commit()
-        flash(f'Total salary for month {month} saved!', 'success')
+        projects = Project.query.all()
+        suppliers = Supplier.query.filter_by(status='Active').all()
+        stock_items = Stock.query.all()
+        
+        return render_template('admin/add_order_simple.html', 
+                             projects=projects,
+                             suppliers=suppliers,
+                             stock_items=stock_items)
     except Exception as e:
-        flash(f'Error saving total salary: {str(e)}', 'danger')
-    return redirect(url_for('admin.payroll'))
+        flash(f'Error loading form data: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+@admin_bp.route('/order/<int:order_id>')
+@role_required([Roles.SUPER_HQ])
+def view_order(order_id):
+    """View purchase order details"""
+    try:
+        purchase_order = PurchaseOrder.query.get_or_404(order_id)
+        
+        order_data = {
+            'id': purchase_order.id,
+            'order_number': purchase_order.order_number,
+            'supplier_name': purchase_order.supplier_name,
+            'supplier_contact': purchase_order.supplier_contact,
+            'supplier_email': purchase_order.supplier_email,
+            'supplier_phone': purchase_order.supplier_phone,
+            'project_name': purchase_order.project.name if purchase_order.project else None,
+            'status': purchase_order.status,
+            'priority': purchase_order.priority,
+            'description': purchase_order.description,
+            'subtotal': purchase_order.subtotal,
+            'tax_rate': purchase_order.tax_rate,
+            'tax_amount': purchase_order.tax_amount,
+            'total_amount': purchase_order.total_amount,
+            'expected_delivery': purchase_order.expected_delivery.strftime('%Y-%m-%d') if purchase_order.expected_delivery else None,
+            'delivery_address': purchase_order.delivery_address,
+            'notes': purchase_order.notes,
+            'requested_by': purchase_order.requested_by_employee.name if purchase_order.requested_by_employee else None,
+            'approved_by': purchase_order.approved_by_employee.name if purchase_order.approved_by_employee else None,
+            'approval_date': purchase_order.approval_date.strftime('%Y-%m-%d %H:%M') if purchase_order.approval_date else None,
+            'created_at': purchase_order.created_at.strftime('%Y-%m-%d %H:%M'),
+            'line_items': [{
+                'item_name': item.item_name,
+                'description': item.description,
+                'quantity': item.quantity,
+                'unit': item.unit,
+                'unit_price': item.unit_price,
+                'line_total': item.line_total
+            } for item in purchase_order.line_items]
+        }
+        
+        return jsonify({
+            'success': True,
+            'order': order_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@admin_bp.route('/order/<int:order_id>/approve', methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def approve_order(order_id):
+    """Approve purchase order"""
+    try:
+        purchase_order = PurchaseOrder.query.get_or_404(order_id)
+        
+        if purchase_order.status not in ['Draft', 'Pending']:
+            return jsonify({
+                'success': False,
+                'message': 'Order cannot be approved in current status'
+            }), 400
+        
+        purchase_order.status = 'Approved'
+        purchase_order.approved_by = session.get('user_id')
+        purchase_order.approval_date = datetime.utcnow()
+        
+        db.session.commit()
+        
+        # Send notification to the user who requested the order
+        if purchase_order.requested_by:
+            # Try to get user email from User model first
+            user = User.query.filter_by(id=purchase_order.requested_by).first()
+            if user and user.email:
+                send_order_notification(user.email, purchase_order.order_number, 'Approved')
+            else:
+                # Fallback to Employee model
+                employee = Employee.query.filter_by(id=purchase_order.requested_by).first()
+                if employee and employee.email:
+                    send_order_notification(employee.email, purchase_order.order_number, 'Approved')
+        
+        flash(f'Purchase order {purchase_order.order_number} approved successfully!', 'success')
+        return jsonify({
+            'success': True,
+            'message': 'Purchase order approved successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@admin_bp.route('/order/<int:order_id>/reject', methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def reject_order(order_id):
+    """Reject purchase order"""
+    try:
+        purchase_order = PurchaseOrder.query.get_or_404(order_id)
+        data = request.get_json()
+        rejection_reason = data.get('reason', 'No reason provided')
+        
+        if purchase_order.status not in ['Draft', 'Pending']:
+            return jsonify({
+                'success': False,
+                'message': 'Order cannot be rejected in current status'
+            }), 400
+        
+        purchase_order.status = 'Rejected'
+        purchase_order.notes = f"{purchase_order.notes or ''}\n\nRejection reason: {rejection_reason}"
+        
+        db.session.commit()
+        
+        # Send notification to the user who requested the order
+        if purchase_order.requested_by:
+            # Try to get user email from User model first
+            user = User.query.filter_by(id=purchase_order.requested_by).first()
+            if user and user.email:
+                send_order_notification(user.email, purchase_order.order_number, 'Rejected', rejection_reason)
+            else:
+                # Fallback to Employee model
+                employee = Employee.query.filter_by(id=purchase_order.requested_by).first()
+                if employee and employee.email:
+                    send_order_notification(employee.email, purchase_order.order_number, 'Rejected', rejection_reason)
+        
+        flash(f'Purchase order {purchase_order.order_number} rejected.', 'warning')
+        return jsonify({
+            'success': True,
+            'message': 'Purchase order rejected'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@admin_bp.route('/order/<int:order_id>/reject-form', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def reject_order_form(order_id):
+    """Handle reject order form submission"""
+    purchase_order = PurchaseOrder.query.get_or_404(order_id)
+    
+    if request.method == 'GET':
+        # Show reject form
+        return render_template('admin/reject_order.html', order=purchase_order)
+    
+    try:
+        if purchase_order.status not in ['Draft', 'Pending']:
+            flash('Order cannot be rejected in current status', 'error')
+            return redirect(url_for('admin.orders'))
+        
+        rejection_reason = request.form.get('reason', 'No reason provided')
+        
+        purchase_order.status = 'Rejected'
+        purchase_order.notes = f"{purchase_order.notes or ''}\n\nRejection reason: {rejection_reason}"
+        
+        db.session.commit()
+        
+        # Send notification to the user who requested the order
+        if purchase_order.requested_by:
+            # Try to get user email from User model first
+            user = User.query.filter_by(id=purchase_order.requested_by).first()
+            if user and user.email:
+                send_order_notification(user.email, purchase_order.order_number, 'Rejected', rejection_reason)
+            else:
+                # Fallback to Employee model
+                employee = Employee.query.filter_by(id=purchase_order.requested_by).first()
+                if employee and employee.email:
+                    send_order_notification(employee.email, purchase_order.order_number, 'Rejected', rejection_reason)
+        
+        flash(f'Purchase order {purchase_order.order_number} rejected successfully. Notification sent to requestor.', 'success')
+        return redirect(url_for('admin.orders'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error rejecting order: {str(e)}', 'error')
+        return redirect(url_for('admin.orders'))
+
+@admin_bp.route('/order/<int:order_id>/delete-form', methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def delete_order_form(order_id):
+    """Handle delete order form submission"""
+    try:
+        purchase_order = PurchaseOrder.query.get_or_404(order_id)
+        
+        if purchase_order.status in ['Approved', 'Ordered', 'Delivered']:
+            flash('Cannot delete order in current status', 'error')
+            return redirect(url_for('admin.orders'))
+        
+        order_number = purchase_order.order_number
+        db.session.delete(purchase_order)
+        db.session.commit()
+        
+        flash(f'Purchase order {order_number} deleted successfully.', 'success')
+        return redirect(url_for('admin.orders'))
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting order: {str(e)}', 'error')
+        return redirect(url_for('admin.orders'))
+
+@admin_bp.route('/order/<int:order_id>/delete', methods=['DELETE'])
+@role_required([Roles.SUPER_HQ])
+def delete_order(order_id):
+    """Delete purchase order"""
+    try:
+        purchase_order = PurchaseOrder.query.get_or_404(order_id)
+        
+        if purchase_order.status in ['Approved', 'Ordered', 'Delivered']:
+            return jsonify({
+                'success': False,
+                'message': 'Cannot delete order in current status'
+            }), 400
+        
+        order_number = purchase_order.order_number
+        db.session.delete(purchase_order)
+        db.session.commit()
+        
+        flash(f'Purchase order {order_number} deleted successfully.', 'success')
+        return jsonify({
+            'success': True,
+            'message': 'Purchase order deleted successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+# Supplier Management Routes
+
+@admin_bp.route('/suppliers')
+@role_required([Roles.SUPER_HQ])
+def suppliers():
+    """Display suppliers management"""
+    try:
+        view_supplier_id = request.args.get('view_supplier', '')
+        
+        suppliers = Supplier.query.order_by(Supplier.name).all()
+        
+        # Get specific supplier for viewing if requested
+        view_supplier = None
+        if view_supplier_id:
+            try:
+                view_supplier = Supplier.query.get(int(view_supplier_id))
+            except (ValueError, TypeError):
+                pass
+        
+        return render_template('admin/suppliers.html', 
+                             suppliers=suppliers, 
+                             view_supplier=view_supplier)
+    except Exception as e:
+        flash(f'Error loading suppliers: {str(e)}', 'error')
+        return render_template('error.html'), 500
+
+@admin_bp.route('/add-supplier', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def add_supplier():
+    """Add new supplier"""
+    if request.method == 'POST':
+        try:
+            data = request.form
+            
+            supplier = Supplier(
+                name=data.get('name'),
+                contact_person=data.get('contact_person'),
+                email=data.get('email'),
+                phone=data.get('phone'),
+                address=data.get('address'),
+                tax_id=data.get('tax_id'),
+                payment_terms=data.get('payment_terms'),
+                rating=float(data.get('rating', 0)) if data.get('rating') else None,
+                notes=data.get('notes')
+            )
+            
+            db.session.add(supplier)
+            db.session.commit()
+            
+            flash(f'Supplier "{supplier.name}" added successfully!', 'success')
+            return redirect(url_for('admin.suppliers'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating supplier: {str(e)}', 'error')
+    
+    return render_template('admin/add_supplier.html')
+
+@admin_bp.route('/edit-supplier/<int:supplier_id>', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def edit_supplier(supplier_id):
+    """Edit existing supplier"""
+    try:
+        supplier = Supplier.query.get_or_404(supplier_id)
+        
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                # Update supplier fields
+                supplier.name = data.get('name')
+                supplier.contact_person = data.get('contact_person')
+                supplier.email = data.get('email')
+                supplier.phone = data.get('phone')
+                supplier.address = data.get('address')
+                supplier.tax_id = data.get('tax_id')
+                supplier.payment_terms = data.get('payment_terms')
+                supplier.rating = float(data.get('rating', 0)) if data.get('rating') else None
+                supplier.notes = data.get('notes')
+                supplier.status = data.get('status', 'Active')
+                supplier.website = data.get('website')
+                supplier.description = data.get('description')
+                supplier.products_services = data.get('products_services')
+                
+                db.session.commit()
+                
+                flash(f'Supplier "{supplier.name}" updated successfully!', 'success')
+                return redirect(url_for('admin.suppliers'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error updating supplier: {str(e)}', 'error')
+        
+        return render_template('admin/edit_supplier.html', supplier=supplier)
+        
+    except Exception as e:
+        flash(f'Error loading supplier: {str(e)}', 'error')
+        return redirect(url_for('admin.suppliers'))
+
+# Context processor to provide global variables to all admin templates
+@admin_bp.context_processor
+def inject_monitoring_counts():
+    """Inject monitoring counts for sidebar badges"""
+    try:
+        incident_count = Incident.query.filter_by(status='Open').count()
+        alert_count = Alert.query.filter_by(status='Active').count()
+        
+        return {
+            'incident_count': incident_count,
+            'alert_count': alert_count
+        }
+    except Exception as e:
+        # Return default values if database query fails
+        return {
+            'incident_count': 0,
+            'alert_count': 0
+        }
+
+# --- Payroll Approval Routes ---
+@admin_bp.route('/payroll/pending')
+@role_required([Roles.SUPER_HQ])
+def pending_payrolls():
+    """View pending payroll approvals for admin"""
+    try:
+        from models import PayrollApproval, User
+        
+        # Get payrolls pending admin approval
+        pending_approvals = db.session.query(PayrollApproval, User).join(
+            User, PayrollApproval.submitted_by == User.id
+        ).filter(
+            PayrollApproval.status == 'pending_admin'
+        ).order_by(PayrollApproval.submitted_at.desc()).all()
+        
+        return render_template('admin/payroll/pending.html', 
+                             pending_approvals=pending_approvals)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading pending payrolls: {str(e)}")
+        flash("Error loading pending payrolls", "error")
+        return redirect(url_for('admin.index'))
+
+@admin_bp.route('/payroll/<int:approval_id>/review', methods=['GET', 'POST'])
+@role_required([Roles.SUPER_HQ])
+def review_payroll(approval_id):
+    """Review and approve/reject payroll"""
+    try:
+        from models import PayrollApproval, StaffPayroll, Employee
+        
+        approval = db.session.get(PayrollApproval, approval_id)
+        if not approval:
+            flash("Payroll approval not found", "error")
+            return redirect(url_for('admin.pending_payrolls'))
+        
+        if approval.status != 'pending_admin':
+            flash("This payroll is no longer pending admin approval", "warning")
+            return redirect(url_for('admin.pending_payrolls'))
+        
+        if request.method == 'POST':
+            action = request.form.get('action')
+            comments = request.form.get('comments', '')
+            
+            if action == 'approve':
+                approval.status = 'pending_finance'
+                approval.admin_reviewer = session.get('user_id')
+                approval.admin_reviewed_at = datetime.now()
+                approval.admin_comments = comments
+                
+                # Update all related staff payrolls
+                year, month = map(int, approval.payroll_period.split('-'))
+                staff_payrolls = StaffPayroll.query.filter(
+                    StaffPayroll.period_year == year,
+                    StaffPayroll.period_month == month
+                ).all()
+                
+                for payroll in staff_payrolls:
+                    payroll.approval_status = 'pending_finance'
+                    payroll.approved_by_admin = session.get('user_id')
+                    payroll.admin_approved_at = datetime.now()
+                
+                flash(f"Payroll for {approval.payroll_period} approved and sent to Finance", "success")
+                
+            elif action == 'reject':
+                approval.status = 'rejected'
+                approval.admin_reviewer = session.get('user_id')
+                approval.admin_reviewed_at = datetime.now()
+                approval.admin_comments = comments
+                
+                # Update all related staff payrolls
+                year, month = map(int, approval.payroll_period.split('-'))
+                staff_payrolls = StaffPayroll.query.filter(
+                    StaffPayroll.period_year == year,
+                    StaffPayroll.period_month == month
+                ).all()
+                
+                for payroll in staff_payrolls:
+                    payroll.approval_status = 'rejected'
+                
+                flash(f"Payroll for {approval.payroll_period} rejected", "warning")
+            
+            db.session.commit()
+            return redirect(url_for('admin.pending_payrolls'))
+        
+        # Get payroll details for review
+        year, month = map(int, approval.payroll_period.split('-'))
+        staff_payrolls = db.session.query(StaffPayroll, Employee).join(
+            Employee, StaffPayroll.employee_id == Employee.id
+        ).filter(
+            StaffPayroll.period_year == year,
+            StaffPayroll.period_month == month
+        ).all()
+        
+        return render_template('admin/payroll/review.html',
+                             approval=approval,
+                             staff_payrolls=staff_payrolls)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error reviewing payroll: {str(e)}")
+        flash("Error reviewing payroll", "error")
+        return redirect(url_for('admin.pending_payrolls'))
+
+@admin_bp.route('/<int:project_id>/assign-staff', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def assign_staff(project_id):
+    try:
+        # Get data from form
+        staff_role = request.form.get('role')
+        staff_id = request.form.get('staff_id')
+        
+        if not staff_role or not staff_id:
+            return jsonify({'status': 'error', 'message': 'Role and staff member are required'})
+        
+        # Validate project exists
+        project = Project.query.get_or_404(project_id)
+        
+        # Validate staff member exists
+        staff_member = User.query.get(staff_id)
+        if not staff_member:
+            return jsonify({'status': 'error', 'message': 'Staff member not found'})
+        
+        # Check if staff is already assigned to this project
+        existing_assignment = StaffAssignment.query.filter_by(
+            project_id=project_id, 
+            staff_id=staff_id
+        ).first()
+        
+        if existing_assignment:
+            return jsonify({'status': 'error', 'message': f'{staff_member.name} is already assigned to this project'})
+        
+        # Create new assignment
+        assignment = StaffAssignment(
+            project_id=project_id, 
+            staff_id=staff_id, 
+            role=staff_role,
+            assigned_at=datetime.now()
+        )
+        
+        db.session.add(assignment)
+        db.session.commit()
+        
+        current_app.logger.info(f"Staff {staff_member.name} (ID: {staff_id}) assigned as {staff_role} to project {project_id}")
+        
+        return jsonify({
+            'status': 'success', 
+            'message': f'{staff_member.name} assigned as {staff_role} to {project.name}'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Assign staff error: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': f'Error assigning staff: {str(e)}'})
+
+
+# Remove staff from project
+@admin_bp.route('/<int:project_id>/remove-staff', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def remove_staff(project_id):
+    try:
+        staff_id = request.form.get('staff_id')
+        
+        if not staff_id:
+            return jsonify({'status': 'error', 'message': 'Staff ID is required'})
+        
+        assignment = StaffAssignment.query.filter_by(
+            project_id=project_id, 
+            staff_id=staff_id
+        ).first()
+        
+        if not assignment:
+            return jsonify({'status': 'error', 'message': 'Staff assignment not found'})
+        
+        staff_member = User.query.get(staff_id)
+        staff_name = staff_member.name if staff_member else f'Staff {staff_id}'
+        
+        db.session.delete(assignment)
+        db.session.commit()
+        
+        current_app.logger.info(f"Staff {staff_name} (ID: {staff_id}) removed from project {project_id}")
+        
+        return jsonify({
+            'status': 'success', 
+            'message': f'{staff_name} removed from project'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Remove staff error: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': f'Error removing staff: {str(e)}'})
+
+
+# Delete project endpoint
+@admin_bp.route('/<int:project_id>/delete', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def delete_project(project_id):
+    try:
+        project = Project.query.get_or_404(project_id)
+        project_name = project.name
+        
+        # Remove all staff assignments first
+        StaffAssignment.query.filter_by(project_id=project_id).delete()
+        
+        # Remove related milestones
+        Milestone.query.filter_by(project_id=project_id).delete()
+        
+        # Remove related tasks
+        Task.query.filter_by(project_id=project_id).delete()
+        
+        # Remove related schedules if they exist
+        if hasattr(Schedule, 'project_id'):
+            Schedule.query.filter_by(project_id=project_id).delete()
+        
+        # Delete the project
+        db.session.delete(project)
+        db.session.commit()
+        
+        current_app.logger.info(f"Project {project_name} (ID: {project_id}) deleted by {current_user.name}")
+        
+        return jsonify({
+            'status': 'success', 
+            'message': f'Project "{project_name}" deleted successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Delete project error: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': f'Error deleting project: {str(e)}'})
+
+
+# Update project status endpoint
+@admin_bp.route('/<int:project_id>/update-status', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def update_project_status(project_id):
+    try:
+        new_status = request.form.get('status')
+        
+        if not new_status:
+            return jsonify({'status': 'error', 'message': 'Status is required'})
+        
+        project = Project.query.get_or_404(project_id)
+        old_status = project.status
+        project.status = new_status
+        project.updated_at = datetime.now()
+        
+        # Auto-update progress based on status
+        if new_status == 'Completed':
+            project.progress = 100.0
+        elif new_status == 'Active' and not project.progress:
+            project.progress = 10.0  # Start with 10% if active
+        
+        db.session.commit()
+        
+        current_app.logger.info(f"Project {project_id} status updated from {old_status} to {new_status}")
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'Project status updated to {new_status}',
+            'project': {
+                'id': project.id,
+                'name': project.name,
+                'status': project.status,
+                'progress': project.progress
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Update project status error: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': f'Error updating status: {str(e)}'})
+
+
+# Update project progress endpoint
+@admin_bp.route('/<int:project_id>/update-progress', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def update_project_progress(project_id):
+    try:
+        progress = float(request.form.get('progress', 0))
+        
+        if progress < 0 or progress > 100:
+            return jsonify({'status': 'error', 'message': 'Progress must be between 0 and 100'})
+        
+        project = Project.query.get_or_404(project_id)
+        old_progress = project.progress
+        project.progress = progress
+        project.updated_at = datetime.now()
+        
+        # Auto-update status based on progress
+        if progress == 100:
+            project.status = 'Completed'
+        elif progress > 0 and project.status == 'Planning':
+            project.status = 'Active'
+        
+        db.session.commit()
+        
+        current_app.logger.info(f"Project {project_id} progress updated from {old_progress}% to {progress}%")
+        
+        return jsonify({
+            'status': 'success',
+            'message': f'Project progress updated to {progress}%',
+            'project': {
+                'id': project.id,
+                'name': project.name,
+                'status': project.status,
+                'progress': project.progress
+            }
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Update project progress error: {str(e)}", exc_info=True)
+        return jsonify({'status': 'error', 'message': f'Error updating progress: {str(e)}'})
+
+
+# Get project progress for admin dashboard
+@admin_bp.route('/<int:project_id>/progress', methods=['GET'])
+@login_required  
+@role_required([Roles.SUPER_HQ])
+def get_project_progress(project_id):
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        # Get updated milestone counts
+        milestones = Milestone.query.filter_by(project_id=project_id).all()
+        completed_milestones = [m for m in milestones if hasattr(m, 'status') and m.status == 'Completed']
+        
+        # Get updated task counts
+        tasks = Task.query.filter_by(project_id=project_id).all()
+        completed_tasks = [t for t in tasks if hasattr(t, 'status') and t.status == 'completed']
+        
+        return jsonify({
+            'status': 'success',
+            'progress': project.progress or 0,
+            'milestone_count': len(milestones),
+            'milestones_completed': len(completed_milestones),
+            'task_count': len(tasks),
+            'tasks_completed': len(completed_tasks),
+            'project_status': project.status,
+            'last_updated': project.updated_at.isoformat() if project.updated_at else None
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Get admin project progress error: {str(e)}", exc_info=True)
+        return jsonify({'error': 'Error fetching project progress'}), 500
+
+
+@admin_bp.route('/<int:project_id>')
+@login_required
+@role_required([Roles.SUPER_HQ])
+def project_details(project_id):
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        # Check if user has access to this project
+        user_assignment = StaffAssignment.query.filter_by(
+            project_id=project_id, 
+            staff_id=current_user.id
+        ).first()
+        
+        is_manager = project.project_manager == current_user.name
+        is_super_hq = current_user.has_role(Roles.SUPER_HQ)
+        
+        # Allow access if user is assigned, is the manager, or is SUPER_HQ
+        if not (user_assignment or is_manager or is_super_hq):
+            flash("You don't have access to this project.", "error")
+            return redirect(url_for('admin.projects'))
+        
+        # Get staff assignments with user details
+        staff_assignments = db.session.query(StaffAssignment, User.name).join(
+            User, StaffAssignment.staff_id == User.id
+        ).filter(StaffAssignment.project_id == project_id).all()
+        
+        # Get available staff for assignment (exclude already assigned staff)
+        assigned_staff_ids = [assignment.staff_id for assignment, _ in staff_assignments]
+        available_staff = User.query.filter(
+            User.id.notin_(assigned_staff_ids) if assigned_staff_ids else True
+        ).all()
+        
+        # Get milestones with status counts
+        milestones = Milestone.query.filter_by(project_id=project_id).all()
+        completed_milestones = [m for m in milestones if hasattr(m, 'status') and m.status == 'Completed']
+        pending_milestones = [m for m in milestones if hasattr(m, 'status') and m.status == 'Pending']
+        overdue_milestones = [m for m in milestones if hasattr(m, 'status') and m.status == 'Pending' and hasattr(m, 'due_date') and m.due_date and m.due_date < datetime.now().date()]
+        
+        # Get schedules if they exist
+        schedules = Schedule.query.filter_by(project_id=project_id).all() if hasattr(Schedule, 'project_id') else []
+        
+        # Get tasks for the project
+        tasks = Task.query.filter_by(project_id=project_id).all()
+        completed_tasks = [t for t in tasks if hasattr(t, 'status') and t.status == 'completed']
+        
+        # Calculate project metrics
+        progress = project.progress or 0
+        if milestones:
+            milestone_progress = (len(completed_milestones) / len(milestones)) * 100
+            # Use milestone progress if it differs significantly from stored progress
+            if abs(milestone_progress - progress) > 5:
+                progress = milestone_progress
+        
+        # Budget calculations
+        total_budget = project.budget or 0
+        # Get total expenses for this project (if expense model has project_id)
+        project_expenses = []
+        if hasattr(Expense, 'project_id'):
+            project_expenses = Expense.query.filter_by(project_id=project_id).all()
+        elif hasattr(Expense, 'user_id'):
+            # Fallback: if expenses are linked to users instead of projects
+            assigned_user_ids = [assignment.staff_id for assignment, _ in staff_assignments]
+            if assigned_user_ids:
+                project_expenses = Expense.query.filter(Expense.user_id.in_(assigned_user_ids)).all()
+        
+        spent_amount = sum(expense.amount for expense in project_expenses if hasattr(expense, 'amount'))
+        remaining_budget = total_budget - spent_amount
+        budget_utilization = (spent_amount / total_budget * 100) if total_budget > 0 else 0
+        
+        # Timeline calculations
+        is_overdue = False
+        days_remaining = None
+        if project.end_date:
+            today = datetime.now().date()
+            if project.end_date < today:
+                is_overdue = True
+                days_remaining = (today - project.end_date).days
+            else:
+                days_remaining = (project.end_date - today).days
+        
+        # Team statistics
+        team_size = len(staff_assignments)
+        team_roles = {}
+        for assignment, staff_name in staff_assignments:
+            role = assignment.role if hasattr(assignment, 'role') else 'Unknown'
+            if role in team_roles:
+                team_roles[role] += 1
+            else:
+                team_roles[role] = 1
+        
+        # Project health calculation
+        health_status = "Good"
+        if is_overdue or budget_utilization > 90:
+            health_status = "Critical"
+        elif progress < 50 and days_remaining and days_remaining < 30:
+            health_status = "Warning"
+        elif len(overdue_milestones) > 0:
+            health_status = "Warning"
+        
+        # Recent activity (last 3 milestones or tasks)
+        recent_milestones = []
+        if milestones:
+            recent_milestones = sorted([m for m in milestones if hasattr(m, 'due_date') and m.due_date], 
+                                     key=lambda x: x.due_date, reverse=True)[:3]
+        
+        recent_tasks = []
+        if tasks:
+            recent_tasks = sorted([t for t in tasks if hasattr(t, 'updated_at') and t.updated_at], 
+                                key=lambda x: x.updated_at, reverse=True)[:3]
+        
+        # BOQ calculations
+        boq_items = BOQItem.query.filter_by(project_id=project_id).all()
+        total_boq_cost = sum(item.total_cost for item in boq_items if hasattr(item, 'total_cost'))
+
+        return render_template('admin/view_project.html',
+                             project=project,
+                             staff_assignments=[{'assignment': assignment, 'staff_name': staff_name}
+                                              for assignment, staff_name in staff_assignments],
+                             available_staff=available_staff,
+                             milestones=milestones,
+                             schedules=schedules,
+                             tasks=tasks,
+                             # Metrics
+                             progress=round(progress, 1),
+                             milestone_count=len(milestones),
+                             completed_milestones=len(completed_milestones),
+                             pending_milestones=len(pending_milestones),
+                             overdue_milestones=len(overdue_milestones),
+                             task_count=len(tasks),
+                             completed_tasks=len(completed_tasks),
+                             # Budget
+                             total_budget=total_budget,
+                             spent_amount=spent_amount,
+                             remaining_budget=remaining_budget,
+                             budget_utilization=round(budget_utilization, 1),
+                             # Timeline
+                             is_overdue=is_overdue,
+                             days_remaining=days_remaining,
+                             # Team
+                             team_size=team_size,
+                             team_roles=team_roles,
+                             # Health
+                             health_status=health_status,
+                             # Recent activity
+                             recent_milestones=recent_milestones,
+                             recent_tasks=recent_tasks,
+                             # Additional data for enhanced template
+                             boq_items=boq_items,
+                             total_boq_cost=total_boq_cost,
+                             documents=ProjectDocument.query.filter_by(project_id=project_id).all(),
+                             activity_log=ProjectActivity.query.filter_by(project_id=project_id).order_by(ProjectActivity.created_at.desc()).limit(10).all())
+    except Exception as e:
+        current_app.logger.error(f"Admin project details error: {str(e)}", exc_info=True)
+        flash("Error loading project details", "error")
+        return render_template('error.html'), 500
+
+
+# ===== ENHANCED PROJECT MANAGEMENT ROUTES =====
+
+@admin_bp.route('/projects/<int:project_id>/assign_staff', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def assign_staff_new(project_id):
+    """Enhanced staff assignment endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        staff_id = request.form.get('staff_id')
+        role = request.form.get('role')
+        
+        if not staff_id or not role:
+            return jsonify({'success': False, 'message': 'Staff ID and role are required'}), 400
+        
+        # Check if staff is already assigned
+        existing_assignment = StaffAssignment.query.filter_by(
+            project_id=project_id, 
+            staff_id=staff_id
+        ).first()
+        
+        if existing_assignment:
+            return jsonify({'success': False, 'message': 'Staff member is already assigned to this project'}), 400
+        
+        # Get staff member details
+        staff_member = User.query.get(staff_id)
+        if not staff_member:
+            return jsonify({'success': False, 'message': 'Staff member not found'}), 404
+        
+        # Create new assignment
+        assignment = StaffAssignment(
+            project_id=project_id,
+            staff_id=staff_id,
+            role=role,
+            assigned_at=datetime.utcnow()
+        )
+        
+        db.session.add(assignment)
+        
+        # Log activity
+        activity = ProjectActivity(
+            project_id=project_id,
+            user_id=current_user.id,
+            action_type='staff_assigned',
+            description=f'{staff_member.name} was assigned as {role}',
+            user_name=current_user.name
+        )
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True, 
+            'message': f'{staff_member.name} has been assigned as {role}'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error assigning staff: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while assigning staff'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/remove_staff', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def remove_staff_new(project_id):
+    """Enhanced staff removal endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        data = request.get_json()
+        staff_id = data.get('staff_id')
+        
+        if not staff_id:
+            return jsonify({'success': False, 'message': 'Staff ID is required'}), 400
+        
+        # Find and remove assignment
+        assignment = StaffAssignment.query.filter_by(
+            project_id=project_id,
+            staff_id=staff_id
+        ).first()
+        
+        if not assignment:
+            return jsonify({'success': False, 'message': 'Staff assignment not found'}), 404
+        
+        # Get staff member details for logging
+        staff_member = User.query.get(staff_id)
+        staff_name = staff_member.name if staff_member else 'Unknown'
+        role = assignment.role
+        
+        db.session.delete(assignment)
+        
+        # Log activity
+        activity = ProjectActivity(
+            project_id=project_id,
+            user_id=current_user.id,
+            action_type='staff_removed',
+            description=f'{staff_name} was removed from {role} role',
+            user_name=current_user.name
+        )
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'{staff_name} has been removed from the project'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error removing staff: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while removing staff'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/add_milestone', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def add_milestone_new(project_id):
+    """Enhanced milestone creation endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        milestone_name = request.form.get('milestone_name')
+        milestone_description = request.form.get('milestone_description', '')
+        due_date_str = request.form.get('due_date')
+        
+        if not milestone_name or not due_date_str:
+            return jsonify({'success': False, 'message': 'Milestone name and due date are required'}), 400
+        
+        # Parse due date
+        try:
+            due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid date format'}), 400
+        
+        # Create new milestone
+        milestone = Milestone(
+            project_id=project_id,
+            title=milestone_name,
+            due_date=due_date,
+            status='Pending'
+        )
+        
+        # Add description if Milestone model supports it
+        if hasattr(milestone, 'description'):
+            milestone.description = milestone_description
+        
+        db.session.add(milestone)
+        
+        # Log activity
+        activity = ProjectActivity(
+            project_id=project_id,
+            user_id=current_user.id,
+            action_type='milestone_added',
+            description=f'Milestone "{milestone_name}" was created with due date {due_date.strftime("%B %d, %Y")}',
+            user_name=current_user.name
+        )
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Milestone "{milestone_name}" has been created'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error adding milestone: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while adding milestone'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/milestones/<int:milestone_id>', methods=['DELETE'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def delete_milestone_new(project_id, milestone_id):
+    """Enhanced milestone deletion endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        milestone = Milestone.query.filter_by(id=milestone_id, project_id=project_id).first()
+        
+        if not milestone:
+            return jsonify({'success': False, 'message': 'Milestone not found'}), 404
+        
+        milestone_title = milestone.title
+        db.session.delete(milestone)
+        
+        # Log activity
+        activity = ProjectActivity(
+            project_id=project_id,
+            user_id=current_user.id,
+            action_type='milestone_deleted',
+            description=f'Milestone "{milestone_title}" was deleted',
+            user_name=current_user.name
+        )
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Milestone "{milestone_title}" has been deleted'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error deleting milestone: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while deleting milestone'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/add_boq_item', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def add_boq_item(project_id):
+    """Add BOQ (Bill of Quantities) item endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        item_description = request.form.get('item_description')
+        quantity = request.form.get('quantity')
+        unit = request.form.get('unit')
+        unit_price = request.form.get('unit_price')
+        
+        if not all([item_description, quantity, unit, unit_price]):
+            return jsonify({'success': False, 'message': 'All fields are required'}), 400
+        
+        try:
+            quantity = float(quantity)
+            unit_price = float(unit_price)
+            total_cost = quantity * unit_price
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid numeric values'}), 400
+        
+        # Create new BOQ item
+        boq_item = BOQItem(
+            project_id=project_id,
+            item_description=item_description,
+            quantity=quantity,
+            unit=unit,
+            unit_price=unit_price,
+            total_cost=total_cost
+        )
+        
+        db.session.add(boq_item)
+        
+        # Log activity
+        activity = ProjectActivity(
+            project_id=project_id,
+            user_id=current_user.id,
+            action_type='boq_item_added',
+            description=f'BOQ item "{item_description}" was added (₦{total_cost:,.2f})',
+            user_name=current_user.name
+        )
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'BOQ item "{item_description}" has been added'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error adding BOQ item: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while adding BOQ item'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/boq_items/<int:item_id>', methods=['DELETE'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def delete_boq_item(project_id, item_id):
+    """Delete BOQ item endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        boq_item = BOQItem.query.filter_by(id=item_id, project_id=project_id).first()
+        
+        if not boq_item:
+            return jsonify({'success': False, 'message': 'BOQ item not found'}), 404
+        
+        item_description = boq_item.item_description
+        db.session.delete(boq_item)
+        
+        # Log activity
+        activity = ProjectActivity(
+            project_id=project_id,
+            user_id=current_user.id,
+            action_type='boq_item_deleted',
+            description=f'BOQ item "{item_description}" was deleted',
+            user_name=current_user.name
+        )
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'BOQ item "{item_description}" has been deleted'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error deleting BOQ item: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while deleting BOQ item'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/upload_document', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def upload_document(project_id):
+    """Enhanced document upload endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        if 'document_file' not in request.files:
+            return jsonify({'success': False, 'message': 'No file selected'}), 400
+        
+        file = request.files['document_file']
+        document_type = request.form.get('document_type')
+        description = request.form.get('document_description', '')
+        
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'}), 400
+        
+        if not document_type:
+            return jsonify({'success': False, 'message': 'Document type is required'}), 400
+        
+        # Validate file type
+        allowed_extensions = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'}
+        if not ('.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
+            return jsonify({'success': False, 'message': 'File type not allowed'}), 400
+        
+        # Create uploads directory if it doesn't exist
+        upload_folder = os.path.join(current_app.root_path, 'uploads', 'projects', str(project_id))
+        os.makedirs(upload_folder, exist_ok=True)
+        
+        # Generate secure filename
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S_')
+        unique_filename = timestamp + filename
+        file_path = os.path.join(upload_folder, unique_filename)
+        
+        # Save file
+        file.save(file_path)
+        file_size = os.path.getsize(file_path)
+        
+        # Create document record
+        document = ProjectDocument(
+            project_id=project_id,
+            filename=unique_filename,
+            original_filename=filename,
+            document_type=document_type,
+            description=description,
+            file_size=file_size,
+            file_path=file_path,
+            uploader_id=current_user.id,
+            uploader_name=current_user.name
+        )
+        
+        db.session.add(document)
+        
+        # Log activity
+        activity = ProjectActivity(
+            project_id=project_id,
+            user_id=current_user.id,
+            action_type='document_uploaded',
+            description=f'Document "{filename}" was uploaded ({document_type})',
+            user_name=current_user.name
+        )
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Document "{filename}" has been uploaded successfully'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error uploading document: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while uploading document'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/documents/<int:document_id>/download')
+@login_required
+@role_required([Roles.SUPER_HQ])
+def download_document(project_id, document_id):
+    """Enhanced document download endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        document = ProjectDocument.query.filter_by(id=document_id, project_id=project_id).first()
+        
+        if not document:
+            flash('Document not found', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
+        
+        if not os.path.exists(document.file_path):
+            flash('File not found on disk', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
+        
+        return send_file(
+            document.file_path,
+            as_attachment=True,
+            download_name=document.original_filename,
+            mimetype='application/octet-stream'
+        )
+        
+    except Exception as e:
+        current_app.logger.error(f"Error downloading document: {str(e)}", exc_info=True)
+        flash('An error occurred while downloading the document', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
+
+
+@admin_bp.route('/projects/<int:project_id>/documents/<int:document_id>', methods=['DELETE'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def delete_document(project_id, document_id):
+    """Enhanced document deletion endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        document = ProjectDocument.query.filter_by(id=document_id, project_id=project_id).first()
+        
+        if not document:
+            return jsonify({'success': False, 'message': 'Document not found'}), 404
+        
+        # Delete file from disk
+        if os.path.exists(document.file_path):
+            os.remove(document.file_path)
+        
+        document_name = document.original_filename
+        db.session.delete(document)
+        
+        # Log activity
+        activity = ProjectActivity(
+            project_id=project_id,
+            user_id=current_user.id,
+            action_type='document_deleted',
+            description=f'Document "{document_name}" was deleted',
+            user_name=current_user.name
+        )
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Document "{document_name}" has been deleted'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error deleting document: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while deleting document'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/update_progress', methods=['POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def update_progress_new(project_id):
+    """Enhanced progress update endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        data = request.get_json()
+        progress = data.get('progress')
+        
+        if progress is None:
+            return jsonify({'success': False, 'message': 'Progress value is required'}), 400
+        
+        try:
+            progress = float(progress)
+            if progress < 0 or progress > 100:
+                return jsonify({'success': False, 'message': 'Progress must be between 0 and 100'}), 400
+        except ValueError:
+            return jsonify({'success': False, 'message': 'Invalid progress value'}), 400
+        
+        old_progress = project.progress or 0
+        project.progress = progress
+        
+        # Log activity
+        activity = ProjectActivity(
+            project_id=project_id,
+            user_id=current_user.id,
+            action_type='progress_updated',
+            description=f'Project progress updated from {old_progress}% to {progress}%',
+            user_name=current_user.name
+        )
+        db.session.add(activity)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Project progress updated to {progress}%'
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error updating progress: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'An error occurred while updating progress'}), 500

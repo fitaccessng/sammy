@@ -10,3 +10,1718 @@
 [2025-09-26 12:12:08,874] ERROR in finance: Finance dashboard error: Could not build url for endpoint 'finance.bank_reconciliation'. Did you mean 'finance.expense_receipt' instead?
 [2025-09-26 12:17:13,155] ERROR in finance: Finance dashboard error: Could not build url for endpoint 'finance.settings'. Did you mean 'finance.reports' instead?
 [2025-09-26 12:21:48,751] ERROR in finance: Finance dashboard error: Could not build url for endpoint 'finance.logout'. Did you mean 'finance.log_audit' instead?
+[2025-10-06 19:07:39,634] INFO in admin: Total employees in database: 1
+[2025-10-06 19:07:39,634] INFO in admin: Role counts: {'super_hq': 0, 'hq_finance': 0, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 19:15:11,623] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 19:15:11,631] INFO in admin: Total employees in database: 1
+[2025-10-06 19:15:11,631] INFO in admin: Employee: Ibeh Kelechi Kelvin, Role: 'Manager' (type: <class 'str'>)
+[2025-10-06 19:15:11,639] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 0 employees
+[2025-10-06 19:15:11,639] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 0 employees
+[2025-10-06 19:15:11,654] INFO in admin: Role 'hr' (HQ Manager): Found 0 employees
+[2025-10-06 19:15:11,657] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 employees
+[2025-10-06 19:15:11,661] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 employees
+[2025-10-06 19:15:11,664] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 employees
+[2025-10-06 19:15:11,667] INFO in admin: Role 'hq_project' (Project Manager): Found 0 employees
+[2025-10-06 19:15:11,670] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 employees
+[2025-10-06 19:15:11,673] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 employees
+[2025-10-06 19:15:11,673] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 employees
+[2025-10-06 19:15:11,677] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 employees
+[2025-10-06 19:15:11,680] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 employees
+[2025-10-06 19:15:11,680] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 employees
+[2025-10-06 19:15:11,684] INFO in admin: Role 'project_staff' (Project Staff): Found 0 employees
+[2025-10-06 19:15:11,698] INFO in admin: Unassigned employees: 1
+[2025-10-06 19:15:11,698] INFO in admin: Role counts: {'super_hq': 0, 'hq_finance': 0, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 1}
+[2025-10-06 19:15:11,698] INFO in admin: Total counted: 1
+[2025-10-06 19:15:11,703] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 19:26:17,717] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 19:26:17,722] INFO in admin: Total users in database: 4
+[2025-10-06 19:26:17,723] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:26:17,723] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:26:17,723] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:26:17,725] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:26:17,726] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 19:26:17,726] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 19:26:17,732] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 19:26:17,732] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 19:26:17,732] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 19:26:17,737] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 19:26:17,741] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 19:26:17,743] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 19:26:17,746] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 19:26:17,749] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 19:26:17,751] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 19:26:17,753] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 19:26:17,755] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 19:26:17,756] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 19:26:17,768] INFO in admin: Unassigned users: 0
+[2025-10-06 19:26:17,771] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 19:26:17,771] INFO in admin: Total counted: 4
+[2025-10-06 19:26:17,771] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 19:26:28,694] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 19:26:28,694] INFO in admin: Total users in database: 4
+[2025-10-06 19:26:28,696] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:26:28,696] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:26:28,699] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:26:28,699] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:26:28,703] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 19:26:28,706] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 19:26:28,710] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 19:26:28,714] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 19:26:28,714] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 19:26:28,714] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 19:26:28,723] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 19:26:28,723] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 19:26:28,727] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 19:26:28,731] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 19:26:28,737] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 19:26:28,739] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 19:26:28,744] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 19:26:28,746] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 19:26:28,753] INFO in admin: Unassigned users: 0
+[2025-10-06 19:26:28,755] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 19:26:28,755] INFO in admin: Total counted: 4
+[2025-10-06 19:26:28,757] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 19:32:58,959] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 19:32:58,959] INFO in admin: Total users in database: 4
+[2025-10-06 19:32:58,961] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:32:58,963] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:32:58,965] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:32:58,965] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:32:58,971] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 19:32:58,975] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 19:32:58,977] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 19:32:58,979] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 19:32:58,982] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 19:32:58,989] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 19:32:58,993] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 19:32:58,995] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 19:32:59,000] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 19:32:59,003] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 19:32:59,009] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 19:32:59,011] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 19:32:59,015] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 19:32:59,018] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 19:32:59,034] INFO in admin: Unassigned users: 0
+[2025-10-06 19:32:59,036] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 19:32:59,036] INFO in admin: Total counted: 4
+[2025-10-06 19:32:59,040] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 19:41:58,971] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 19:41:58,971] INFO in admin: Total users in database: 4
+[2025-10-06 19:41:58,974] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:41:58,975] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:41:58,975] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:41:58,977] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:41:58,979] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 19:41:58,983] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 19:41:58,986] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 19:41:58,991] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 19:41:58,994] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 19:41:58,996] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 19:41:58,996] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 19:41:58,999] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 19:41:59,002] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 19:41:59,004] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 19:41:59,006] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 19:41:59,008] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 19:41:59,008] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 19:41:59,012] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 19:41:59,024] INFO in admin: Unassigned users: 0
+[2025-10-06 19:41:59,024] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 19:41:59,028] INFO in admin: Total counted: 4
+[2025-10-06 19:41:59,028] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 19:48:22,436] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 19:48:22,436] INFO in admin: Total users in database: 4
+[2025-10-06 19:48:22,436] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:48:22,439] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:48:22,439] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 19:48:22,441] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 19:48:22,444] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 19:48:22,446] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 19:48:22,448] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 19:48:22,448] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 19:48:22,450] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 19:48:22,455] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 19:48:22,456] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 19:48:22,458] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 19:48:22,462] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 19:48:22,464] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 19:48:22,466] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 19:48:22,468] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 19:48:22,472] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 19:48:22,472] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 19:48:22,484] INFO in admin: Unassigned users: 0
+[2025-10-06 19:48:22,485] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 19:48:22,486] INFO in admin: Total counted: 4
+[2025-10-06 19:48:22,487] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 20:03:41,754] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 20:03:41,754] INFO in admin: Total users in database: 4
+[2025-10-06 20:03:41,759] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 20:03:41,761] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 20:03:41,761] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 20:03:41,764] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 20:03:41,772] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 20:03:41,772] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 20:03:41,781] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 20:03:41,785] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 20:03:41,785] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 20:03:41,791] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 20:03:41,793] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 20:03:41,797] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 20:03:41,799] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 20:03:41,803] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 20:03:41,807] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 20:03:41,809] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 20:03:41,812] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 20:03:41,817] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 20:03:41,846] INFO in admin: Unassigned users: 0
+[2025-10-06 20:03:41,846] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 20:03:41,851] INFO in admin: Total counted: 4
+[2025-10-06 20:03:41,853] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 21:38:52,374] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 21:38:52,382] INFO in admin: Total users in database: 4
+[2025-10-06 21:38:52,382] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:38:52,385] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:38:52,385] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:38:52,385] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:38:52,390] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 21:38:52,392] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 21:38:52,392] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 21:38:52,398] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 21:38:52,398] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 21:38:52,398] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 21:38:52,406] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 21:38:52,410] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 21:38:52,412] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 21:38:52,412] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 21:38:52,412] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 21:38:52,422] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 21:38:52,425] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 21:38:52,429] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 21:38:52,438] INFO in admin: Unassigned users: 0
+[2025-10-06 21:38:52,441] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 21:38:52,442] INFO in admin: Total counted: 4
+[2025-10-06 21:38:52,445] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 21:41:01,595] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 21:41:01,596] INFO in admin: Total users in database: 4
+[2025-10-06 21:41:01,596] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:41:01,599] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:41:01,599] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:41:01,600] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:41:01,601] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 21:41:01,607] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 21:41:01,609] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 21:41:01,614] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 21:41:01,618] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 21:41:01,620] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 21:41:01,622] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 21:41:01,629] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 21:41:01,633] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 21:41:01,637] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 21:41:01,639] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 21:41:01,641] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 21:41:01,643] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 21:41:01,646] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 21:41:01,652] INFO in admin: Unassigned users: 0
+[2025-10-06 21:41:01,655] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 21:41:01,656] INFO in admin: Total counted: 4
+[2025-10-06 21:41:01,656] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 21:42:50,653] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 21:42:50,655] INFO in admin: Total users in database: 4
+[2025-10-06 21:42:50,656] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:42:50,656] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:42:50,656] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:42:50,656] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:42:50,661] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 21:42:50,664] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 21:42:50,667] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 21:42:50,672] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 21:42:50,674] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 21:42:50,677] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 21:42:50,679] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 21:42:50,681] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 21:42:50,685] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 21:42:50,687] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 21:42:50,689] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 21:42:50,691] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 21:42:50,691] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 21:42:50,694] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 21:42:50,702] INFO in admin: Unassigned users: 0
+[2025-10-06 21:42:50,706] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 21:42:50,706] INFO in admin: Total counted: 4
+[2025-10-06 21:42:50,706] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 21:43:55,578] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 21:43:55,580] INFO in admin: Total users in database: 4
+[2025-10-06 21:43:55,580] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:43:55,580] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:43:55,583] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:43:55,583] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:43:55,587] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 21:43:55,590] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 21:43:55,593] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 21:43:55,597] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 21:43:55,602] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 21:43:55,606] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 21:43:55,609] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 21:43:55,613] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 21:43:55,616] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 21:43:55,616] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 21:43:55,621] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 21:43:55,624] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 21:43:55,629] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 21:43:55,633] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 21:43:55,640] INFO in admin: Unassigned users: 0
+[2025-10-06 21:43:55,640] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 21:43:55,642] INFO in admin: Total counted: 4
+[2025-10-06 21:43:55,642] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 21:44:53,173] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 21:44:53,173] INFO in admin: Total users in database: 4
+[2025-10-06 21:44:53,176] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:44:53,176] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:44:53,179] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 21:44:53,182] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 21:44:53,184] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 21:44:53,186] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 21:44:53,189] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 21:44:53,196] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 21:44:53,201] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 21:44:53,202] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 21:44:53,206] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 21:44:53,209] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 21:44:53,213] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 21:44:53,218] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 21:44:53,221] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 21:44:53,225] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 21:44:53,232] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 21:44:53,235] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 21:44:53,238] INFO in admin: Unassigned users: 0
+[2025-10-06 21:44:53,238] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 21:44:53,243] INFO in admin: Total counted: 4
+[2025-10-06 21:44:53,246] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:02:57,535] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:02:57,537] INFO in admin: Total users in database: 4
+[2025-10-06 23:02:57,537] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:02:57,538] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:02:57,538] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:02:57,540] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:02:57,542] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:02:57,545] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:02:57,546] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:02:57,548] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:02:57,549] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:02:57,550] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:02:57,552] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:02:57,554] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:02:57,555] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:02:57,557] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:02:57,558] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:02:57,561] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:02:57,564] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:02:57,564] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:02:57,570] INFO in admin: Unassigned users: 0
+[2025-10-06 23:02:57,572] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:02:57,573] INFO in admin: Total counted: 4
+[2025-10-06 23:02:57,575] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:10:38,911] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:10:38,914] INFO in admin: Total users in database: 4
+[2025-10-06 23:10:38,914] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:10:38,914] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:10:38,914] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:10:38,914] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:10:38,914] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:10:38,921] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:10:38,922] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:10:38,926] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:10:38,927] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:10:38,929] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:10:38,931] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:10:38,934] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:10:38,934] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:10:38,938] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:10:38,939] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:10:38,941] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:10:38,948] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:10:38,950] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:10:38,957] INFO in admin: Unassigned users: 0
+[2025-10-06 23:10:38,959] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:10:38,962] INFO in admin: Total counted: 4
+[2025-10-06 23:10:38,963] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:17:14,072] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:17:14,073] INFO in admin: Total users in database: 4
+[2025-10-06 23:17:14,074] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:17:14,075] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:17:14,077] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:17:14,080] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:17:14,085] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:17:14,099] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:17:14,103] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:17:14,106] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:17:14,117] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:17:14,122] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:17:14,131] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:17:14,139] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:17:14,139] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:17:14,151] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:17:14,153] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:17:14,157] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:17:14,159] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:17:14,171] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:17:14,240] INFO in admin: Unassigned users: 0
+[2025-10-06 23:17:14,278] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:17:14,287] INFO in admin: Total counted: 4
+[2025-10-06 23:17:14,289] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:22:21,861] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:22:21,863] INFO in admin: Total users in database: 4
+[2025-10-06 23:22:21,863] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:22:21,866] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:22:21,866] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:22:21,866] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:22:21,870] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:22:21,872] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:22:21,876] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:22:21,885] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:22:21,889] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:22:21,891] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:22:21,899] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:22:21,901] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:22:21,904] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:22:21,910] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:22:21,921] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:22:21,924] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:22:21,928] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:22:21,930] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:22:21,940] INFO in admin: Unassigned users: 0
+[2025-10-06 23:22:21,944] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:22:21,950] INFO in admin: Total counted: 4
+[2025-10-06 23:22:21,952] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:28:48,296] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:28:48,300] INFO in admin: Total users in database: 4
+[2025-10-06 23:28:48,300] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:28:48,302] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:28:48,302] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:28:48,304] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:28:48,306] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:28:48,308] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:28:48,308] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:28:48,310] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:28:48,312] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:28:48,314] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:28:48,314] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:28:48,324] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:28:48,326] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:28:48,328] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:28:48,328] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:28:48,330] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:28:48,332] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:28:48,334] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:28:48,340] INFO in admin: Unassigned users: 0
+[2025-10-06 23:28:48,342] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:28:48,342] INFO in admin: Total counted: 4
+[2025-10-06 23:28:48,344] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:29:03,305] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:29:03,305] INFO in admin: Total users in database: 4
+[2025-10-06 23:29:03,308] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:29:03,308] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:29:03,310] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:29:03,312] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:29:03,315] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:29:03,319] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:29:03,321] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:29:03,325] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:29:03,328] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:29:03,330] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:29:03,333] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:29:03,334] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:29:03,336] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:29:03,339] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:29:03,352] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:29:03,352] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:29:03,358] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:29:03,362] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:29:03,366] INFO in admin: Unassigned users: 0
+[2025-10-06 23:29:03,369] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:29:03,370] INFO in admin: Total counted: 4
+[2025-10-06 23:29:03,371] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:29:16,186] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:29:16,187] INFO in admin: Total users in database: 4
+[2025-10-06 23:29:16,188] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:29:16,188] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:29:16,189] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:29:16,190] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:29:16,194] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:29:16,199] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:29:16,202] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:29:16,204] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:29:16,205] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:29:16,206] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:29:16,209] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:29:16,210] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:29:16,211] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:29:16,214] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:29:16,214] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:29:16,214] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:29:16,214] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:29:16,222] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:29:16,222] INFO in admin: Unassigned users: 0
+[2025-10-06 23:29:16,225] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:29:16,226] INFO in admin: Total counted: 4
+[2025-10-06 23:29:16,226] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:40:34,051] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:40:34,121] INFO in admin: Total users in database: 4
+[2025-10-06 23:40:34,146] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:40:34,165] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:40:34,183] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:40:34,184] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:40:34,187] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:40:34,191] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:40:34,193] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:40:34,195] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:40:34,197] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:40:34,197] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:40:34,199] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:40:34,201] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:40:34,203] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:40:34,205] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:40:34,206] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:40:34,209] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:40:34,215] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:40:34,233] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:40:34,243] INFO in admin: Unassigned users: 0
+[2025-10-06 23:40:34,243] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:40:34,243] INFO in admin: Total counted: 4
+[2025-10-06 23:40:34,246] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:45:54,640] INFO in admin: === ADMIN DASHBOARD DEBUG ===
+[2025-10-06 23:45:54,642] INFO in admin: Current user: Hightower
+[2025-10-06 23:45:54,643] INFO in admin: Current user role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:45:54,643] INFO in admin: Is authenticated: True
+[2025-10-06 23:45:54,645] INFO in admin: === END DEBUG ===
+[2025-10-06 23:45:58,461] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:45:58,461] INFO in admin: Total users in database: 4
+[2025-10-06 23:45:58,462] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:45:58,462] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:45:58,463] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:45:58,464] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:45:58,466] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:45:58,468] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:45:58,470] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:45:58,473] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:45:58,475] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:45:58,476] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:45:58,477] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:45:58,478] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:45:58,480] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:45:58,480] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:45:58,482] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:45:58,484] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:45:58,485] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:45:58,486] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:45:58,490] INFO in admin: Unassigned users: 0
+[2025-10-06 23:45:58,490] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:45:58,490] INFO in admin: Total counted: 4
+[2025-10-06 23:45:58,490] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:46:47,907] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:46:47,909] INFO in admin: Total users in database: 4
+[2025-10-06 23:46:47,914] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:46:47,917] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:46:47,920] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:46:47,921] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:46:47,925] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:46:47,935] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:46:47,937] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:46:47,940] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:46:47,941] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:46:47,943] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:46:47,950] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:46:47,953] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:46:47,955] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:46:47,958] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:46:47,960] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:46:47,968] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:46:47,971] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:46:47,973] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:46:47,987] INFO in admin: Unassigned users: 0
+[2025-10-06 23:46:47,988] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:46:47,989] INFO in admin: Total counted: 4
+[2025-10-06 23:46:47,990] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:47:00,133] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:47:00,133] INFO in admin: Total users in database: 4
+[2025-10-06 23:47:00,135] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:00,135] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:00,136] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:00,137] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:00,140] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:47:00,141] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:47:00,142] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:47:00,143] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:47:00,144] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:47:00,145] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:47:00,146] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:47:00,147] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:47:00,150] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:47:00,151] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:47:00,154] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:47:00,155] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:47:00,156] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:47:00,157] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:47:00,162] INFO in admin: Unassigned users: 0
+[2025-10-06 23:47:00,164] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:47:00,164] INFO in admin: Total counted: 4
+[2025-10-06 23:47:00,165] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:47:16,157] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:47:16,158] INFO in admin: Total users in database: 4
+[2025-10-06 23:47:16,159] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:16,161] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:16,162] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:16,162] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:16,167] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:47:16,169] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:47:16,171] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:47:16,173] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:47:16,176] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:47:16,179] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:47:16,180] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:47:16,182] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:47:16,183] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:47:16,185] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:47:16,187] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:47:16,190] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:47:16,194] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:47:16,196] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:47:16,206] INFO in admin: Unassigned users: 0
+[2025-10-06 23:47:16,207] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:47:16,209] INFO in admin: Total counted: 4
+[2025-10-06 23:47:16,210] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:47:29,070] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:47:29,072] INFO in admin: Total users in database: 4
+[2025-10-06 23:47:29,073] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:29,073] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:29,074] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:29,074] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:29,077] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:47:29,080] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:47:29,081] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:47:29,083] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:47:29,087] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:47:29,088] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:47:29,090] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:47:29,092] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:47:29,094] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:47:29,096] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:47:29,098] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:47:29,102] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:47:29,103] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:47:29,104] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:47:29,116] INFO in admin: Unassigned users: 0
+[2025-10-06 23:47:29,117] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:47:29,117] INFO in admin: Total counted: 4
+[2025-10-06 23:47:29,118] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:47:34,501] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:47:34,501] INFO in admin: Total users in database: 4
+[2025-10-06 23:47:34,502] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:34,502] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:34,503] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:34,503] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:34,506] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:47:34,510] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:47:34,512] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:47:34,513] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:47:34,513] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:47:34,518] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:47:34,519] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:47:34,520] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:47:34,522] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:47:34,523] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:47:34,526] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:47:34,527] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:47:34,530] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:47:34,532] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:47:34,534] INFO in admin: Unassigned users: 0
+[2025-10-06 23:47:34,536] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:47:34,536] INFO in admin: Total counted: 4
+[2025-10-06 23:47:34,537] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:47:48,036] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:47:48,037] INFO in admin: Total users in database: 4
+[2025-10-06 23:47:48,038] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:48,038] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:48,038] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:47:48,041] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:47:48,049] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:47:48,051] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:47:48,052] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:47:48,054] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:47:48,057] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:47:48,063] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:47:48,065] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:47:48,068] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:47:48,071] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:47:48,073] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:47:48,074] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:47:48,075] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:47:48,077] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:47:48,079] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:47:48,090] INFO in admin: Unassigned users: 0
+[2025-10-06 23:47:48,091] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:47:48,092] INFO in admin: Total counted: 4
+[2025-10-06 23:47:48,093] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:48:18,426] INFO in admin: === ROLE DEBUG INFO ===
+[2025-10-06 23:48:18,428] INFO in admin: Total users in database: 4
+[2025-10-06 23:48:18,428] INFO in admin: User: Ibeh Kelechi Kelvin, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:48:18,429] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:48:18,430] INFO in admin: User: kelvin kelechi, Role: 'hq_finance' (type: <class 'str'>)
+[2025-10-06 23:48:18,430] INFO in admin: User: Hightower, Role: 'super_hq' (type: <class 'str'>)
+[2025-10-06 23:48:18,434] INFO in admin: Role 'super_hq' (Super HQ Admin): Found 2 users
+[2025-10-06 23:48:18,437] INFO in admin: Role 'hq_finance' (HQ Finance Manager): Found 2 users
+[2025-10-06 23:48:18,439] INFO in admin: Role 'hr' (HQ Manager): Found 0 users
+[2025-10-06 23:48:18,440] INFO in admin: Role 'hq_hr' (HQ HR Manager): Found 0 users
+[2025-10-06 23:48:18,443] INFO in admin: Role 'hq_procurement' (HQ Procurement Manager): Found 0 users
+[2025-10-06 23:48:18,446] INFO in admin: Role 'hq_quarry' (Quarry Manager): Found 0 users
+[2025-10-06 23:48:18,446] INFO in admin: Role 'hq_project' (Project Manager): Found 0 users
+[2025-10-06 23:48:18,450] INFO in admin: Role 'hq_cost_control' (HQ Cost Control Manager): Found 0 users
+[2025-10-06 23:48:18,452] INFO in admin: Role 'finance_staff' (Finance Staff): Found 0 users
+[2025-10-06 23:48:18,455] INFO in admin: Role 'hr_staff' (HR Staff): Found 0 users
+[2025-10-06 23:48:18,458] INFO in admin: Role 'procurement_staff' (Procurement Staff): Found 0 users
+[2025-10-06 23:48:18,460] INFO in admin: Role 'procurement_officer' (Procurement Officer): Found 0 users
+[2025-10-06 23:48:18,466] INFO in admin: Role 'quarry_staff' (Quarry Staff): Found 0 users
+[2025-10-06 23:48:18,470] INFO in admin: Role 'project_staff' (Project Staff): Found 0 users
+[2025-10-06 23:48:18,473] INFO in admin: Unassigned users: 0
+[2025-10-06 23:48:18,475] INFO in admin: Role counts: {'super_hq': 2, 'hq_finance': 2, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-06 23:48:18,475] INFO in admin: Total counted: 4
+[2025-10-06 23:48:18,475] INFO in admin: === END ROLE DEBUG ===
+[2025-10-06 23:48:31,241] INFO in admin: Total employees in database: 1
+[2025-10-06 23:48:31,243] INFO in admin: Role counts: {'super_hq': 0, 'hq_finance': 0, 'hr': 0, 'hq_hr': 0, 'hq_procurement': 0, 'hq_quarry': 0, 'hq_project': 0, 'hq_cost_control': 0, 'finance_staff': 0, 'hr_staff': 0, 'procurement_staff': 0, 'procurement_officer': 0, 'quarry_staff': 0, 'project_staff': 0, 'no_role': 0}
+[2025-10-07 00:05:45,683] INFO in admin: === ASSIGN ROLE DEBUG START ===
+[2025-10-07 00:05:45,685] INFO in admin: Request data: {'employee_id': 1, 'role_id': 13}
+[2025-10-07 00:05:45,686] INFO in admin: Employee ID: 1, Role ID: 13
+[2025-10-07 00:05:45,689] INFO in admin: Found employee: Ibeh Kelechi Kelvin
+[2025-10-07 00:05:45,690] INFO in admin: Selected role: {'id': 13, 'value': 'quarry_staff', 'name': 'Quarry Staff'}
+[2025-10-07 00:05:45,690] INFO in admin: About to commit changes: Ibeh Kelechi Kelvin -> Quarry Staff
+[2025-10-07 00:05:45,708] INFO in admin: Changes committed successfully
+[2025-10-07 00:05:45,739] INFO in admin: === ASSIGN ROLE DEBUG END ===
+[2025-10-07 00:09:22,413] INFO in admin: === ASSIGN ROLE DEBUG START ===
+[2025-10-07 00:09:22,415] INFO in admin: Request data: {'employee_id': 1, 'role_id': 10}
+[2025-10-07 00:09:22,416] INFO in admin: Employee ID: 1, Role ID: 10
+[2025-10-07 00:09:22,418] INFO in admin: Found employee: Ibeh Kelechi Kelvin
+[2025-10-07 00:09:22,419] INFO in admin: Selected role: {'id': 10, 'value': 'hr_staff', 'name': 'HR Staff'}
+[2025-10-07 00:09:22,420] INFO in admin: About to commit changes: Ibeh Kelechi Kelvin -> HR Staff
+[2025-10-07 00:09:22,438] INFO in admin: Changes committed successfully
+[2025-10-07 00:09:22,454] INFO in admin: === ASSIGN ROLE DEBUG END ===
+[2025-10-08 15:16:03,964] ERROR in hr: HR dashboard error: cannot import name 'Leave' from 'models' (C:\Users\Nwakanma\Desktop\Fitaccess\sammy\models.py)
+[2025-10-08 15:22:09,266] ERROR in hr: HR dashboard error: cannot import name 'Query' from 'models' (C:\Users\Nwakanma\Desktop\Fitaccess\sammy\models.py)
+[2025-10-08 15:24:11,581] ERROR in hr: HR dashboard error: (sqlite3.OperationalError) no such table: leave
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT leave.id AS leave_id, leave.employee_id AS leave_employee_id, leave.type AS leave_type, leave.status AS leave_status, leave.start AS leave_start, leave."end" AS leave_end, leave.created_at AS leave_created_at 
+FROM leave 
+WHERE leave.status = ?) AS anon_1]
+[parameters: ('Active',)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-08 15:25:47,940] ERROR in hr: HR dashboard error: (sqlite3.OperationalError) no such table: leave
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT leave.id AS leave_id, leave.employee_id AS leave_employee_id, leave.type AS leave_type, leave.status AS leave_status, leave.start AS leave_start, leave."end" AS leave_end, leave.created_at AS leave_created_at 
+FROM leave 
+WHERE leave.status = ?) AS anon_1]
+[parameters: ('Active',)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-08 15:28:30,241] ERROR in hr: HR dashboard error: (sqlite3.OperationalError) no such table: leave
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT leave.id AS leave_id, leave.employee_id AS leave_employee_id, leave.type AS leave_type, leave.status AS leave_status, leave.start AS leave_start, leave."end" AS leave_end, leave.created_at AS leave_created_at 
+FROM leave 
+WHERE leave.status = ?) AS anon_1]
+[parameters: ('Active',)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-08 15:34:18,495] ERROR in hr: HR dashboard error: (sqlite3.OperationalError) no such table: query
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT "query".id AS query_id, "query".employee_id AS query_employee_id, "query".subject AS query_subject, "query".status AS query_status, "query".priority AS query_priority, "query".category AS query_category, "query".submitted_at AS query_submitted_at, "query".description AS query_description 
+FROM "query" 
+WHERE "query".status = ?) AS anon_1]
+[parameters: ('Pending',)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-08 16:02:12,946] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.manage_departments'. Did you mean 'hr.leave_management' instead?
+[2025-10-08 16:10:29,298] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 16:12:00,371] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 16:34:22,724] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 16:35:32,469] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 16:37:26,502] ERROR in hr: Staff list error: Could not build url for endpoint 'import_staff'. Did you mean 'project.staff' instead?
+[2025-10-08 16:43:46,420] ERROR in hr: Staff list error: Could not build url for endpoint 'import_staff'. Did you mean 'project.staff' instead?
+[2025-10-08 16:45:44,104] ERROR in hr: Staff list error: Could not build url for endpoint 'import_staff'. Did you mean 'project.staff' instead?
+[2025-10-08 16:49:04,771] ERROR in hr: Staff list error: Could not build url for endpoint 'import_staff'. Did you mean 'project.staff' instead?
+[2025-10-08 16:49:23,022] ERROR in hr: Staff list error: Could not build url for endpoint 'import_staff'. Did you mean 'project.staff' instead?
+[2025-10-08 16:55:34,870] ERROR in hr: Staff list error: Could not build url for endpoint 'import_staff'. Did you mean 'project.staff' instead?
+[2025-10-08 17:01:03,887] ERROR in hr: Staff list error: Could not build url for endpoint 'import_staff'. Did you mean 'project.staff' instead?
+[2025-10-08 17:02:54,713] ERROR in hr: Staff list error: Could not build url for endpoint 'hr_import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 17:02:56,815] ERROR in hr: Staff list error: Could not build url for endpoint 'hr_import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 17:03:36,851] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 17:03:55,198] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 17:06:01,104] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 17:07:44,400] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-08 17:08:07,727] ERROR in hr: Staff list error: Could not build url for endpoint 'hr.import_staff'. Did you mean 'hr.search_staff' instead?
+[2025-10-10 15:03:19,023] ERROR in hr: Staff list error: block 'title' defined twice
+[2025-10-10 15:07:22,102] ERROR in hr: Staff list error: Encountered unknown tag 'endif'. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+[2025-10-10 15:10:59,288] ERROR in hr: Staff list error: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+[2025-10-10 15:20:32,751] ERROR in hr: Staff list error: Encountered unknown tag 'endblock'.
+[2025-10-10 15:24:22,970] ERROR in hr: Staff list error: Encountered unknown tag 'endblock'.
+[2025-10-10 15:26:52,621] ERROR in hr: Staff list error: Encountered unknown tag 'endblock'.
+[2025-10-10 16:03:57,530] ERROR in hr: Staff list error: Encountered unknown tag 'endblock'.
+[2025-10-10 16:07:46,197] ERROR in hr: Staff list error: Encountered unknown tag 'endblock'.
+[2025-10-10 16:10:31,570] ERROR in hr: Staff list error: Encountered unknown tag 'endblock'.
+[2025-10-10 16:12:39,117] ERROR in hr: Staff list error: Encountered unknown tag 'endblock'.
+[2025-10-11 04:25:15,558] ERROR in hr: Staff list error: Encountered unknown tag 'endblock'.
+[2025-10-11 04:27:17,035] ERROR in hr: Staff list error: Missing end of comment tag
+[2025-10-11 04:28:41,040] ERROR in hr: Staff list error: hr/staff/add_modal.html
+[2025-10-11 04:39:24,711] ERROR in hr: Staff list error: hr/staff/add_modal.html
+[2025-10-11 17:48:24,112] WARNING in hr: xlsxwriter unavailable or failed (No module named 'xlsxwriter'); trying openpyxl for export
+[2025-10-11 17:48:24,118] ERROR in hr: Excel export failed with both engines (xlsxwriter/openpyxl). Falling back to CSV. Error: No module named 'openpyxl'
+[2025-10-11 17:48:30,281] WARNING in hr: xlsxwriter unavailable or failed (No module named 'xlsxwriter'); trying openpyxl for export
+[2025-10-11 17:48:30,286] ERROR in hr: Excel export failed with both engines (xlsxwriter/openpyxl). Falling back to CSV. Error: No module named 'openpyxl'
+[2025-10-11 18:08:14,099] ERROR in hr: Add staff error: (sqlite3.OperationalError) no such table: staff_payroll
+[SQL: INSERT INTO staff_payroll (employee_id, period_year, period_month, site, employment_date, bank_name, account_number, designation, work_days, days_worked, overtime_hours, gross, arrears, rice_contribution, loan_or_salary_advance, jaco, minna_paye, late_deduction, balance_salary, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: (2, 2025, 10, 'Finance', '2025-10-06', 'GTbank', '08086947120', 'Operation', 22, 20, None, None, None, None, None, None, None, None, None, '2025-10-11 17:08:14.096212')]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-12 07:44:05,465] ERROR in hr: Add staff error: (sqlite3.IntegrityError) UNIQUE constraint failed: employee.email
+[SQL: INSERT INTO employee (staff_code, name, email, role, department, status, site, dob, next_of_kin, next_of_kin_relationship, next_of_kin_address, next_of_kin_phone, position, date_of_employment, employment_letter, sectional_head, job_description, academic_qualification_at_employment, present_academic_qualification, current_address, permanent_address, phone, degree, institution, current_certification, present_assignment, employment_dates, past_job_title, past_employer_dates, past_accomplishments, technical_skills, soft_skills, certifications, team_info, notes, sectional_head_upgrade, job_description_upgrade, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('FAA002', 'Power Ghost', 'Hightowerkels@gmail.com', None, 'cost control', 'Active', 'cost control', '2025-10-13', 'St patrick Ghost', None, None, '+2349037066685', 'Operation', '2025-10-09', None, None, None, None, None, 'Lagos', None, '+2349037066685', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, '2025-10-12 06:44:05.434288', '2025-10-12 06:44:05.434288')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+[2025-10-12 08:45:00,257] ERROR in hr: Staff details error: Could not build url for endpoint 'files.upload'. Did you mean 'files.upload_file' instead?
+[2025-10-12 08:55:39,694] ERROR in hr: Staff details error: Could not build url for endpoint 'files.upload'. Did you mean 'files.upload_file' instead?
+[2025-10-12 08:55:46,237] ERROR in hr: Staff details error: Could not build url for endpoint 'files.upload'. Did you mean 'files.upload_file' instead?
+[2025-10-13 00:32:27,623] ERROR in hr: Staff details error: Could not build url for endpoint 'files.upload'. Did you mean 'files.upload_file' instead?
+[2025-10-13 02:17:43,946] ERROR in hr: Payroll error: 'str' object is not callable
+[2025-10-13 02:22:47,727] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:22:47,775] ERROR in hr: Payroll error: 'str' object is not callable
+[2025-10-13 02:22:53,799] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:22:53,803] ERROR in hr: Payroll error: 'str' object is not callable
+[2025-10-13 02:26:38,657] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:26:38,661] INFO in hr: Found 0 payroll history records
+[2025-10-13 02:26:38,671] INFO in hr: Payroll data created successfully
+[2025-10-13 02:26:38,709] ERROR in hr: Payroll error: 'str' object is not callable
+[2025-10-13 02:26:44,911] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:26:44,913] INFO in hr: Found 0 payroll history records
+[2025-10-13 02:26:44,915] INFO in hr: Payroll data created successfully
+[2025-10-13 02:26:44,918] ERROR in hr: Payroll error: 'str' object is not callable
+[2025-10-13 02:29:14,016] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:29:14,018] INFO in hr: Found 0 payroll history records
+[2025-10-13 02:29:14,019] INFO in hr: Payroll data created successfully
+[2025-10-13 02:29:22,385] ERROR in hr: Payroll generation error: 'total_employees' is an invalid keyword argument for PayrollHistory
+[2025-10-13 02:29:22,411] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:29:22,414] INFO in hr: Found 0 payroll history records
+[2025-10-13 02:29:22,418] INFO in hr: Payroll data created successfully
+[2025-10-13 02:36:46,211] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:36:46,216] INFO in hr: Found 0 payroll history records
+[2025-10-13 02:36:46,229] INFO in hr: Payroll data created successfully
+[2025-10-13 02:36:50,401] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:36:50,404] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:36:50,405] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:36:50,407] INFO in hr: Payroll data created successfully
+[2025-10-13 02:37:15,064] ERROR in hr: Staff payroll error: 'models.Employee object' has no attribute 'first_name'
+[2025-10-13 02:37:15,082] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:37:15,084] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:37:15,085] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:37:15,089] INFO in hr: Payroll data created successfully
+[2025-10-13 02:43:12,906] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:43:12,909] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:43:12,910] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:43:12,914] INFO in hr: Payroll data created successfully
+[2025-10-13 02:43:15,402] ERROR in hr: Staff payroll error: 'models.StaffPayroll object' has no attribute 'gross_salary'
+[2025-10-13 02:43:15,415] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:43:15,417] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:43:15,417] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:43:15,420] INFO in hr: Payroll data created successfully
+[2025-10-13 02:43:44,978] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:43:44,980] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:43:44,981] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:43:44,984] INFO in hr: Payroll data created successfully
+[2025-10-13 02:43:55,154] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:43:55,156] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:43:55,158] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:43:55,163] INFO in hr: Payroll data created successfully
+[2025-10-13 02:43:56,363] ERROR in hr: Staff payroll error: 'models.StaffPayroll object' has no attribute 'gross_salary'
+[2025-10-13 02:43:56,412] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:43:56,416] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:43:56,417] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:43:56,421] INFO in hr: Payroll data created successfully
+[2025-10-13 02:48:40,482] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:48:40,486] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:48:40,487] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:48:40,496] INFO in hr: Payroll data created successfully
+[2025-10-13 02:48:42,509] ERROR in hr: Staff payroll error: unsupported operand type(s) for +: 'int' and 'NoneType'
+[2025-10-13 02:48:42,526] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:48:42,530] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:48:42,531] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:48:42,533] INFO in hr: Payroll data created successfully
+[2025-10-13 02:49:11,077] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:49:11,078] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:49:11,079] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:49:11,081] INFO in hr: Payroll data created successfully
+[2025-10-13 02:49:16,426] ERROR in hr: Staff payroll error: unsupported operand type(s) for +: 'int' and 'NoneType'
+[2025-10-13 02:49:16,444] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 02:49:16,446] INFO in hr: Found 1 payroll history records
+[2025-10-13 02:49:16,447] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 02:49:16,451] INFO in hr: Payroll data created successfully
+[2025-10-13 09:24:36,365] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 09:24:36,370] INFO in hr: Found 1 payroll history records
+[2025-10-13 09:24:36,372] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 09:24:36,376] INFO in hr: Payroll data created successfully
+[2025-10-13 09:24:49,304] ERROR in hr: Staff payroll error: unsupported operand type(s) for +: 'int' and 'NoneType'
+[2025-10-13 09:24:49,323] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 09:24:49,328] INFO in hr: Found 1 payroll history records
+[2025-10-13 09:24:49,330] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 09:24:49,336] INFO in hr: Payroll data created successfully
+[2025-10-13 09:29:28,486] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 09:29:28,495] INFO in hr: Found 1 payroll history records
+[2025-10-13 09:29:28,496] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 09:29:28,504] INFO in hr: Payroll data created successfully
+[2025-10-13 10:11:15,103] ERROR in hr: Staff payroll error: (sqlite3.OperationalError) no such column: staff_payroll.approval_status
+[SQL: SELECT staff_payroll.id AS staff_payroll_id, staff_payroll.employee_id AS staff_payroll_employee_id, staff_payroll.period_year AS staff_payroll_period_year, staff_payroll.period_month AS staff_payroll_period_month, staff_payroll.site AS staff_payroll_site, staff_payroll.employment_date AS staff_payroll_employment_date, staff_payroll.bank_name AS staff_payroll_bank_name, staff_payroll.account_number AS staff_payroll_account_number, staff_payroll.designation AS staff_payroll_designation, staff_payroll.work_days AS staff_payroll_work_days, staff_payroll.days_worked AS staff_payroll_days_worked, staff_payroll.overtime_hours AS staff_payroll_overtime_hours, staff_payroll.gross AS staff_payroll_gross, staff_payroll.arrears AS staff_payroll_arrears, staff_payroll.rice_contribution AS staff_payroll_rice_contribution, staff_payroll.loan_or_salary_advance AS staff_payroll_loan_or_salary_advance, staff_payroll.jaco AS staff_payroll_jaco, staff_payroll.minna_paye AS staff_payroll_minna_paye, staff_payroll.late_deduction AS staff_payroll_late_deduction, staff_payroll.balance_salary AS staff_payroll_balance_salary, staff_payroll.approval_status AS staff_payroll_approval_status, staff_payroll.approved_by_admin AS staff_payroll_approved_by_admin, staff_payroll.approved_by_finance AS staff_payroll_approved_by_finance, staff_payroll.submitted_at AS staff_payroll_submitted_at, staff_payroll.admin_approved_at AS staff_payroll_admin_approved_at, staff_payroll.finance_approved_at AS staff_payroll_finance_approved_at, staff_payroll.created_at AS staff_payroll_created_at, employee.id AS employee_id, employee.staff_code AS employee_staff_code, employee.name AS employee_name, employee.email AS employee_email, employee.role AS employee_role, employee.department AS employee_department, employee.status AS employee_status, employee.site AS employee_site, employee.dob AS employee_dob, employee.next_of_kin AS employee_next_of_kin, employee.next_of_kin_relationship AS employee_next_of_kin_relationship, employee.next_of_kin_address AS employee_next_of_kin_address, employee.next_of_kin_phone AS employee_next_of_kin_phone, employee.position AS employee_position, employee.date_of_employment AS employee_date_of_employment, employee.employment_letter AS employee_employment_letter, employee.sectional_head AS employee_sectional_head, employee.job_description AS employee_job_description, employee.academic_qualification_at_employment AS employee_academic_qualification_at_employment, employee.present_academic_qualification AS employee_present_academic_qualification, employee.current_address AS employee_current_address, employee.permanent_address AS employee_permanent_address, employee.phone AS employee_phone, employee.degree AS employee_degree, employee.institution AS employee_institution, employee.current_certification AS employee_current_certification, employee.present_assignment AS employee_present_assignment, employee.employment_dates AS employee_employment_dates, employee.past_job_title AS employee_past_job_title, employee.past_employer_dates AS employee_past_employer_dates, employee.past_accomplishments AS employee_past_accomplishments, employee.technical_skills AS employee_technical_skills, employee.soft_skills AS employee_soft_skills, employee.certifications AS employee_certifications, employee.team_info AS employee_team_info, employee.notes AS employee_notes, employee.sectional_head_upgrade AS employee_sectional_head_upgrade, employee.job_description_upgrade AS employee_job_description_upgrade, employee.created_at AS employee_created_at, employee.updated_at AS employee_updated_at 
+FROM staff_payroll JOIN employee ON staff_payroll.employee_id = employee.id 
+WHERE staff_payroll.period_year = ? AND staff_payroll.period_month = ?]
+[parameters: (2025, 10)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 10:11:15,184] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 10:11:15,189] INFO in hr: Found 1 payroll history records
+[2025-10-13 10:11:15,190] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 10:11:15,203] ERROR in hr: Payroll error: (sqlite3.OperationalError) no such column: staff_payroll.approval_status
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT staff_payroll.id AS staff_payroll_id, staff_payroll.employee_id AS staff_payroll_employee_id, staff_payroll.period_year AS staff_payroll_period_year, staff_payroll.period_month AS staff_payroll_period_month, staff_payroll.site AS staff_payroll_site, staff_payroll.employment_date AS staff_payroll_employment_date, staff_payroll.bank_name AS staff_payroll_bank_name, staff_payroll.account_number AS staff_payroll_account_number, staff_payroll.designation AS staff_payroll_designation, staff_payroll.work_days AS staff_payroll_work_days, staff_payroll.days_worked AS staff_payroll_days_worked, staff_payroll.overtime_hours AS staff_payroll_overtime_hours, staff_payroll.gross AS staff_payroll_gross, staff_payroll.arrears AS staff_payroll_arrears, staff_payroll.rice_contribution AS staff_payroll_rice_contribution, staff_payroll.loan_or_salary_advance AS staff_payroll_loan_or_salary_advance, staff_payroll.jaco AS staff_payroll_jaco, staff_payroll.minna_paye AS staff_payroll_minna_paye, staff_payroll.late_deduction AS staff_payroll_late_deduction, staff_payroll.balance_salary AS staff_payroll_balance_salary, staff_payroll.approval_status AS staff_payroll_approval_status, staff_payroll.approved_by_admin AS staff_payroll_approved_by_admin, staff_payroll.approved_by_finance AS staff_payroll_approved_by_finance, staff_payroll.submitted_at AS staff_payroll_submitted_at, staff_payroll.admin_approved_at AS staff_payroll_admin_approved_at, staff_payroll.finance_approved_at AS staff_payroll_finance_approved_at, staff_payroll.created_at AS staff_payroll_created_at 
+FROM staff_payroll 
+WHERE staff_payroll.period_year = ? AND staff_payroll.period_month = ?) AS anon_1]
+[parameters: (2025, 10)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 10:24:05,851] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 10:24:05,863] INFO in hr: Found 1 payroll history records
+[2025-10-13 10:24:05,864] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 10:24:05,894] INFO in hr: Payroll data created successfully
+[2025-10-13 10:24:06,088] ERROR in hr: Payroll error: 'dict object' has no attribute 'current_month_num'
+[2025-10-13 10:24:08,347] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 10:24:08,359] INFO in hr: Found 1 payroll history records
+[2025-10-13 10:24:08,362] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 10:24:08,376] INFO in hr: Payroll data created successfully
+[2025-10-13 10:24:08,394] ERROR in hr: Payroll error: 'dict object' has no attribute 'current_month_num'
+[2025-10-13 10:24:09,528] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 10:24:09,532] INFO in hr: Found 1 payroll history records
+[2025-10-13 10:24:09,534] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 10:24:09,540] INFO in hr: Payroll data created successfully
+[2025-10-13 10:24:09,543] ERROR in hr: Payroll error: 'dict object' has no attribute 'current_month_num'
+[2025-10-13 10:24:19,798] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 10:24:19,801] INFO in hr: Found 1 payroll history records
+[2025-10-13 10:24:19,802] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 10:24:19,807] INFO in hr: Payroll data created successfully
+[2025-10-13 10:24:19,816] ERROR in hr: Payroll error: 'dict object' has no attribute 'current_month_num'
+[2025-10-13 12:14:25,085] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 12:14:25,090] INFO in hr: Found 1 payroll history records
+[2025-10-13 12:14:25,092] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 12:14:25,102] INFO in hr: Payroll data created successfully
+[2025-10-13 12:14:50,465] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 12:14:50,498] INFO in hr: Found 1 payroll history records
+[2025-10-13 12:14:50,498] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 12:14:50,500] INFO in hr: Payroll data created successfully
+[2025-10-13 12:15:00,728] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 12:15:00,728] INFO in hr: Found 2 payroll history records
+[2025-10-13 12:15:00,729] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 12:15:00,729] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 12:15:00,732] INFO in hr: Payroll data created successfully
+[2025-10-13 12:15:36,341] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 12:15:36,344] INFO in hr: Found 2 payroll history records
+[2025-10-13 12:15:36,344] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 12:15:36,345] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 12:15:36,347] INFO in hr: Payroll data created successfully
+[2025-10-13 12:15:46,044] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 12:15:46,047] INFO in hr: Found 2 payroll history records
+[2025-10-13 12:15:46,048] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 12:15:46,049] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 12:15:46,052] INFO in hr: Payroll data created successfully
+[2025-10-13 12:52:36,723] ERROR in hr: Payroll error: (sqlite3.OperationalError) no such column: employee.basic_salary
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT employee.id AS employee_id, employee.staff_code AS employee_staff_code, employee.name AS employee_name, employee.email AS employee_email, employee.role AS employee_role, employee.department AS employee_department, employee.status AS employee_status, employee.site AS employee_site, employee.dob AS employee_dob, employee.next_of_kin AS employee_next_of_kin, employee.next_of_kin_relationship AS employee_next_of_kin_relationship, employee.next_of_kin_address AS employee_next_of_kin_address, employee.next_of_kin_phone AS employee_next_of_kin_phone, employee.position AS employee_position, employee.date_of_employment AS employee_date_of_employment, employee.employment_letter AS employee_employment_letter, employee.sectional_head AS employee_sectional_head, employee.job_description AS employee_job_description, employee.academic_qualification_at_employment AS employee_academic_qualification_at_employment, employee.present_academic_qualification AS employee_present_academic_qualification, employee.current_address AS employee_current_address, employee.permanent_address AS employee_permanent_address, employee.phone AS employee_phone, employee.degree AS employee_degree, employee.institution AS employee_institution, employee.current_certification AS employee_current_certification, employee.present_assignment AS employee_present_assignment, employee.employment_dates AS employee_employment_dates, employee.past_job_title AS employee_past_job_title, employee.past_employer_dates AS employee_past_employer_dates, employee.past_accomplishments AS employee_past_accomplishments, employee.technical_skills AS employee_technical_skills, employee.soft_skills AS employee_soft_skills, employee.certifications AS employee_certifications, employee.team_info AS employee_team_info, employee.notes AS employee_notes, employee.sectional_head_upgrade AS employee_sectional_head_upgrade, employee.job_description_upgrade AS employee_job_description_upgrade, employee.basic_salary AS employee_basic_salary, employee.housing_allowance AS employee_housing_allowance, employee.transport_allowance AS employee_transport_allowance, employee.medical_allowance AS employee_medical_allowance, employee.special_allowance AS employee_special_allowance, employee.overtime_rate AS employee_overtime_rate, employee.tax_number AS employee_tax_number, employee.pension_number AS employee_pension_number, employee.bank_name AS employee_bank_name, employee.bank_account_number AS employee_bank_account_number, employee.bank_sort_code AS employee_bank_sort_code, employee.employment_type AS employee_employment_type, employee.grade_level AS employee_grade_level, employee.step AS employee_step, employee.created_at AS employee_created_at, employee.updated_at AS employee_updated_at 
+FROM employee 
+WHERE employee.status = ?) AS anon_1]
+[parameters: ('Active',)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 12:52:42,407] ERROR in hr: Payroll error: (sqlite3.OperationalError) no such column: employee.basic_salary
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT employee.id AS employee_id, employee.staff_code AS employee_staff_code, employee.name AS employee_name, employee.email AS employee_email, employee.role AS employee_role, employee.department AS employee_department, employee.status AS employee_status, employee.site AS employee_site, employee.dob AS employee_dob, employee.next_of_kin AS employee_next_of_kin, employee.next_of_kin_relationship AS employee_next_of_kin_relationship, employee.next_of_kin_address AS employee_next_of_kin_address, employee.next_of_kin_phone AS employee_next_of_kin_phone, employee.position AS employee_position, employee.date_of_employment AS employee_date_of_employment, employee.employment_letter AS employee_employment_letter, employee.sectional_head AS employee_sectional_head, employee.job_description AS employee_job_description, employee.academic_qualification_at_employment AS employee_academic_qualification_at_employment, employee.present_academic_qualification AS employee_present_academic_qualification, employee.current_address AS employee_current_address, employee.permanent_address AS employee_permanent_address, employee.phone AS employee_phone, employee.degree AS employee_degree, employee.institution AS employee_institution, employee.current_certification AS employee_current_certification, employee.present_assignment AS employee_present_assignment, employee.employment_dates AS employee_employment_dates, employee.past_job_title AS employee_past_job_title, employee.past_employer_dates AS employee_past_employer_dates, employee.past_accomplishments AS employee_past_accomplishments, employee.technical_skills AS employee_technical_skills, employee.soft_skills AS employee_soft_skills, employee.certifications AS employee_certifications, employee.team_info AS employee_team_info, employee.notes AS employee_notes, employee.sectional_head_upgrade AS employee_sectional_head_upgrade, employee.job_description_upgrade AS employee_job_description_upgrade, employee.basic_salary AS employee_basic_salary, employee.housing_allowance AS employee_housing_allowance, employee.transport_allowance AS employee_transport_allowance, employee.medical_allowance AS employee_medical_allowance, employee.special_allowance AS employee_special_allowance, employee.overtime_rate AS employee_overtime_rate, employee.tax_number AS employee_tax_number, employee.pension_number AS employee_pension_number, employee.bank_name AS employee_bank_name, employee.bank_account_number AS employee_bank_account_number, employee.bank_sort_code AS employee_bank_sort_code, employee.employment_type AS employee_employment_type, employee.grade_level AS employee_grade_level, employee.step AS employee_step, employee.created_at AS employee_created_at, employee.updated_at AS employee_updated_at 
+FROM employee 
+WHERE employee.status = ?) AS anon_1]
+[parameters: ('Active',)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 12:52:43,574] ERROR in hr: Payroll error: (sqlite3.OperationalError) no such column: employee.basic_salary
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT employee.id AS employee_id, employee.staff_code AS employee_staff_code, employee.name AS employee_name, employee.email AS employee_email, employee.role AS employee_role, employee.department AS employee_department, employee.status AS employee_status, employee.site AS employee_site, employee.dob AS employee_dob, employee.next_of_kin AS employee_next_of_kin, employee.next_of_kin_relationship AS employee_next_of_kin_relationship, employee.next_of_kin_address AS employee_next_of_kin_address, employee.next_of_kin_phone AS employee_next_of_kin_phone, employee.position AS employee_position, employee.date_of_employment AS employee_date_of_employment, employee.employment_letter AS employee_employment_letter, employee.sectional_head AS employee_sectional_head, employee.job_description AS employee_job_description, employee.academic_qualification_at_employment AS employee_academic_qualification_at_employment, employee.present_academic_qualification AS employee_present_academic_qualification, employee.current_address AS employee_current_address, employee.permanent_address AS employee_permanent_address, employee.phone AS employee_phone, employee.degree AS employee_degree, employee.institution AS employee_institution, employee.current_certification AS employee_current_certification, employee.present_assignment AS employee_present_assignment, employee.employment_dates AS employee_employment_dates, employee.past_job_title AS employee_past_job_title, employee.past_employer_dates AS employee_past_employer_dates, employee.past_accomplishments AS employee_past_accomplishments, employee.technical_skills AS employee_technical_skills, employee.soft_skills AS employee_soft_skills, employee.certifications AS employee_certifications, employee.team_info AS employee_team_info, employee.notes AS employee_notes, employee.sectional_head_upgrade AS employee_sectional_head_upgrade, employee.job_description_upgrade AS employee_job_description_upgrade, employee.basic_salary AS employee_basic_salary, employee.housing_allowance AS employee_housing_allowance, employee.transport_allowance AS employee_transport_allowance, employee.medical_allowance AS employee_medical_allowance, employee.special_allowance AS employee_special_allowance, employee.overtime_rate AS employee_overtime_rate, employee.tax_number AS employee_tax_number, employee.pension_number AS employee_pension_number, employee.bank_name AS employee_bank_name, employee.bank_account_number AS employee_bank_account_number, employee.bank_sort_code AS employee_bank_sort_code, employee.employment_type AS employee_employment_type, employee.grade_level AS employee_grade_level, employee.step AS employee_step, employee.created_at AS employee_created_at, employee.updated_at AS employee_updated_at 
+FROM employee 
+WHERE employee.status = ?) AS anon_1]
+[parameters: ('Active',)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 12:52:44,348] ERROR in hr: Staff payroll error: (sqlite3.OperationalError) no such column: employee.basic_salary
+[SQL: SELECT staff_payroll.id AS staff_payroll_id, staff_payroll.employee_id AS staff_payroll_employee_id, staff_payroll.period_year AS staff_payroll_period_year, staff_payroll.period_month AS staff_payroll_period_month, staff_payroll.site AS staff_payroll_site, staff_payroll.employment_date AS staff_payroll_employment_date, staff_payroll.bank_name AS staff_payroll_bank_name, staff_payroll.account_number AS staff_payroll_account_number, staff_payroll.designation AS staff_payroll_designation, staff_payroll.work_days AS staff_payroll_work_days, staff_payroll.days_worked AS staff_payroll_days_worked, staff_payroll.overtime_hours AS staff_payroll_overtime_hours, staff_payroll.gross AS staff_payroll_gross, staff_payroll.arrears AS staff_payroll_arrears, staff_payroll.rice_contribution AS staff_payroll_rice_contribution, staff_payroll.loan_or_salary_advance AS staff_payroll_loan_or_salary_advance, staff_payroll.jaco AS staff_payroll_jaco, staff_payroll.minna_paye AS staff_payroll_minna_paye, staff_payroll.late_deduction AS staff_payroll_late_deduction, staff_payroll.balance_salary AS staff_payroll_balance_salary, staff_payroll.approval_status AS staff_payroll_approval_status, staff_payroll.approved_by_admin AS staff_payroll_approved_by_admin, staff_payroll.approved_by_finance AS staff_payroll_approved_by_finance, staff_payroll.submitted_at AS staff_payroll_submitted_at, staff_payroll.admin_approved_at AS staff_payroll_admin_approved_at, staff_payroll.finance_approved_at AS staff_payroll_finance_approved_at, staff_payroll.created_at AS staff_payroll_created_at, employee.id AS employee_id, employee.staff_code AS employee_staff_code, employee.name AS employee_name, employee.email AS employee_email, employee.role AS employee_role, employee.department AS employee_department, employee.status AS employee_status, employee.site AS employee_site, employee.dob AS employee_dob, employee.next_of_kin AS employee_next_of_kin, employee.next_of_kin_relationship AS employee_next_of_kin_relationship, employee.next_of_kin_address AS employee_next_of_kin_address, employee.next_of_kin_phone AS employee_next_of_kin_phone, employee.position AS employee_position, employee.date_of_employment AS employee_date_of_employment, employee.employment_letter AS employee_employment_letter, employee.sectional_head AS employee_sectional_head, employee.job_description AS employee_job_description, employee.academic_qualification_at_employment AS employee_academic_qualification_at_employment, employee.present_academic_qualification AS employee_present_academic_qualification, employee.current_address AS employee_current_address, employee.permanent_address AS employee_permanent_address, employee.phone AS employee_phone, employee.degree AS employee_degree, employee.institution AS employee_institution, employee.current_certification AS employee_current_certification, employee.present_assignment AS employee_present_assignment, employee.employment_dates AS employee_employment_dates, employee.past_job_title AS employee_past_job_title, employee.past_employer_dates AS employee_past_employer_dates, employee.past_accomplishments AS employee_past_accomplishments, employee.technical_skills AS employee_technical_skills, employee.soft_skills AS employee_soft_skills, employee.certifications AS employee_certifications, employee.team_info AS employee_team_info, employee.notes AS employee_notes, employee.sectional_head_upgrade AS employee_sectional_head_upgrade, employee.job_description_upgrade AS employee_job_description_upgrade, employee.basic_salary AS employee_basic_salary, employee.housing_allowance AS employee_housing_allowance, employee.transport_allowance AS employee_transport_allowance, employee.medical_allowance AS employee_medical_allowance, employee.special_allowance AS employee_special_allowance, employee.overtime_rate AS employee_overtime_rate, employee.tax_number AS employee_tax_number, employee.pension_number AS employee_pension_number, employee.bank_name AS employee_bank_name, employee.bank_account_number AS employee_bank_account_number, employee.bank_sort_code AS employee_bank_sort_code, employee.employment_type AS employee_employment_type, employee.grade_level AS employee_grade_level, employee.step AS employee_step, employee.created_at AS employee_created_at, employee.updated_at AS employee_updated_at 
+FROM staff_payroll JOIN employee ON staff_payroll.employee_id = employee.id 
+WHERE staff_payroll.period_year = ? AND staff_payroll.period_month = ?]
+[parameters: (2025, 10)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 12:52:44,380] ERROR in hr: Payroll error: (sqlite3.OperationalError) no such column: employee.basic_salary
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT employee.id AS employee_id, employee.staff_code AS employee_staff_code, employee.name AS employee_name, employee.email AS employee_email, employee.role AS employee_role, employee.department AS employee_department, employee.status AS employee_status, employee.site AS employee_site, employee.dob AS employee_dob, employee.next_of_kin AS employee_next_of_kin, employee.next_of_kin_relationship AS employee_next_of_kin_relationship, employee.next_of_kin_address AS employee_next_of_kin_address, employee.next_of_kin_phone AS employee_next_of_kin_phone, employee.position AS employee_position, employee.date_of_employment AS employee_date_of_employment, employee.employment_letter AS employee_employment_letter, employee.sectional_head AS employee_sectional_head, employee.job_description AS employee_job_description, employee.academic_qualification_at_employment AS employee_academic_qualification_at_employment, employee.present_academic_qualification AS employee_present_academic_qualification, employee.current_address AS employee_current_address, employee.permanent_address AS employee_permanent_address, employee.phone AS employee_phone, employee.degree AS employee_degree, employee.institution AS employee_institution, employee.current_certification AS employee_current_certification, employee.present_assignment AS employee_present_assignment, employee.employment_dates AS employee_employment_dates, employee.past_job_title AS employee_past_job_title, employee.past_employer_dates AS employee_past_employer_dates, employee.past_accomplishments AS employee_past_accomplishments, employee.technical_skills AS employee_technical_skills, employee.soft_skills AS employee_soft_skills, employee.certifications AS employee_certifications, employee.team_info AS employee_team_info, employee.notes AS employee_notes, employee.sectional_head_upgrade AS employee_sectional_head_upgrade, employee.job_description_upgrade AS employee_job_description_upgrade, employee.basic_salary AS employee_basic_salary, employee.housing_allowance AS employee_housing_allowance, employee.transport_allowance AS employee_transport_allowance, employee.medical_allowance AS employee_medical_allowance, employee.special_allowance AS employee_special_allowance, employee.overtime_rate AS employee_overtime_rate, employee.tax_number AS employee_tax_number, employee.pension_number AS employee_pension_number, employee.bank_name AS employee_bank_name, employee.bank_account_number AS employee_bank_account_number, employee.bank_sort_code AS employee_bank_sort_code, employee.employment_type AS employee_employment_type, employee.grade_level AS employee_grade_level, employee.step AS employee_step, employee.created_at AS employee_created_at, employee.updated_at AS employee_updated_at 
+FROM employee 
+WHERE employee.status = ?) AS anon_1]
+[parameters: ('Active',)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 12:52:45,370] ERROR in hr: Payroll error: (sqlite3.OperationalError) no such column: employee.basic_salary
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT employee.id AS employee_id, employee.staff_code AS employee_staff_code, employee.name AS employee_name, employee.email AS employee_email, employee.role AS employee_role, employee.department AS employee_department, employee.status AS employee_status, employee.site AS employee_site, employee.dob AS employee_dob, employee.next_of_kin AS employee_next_of_kin, employee.next_of_kin_relationship AS employee_next_of_kin_relationship, employee.next_of_kin_address AS employee_next_of_kin_address, employee.next_of_kin_phone AS employee_next_of_kin_phone, employee.position AS employee_position, employee.date_of_employment AS employee_date_of_employment, employee.employment_letter AS employee_employment_letter, employee.sectional_head AS employee_sectional_head, employee.job_description AS employee_job_description, employee.academic_qualification_at_employment AS employee_academic_qualification_at_employment, employee.present_academic_qualification AS employee_present_academic_qualification, employee.current_address AS employee_current_address, employee.permanent_address AS employee_permanent_address, employee.phone AS employee_phone, employee.degree AS employee_degree, employee.institution AS employee_institution, employee.current_certification AS employee_current_certification, employee.present_assignment AS employee_present_assignment, employee.employment_dates AS employee_employment_dates, employee.past_job_title AS employee_past_job_title, employee.past_employer_dates AS employee_past_employer_dates, employee.past_accomplishments AS employee_past_accomplishments, employee.technical_skills AS employee_technical_skills, employee.soft_skills AS employee_soft_skills, employee.certifications AS employee_certifications, employee.team_info AS employee_team_info, employee.notes AS employee_notes, employee.sectional_head_upgrade AS employee_sectional_head_upgrade, employee.job_description_upgrade AS employee_job_description_upgrade, employee.basic_salary AS employee_basic_salary, employee.housing_allowance AS employee_housing_allowance, employee.transport_allowance AS employee_transport_allowance, employee.medical_allowance AS employee_medical_allowance, employee.special_allowance AS employee_special_allowance, employee.overtime_rate AS employee_overtime_rate, employee.tax_number AS employee_tax_number, employee.pension_number AS employee_pension_number, employee.bank_name AS employee_bank_name, employee.bank_account_number AS employee_bank_account_number, employee.bank_sort_code AS employee_bank_sort_code, employee.employment_type AS employee_employment_type, employee.grade_level AS employee_grade_level, employee.step AS employee_step, employee.created_at AS employee_created_at, employee.updated_at AS employee_updated_at 
+FROM employee 
+WHERE employee.status = ?) AS anon_1]
+[parameters: ('Active',)]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 12:52:45,706] ERROR in hr: HR dashboard error: (sqlite3.OperationalError) no such column: employee.basic_salary
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT employee.id AS employee_id, employee.staff_code AS employee_staff_code, employee.name AS employee_name, employee.email AS employee_email, employee.role AS employee_role, employee.department AS employee_department, employee.status AS employee_status, employee.site AS employee_site, employee.dob AS employee_dob, employee.next_of_kin AS employee_next_of_kin, employee.next_of_kin_relationship AS employee_next_of_kin_relationship, employee.next_of_kin_address AS employee_next_of_kin_address, employee.next_of_kin_phone AS employee_next_of_kin_phone, employee.position AS employee_position, employee.date_of_employment AS employee_date_of_employment, employee.employment_letter AS employee_employment_letter, employee.sectional_head AS employee_sectional_head, employee.job_description AS employee_job_description, employee.academic_qualification_at_employment AS employee_academic_qualification_at_employment, employee.present_academic_qualification AS employee_present_academic_qualification, employee.current_address AS employee_current_address, employee.permanent_address AS employee_permanent_address, employee.phone AS employee_phone, employee.degree AS employee_degree, employee.institution AS employee_institution, employee.current_certification AS employee_current_certification, employee.present_assignment AS employee_present_assignment, employee.employment_dates AS employee_employment_dates, employee.past_job_title AS employee_past_job_title, employee.past_employer_dates AS employee_past_employer_dates, employee.past_accomplishments AS employee_past_accomplishments, employee.technical_skills AS employee_technical_skills, employee.soft_skills AS employee_soft_skills, employee.certifications AS employee_certifications, employee.team_info AS employee_team_info, employee.notes AS employee_notes, employee.sectional_head_upgrade AS employee_sectional_head_upgrade, employee.job_description_upgrade AS employee_job_description_upgrade, employee.basic_salary AS employee_basic_salary, employee.housing_allowance AS employee_housing_allowance, employee.transport_allowance AS employee_transport_allowance, employee.medical_allowance AS employee_medical_allowance, employee.special_allowance AS employee_special_allowance, employee.overtime_rate AS employee_overtime_rate, employee.tax_number AS employee_tax_number, employee.pension_number AS employee_pension_number, employee.bank_name AS employee_bank_name, employee.bank_account_number AS employee_bank_account_number, employee.bank_sort_code AS employee_bank_sort_code, employee.employment_type AS employee_employment_type, employee.grade_level AS employee_grade_level, employee.step AS employee_step, employee.created_at AS employee_created_at, employee.updated_at AS employee_updated_at 
+FROM employee) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 12:52:53,808] ERROR in hr: HR dashboard error: (sqlite3.OperationalError) no such column: employee.basic_salary
+[SQL: SELECT count(*) AS count_1 
+FROM (SELECT employee.id AS employee_id, employee.staff_code AS employee_staff_code, employee.name AS employee_name, employee.email AS employee_email, employee.role AS employee_role, employee.department AS employee_department, employee.status AS employee_status, employee.site AS employee_site, employee.dob AS employee_dob, employee.next_of_kin AS employee_next_of_kin, employee.next_of_kin_relationship AS employee_next_of_kin_relationship, employee.next_of_kin_address AS employee_next_of_kin_address, employee.next_of_kin_phone AS employee_next_of_kin_phone, employee.position AS employee_position, employee.date_of_employment AS employee_date_of_employment, employee.employment_letter AS employee_employment_letter, employee.sectional_head AS employee_sectional_head, employee.job_description AS employee_job_description, employee.academic_qualification_at_employment AS employee_academic_qualification_at_employment, employee.present_academic_qualification AS employee_present_academic_qualification, employee.current_address AS employee_current_address, employee.permanent_address AS employee_permanent_address, employee.phone AS employee_phone, employee.degree AS employee_degree, employee.institution AS employee_institution, employee.current_certification AS employee_current_certification, employee.present_assignment AS employee_present_assignment, employee.employment_dates AS employee_employment_dates, employee.past_job_title AS employee_past_job_title, employee.past_employer_dates AS employee_past_employer_dates, employee.past_accomplishments AS employee_past_accomplishments, employee.technical_skills AS employee_technical_skills, employee.soft_skills AS employee_soft_skills, employee.certifications AS employee_certifications, employee.team_info AS employee_team_info, employee.notes AS employee_notes, employee.sectional_head_upgrade AS employee_sectional_head_upgrade, employee.job_description_upgrade AS employee_job_description_upgrade, employee.basic_salary AS employee_basic_salary, employee.housing_allowance AS employee_housing_allowance, employee.transport_allowance AS employee_transport_allowance, employee.medical_allowance AS employee_medical_allowance, employee.special_allowance AS employee_special_allowance, employee.overtime_rate AS employee_overtime_rate, employee.tax_number AS employee_tax_number, employee.pension_number AS employee_pension_number, employee.bank_name AS employee_bank_name, employee.bank_account_number AS employee_bank_account_number, employee.bank_sort_code AS employee_bank_sort_code, employee.employment_type AS employee_employment_type, employee.grade_level AS employee_grade_level, employee.step AS employee_step, employee.created_at AS employee_created_at, employee.updated_at AS employee_updated_at 
+FROM employee) AS anon_1]
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+[2025-10-13 13:09:18,124] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 13:09:18,139] INFO in hr: Found 2 payroll history records
+[2025-10-13 13:09:18,146] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 13:09:18,149] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 13:09:18,191] ERROR in hr: Payroll error: type object 'PayrollApproval' has no attribute 'period_year'
+[2025-10-13 14:26:19,174] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 14:26:19,178] INFO in hr: Found 2 payroll history records
+[2025-10-13 14:26:19,179] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:26:19,179] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:26:19,200] INFO in hr: Payroll data created successfully
+[2025-10-13 14:26:19,243] ERROR in hr: Payroll error: 'str' object is not callable
+[2025-10-13 14:27:57,671] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 14:27:57,675] INFO in hr: Found 2 payroll history records
+[2025-10-13 14:27:57,675] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:27:57,676] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:27:57,693] INFO in hr: Payroll data created successfully
+[2025-10-13 14:27:57,757] ERROR in hr: Payroll error: 'str' object is not callable
+[2025-10-13 14:34:35,829] INFO in hr: Starting payroll route processing
+[2025-10-13 14:34:35,831] INFO in hr: Current date info: 2025-10-13 14:34:35.831692, month: 10, year: 2025
+[2025-10-13 14:34:35,838] INFO in hr: Total payroll calculated: 0
+[2025-10-13 14:34:35,855] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 14:34:35,859] INFO in hr: Found 2 payroll history records
+[2025-10-13 14:34:35,860] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:34:35,860] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:34:35,874] INFO in hr: Querying PayrollApproval
+[2025-10-13 14:34:35,882] INFO in hr: Current approval found: None
+[2025-10-13 14:34:35,882] INFO in hr: Getting detailed payroll breakdown
+[2025-10-13 14:34:35,887] INFO in hr: Found 3 current payrolls
+[2025-10-13 14:34:35,888] INFO in hr: Calculating totals
+[2025-10-13 14:34:35,890] INFO in hr: Totals calculated - Gross: 565252.0, Deductions: 0, Net: 0
+[2025-10-13 14:34:35,891] INFO in hr: Building payroll data dictionary
+[2025-10-13 14:34:35,891] INFO in hr: Date strings created - next_payday: November 05, 2025, current_month: October
+[2025-10-13 14:34:35,892] INFO in hr: Payroll data created successfully
+[2025-10-13 14:34:35,893] INFO in hr: About to render template
+[2025-10-13 14:34:35,988] ERROR in hr: Template rendering error: 'str' object is not callable
+[2025-10-13 14:34:35,990] ERROR in hr: Payroll error: 'str' object is not callable
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\hr.py", line 650, in payroll
+    raise template_error
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\hr.py", line 645, in payroll
+    return render_template('hr/payroll/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\payroll\index.html", line 1, in top-level template code
+    {% extends "hr/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\base.html", line 150, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\payroll\index.html", line 416, in block 'content'
+    {{ csrf_token() }}
+TypeError: 'str' object is not callable
+[2025-10-13 14:38:45,948] INFO in hr: Starting payroll route processing
+[2025-10-13 14:38:45,951] INFO in hr: Current date info: 2025-10-13 14:38:45.951616, month: 10, year: 2025
+[2025-10-13 14:38:45,971] INFO in hr: Total payroll calculated: 0
+[2025-10-13 14:38:45,988] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 14:38:45,992] INFO in hr: Found 2 payroll history records
+[2025-10-13 14:38:45,993] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:38:45,994] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:38:46,005] INFO in hr: Querying PayrollApproval
+[2025-10-13 14:38:46,022] INFO in hr: Current approval found: None
+[2025-10-13 14:38:46,022] INFO in hr: Getting detailed payroll breakdown
+[2025-10-13 14:38:46,027] INFO in hr: Found 3 current payrolls
+[2025-10-13 14:38:46,028] INFO in hr: Calculating totals
+[2025-10-13 14:38:46,028] INFO in hr: Totals calculated - Gross: 565252.0, Deductions: 0, Net: 0
+[2025-10-13 14:38:46,029] INFO in hr: Building payroll data dictionary
+[2025-10-13 14:38:46,030] INFO in hr: Date strings created - next_payday: November 05, 2025, current_month: October
+[2025-10-13 14:38:46,031] INFO in hr: Payroll data created successfully
+[2025-10-13 14:38:46,032] INFO in hr: About to render template
+[2025-10-13 14:38:46,189] ERROR in hr: Template rendering error: 'str' object is not callable
+[2025-10-13 14:38:46,190] ERROR in hr: Payroll error: 'str' object is not callable
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\hr.py", line 651, in payroll
+    raise template_error
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\hr.py", line 646, in payroll
+    return render_template('hr/payroll/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\payroll\index.html", line 1, in top-level template code
+    {% extends "hr/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\base.html", line 150, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\payroll\index.html", line 416, in block 'content'
+    {{ csrf_token() }}
+TypeError: 'str' object is not callable
+[2025-10-13 14:38:57,038] INFO in hr: Starting payroll route processing
+[2025-10-13 14:38:57,039] INFO in hr: Current date info: 2025-10-13 14:38:57.039371, month: 10, year: 2025
+[2025-10-13 14:38:57,041] INFO in hr: Total payroll calculated: 0
+[2025-10-13 14:38:57,044] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 14:38:57,045] INFO in hr: Found 2 payroll history records
+[2025-10-13 14:38:57,046] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:38:57,047] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:38:57,048] INFO in hr: Querying PayrollApproval
+[2025-10-13 14:38:57,050] INFO in hr: Current approval found: None
+[2025-10-13 14:38:57,050] INFO in hr: Getting detailed payroll breakdown
+[2025-10-13 14:38:57,052] INFO in hr: Found 3 current payrolls
+[2025-10-13 14:38:57,052] INFO in hr: Calculating totals
+[2025-10-13 14:38:57,053] INFO in hr: Totals calculated - Gross: 565252.0, Deductions: 0, Net: 0
+[2025-10-13 14:38:57,054] INFO in hr: Building payroll data dictionary
+[2025-10-13 14:38:57,054] INFO in hr: Date strings created - next_payday: November 05, 2025, current_month: October
+[2025-10-13 14:38:57,055] INFO in hr: Payroll data created successfully
+[2025-10-13 14:38:57,056] INFO in hr: About to render template
+[2025-10-13 14:38:57,060] ERROR in hr: Template rendering error: 'str' object is not callable
+[2025-10-13 14:38:57,061] ERROR in hr: Payroll error: 'str' object is not callable
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\hr.py", line 651, in payroll
+    raise template_error
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\hr.py", line 646, in payroll
+    return render_template('hr/payroll/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\payroll\index.html", line 1, in top-level template code
+    {% extends "hr/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\base.html", line 150, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\payroll\index.html", line 416, in block 'content'
+    {{ csrf_token() }}
+TypeError: 'str' object is not callable
+[2025-10-13 14:48:33,304] INFO in hr: Starting payroll route processing
+[2025-10-13 14:48:33,308] INFO in hr: Current date info: 2025-10-13 14:48:33.308009, month: 10, year: 2025
+[2025-10-13 14:48:33,313] INFO in hr: Total payroll calculated: 0
+[2025-10-13 14:48:33,340] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 14:48:33,345] INFO in hr: Found 2 payroll history records
+[2025-10-13 14:48:33,346] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:48:33,346] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:48:33,360] INFO in hr: Querying PayrollApproval
+[2025-10-13 14:48:33,367] INFO in hr: Current approval found: None
+[2025-10-13 14:48:33,368] INFO in hr: Getting detailed payroll breakdown
+[2025-10-13 14:48:33,372] INFO in hr: Found 3 current payrolls
+[2025-10-13 14:48:33,375] INFO in hr: Calculating totals
+[2025-10-13 14:48:33,376] INFO in hr: Totals calculated - Gross: 565252.0, Deductions: 0, Net: 0
+[2025-10-13 14:48:33,376] INFO in hr: Building payroll data dictionary
+[2025-10-13 14:48:33,377] INFO in hr: Date strings created - next_payday: November 05, 2025, current_month: October
+[2025-10-13 14:48:33,378] INFO in hr: Payroll data created successfully
+[2025-10-13 14:48:33,379] INFO in hr: About to render template
+[2025-10-13 14:48:39,790] INFO in hr: Starting payroll route processing
+[2025-10-13 14:48:39,791] INFO in hr: Current date info: 2025-10-13 14:48:39.791189, month: 10, year: 2025
+[2025-10-13 14:48:39,792] INFO in hr: Total payroll calculated: 0
+[2025-10-13 14:48:39,794] INFO in hr: next_payday type: <class 'datetime.datetime'>, value: 2025-11-05 00:00:00
+[2025-10-13 14:48:39,795] INFO in hr: Found 2 payroll history records
+[2025-10-13 14:48:39,796] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:48:39,797] INFO in hr: Processing payroll record: created_at type=<class 'datetime.datetime'>, period_start type=<class 'datetime.date'>
+[2025-10-13 14:48:39,799] INFO in hr: Querying PayrollApproval
+[2025-10-13 14:48:39,801] INFO in hr: Current approval found: None
+[2025-10-13 14:48:39,802] INFO in hr: Getting detailed payroll breakdown
+[2025-10-13 14:48:39,803] INFO in hr: Found 3 current payrolls
+[2025-10-13 14:48:39,804] INFO in hr: Calculating totals
+[2025-10-13 14:48:39,804] INFO in hr: Totals calculated - Gross: 565252.0, Deductions: 0, Net: 0
+[2025-10-13 14:48:39,805] INFO in hr: Building payroll data dictionary
+[2025-10-13 14:48:39,806] INFO in hr: Date strings created - next_payday: November 05, 2025, current_month: October
+[2025-10-13 14:48:39,807] INFO in hr: Payroll data created successfully
+[2025-10-13 14:48:39,807] INFO in hr: About to render template
+[2025-10-14 08:11:23,939] INFO in hr: New HR task created: 1
+[2025-10-14 08:22:45,157] ERROR in hr: Reports error: 'str' object is not callable
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\hr.py", line 2689, in reports
+    return render_template('hr/reports/index.html', reports=report_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\reports\index.html", line 1, in top-level template code
+    {% extends "hr/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\base.html", line 155, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\reports\index.html", line 334, in block 'content'
+    {% block extra_js %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\reports\index.html", line 596, in block 'extra_js'
+    'X-CSRFToken': '{{ csrf_token() }}',
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: 'str' object is not callable
+[2025-10-14 08:23:45,887] ERROR in hr: Reports error: 'str' object is not callable
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\hr.py", line 2689, in reports
+    return render_template('hr/reports/index.html', reports=report_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\reports\index.html", line 1, in top-level template code
+    {% extends "hr/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\base.html", line 155, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\reports\index.html", line 334, in block 'content'
+    {% block extra_js %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\hr\reports\index.html", line 596, in block 'extra_js'
+    'X-CSRFToken': '{{ csrf_token() }}',
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: 'str' object is not callable
+[2025-10-18 14:48:59,044] ERROR in hr: Logout error: Could not build url for endpoint 'auth.login'. Did you mean 'main.login' instead?
+[2025-10-18 14:51:17,173] ERROR in admin: Error in oversight_reports_view: 'PurchaseOrder' object has no attribute 'supplier'
+[2025-10-18 14:51:22,147] ERROR in admin: Error in oversight_reports_view: 'PurchaseOrder' object has no attribute 'supplier'
+[2025-10-18 14:53:31,439] ERROR in email: Email send error: [Errno 11001] getaddrinfo failed
+[2025-10-18 14:53:31,441] ERROR in email: Email send error: [Errno 11001] getaddrinfo failed
+[2025-10-18 14:53:31,443] INFO in admin: Reporting line created: St patrick Ghost reports to kelvin
+[2025-10-18 14:56:22,273] ERROR in finance: Logout error: Could not build url for endpoint 'auth.login'. Did you mean 'main.login' instead?
+[2025-10-18 14:56:50,381] ERROR in finance: Logout error: Could not build url for endpoint 'auth.login'. Did you mean 'main.login' instead?
+[2025-10-18 14:58:29,036] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:58:29,036] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:58:29,050] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:58:29,052] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:58:29,080] ERROR in project: Project dashboard error: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\project.py", line 117, in project_home
+    return render_template('projects/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\index.html", line 267, in template
+    {% endif %}
+jinja2.exceptions.TemplateSyntaxError: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+[2025-10-18 14:59:26,104] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:59:26,106] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:59:26,111] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:59:26,116] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:59:26,131] ERROR in project: Project dashboard error: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\project.py", line 117, in project_home
+    return render_template('projects/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\index.html", line 267, in template
+    {% endif %}
+jinja2.exceptions.TemplateSyntaxError: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+[2025-10-18 14:59:35,759] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:59:35,761] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:59:35,761] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:59:35,768] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 14:59:35,778] ERROR in project: Project dashboard error: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\project.py", line 117, in project_home
+    return render_template('projects/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\index.html", line 267, in template
+    {% endif %}
+jinja2.exceptions.TemplateSyntaxError: Unexpected end of template. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+[2025-10-18 15:03:43,108] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:03:43,114] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:03:43,118] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:03:43,120] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:38,148] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:38,158] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:38,164] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:38,164] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:42,495] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:42,500] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:42,502] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:42,505] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:43,333] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:43,341] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:43,345] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:04:43,355] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:05:05,442] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:05:05,450] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:05:05,453] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:05:05,456] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:05:12,798] ERROR in project: Project details error: 'models.Project object' has no attribute 'staff'
+[2025-10-18 15:05:32,482] ERROR in project: Project details error: 'models.Project object' has no attribute 'staff'
+[2025-10-18 15:05:35,162] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:05:35,164] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:05:35,164] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:05:35,168] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:05:40,059] ERROR in project: Project details error: 'models.Project object' has no attribute 'staff'
+[2025-10-18 15:08:53,590] ERROR in project: Project details error: 'models.Project object' has no attribute 'staff'
+[2025-10-18 15:08:56,211] ERROR in project: Project details error: 'models.Project object' has no attribute 'staff'
+[2025-10-18 15:12:11,978] ERROR in project: Project details error: Could not build url for endpoint 'project.project_reports' with values ['project_id']. Did you mean 'project.project_details' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\project.py", line 206, in project_details
+    return render_template('projects/details.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\details.html", line 1, in top-level template code
+    {% extends "projects/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\base.html", line 136, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\details.html", line 103, in block 'content'
+    <a href="{{ url_for('project.project_reports', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project.project_reports' with values ['project_id']. Did you mean 'project.project_details' instead?
+[2025-10-18 15:12:16,474] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:12:16,478] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:12:16,480] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:12:16,482] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:12:19,442] ERROR in project: Project details error: Could not build url for endpoint 'project.project_reports' with values ['project_id']. Did you mean 'project.project_details' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\project.py", line 206, in project_details
+    return render_template('projects/details.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\details.html", line 1, in top-level template code
+    {% extends "projects/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\base.html", line 136, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\details.html", line 103, in block 'content'
+    <a href="{{ url_for('project.project_reports', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project.project_reports' with values ['project_id']. Did you mean 'project.project_details' instead?
+[2025-10-18 15:12:36,157] ERROR in project: Project details error: Could not build url for endpoint 'project.project_reports' with values ['project_id']. Did you mean 'project.project_details' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\project.py", line 206, in project_details
+    return render_template('projects/details.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\details.html", line 1, in top-level template code
+    {% extends "projects/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\base.html", line 136, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\details.html", line 103, in block 'content'
+    <a href="{{ url_for('project.project_reports', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project.project_reports' with values ['project_id']. Did you mean 'project.project_details' instead?
+[2025-10-18 15:15:36,788] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:15:36,792] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:15:36,795] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:15:36,797] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:24:26,172] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:24:26,175] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:24:26,176] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:24:26,176] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:27:41,109] ERROR in project: Error processing project 4: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:27:41,115] ERROR in project: Error processing project 3: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:27:41,116] ERROR in project: Error processing project 2: object of type 'AppenderQuery' has no len()
+[2025-10-18 15:27:41,116] ERROR in project: Error processing project 1: object of type 'AppenderQuery' has no len()
+[2025-10-18 23:33:05,435] ERROR in admin: Project details error: name 'StaffAssignment' is not defined
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 2796, in project_details
+    user_assignment = StaffAssignment.query.filter_by(
+                      ^^^^^^^^^^^^^^^
+NameError: name 'StaffAssignment' is not defined
+[2025-10-18 23:34:39,671] ERROR in admin: Project details error: name 'StaffAssignment' is not defined
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 2811, in project_details
+    user_assignment = StaffAssignment.query.filter_by(
+                      ^^^^^^^^^^^^^^^
+NameError: name 'StaffAssignment' is not defined
+[2025-10-19 00:01:49,716] ERROR in admin: Error loading project form: Object of type Undefined is not JSON serializable
+[2025-10-19 00:01:58,437] ERROR in admin: Error loading project form: Object of type Undefined is not JSON serializable
+[2025-10-19 00:20:23,487] ERROR in admin: Error loading project form: Object of type Undefined is not JSON serializable
+[2025-10-19 00:51:49,812] ERROR in admin: Error loading project form: 'str' object is not callable
+[2025-10-19 01:00:06,261] ERROR in admin: Error creating project: 'remaining_amount' is an invalid keyword argument for Budget
+[2025-10-19 01:36:20,230] ERROR in admin: Admin project details error: Encountered unknown tag 'else'. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 3200, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 881, in template
+    {% else %}
+jinja2.exceptions.TemplateSyntaxError: Encountered unknown tag 'else'. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+[2025-10-19 01:42:56,614] ERROR in admin: Admin project details error: Encountered unknown tag 'else'. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 3200, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 881, in template
+    {% else %}
+jinja2.exceptions.TemplateSyntaxError: Encountered unknown tag 'else'. Jinja was looking for the following tags: 'endblock'. The innermost block that needs to be closed is 'block'.
+[2025-10-19 01:45:49,060] ERROR in admin: Admin project details error: Could not build url for endpoint 'admin.edit_project' with values ['project_id']. Did you mean 'admin.add_project' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 3200, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 536, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 120, in block 'content'
+    <a href="{{ url_for('admin.edit_project', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'admin.edit_project' with values ['project_id']. Did you mean 'admin.add_project' instead?
+[2025-10-19 01:46:02,035] ERROR in admin: Admin project details error: Could not build url for endpoint 'admin.edit_project' with values ['project_id']. Did you mean 'admin.add_project' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 3200, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 536, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 120, in block 'content'
+    <a href="{{ url_for('admin.edit_project', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'admin.edit_project' with values ['project_id']. Did you mean 'admin.add_project' instead?
+[2025-10-19 01:46:32,082] ERROR in admin: Admin project details error: Could not build url for endpoint 'admin.edit_project' with values ['project_id']. Did you mean 'admin.add_project' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 3200, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 536, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 120, in block 'content'
+    <a href="{{ url_for('admin.edit_project', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'admin.edit_project' with values ['project_id']. Did you mean 'admin.add_project' instead?
+[2025-10-19 01:54:25,214] ERROR in admin: Admin project details error: Could not build url for endpoint 'admin.edit_project' with values ['project_id']. Did you mean 'admin.add_project' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 3200, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 536, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 120, in block 'content'
+    <a href="{{ url_for('admin.edit_project', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'admin.edit_project' with values ['project_id']. Did you mean 'admin.add_project' instead?
+[2025-10-19 10:14:57,616] ERROR in admin: Admin project details error: Could not build url for endpoint 'admin.tasks' with values ['project_id']. Did you mean 'admin.assets' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 3200, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 536, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1272, in block 'content'
+    window.location.href = "{{ url_for('admin.tasks', project_id=project.id) }}";
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'admin.tasks' with values ['project_id']. Did you mean 'admin.assets' instead?
+[2025-10-19 10:20:34,780] ERROR in admin: Admin project details error: 'globals' is undefined
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\routes\admin.py", line 3200, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 536, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1277, in block 'content'
+    window.location.href = "{{ url_for('admin.project_expenses', project_id=project.id) if 'project_expenses' in globals() else '/admin/projects/' ~ project.id ~ '/expenses' }}";
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\utils.py", line 83, in from_obj
+    if hasattr(obj, "jinja_pass_arg"):
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+jinja2.exceptions.UndefinedError: 'globals' is undefined

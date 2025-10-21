@@ -1,75 +1,672 @@
-{% extends "admin/base.html" %}
+{% extends "admin/base_simple.html" %}
 
-{% block title %}Create New Project | SammyA{% endblock %}
+{% block title %}Create New Project - Admin Dashboard{% endblock %}
+
+{% block head %}
+{{ super() }}
+{% endblock %}
 
 {% block content %}
 <div class="flex justify-center items-center min-h-[70vh] bg-gray-50">
-  <div class="w-full max-w-2xl bg-white rounded-2xl shadow-xl p-10 border border-gray-100">
+  <div class="w-full max-w-6xl bg-white rounded-2xl shadow-xl p-10 border border-gray-100">
     <div class="flex items-center mb-8">
       <div class="bg-blue-100 p-3 rounded-full mr-4">
         <i class='bx bx-plus-circle text-3xl text-blue-600'></i>
       </div>
       <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Create New Project</h2>
     </div>
-    <p class="text-gray-600 mb-6">Comprehensive view of project information and schedule</p>
-    <form method="POST" action="{{ url_for('admin.add_project') }}" enctype="multipart/form-data" class="space-y-7">
-      {{ form.hidden_tag() }}
-      <div>
-        <label class="block text-gray-700 font-semibold mb-2">Project Name</label>
-        {{ form.name(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-blue-500") }}
-      </div>
-      <div>
-        <label class="block text-gray-700 font-semibold mb-2">Description</label>
-        {{ form.description(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-blue-500") }}
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="block text-gray-700 font-semibold mb-2">Start Date</label>
-          {{ form.start_date(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-blue-500", type="date") }}
-        </div>
-        <div>
-          <label class="block text-gray-700 font-semibold mb-2">End Date</label>
-          {{ form.end_date(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-blue-500", type="date") }}
-        </div>
-      </div>
-      <div>
-        <label class="block text-gray-700 font-semibold mb-2">Project Manager</label>
-        {{ form.project_manager(class="select p-2 border select-bordered w-full focus:ring-2 focus:ring-blue-500") }}
-      </div>
-      <div>
-        <label class="block text-gray-700 font-semibold mb-2">Budget</label>
-        {{ form.budget(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-blue-500", type="number", step="0.01") }}
-      </div>
-      <div>
-        <label class="block text-gray-700 font-semibold mb-2">Status</label>
-        {{ form.status(class="select p-2 border select-bordered w-full focus:ring-2 focus:ring-blue-500") }}
-      </div>
-      <div>
-        <label class="block text-gray-700 font-semibold mb-2">Project Image</label>
-        {{ form.image(class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-blue-500") }}
-      </div>
-      <div>
-        <label class="block text-gray-700 font-semibold mb-2">Assign Staff</label>
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label class="block text-gray-600 mb-1">Select Staff</label>
-            {{ form.staff(class="select p-2 border select-bordered w-full focus:ring-2 focus:ring-blue-500") }}
+    <p class="text-gray-600 mb-6">Setup comprehensive project details, budget allocation, timeline, and team assignments</p>
+
+    <!-- Display Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="mb-4 p-4 rounded-lg {% if category == 'error' %}bg-red-100 text-red-700 border border-red-300{% elif category == 'success' %}bg-green-100 text-green-700 border border-green-300{% else %}bg-blue-100 text-blue-700 border border-blue-300{% endif %}">
+            <i class='bx {% if category == 'error' %}bx-error-circle{% elif category == 'success' %}bx-check-circle{% else %}bx-info-circle{% endif %} mr-2'></i>
+            {{ message }}
           </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('admin.add_project') }}" class="space-y-8" id="projectForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+      <!-- Project Basic Information -->
+      <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <i class='bx bx-info-circle text-blue-600 mr-2'></i>
+          Project Information
+        </h3>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="lg:col-span-2">
+            <label class="block text-gray-700 font-semibold mb-2" for="name">
+              Project Name <span class="text-red-500">*</span>
+            </label>
+            <input type="text" name="name" id="name" required 
+                   value="{{ form_data.name or '' }}"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   placeholder="Enter comprehensive project name">
+            <p class="text-sm text-gray-500 mt-1">Provide a clear and descriptive name for the project</p>
+          </div>
+          
+          <div class="lg:col-span-2">
+            <label class="block text-gray-700 font-semibold mb-2" for="description">Project Description</label>
+            <textarea name="description" id="description" rows="4"
+                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Detailed project scope, objectives, and key deliverables">{{ form_data.description or '' }}</textarea>
+          </div>
+
           <div>
-            <label class="block text-gray-600 mb-1">Role</label>
-            <input type="text" name="staff_role" class="input p-2 border input-bordered w-full focus:ring-2 focus:ring-blue-500" placeholder="Staff Role">
+            <label class="block text-gray-700 font-semibold mb-2" for="project_type">Project Type</label>
+            <select name="project_type" id="project_type"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">Select Project Type</option>
+              <option value="Construction" {{ 'selected' if form_data.project_type == 'Construction' else '' }}>Construction</option>
+              <option value="Infrastructure" {{ 'selected' if form_data.project_type == 'Infrastructure' else '' }}>Infrastructure</option>
+              <option value="Renovation" {{ 'selected' if form_data.project_type == 'Renovation' else '' }}>Renovation</option>
+              <option value="Maintenance" {{ 'selected' if form_data.project_type == 'Maintenance' else '' }}>Maintenance</option>
+              <option value="Development" {{ 'selected' if form_data.project_type == 'Development' else '' }}>Development</option>
+              <option value="Commercial" {{ 'selected' if form_data.project_type == 'Commercial' else '' }}>Commercial</option>
+              <option value="Residential" {{ 'selected' if form_data.project_type == 'Residential' else '' }}>Residential</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="priority">Project Priority</label>
+            <select name="priority" id="priority"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="Medium" {{ 'selected' if form_data.priority == 'Medium' else '' }}>Medium</option>
+              <option value="Low" {{ 'selected' if form_data.priority == 'Low' else '' }}>Low</option>
+              <option value="High" {{ 'selected' if form_data.priority == 'High' else '' }}>High</option>
+              <option value="Critical" {{ 'selected' if form_data.priority == 'Critical' else '' }}>Critical</option>
+            </select>
           </div>
         </div>
       </div>
-      <button type="submit" class="w-full py-3 px-6 bg-blue-600 text-white font-bold rounded-lg shadow hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
-        <i class='bx bx-send text-xl'></i> Create Project
-      </button>
+
+      <!-- Project Timeline -->
+      <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <i class='bx bx-calendar text-green-600 mr-2'></i>
+          Project Timeline
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="start_date">
+              Start Date <span class="text-red-500">*</span>
+            </label>
+            <input type="date" name="start_date" id="start_date" required
+                   value="{{ form_data.start_date or '' }}"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+          
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="end_date">
+              Expected End Date <span class="text-red-500">*</span>
+            </label>
+            <input type="date" name="end_date" id="end_date" required
+                   value="{{ form_data.end_date or '' }}"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="duration_months">Estimated Duration (Months)</label>
+            <input type="number" name="duration_months" id="duration_months" step="0.5" min="0.5" max="120"
+                   value="{{ form_data.duration_months or '' }}"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   placeholder="Auto-calculated" readonly>
+            <p class="text-sm text-gray-500 mt-1">Automatically calculated from dates</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team Management -->
+      <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <i class='bx bx-group text-purple-600 mr-2'></i>
+          Team & Management
+        </h3>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="project_manager">
+              Project Manager <span class="text-red-500">*</span>
+            </label>
+            <select name="project_manager" id="project_manager" required
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">Select Project Manager</option>
+              {% if employees %}
+                {% for employee in employees %}
+                  <option value="{{ employee.name }}" {{ 'selected' if form_data.project_manager == employee.name else '' }}>
+                    {{ employee.name }} - {{ employee.position or employee.role or 'Staff' }}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+            {% if not employees %}
+              <p class="text-sm text-yellow-600 mt-1 flex items-center">
+                <i class='bx bx-error-alt mr-1'></i>
+                No active employees found. Please add employees first.
+              </p>
+            {% endif %}
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="client_name">Client/Stakeholder</label>
+            <input type="text" name="client_name" id="client_name"
+                   value="{{ form_data.client_name or '' }}"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   placeholder="Primary client or stakeholder name">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="site_location">Site Location</label>
+            <input type="text" name="site_location" id="site_location"
+                   value="{{ form_data.site_location or '' }}"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   placeholder="Project site address or location">
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="status">Project Status</label>
+            <select name="status" id="status"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="Planning" {{ 'selected' if form_data.status == 'Planning' else '' }}>Planning</option>
+              <option value="Active" {{ 'selected' if form_data.status == 'Active' else '' }}>Active</option>
+              <option value="On Hold" {{ 'selected' if form_data.status == 'On Hold' else '' }}>On Hold</option>
+              <option value="Completed" {{ 'selected' if form_data.status == 'Completed' else '' }}>Completed</option>
+              <option value="Cancelled" {{ 'selected' if form_data.status == 'Cancelled' else '' }}>Cancelled</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Financial Information -->
+      <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <i class='bx bx-wallet text-yellow-600 mr-2'></i>
+          Financial Planning
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="budget">
+              Total Budget (₦) <span class="text-red-500">*</span>
+            </label>
+            <input type="number" name="budget" id="budget" step="0.01" min="0" required
+                   value="{{ form_data.budget or '' }}"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   placeholder="Total project budget">
+            <p class="text-sm text-gray-500 mt-1">Enter the total budget amount in Nigerian Naira</p>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="contingency_budget">Contingency Budget (₦)</label>
+            <input type="number" name="contingency_budget" id="contingency_budget" step="0.01" min="0"
+                   value="{{ form_data.contingency_budget or '' }}"
+                   class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                   placeholder="Emergency/contingency fund">
+            <p class="text-sm text-gray-500 mt-1">Recommended: 10-15% of total budget</p>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="funding_source">Funding Source</label>
+            <select name="funding_source" id="funding_source"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">Select Funding Source</option>
+              <option value="Internal" {{ 'selected' if form_data.funding_source == 'Internal' else '' }}>Internal Funding</option>
+              <option value="Client Payment" {{ 'selected' if form_data.funding_source == 'Client Payment' else '' }}>Client Payment</option>
+              <option value="Bank Loan" {{ 'selected' if form_data.funding_source == 'Bank Loan' else '' }}>Bank Loan</option>
+              <option value="Investment" {{ 'selected' if form_data.funding_source == 'Investment' else '' }}>Investment</option>
+              <option value="Government Grant" {{ 'selected' if form_data.funding_source == 'Government Grant' else '' }}>Government Grant</option>
+              <option value="Mixed Funding" {{ 'selected' if form_data.funding_source == 'Mixed Funding' else '' }}>Mixed Funding</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Risk Management & Compliance -->
+      <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+          <i class='bx bx-shield text-red-600 mr-2'></i>
+          Risk & Compliance
+        </h3>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="risk_level">Risk Assessment Level</label>
+            <select name="risk_level" id="risk_level"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="Low" {{ 'selected' if form_data.risk_level == 'Low' else '' }}>Low Risk</option>
+              <option value="Medium" {{ 'selected' if form_data.risk_level == 'Medium' else '' }}>Medium Risk</option>
+              <option value="High" {{ 'selected' if form_data.risk_level == 'High' else '' }}>High Risk</option>
+              <option value="Critical" {{ 'selected' if form_data.risk_level == 'Critical' else '' }}>Critical Risk</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-gray-700 font-semibold mb-2" for="safety_requirements">Safety Requirements</label>
+            <select name="safety_requirements" id="safety_requirements"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="Standard" {{ 'selected' if form_data.safety_requirements == 'Standard' else '' }}>Standard Safety</option>
+              <option value="Enhanced" {{ 'selected' if form_data.safety_requirements == 'Enhanced' else '' }}>Enhanced Safety</option>
+              <option value="High Security" {{ 'selected' if form_data.safety_requirements == 'High Security' else '' }}>High Security</option>
+              <option value="Specialized" {{ 'selected' if form_data.safety_requirements == 'Specialized' else '' }}>Specialized Safety</option>
+            </select>
+          </div>
+
+          <div class="lg:col-span-2">
+            <label class="block text-gray-700 font-semibold mb-2" for="regulatory_requirements">Regulatory Requirements</label>
+            <textarea name="regulatory_requirements" id="regulatory_requirements" rows="3"
+                      class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Required permits, licenses, compliance standards, environmental considerations">{{ form_data.regulatory_requirements or '' }}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="bg-gray-50 p-6 rounded-xl border border-gray-200">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <button type="submit" class="flex-1 sm:flex-none px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 transition-all flex items-center justify-center gap-2 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+            <i class='bx bx-send text-xl'></i>
+            <span>Create Project</span>
+          </button>
+          
+         
+        </div>
+      </div>
     </form>
-    <div class="flex gap-4 mt-8 justify-center">
-      <a href="{{ url_for('admin.projects') }}" class="inline-flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg shadow hover:bg-gray-300 transition-all">
-        <i class='bx bx-arrow-back text-lg'></i> Back to Projects
-      </a>
-    </div>
+    
+    <!-- Navigation Links -->
+  
   </div>
 </div>
+
+<!-- Enhanced JavaScript for Business Logic -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('projectForm');
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const durationInput = document.getElementById('duration_months');
+    const budgetInput = document.getElementById('budget');
+    const contingencyInput = document.getElementById('contingency_budget');
+    const projectNameInput = document.getElementById('name');
+
+    // Set minimum dates to today
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.setAttribute('min', today);
+
+    // Auto-calculate duration when dates change
+    function calculateDuration() {
+        if (startDateInput.value && endDateInput.value) {
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+            const timeDiff = endDate.getTime() - startDate.getTime();
+            const monthsDiff = Math.ceil(timeDiff / (1000 * 3600 * 24 * 30.44));
+            if (monthsDiff > 0) {
+                durationInput.value = monthsDiff;
+                
+                // Color code based on duration
+                if (monthsDiff <= 3) {
+                    durationInput.style.backgroundColor = '#dcfce7'; // green
+                } else if (monthsDiff <= 12) {
+                    durationInput.style.backgroundColor = '#fef3c7'; // yellow
+                } else {
+                    durationInput.style.backgroundColor = '#fecaca'; // red
+                }
+            }
+        }
+    }
+
+    // Auto-suggest contingency budget (10% of total budget)
+    function suggestContingency() {
+        if (budgetInput.value && !contingencyInput.value) {
+            const budget = parseFloat(budgetInput.value);
+            const suggestedContingency = Math.round(budget * 0.1);
+            contingencyInput.placeholder = `Suggested: ₦${suggestedContingency.toLocaleString()}`;
+            contingencyInput.value = suggestedContingency;
+        }
+    }
+
+    // Validate dates
+    function validateDates() {
+        if (startDateInput.value && endDateInput.value) {
+            const startDate = new Date(startDateInput.value);
+            const endDate = new Date(endDateInput.value);
+            
+            if (endDate <= startDate) {
+                endDateInput.setCustomValidity('End date must be after start date');
+                showFieldError(endDateInput, 'End date must be after start date');
+            } else {
+                endDateInput.setCustomValidity('');
+                clearFieldError(endDateInput);
+            }
+            
+            // Update minimum end date
+            endDateInput.setAttribute('min', startDateInput.value);
+        }
+    }
+
+    // Show field error
+    function showFieldError(field, message) {
+        field.classList.add('border-red-500', 'bg-red-50');
+        field.classList.remove('border-gray-300');
+        
+        // Remove existing error message
+        const existingError = field.parentNode.querySelector('.error-message');
+        if (existingError) {
+            existingError.remove();
+        }
+        
+        // Add error message
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error-message text-red-500 text-sm mt-1';
+        errorDiv.textContent = message;
+        field.parentNode.appendChild(errorDiv);
+    }
+
+    // Clear field error
+    function clearFieldError(field) {
+        field.classList.remove('border-red-500', 'bg-red-50');
+        field.classList.add('border-gray-300');
+        
+        const errorMessage = field.parentNode.querySelector('.error-message');
+        if (errorMessage) {
+            errorMessage.remove();
+        }
+    }
+
+    // Event listeners
+    startDateInput.addEventListener('change', function() {
+        calculateDuration();
+        validateDates();
+    });
+    
+    endDateInput.addEventListener('change', function() {
+        calculateDuration();
+        validateDates();
+    });
+    
+    budgetInput.addEventListener('blur', function() {
+        suggestContingency();
+        
+        // Budget validation
+        const budget = parseFloat(this.value);
+        if (budget < 50000) {
+            showFieldError(this, 'Budget seems low for a construction project');
+        } else if (budget > 1000000000) {
+            showFieldError(this, 'Budget is very high. Please confirm this is correct');
+        } else {
+            clearFieldError(this);
+        }
+    });
+
+    // Project name validation
+    projectNameInput.addEventListener('input', function() {
+        if (this.value.length > 255) {
+            this.value = this.value.substring(0, 255);
+            showFieldError(this, 'Project name must be less than 255 characters');
+        } else {
+            clearFieldError(this);
+        }
+    });
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Clear all previous errors
+        const errorMessages = form.querySelectorAll('.error-message');
+        errorMessages.forEach(msg => msg.remove());
+        
+        // Validate required fields
+        const requiredFields = form.querySelectorAll('[required]');
+        requiredFields.forEach(field => {
+            if (!field.value.trim()) {
+                showFieldError(field, 'This field is required');
+                isValid = false;
+            }
+        });
+        
+        // Validate dates
+        validateDates();
+        if (endDateInput.validationMessage) {
+            isValid = false;
+        }
+        
+        // Budget validation
+        const budget = parseFloat(budgetInput.value);
+        if (budget <= 0) {
+            showFieldError(budgetInput, 'Budget must be greater than 0');
+            isValid = false;
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+            
+            // Scroll to first error
+            const firstError = form.querySelector('.border-red-500');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                firstError.focus();
+            }
+            return;
+        }
+        
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin text-xl"></i> Creating Project...';
+            submitBtn.classList.add('opacity-75', 'cursor-not-allowed');
+        }
+    });
+
+    // Real-time validation for all inputs
+    const allInputs = form.querySelectorAll('input, textarea, select');
+    allInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            if (this.hasAttribute('required') && this.value.trim()) {
+                clearFieldError(this);
+            }
+        });
+    });
+});
+
+// Global functions
+function resetForm() {
+    if (confirm('Are you sure you want to reset the form? All data will be lost.')) {
+        document.getElementById('projectForm').reset();
+        
+        // Clear all error messages
+        const errorMessages = document.querySelectorAll('.error-message');
+        errorMessages.forEach(msg => msg.remove());
+        
+        // Reset field styles
+        const fields = document.querySelectorAll('input, textarea, select');
+        fields.forEach(field => {
+            field.classList.remove('border-red-500', 'bg-red-50');
+            field.classList.add('border-gray-300');
+            field.style.backgroundColor = '';
+        });
+        
+        // Reset duration field
+        document.getElementById('duration_months').value = '';
+        document.getElementById('contingency_budget').placeholder = 'Emergency/contingency fund';
+    }
+}
+
+function saveDraft() {
+    const formData = new FormData(document.getElementById('projectForm'));
+    const data = Object.fromEntries(formData);
+    
+    // Save to localStorage
+    localStorage.setItem('projectDraft', JSON.stringify(data));
+    
+    // Show success message
+    const successDiv = document.createElement('div');
+    successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50';
+    successDiv.innerHTML = '<i class="bx bx-check-circle mr-2"></i>Draft saved successfully!';
+    document.body.appendChild(successDiv);
+    
+    setTimeout(() => {
+        successDiv.remove();
+    }, 3000);
+}
+
+// Load draft on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const draft = localStorage.getItem('projectDraft');
+    if (draft && confirm('A draft was found. Would you like to load it?')) {
+        const data = JSON.parse(draft);
+        
+        Object.keys(data).forEach(key => {
+            const field = document.querySelector(`[name="${key}"]`);
+            if (field) {
+                field.value = data[key];
+            }
+        });
+        
+        // Clear draft after loading
+        localStorage.removeItem('projectDraft');
+    }
+});
+
+// CSRF Token Management
+document.addEventListener('DOMContentLoaded', function() {
+    // Refresh CSRF token every 25 minutes to prevent expiration
+    setInterval(function() {
+        fetch('{{ url_for("admin.dashboard") }}', {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(html => {
+            // Extract new CSRF token from response if available
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            const newToken = doc.querySelector('meta[name="csrf-token"]');
+            if (newToken) {
+                // Update all CSRF token inputs
+                const csrfInputs = document.querySelectorAll('input[name="csrf_token"]');
+                csrfInputs.forEach(input => {
+                    input.value = newToken.getAttribute('content');
+                });
+            }
+        })
+        .catch(error => {
+            console.log('CSRF token refresh failed:', error);
+        });
+    }, 25 * 60 * 1000); // 25 minutes
+    
+    // Form submission with retry on CSRF failure
+    const form = document.getElementById('projectForm');
+    const originalSubmit = form.onsubmit;
+    
+    form.addEventListener('submit', function(e) {
+        // If original validation fails, don't proceed
+        if (originalSubmit && originalSubmit.call(this, e) === false) {
+            return;
+        }
+        
+        // Add retry mechanism for CSRF failures
+        const formData = new FormData(this);
+        
+        // Don't prevent default submission, let it proceed normally
+        // The server will handle CSRF validation and redirect back with error if needed
+    });
+});
+</script>
+
+<style>
+/* Enhanced styles for better UX */
+.bg-gray-50 {
+    background-color: #f9fafb;
+}
+
+.border-red-500 {
+    border-color: #ef4444;
+}
+
+.bg-red-50 {
+    background-color: #fef2f2;
+}
+
+.text-red-500 {
+    color: #ef4444;
+}
+
+.opacity-75 {
+    opacity: 0.75;
+}
+
+.cursor-not-allowed {
+    cursor: not-allowed;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.bx-spin {
+    animation: spin 1s linear infinite;
+}
+
+/* Smooth transitions */
+input, textarea, select, button {
+    transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Loading states */
+button:disabled {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Error message styling */
+.error-message {
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+}
+
+.error-message::before {
+    content: "⚠";
+    margin-right: 0.25rem;
+    color: #ef4444;
+}
+
+/* Success animations */
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.fixed.top-4.right-4 {
+    animation: slideInRight 0.3s ease-out;
+}
+</style>
 {% endblock %}

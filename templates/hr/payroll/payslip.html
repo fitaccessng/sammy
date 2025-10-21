@@ -1,0 +1,256 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Payslip - {{ employee.name }} | SammyA HR{% endblock %}
+{% block header %}Employee Payslip{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header with Actions -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-xl font-semibold text-gray-800">Payslip for {{ period }}</h2>
+            <p class="text-gray-600">{{ employee.name }} - {{ employee.staff_code }}</p>
+        </div>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('hr.payroll_staff') }}" 
+               class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center">
+                <i class='bx bx-arrow-back text-lg mr-2'></i>
+                Back
+            </a>
+            <button onclick="window.print()" 
+                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+                <i class='bx bx-printer text-lg mr-2'></i>
+                Print
+            </button>
+            <button onclick="downloadPDF()" 
+                    class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center">
+                <i class='bx bx-download text-lg mr-2'></i>
+                Download PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- Payslip Content -->
+    <div class="bg-white rounded-lg shadow-lg p-8 print:shadow-none print:border print:border-gray-300">
+        <!-- Company Header -->
+        <div class="border-b pb-6 mb-6">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">SammyA Company</h1>
+                    <p class="text-gray-600">Employee Payslip</p>
+                    <p class="text-sm text-gray-500">Pay Period: {{ period }}</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-sm text-gray-600">Generated on: {{ moment().format('MMMM DD, YYYY') }}</p>
+                    <p class="text-sm text-gray-600">Payslip #: PS{{ employee.id }}{{ payroll.period_month }}{{ payroll.period_year }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Information -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Employee Information</h3>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Name:</span>
+                        <span class="font-medium">{{ employee.name }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Staff Code:</span>
+                        <span class="font-medium">{{ employee.staff_code or 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Department:</span>
+                        <span class="font-medium">{{ employee.department or 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Position:</span>
+                        <span class="font-medium">{{ employee.position or employee.role or 'N/A' }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Employment Type:</span>
+                        <span class="font-medium">Regular</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-3">Payment Details</h3>
+                <div class="space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Pay Period:</span>
+                        <span class="font-medium">{{ period }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Payment Date:</span>
+                        <span class="font-medium">{{ moment().format('MMMM DD, YYYY') }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Bank Account:</span>
+                        <span class="font-medium">N/A</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Bank Name:</span>
+                        <span class="font-medium">N/A</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Salary Breakdown -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+            <!-- Earnings -->
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Earnings</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Basic Salary</span>
+                        <span class="font-medium">₦{{ "{:,.2f}".format((payroll.gross or 0) * 0.6) }}</span>
+                    </div>
+                    {% if payroll.gross and payroll.gross > 0 %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Total Allowances</span>
+                        <span class="font-medium">₦{{ "{:,.2f}".format((payroll.gross or 0) * 0.4) }}</span>
+                    </div>
+                    
+                    <!-- Detailed allowances breakdown -->
+                    <div class="flex justify-between pl-4 text-sm">
+                        <span class="text-gray-500">• Housing Allowance (25%)</span>
+                        <span>₦{{ "{:,.2f}".format((payroll.gross or 0) * 0.25) }}</span>
+                    </div>
+                    <div class="flex justify-between pl-4 text-sm">
+                        <span class="text-gray-500">• Transport Allowance (10%)</span>
+                        <span>₦{{ "{:,.2f}".format((payroll.gross or 0) * 0.10) }}</span>
+                    </div>
+                    <div class="flex justify-between pl-4 text-sm">
+                        <span class="text-gray-500">• Meal Allowance (5%)</span>
+                        <span>₦{{ "{:,.2f}".format((payroll.gross or 0) * 0.05) }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="border-t pt-3 mt-4">
+                    <div class="flex justify-between font-semibold text-lg">
+                        <span>Gross Salary</span>
+                        <span class="text-green-600">₦{{ "{:,.2f}".format(payroll.gross or 0) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Deductions -->
+            <div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 pb-2 border-b">Deductions</h3>
+                <div class="space-y-3">
+                    {% if payroll.minna_paye and payroll.minna_paye > 0 %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Income Tax (PAYE)</span>
+                        <span class="font-medium text-red-600">₦{{ "{:,.2f}".format(payroll.minna_paye) }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Pension Contribution (7.5%)</span>
+                        <span class="font-medium text-red-600">₦{{ "{:,.2f}".format((payroll.gross or 0) * 0.075) }}</span>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Insurance Premium (2%)</span>
+                        <span class="font-medium text-red-600">₦{{ "{:,.2f}".format((payroll.gross or 0) * 0.02) }}</span>
+                    </div>
+                    
+                    {% if payroll.jaco and payroll.jaco > 0 %}
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">JACO Deduction</span>
+                        <span class="font-medium text-red-600">₦{{ "{:,.2f}".format(payroll.jaco) }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="border-t pt-3 mt-4">
+                    <div class="flex justify-between font-semibold text-lg">
+                        <span>Total Deductions</span>
+                        <span class="text-red-600">₦{{ "{:,.2f}".format((payroll.minna_paye or 0) + (payroll.jaco or 0) + ((payroll.gross or 0) * 0.075) + ((payroll.gross or 0) * 0.02)) }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Net Pay -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h3 class="text-xl font-bold text-gray-800">Net Pay</h3>
+                    <p class="text-gray-600">Amount payable to employee</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-3xl font-bold text-blue-600">₦{{ "{:,.2f}".format(payroll.balance_salary or 0) }}</p>
+                    <p class="text-sm text-gray-600">{{ period }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Year to Date Summary -->
+        <div class="border-t pt-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Year to Date Summary</h3>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">YTD Gross</p>
+                    <p class="text-lg font-semibold">₦{{ "{:,.2f}".format((payroll.gross or 0) * payroll.period_month) }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">YTD Tax</p>
+                    <p class="text-lg font-semibold text-red-600">₦{{ "{:,.2f}".format((payroll.minna_paye or 0) * payroll.period_month) }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">YTD Pension</p>
+                    <p class="text-lg font-semibold text-red-600">₦{{ "{:,.2f}".format((payroll.jaco or 0) * payroll.period_month) }}</p>
+                </div>
+                <div class="text-center">
+                    <p class="text-sm text-gray-600">YTD Net</p>
+                    <p class="text-lg font-semibold text-green-600">₦{{ "{:,.2f}".format((payroll.balance_salary or 0) * payroll.period_month) }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t pt-6 mt-8 text-center text-sm text-gray-500">
+            <p>This is a computer-generated payslip and does not require signature.</p>
+            <p>For any payroll inquiries, please contact the HR Department.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .print\\:shadow-none { box-shadow: none !important; }
+    .print\\:border { border: 1px solid #d1d5db !important; }
+    .print\\:border-gray-300 { border-color: #d1d5db !important; }
+    
+    /* Hide non-essential elements when printing */
+    .no-print { display: none !important; }
+    
+    /* Ensure proper page breaks */
+    .break-inside-avoid { break-inside: avoid; }
+}
+</style>
+
+<script>
+function downloadPDF() {
+    // This would implement PDF download functionality
+    // For now, we'll trigger print which users can save as PDF
+    window.print();
+}
+
+// Auto-hide header and nav when printing
+window.addEventListener('beforeprint', function() {
+    document.querySelector('nav')?.classList.add('no-print');
+    document.querySelector('header')?.classList.add('no-print');
+});
+
+window.addEventListener('afterprint', function() {
+    document.querySelector('nav')?.classList.remove('no-print');
+    document.querySelector('header')?.classList.remove('no-print');
+});
+</script>
+{% endblock %}

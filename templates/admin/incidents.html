@@ -1,0 +1,461 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Incident Management - Construction Management System{% endblock %}
+
+{% block header %}Incident Management{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --indigo-color: #6366f1;
+        --indigo-light: #eef2ff;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+    }
+
+    .modern-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.625rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        letter-spacing: 0.025em;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+        color: white;
+        border: 1px solid transparent;
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #3730a3 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-danger-modern {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        color: white;
+        border: 1px solid transparent;
+    }
+
+    .btn-danger-modern:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-sm-modern {
+        padding: 0.5rem 1rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        border-left: 4px solid;
+        transition: var(--transition);
+    }
+
+    .stat-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.incidents { border-left-color: var(--danger-color); }
+    .stat-card.open { border-left-color: var(--warning-color); }
+    .stat-card.resolved { border-left-color: var(--success-color); }
+    .stat-card.critical { border-left-color: #dc2626; }
+
+    .stat-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-description {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+
+    .incidents-table {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        overflow: hidden;
+    }
+
+    .table-header {
+        background: var(--gray-50);
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .table-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .incident-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .incident-table th {
+        background: var(--gray-50);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--gray-700);
+        border-bottom: 1px solid var(--gray-200);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .incident-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: top;
+    }
+
+    .incident-table tr:hover {
+        background: var(--gray-50);
+    }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .status-open {
+        background: var(--warning-light);
+        color: #92400e;
+    }
+
+    .status-resolved {
+        background: var(--success-light);
+        color: #065f46;
+    }
+
+    .status-in-progress {
+        background: var(--primary-light);
+        color: var(--primary-dark);
+    }
+
+    .severity-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .severity-critical {
+        background: var(--danger-light);
+        color: #dc2626;
+    }
+
+    .severity-high {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .severity-medium {
+        background: #ede9fe;
+        color: #7c3aed;
+    }
+
+    .severity-low {
+        background: var(--gray-100);
+        color: var(--gray-700);
+    }
+
+    .incident-title {
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 0.25rem;
+    }
+
+    .incident-description {
+        color: var(--gray-600);
+        font-size: 0.875rem;
+        line-height: 1.4;
+    }
+
+    .no-incidents {
+        text-align: center;
+        padding: 3rem;
+        color: var(--gray-500);
+    }
+
+    .no-incidents i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        display: block;
+        color: var(--gray-300);
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .table-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .incident-table {
+            font-size: 0.875rem;
+        }
+        
+        .incident-table th,
+        .incident-table td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Incident Management</h2>
+        <p class="text-gray-600">Monitor and manage all site safety incidents</p>
+    </div>
+    <a href="{{ url_for('admin.add_incident') }}" class="btn-primary-modern">
+        <i class='bx bx-plus'></i>
+        Report Incident
+    </a>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card incidents">
+        <div class="stat-title">
+            <i class='bx bxs-error'></i>
+            Total Incidents
+        </div>
+        <div class="stat-value">{{ incident_stats.total_incidents }}</div>
+        <div class="stat-description">All reported incidents</div>
+    </div>
+    
+    <div class="stat-card open">
+        <div class="stat-title">
+            <i class='bx bxs-error-alt'></i>
+            Open Incidents
+        </div>
+        <div class="stat-value">{{ incident_stats.open_incidents }}</div>
+        <div class="stat-description">Requiring attention</div>
+    </div>
+    
+    <div class="stat-card resolved">
+        <div class="stat-title">
+            <i class='bx bxs-check-circle'></i>
+            Resolved
+        </div>
+        <div class="stat-value">{{ incident_stats.resolved_incidents }}</div>
+        <div class="stat-description">Successfully resolved</div>
+    </div>
+    
+    <div class="stat-card critical">
+        <div class="stat-title">
+            <i class='bx bxs-bell-ring'></i>
+            Critical
+        </div>
+        <div class="stat-value">{{ incident_stats.critical_incidents }}</div>
+        <div class="stat-description">High priority incidents</div>
+    </div>
+</div>
+
+<!-- Incidents Table -->
+<div class="incidents-table">
+    <div class="table-header">
+        <h3 class="table-title">
+            <i class='bx bx-list-ul'></i>
+            All Incidents
+        </h3>
+        <div class="flex gap-2">
+            <button class="btn-sm-modern btn-primary-modern">
+                <i class='bx bx-filter'></i>
+                Filter
+            </button>
+            <button class="btn-sm-modern btn-primary-modern">
+                <i class='bx bx-export'></i>
+                Export
+            </button>
+        </div>
+    </div>
+    
+    {% if incidents %}
+    <table class="incident-table">
+        <thead>
+            <tr>
+                <th>Incident</th>
+                <th>Severity</th>
+                <th>Status</th>
+                <th>Reported By</th>
+                <th>Date Reported</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for incident in incidents %}
+            <tr>
+                <td>
+                    <div class="incident-title">{{ incident.title }}</div>
+                    <div class="incident-description">
+                        {{ incident.description[:100] }}{% if incident.description|length > 100 %}...{% endif %}
+                    </div>
+                </td>
+                <td>
+                    <span class="severity-badge severity-{{ incident.severity.lower() }}">
+                        {{ incident.severity }}
+                    </span>
+                </td>
+                <td>
+                    <span class="status-badge status-{{ incident.status.lower().replace(' ', '-') }}">
+                        {{ incident.status }}
+                    </span>
+                </td>
+                <td>
+                    <div class="text-gray-800 font-medium">{{ incident.reported_by or 'Unknown' }}</div>
+                </td>
+                <td>
+                    <div class="text-gray-800">{{ incident.date_reported.strftime('%b %d, %Y') }}</div>
+                    <div class="text-gray-500 text-sm">{{ incident.date_reported.strftime('%I:%M %p') }}</div>
+                </td>
+                <td>
+                    <div class="flex gap-2">
+                        <button class="btn-sm-modern btn-primary-modern" onclick="viewIncident({{ incident.id }})">
+                            <i class='bx bx-show'></i>
+                        </button>
+                        <button class="btn-sm-modern btn-danger-modern" onclick="deleteIncident({{ incident.id }})">
+                            <i class='bx bx-trash'></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div class="no-incidents">
+        <i class='bx bxs-shield-alt-2'></i>
+        <h3 class="text-lg font-medium mb-2">No Incidents Reported</h3>
+        <p>No safety incidents have been reported yet. This is great news!</p>
+        <a href="{{ url_for('admin.add_incident') }}" class="btn-primary-modern mt-4">
+            <i class='bx bx-plus'></i>
+            Report First Incident
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function viewIncident(incidentId) {
+    // Implementation for viewing incident details
+    console.log('View incident:', incidentId);
+}
+
+function deleteIncident(incidentId) {
+    if (confirm('Are you sure you want to delete this incident? This action cannot be undone.')) {
+        // Implementation for deleting incident
+        console.log('Delete incident:', incidentId);
+    }
+}
+</script>
+{% endblock %}

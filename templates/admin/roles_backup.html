@@ -1,0 +1,1213 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Staff Roles Management - Construction Management System{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Modern Card Styling */
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+    }
+
+    .modern-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    /* Professional Buttons */
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 8px;
+        transition: var(--transition);
+        cursor: pointer;
+        border: none;
+        min-height: 44px;
+    }
+
+    .btn-sm {
+        padding: 0.375rem 0.75rem;
+        font-size: 0.75rem;
+        min-height: 36px;
+    }
+
+    .btn-primary {
+        background: var(--primary-color);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: var(--primary-dark);
+        transform: translateY(-1px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-secondary {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary:hover {
+        background: var(--gray-200);
+    }
+
+    .btn-success {
+        background: var(--success-color);
+        color: white;
+    }
+
+    .btn-success:hover {
+        background: #059669;
+    }
+
+    .btn-warning {
+        background: var(--warning-color);
+        color: white;
+    }
+
+    .btn-danger {
+        background: var(--danger-color);
+        color: white;
+    }
+
+    .btn-danger:hover {
+        background: #dc2626;
+    }
+
+    /* Modern Table Styling */
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        background: white;
+        border-radius: var(--border-radius);
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .modern-table th {
+        background: var(--gray-50);
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--gray-700);
+        border-bottom: 1px solid var(--gray-200);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .modern-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: middle;
+    }
+
+    .modern-table tr:hover {
+        background: var(--gray-50);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+    }
+
+    .status-verified {
+        background: var(--success-light);
+        color: var(--success-color);
+    }
+
+    .status-pending {
+        background: var(--warning-light);
+        color: var(--warning-color);
+    }
+
+    .status-role {
+        background: var(--primary-light);
+        color: var(--primary-color);
+    }
+
+    .status-no-role {
+        background: var(--gray-100);
+        color: var(--gray-500);
+    }
+
+    /* Modern Modal */
+    .modern-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    .modern-modal-content {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+        max-width: 500px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 640px) {
+        .mobile-hidden {
+            display: none !important;
+        }
+        
+        .modern-table th,
+        .modern-table td {
+            padding: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+        }
+        
+        .stats-card {
+            padding: 1rem !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .tablet-hidden {
+            display: none !important;
+        }
+    }
+
+    /* Professional Animations */
+    .fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .slide-in {
+        animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Loading States */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+
+    .spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+    <div>
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">Staff Roles Management</h1>
+        <nav class="flex mt-2" aria-label="Breadcrumb">
+            <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                <li><a href="/admin" class="hover:text-gray-700 transition-colors">Admin</a></li>
+                <li><i class='bx bx-chevron-right'></i></li>
+                <li class="text-gray-900 font-medium">Roles Management</li>
+            </ol>
+        </nav>
+    </div>
+    <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+        <button onclick="exportRoleReport()" class="btn btn-secondary">
+            <i class='bx bx-download mr-2'></i>
+            <span class="mobile-hidden">Export Report</span>
+            <span class="sm:hidden">Export</span>
+        </button>
+        <button onclick="bulkAssignRole()" class="btn btn-primary">
+            <i class='bx bx-user-plus mr-2'></i>
+            <span class="mobile-hidden">Bulk Assign</span>
+            <span class="sm:hidden">Assign</span>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-4 sm:mb-6">
+    <h2 class="text-xl sm:text-2xl <!-- Bulk Role Assignment Modal -->
+<div id="bulkRoleAssignmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-4 sm:top-20 mx-auto p-3 sm:p-5 border w-11/12 sm:w-2/3 max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base sm:text-lg font-medium text-gray-900 flex items-center">
+                    <i class='bx bxs-group mr-2 text-blue-600'></i>
+                    <span class="hidden sm:inline">Bulk Role Assignment</span>
+                    <span class="sm:hidden">Bulk Assign</span>
+                </h3>
+                <button onclick="closeModal('bulkRoleAssignmentModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-xl sm:text-2xl'></i>
+                </button>
+            </div>t-gray-800 mb-2">Staff Roles Management</h2>
+    <p class="text-sm sm:text-base text-gray-600">Manage staff members and assign system roles for access control and permissions</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
+    <!-- Total Staff Card -->
+    <div class="card bg-white p-4 sm:p-6 border-l-4 border-l-blue-500">
+        <div class="flex items-center justify-between">
+            <div class="flex-1">
+                <p class="text-gray-500 text-xs sm:text-sm font-medium uppercase tracking-wide">Total Users</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2">{{ users|length }}</h3>
+                <p class="text-blue-500 text-xs sm:text-sm mt-1 sm:mt-2">
+                    <i class='bx bx-user'></i>
+                    <span class="hidden sm:inline">Registered accounts</span>
+                    <span class="sm:hidden">Accounts</span>
+                </p>
+            </div>
+            <div class="bg-blue-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+                <i class='bx bxs-user-detail text-xl sm:text-2xl text-blue-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Assigned Roles Card -->
+    <div class="card bg-white p-4 sm:p-6 border-l-4 border-l-green-500">
+        <div class="flex items-center justify-between">
+            <div class="flex-1">
+                <p class="text-gray-500 text-xs sm:text-sm font-medium uppercase tracking-wide">Assigned Roles</p>
+                <h3 class="text-2xl sm:text-3xl font-bold text-gray-800 mt-1 sm:mt-2">{{ users | selectattr('current_role_value') | selectattr('current_role_value', 'ne', '') | list | length }}</h3>
+                <p class="text-green-500 text-xs sm:text-sm mt-1 sm:mt-2">
+                    <i class='bx bx-check'></i>
+                    <span class="hidden sm:inline">With roles</span>
+                    <span class="sm:hidden">Assigned</span>
+                </p>
+            </div>
+            <div class="bg-green-100 p-2 sm:p-3 rounded-full flex-shrink-0">
+                <i class='bx bxs-user-check text-xl sm:text-2xl text-green-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unassigned Staff Card -->
+    <div class="card bg-white p-6 border-l-yellow-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Unassigned Users</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ users | rejectattr('current_role_value') | list | length }}</h3>
+                <p class="text-yellow-500 text-sm mt-2">
+                    <i class='bx bx-user-x'></i>
+                    No roles
+                </p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-full">
+                <i class='bx bxs-user-x text-2xl text-yellow-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Available Roles Card -->
+    <div class="card bg-white p-6 border-l-purple-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Available Roles</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ available_roles|length }}</h3>
+                <p class="text-purple-500 text-sm mt-2">
+                    <i class='bx bx-shield'></i>
+                    System roles
+                </p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-full">
+                <i class='bx bxs-shield text-2xl text-purple-600'></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Distribution Overview -->
+<div class="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+    <!-- Role Distribution Chart -->
+    <div class="xl:col-span-2">
+        <div class="card bg-white">
+            <div class="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200">
+                <h3 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                    <i class='bx bxs-pie-chart-alt-2 mr-2 text-blue-600'></i>
+                    <span class="hidden sm:inline">Role Distribution</span>
+                    <span class="sm:hidden">Roles</span>
+                </h3>
+            </div>
+            <div class="p-4 sm:p-6">
+                <div class="space-y-4">
+                    {% for role in available_roles %}
+                    <div class="flex items-center justify-between hover:bg-gray-50 p-2 rounded transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 rounded-full 
+                                {% if 'super_hq' in role.value %}bg-red-500
+                                {% elif 'hq_' in role.value %}bg-blue-500
+                                {% elif 'manager' in role.value %}bg-purple-500
+                                {% else %}bg-green-500{% endif %}"></div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">{{ role.name }}</span>
+                                {% if role_users.get(role.value) %}
+                                <div class="text-xs text-gray-500 mt-1">
+                                    {% for user in role_users.get(role.value)[:3] %}
+                                        {{ user.name }}{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                    {% if role_users.get(role.value)|length > 3 %}
+                                        ... and {{ role_users.get(role.value)|length - 3 }} more
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg font-bold text-gray-900">{{ role_counts.get(role.value, 0) }}</span>
+                            <span class="text-xs text-gray-500">staff</span>
+                            {% if role_counts.get(role.value, 0) > 0 %}
+                            <button onclick="showRoleEmployees('{{ role.value }}', '{{ role.name }}')" 
+                                    class="text-blue-600 hover:text-blue-800 text-xs">
+                                <i class='bx bx-info-circle'></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Unassigned employees -->
+                    <div class="flex items-center justify-between hover:bg-gray-50 p-2 rounded transition-colors border-t pt-4 mt-4">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-4 h-4 rounded-full bg-gray-400"></div>
+                            <div>
+                                <span class="text-sm font-medium text-gray-700">Unassigned Staff</span>
+                                {% if role_users.get('no_role') %}
+                                <div class="text-xs text-gray-500 mt-1">
+                                    {% for user in role_users.get('no_role')[:3] %}
+                                        {{ user.name }}{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                    {% if role_users.get('no_role')|length > 3 %}
+                                        ... and {{ role_users.get('no_role')|length - 3 }} more
+                                    {% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-lg font-bold text-yellow-600">{{ role_counts.get('no_role', 0) }}</span>
+                            <span class="text-xs text-gray-500">staff</span>
+                            {% if role_counts.get('no_role', 0) > 0 %}
+                            <button onclick="showRoleEmployees('no_role', 'Unassigned Staff')" 
+                                    class="text-yellow-600 hover:text-yellow-800 text-xs">
+                                <i class='bx bx-info-circle'></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Summary -->
+                <div class="mt-6 pt-4 border-t">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">Total Staff:</span>
+                        <span class="text-lg font-bold text-indigo-600">{{ total_users or users|length }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card bg-white">
+        <div class="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                <i class='bx bxs-zap mr-2 text-purple-600'></i>
+                <span class="hidden sm:inline">Quick Actions</span>
+                <span class="sm:hidden">Actions</span>
+            </h3>
+        </div>
+        <div class="p-4 sm:p-6">
+            <div class="space-y-2 sm:space-y-3">
+                <button onclick="bulkAssignRole()" class="w-full inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-blue-300 text-xs sm:text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                    <i class='bx bxs-user-plus mr-2'></i>
+                    <span class="hidden sm:inline">Bulk Assign Roles</span>
+                    <span class="sm:hidden">Bulk Assign</span>
+                </button>
+                <button onclick="exportRoleReport()" class="w-full inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-green-300 text-xs sm:text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100 transition-colors">
+                    <i class='bx bxs-download mr-2'></i>
+                    <span class="hidden sm:inline">Export Role Report</span>
+                    <span class="sm:hidden">Export</span>
+                </button>
+                <button onclick="viewRolePermissions()" class="w-full inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-purple-300 text-xs sm:text-sm font-medium rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
+                    <i class='bx bxs-shield mr-2'></i>
+                    <span class="hidden sm:inline">View Permissions</span>
+                    <span class="sm:hidden">Permissions</span>
+                </button>
+                <button onclick="showRoleHierarchy()" class="w-full inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 text-xs sm:text-sm font-medium rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <i class='bx bxs-network-chart mr-2'></i>
+                    <span class="hidden sm:inline">Role Hierarchy</span>
+                    <span class="sm:hidden">Hierarchy</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Staff List with Role Management -->
+<div class="card bg-white">
+    <div class="bg-gray-50 px-4 sm:px-6 py-4 border-b border-gray-200">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-3 sm:space-y-0">
+            <h3 class="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                <i class='bx bxs-user-detail mr-2 text-indigo-600'></i>
+                <span class="hidden sm:inline">Staff Members & Role Assignments</span>
+                <span class="sm:hidden">Staff & Roles</span>
+            </h3>
+            <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <input type="text" id="searchStaff" placeholder="Search staff..." class="w-full sm:w-auto px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <select id="filterByRole" class="w-full sm:w-auto px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">All Roles</option>
+                    <option value="no-role">No Role Assigned</option>
+                    {% for role in available_roles %}
+                    <option value="{{ role.value }}">{{ role.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+    <div class="p-3 sm:p-6">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200" id="staffTable">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <input type="checkbox" id="selectAll" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Verification</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Created Date</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Role</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">Status</th>
+                        <th class="px-3 sm:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for user in users %}
+                    <tr class="hover:bg-gray-50 staff-row" data-role="{{ user.current_role_value or 'no-role' }}" data-name="{{ user.name.lower() }}">
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" name="selectedStaff" value="{{ user.id }}" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        </td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-8 w-8 sm:h-10 sm:w-10">
+                                    <div class="h-8 w-8 sm:h-10 sm:w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <i class='bx bxs-user text-gray-600 text-sm sm:text-base'></i>
+                                    </div>
+                                </div>
+                                <div class="ml-3 sm:ml-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+                                    <div class="text-xs sm:text-sm text-gray-500">{{ user.email }}</div>
+                                    <!-- Mobile-only verification and date -->\n                                    <div class="sm:hidden mt-1 text-xs text-gray-500">
+                                        {% if user.is_verified %}<span class="text-green-600">Verified</span>{% else %}<span class="text-yellow-600">Pending</span>{% endif %}
+                                        <span class="ml-2">{{ user.created_at }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden sm:table-cell">
+                            {% if user.is_verified %}<span class="text-green-600">Verified</span>{% else %}<span class="text-yellow-600">Pending</span>{% endif %}
+                        </td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-900 hidden lg:table-cell">
+                            {{ user.created_at }}
+                        </td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap">\n                            <span id="roleDisplay-{{ user.id }}" class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if user.current_role_value %}
+                                    {% if 'super_hq' in user.current_role_value %}bg-red-100 text-red-800
+                                    {% elif 'hq_' in user.current_role_value %}bg-blue-100 text-blue-800
+                                    {% elif 'manager' in user.current_role_value %}bg-purple-100 text-purple-800
+                                    {% else %}bg-green-100 text-green-800{% endif %}
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ user.current_role }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if user.is_verified %}bg-green-100 text-green-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {% if user.is_verified %}Active{% else %}Pending{% endif %}
+                            </span>
+                        </td>
+                        <td class="px-3 sm:px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex flex-col sm:flex-row sm:space-x-2 space-y-1 sm:space-y-0">
+                                <!-- Debug: Show what data we have (hidden on mobile) -->
+                                <small class="text-xs text-gray-400 hidden lg:block">
+                                    ID:{{ user.id }} | Role: "{{ user.current_role_value or 'None' }}"
+                                </small>
+                                
+                                <!-- Always visible Assign Role button -->
+                                <button onclick="assignRole({{ user.id }}, '{{ user.name }}')"
+                                        class="text-blue-600 hover:text-blue-900 transition-colors bg-blue-50 px-2 py-1 rounded text-xs sm:text-sm" 
+                                        title="Assign Role">
+                                    <i class='bx bxs-user-check'></i> 
+                                    <span class="hidden sm:inline">Assign</span>
+                                </button>
+                                
+                                <!-- Conditional Remove Role button -->
+                                {% if user.current_role_value and user.current_role_value != '' %}
+                                <button onclick="removeRole({{ user.id }}, '{{ user.name }}')"
+                                        class="text-red-600 hover:text-red-900 transition-colors bg-red-50 px-2 py-1 rounded text-xs sm:text-sm"
+                                        title="Remove Role">
+                                    <i class='bx bxs-user-x'></i> 
+                                    <span class="hidden sm:inline">Remove</span>
+                                </button>
+                                {% else %}
+                                <span class="text-xs text-gray-400 hidden sm:inline">(No role to remove)</span>
+                                {% endif %}
+                                
+                                <!-- View Details button -->
+                                <button onclick="viewUserDetails({{ user.id }})"
+                                        class="text-gray-600 hover:text-gray-900 transition-colors bg-gray-50 px-2 py-1 rounded text-xs sm:text-sm"
+                                        title="View Details">
+                                    <i class='bx bxs-info-circle'></i> 
+                                    <span class="hidden sm:inline">Details</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Role Employees Modal -->
+<div id="roleEmployeesModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-4 sm:top-20 mx-auto p-3 sm:p-5 border w-11/12 sm:w-2/3 max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base sm:text-lg font-medium text-gray-900 flex items-center">
+                    <i class='bx bxs-group mr-2 text-blue-600'></i>
+                    <span id="roleEmployeesTitle" class="hidden sm:inline">Employees in Role</span>
+                    <span id="roleEmployeesTitleMobile" class="sm:hidden">Role Members</span>
+                </h3>
+                <button onclick="closeModal('roleEmployeesModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-xl sm:text-2xl'></i>
+                </button>
+            </div>
+            <div id="roleEmployeesList" class="max-h-60 sm:max-h-96 overflow-y-auto">
+                <!-- Employee list will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Assignment Modal -->
+<div id="roleAssignmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-blue-100">
+                <i class='bx bxs-user-check text-blue-600 text-2xl'></i>
+            </div>
+            <h3 class="text-lg font-medium text-gray-900 mt-4">Assign Role</h3>
+            <div class="mt-2 px-7 py-3">
+                <p class="text-sm text-gray-500" id="roleAssignmentMessage">
+                    Select a role to assign to <span id="selectedEmployeeName" class="font-semibold"></span>
+                </p>
+                <div class="mt-4">
+                    <select id="roleSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">Select a role...</option>
+                        {% for role in available_roles %}
+                        <option value="{{ role.value }}">{{ role.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="items-center px-4 py-3">
+                <button id="confirmAssignment" 
+                        class="px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                    Assign Role
+                </button>
+                <button onclick="closeModal('roleAssignmentModal')" 
+                        class="mt-3 px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Role Assignment Modal -->
+<div id="bulkRoleAssignmentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-4 sm:top-20 mx-auto p-3 sm:p-5 border w-11/12 sm:w-2/3 max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-base sm:text-lg font-medium text-gray-900 flex items-center">
+                    <i class='bx bxs-users mr-2 text-blue-600'></i>
+                    <span class="hidden sm:inline">Bulk Role Assignment</span>
+                    <span class="sm:hidden">Bulk Assign</span>
+                </h3>
+                <button onclick="closeModal('bulkRoleAssignmentModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-xl sm:text-2xl'></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                <!-- Selected Users -->
+                <div>
+                    <h4 class="text-sm sm:text-md font-semibold text-gray-800 mb-3">
+                        <span class="hidden sm:inline">Selected Users</span>
+                        <span class="sm:hidden">Users</span>
+                        (<span id="selectedUsersCount">0</span>)
+                    </h4>
+                    <div id="selectedUsersList" class="max-h-48 sm:max-h-64 overflow-y-auto bg-gray-50 p-3 rounded-md">
+                        <p class="text-gray-500 text-sm">No users selected</p>
+                    </div>
+                </div>
+                
+                <!-- Role Selection -->
+                <div>
+                    <h4 class="text-md font-semibold text-gray-800 mb-3">Assign Role</h4>
+                    <div class="space-y-4">
+                        <select id="bulkRoleSelect" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Select a role...</option>
+                            {% for role in available_roles %}
+                            <option value="{{ role.value }}">{{ role.name }}</option>
+                            {% endfor %}
+                        </select>
+                        
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                            <div class="flex">
+                                <div class="flex-shrink-0">
+                                    <i class='bx bx-info-circle text-yellow-600'></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm text-yellow-700">
+                                        This will assign the selected role to all selected users. Their previous roles will be replaced.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-3">
+                            <button id="confirmBulkAssignment" 
+                                    class="flex-1 px-4 py-2 bg-blue-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                                Assign Role to All
+                            </button>
+                            <button onclick="closeModal('bulkRoleAssignmentModal')" 
+                                    class="flex-1 px-4 py-2 bg-gray-500 text-white text-base font-medium rounded-md shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-300">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success/Error Messages -->
+<div id="messageContainer" class="fixed top-4 right-4 z-50 hidden">
+    <div id="messageBox" class="max-w-sm w-full bg-white shadow-lg rounded-lg pointer-events-auto">
+        <div class="rounded-lg shadow-xs overflow-hidden">
+            <div class="p-4">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i id="messageIcon" class="text-2xl"></i>
+                    </div>
+                    <div class="ml-3 w-0 flex-1 pt-0.5">
+                        <p id="messageText" class="text-sm font-medium text-gray-900"></p>
+                    </div>
+                    <div class="ml-4 flex-shrink-0 flex">
+                        <button onclick="hideMessage()" class="text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition ease-in-out duration-150">
+                            <i class='bx bx-x'></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let selectedEmployeeId = null;
+
+// Role user data from backend
+const roleUsersData = {{ role_users | tojson }};
+
+// Get CSRF token for AJAX requests
+function getCSRFToken() {
+    const csrfToken = document.querySelector('meta[name=csrf-token]');
+    return csrfToken ? csrfToken.getAttribute('content') : '';
+}
+
+// Show employees in a specific role
+function showRoleEmployees(roleValue, roleName) {
+    const users = roleUsersData[roleValue] || [];
+    const modal = document.getElementById('roleEmployeesModal');
+    const title = document.getElementById('roleEmployeesTitle');
+    const list = document.getElementById('roleEmployeesList');
+    
+    title.textContent = `${roleName} (${users.length} users)`;
+    
+    if (users.length === 0) {
+        list.innerHTML = '<p class="text-gray-500 text-center py-8">No users found for this role.</p>';
+    } else {
+        let html = '<div class="grid grid-cols-1 md:grid-cols-2 gap-4">';
+        users.forEach(user => {
+            html += `
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class='bx bxs-user text-blue-600'></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-900">${user.name}</p>
+                            <p class="text-sm text-gray-500">${user.email || 'No email'}</p>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex space-x-2">
+                        <button onclick="assignRole(${user.id}, '${user.name}')" 
+                                class="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
+                            Change Role
+                        </button>
+                        ${roleValue !== 'no_role' ? `
+                        <button onclick="removeRole(${user.id}, '${user.name}')" 
+                                class="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200">
+                            Remove Role
+                        </button>` : ''}
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        list.innerHTML = html;
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+// Search and filter functionality
+document.getElementById('searchStaff').addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase();
+    filterTable();
+});
+
+document.getElementById('filterByRole').addEventListener('change', function() {
+    filterTable();
+});
+
+function filterTable() {
+    const searchTerm = document.getElementById('searchStaff').value.toLowerCase();
+    const roleFilter = document.getElementById('filterByRole').value;
+    const rows = document.querySelectorAll('.staff-row');
+    
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const role = row.dataset.role;
+        
+        const matchesSearch = name.includes(searchTerm);
+        const matchesRole = !roleFilter || role === roleFilter;
+        
+        if (matchesSearch && matchesRole) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Select all functionality
+document.getElementById('selectAll').addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('input[name="selectedStaff"]');
+    checkboxes.forEach(checkbox => {
+        if (checkbox.closest('.staff-row').style.display !== 'none') {
+            checkbox.checked = this.checked;
+        }
+    });
+});
+
+// Role assignment functions
+function assignRole(employeeId, employeeName) {
+    selectedEmployeeId = employeeId;
+    document.getElementById('selectedEmployeeName').textContent = employeeName;
+    document.getElementById('roleSelect').value = '';
+    document.getElementById('roleAssignmentModal').classList.remove('hidden');
+    // Close the role employees modal if open
+    closeModal('roleEmployeesModal');
+}
+
+function removeRole(employeeId, employeeName) {
+    if (confirm(`Are you sure you want to remove the role from ${employeeName}?`)) {
+        fetch('/admin/remove-employee-role', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                employee_id: employeeId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showMessage(data.message, 'success');
+                setTimeout(() => location.reload(), 1000); // Refresh after 1 second
+            } else {
+                showMessage(data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showMessage('An error occurred while removing the role', 'error');
+        });
+    }
+}
+
+document.getElementById('confirmAssignment').addEventListener('click', function() {
+    const selectedRole = document.getElementById('roleSelect').value;
+    
+    if (!selectedRole) {
+        showMessage('Please select a role', 'error');
+        return;
+    }
+    
+    console.log('Individual assignment:', { employeeId: selectedEmployeeId, selectedRole });
+    
+    fetch('/admin/assign-employee-role', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            employee_id: selectedEmployeeId,
+            role: selectedRole
+        })
+    })
+    .then(response => {
+        console.log('Individual assignment response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.text();
+    })
+    .then(text => {
+        console.log('Individual assignment response text:', text.substring(0, 100));
+        try {
+            const data = JSON.parse(text);
+            console.log('Individual assignment response data:', data);
+            if (data.status === 'success') {
+                showMessage(data.message, 'success');
+                closeModal('roleAssignmentModal');
+                setTimeout(() => location.reload(), 1000); // Refresh after 1 second
+            } else {
+                showMessage(data.message || 'Unknown error occurred', 'error');
+            }
+        } catch (jsonError) {
+            console.error('JSON parse error:', jsonError);
+            if (text.includes('<!DOCTYPE') || text.includes('<html>')) {
+                showMessage('Session expired. Please log in again.', 'error');
+                setTimeout(() => window.location.href = '/auth/login', 2000);
+            } else {
+                showMessage('Invalid response from server', 'error');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Individual assignment error:', error);
+        showMessage(`Error: ${error.message}`, 'error');
+    });
+});
+
+// Modal functions
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+
+// Message functions
+function showMessage(message, type) {
+    const messageContainer = document.getElementById('messageContainer');
+    const messageBox = document.getElementById('messageBox');
+    const messageIcon = document.getElementById('messageIcon');
+    const messageText = document.getElementById('messageText');
+    
+    messageText.textContent = message;
+    
+    if (type === 'success') {
+        messageBox.className = 'max-w-sm w-full bg-green-50 border border-green-200 shadow-lg rounded-lg pointer-events-auto';
+        messageIcon.className = 'bx bx-check-circle text-2xl text-green-600';
+    } else {
+        messageBox.className = 'max-w-sm w-full bg-red-50 border border-red-200 shadow-lg rounded-lg pointer-events-auto';
+        messageIcon.className = 'bx bx-error-circle text-2xl text-red-600';
+    }
+    
+    messageContainer.classList.remove('hidden');
+    
+    setTimeout(() => {
+        hideMessage();
+    }, 5000);
+}
+
+function hideMessage() {
+    document.getElementById('messageContainer').classList.add('hidden');
+}
+
+// Quick action functions
+function bulkAssignRole() {
+    const selectedStaff = document.querySelectorAll('input[name="selectedStaff"]:checked');
+    if (selectedStaff.length === 0) {
+        showMessage('Please select users first', 'error');
+        return;
+    }
+    
+    // Populate the modal with selected users
+    const selectedUsersList = document.getElementById('selectedUsersList');
+    const selectedUsersCount = document.getElementById('selectedUsersCount');
+    
+    selectedUsersCount.textContent = selectedStaff.length;
+    
+    let html = '<div class="space-y-2">';
+    selectedStaff.forEach(checkbox => {
+        const row = checkbox.closest('tr');
+        const userName = row.querySelector('.text-sm.font-medium.text-gray-900').textContent;
+        const userEmail = row.querySelector('.text-sm.text-gray-500').textContent;
+        
+        html += `
+            <div class="flex items-center space-x-2 p-2 bg-white rounded border">
+                <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+                    <i class='bx bxs-user text-blue-600 text-sm'></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-900">${userName}</p>
+                    <p class="text-xs text-gray-500">${userEmail}</p>
+                </div>
+            </div>
+        `;
+    });
+    html += '</div>';
+    
+    selectedUsersList.innerHTML = html;
+    
+    // Reset role selection
+    document.getElementById('bulkRoleSelect').value = '';
+    
+    // Show the modal
+    document.getElementById('bulkRoleAssignmentModal').classList.remove('hidden');
+}
+
+// Bulk assignment confirmation
+document.getElementById('confirmBulkAssignment').addEventListener('click', function() {
+    const selectedRole = document.getElementById('bulkRoleSelect').value;
+    const selectedStaff = document.querySelectorAll('input[name="selectedStaff"]:checked');
+    
+    if (!selectedRole) {
+        showMessage('Please select a role', 'error');
+        return;
+    }
+    
+    if (selectedStaff.length === 0) {
+        showMessage('No users selected', 'error');
+        return;
+    }
+    
+    // Get user IDs
+    const userIds = Array.from(selectedStaff).map(checkbox => parseInt(checkbox.value));
+    
+    console.log('Bulk assignment:', { userIds, selectedRole });
+    
+    // Show loading state
+    this.textContent = 'Assigning Roles...';
+    this.disabled = true;
+    
+    fetch('/admin/bulk-assign-roles', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            user_ids: userIds,
+            role: selectedRole
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.text();
+    })
+    .then(text => {
+        console.log('Bulk assignment response text:', text.substring(0, 100));
+        try {
+            const data = JSON.parse(text);
+            console.log('Response data:', data);
+            if (data.status === 'success') {
+                showMessage(data.message, 'success');
+                closeModal('bulkRoleAssignmentModal');
+                setTimeout(() => location.reload(), 1500); // Refresh after 1.5 seconds
+            } else {
+                showMessage(data.message || 'Unknown error occurred', 'error');
+            }
+        } catch (jsonError) {
+            console.error('JSON parse error:', jsonError);
+            if (text.includes('<!DOCTYPE') || text.includes('<html>')) {
+                showMessage('Session expired. Please log in again.', 'error');
+                setTimeout(() => window.location.href = '/auth/login', 2000);
+            } else {
+                showMessage('Invalid response from server', 'error');
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Bulk assignment error:', error);
+        showMessage(`Error: ${error.message}`, 'error');
+    })
+    .finally(() => {
+        // Reset button state
+        this.textContent = 'Assign Role to All';
+        this.disabled = false;
+    });
+});
+
+function exportRoleReport() {
+    showMessage('Generating role report...', 'success');
+    
+    // Redirect to export endpoint
+    window.location.href = '/admin/export-role-report';
+}
+
+function viewRolePermissions() {
+    window.location.href = '/admin/permissions-view';
+}
+
+function showRoleHierarchy() {
+    alert(`Role Hierarchy:
+
+SUPER HQ ADMIN
+├── HQ Managers
+│   ├── HQ Finance Manager
+│   ├── HQ HR Manager  
+│   ├── HQ Procurement Manager
+│   ├── Quarry Manager
+│   ├── Project Manager
+│   └── HQ Cost Control Manager
+└── Staff Roles
+    ├── Finance Staff
+    ├── HR Staff
+    ├── Procurement Staff
+    ├── Procurement Officer
+    ├── Quarry Staff
+    └── Project Staff
+
+Each role has specific access permissions and responsibilities within the construction management system.`);
+}
+
+function viewUserDetails(userId) {
+    // Implementation for viewing user details
+    showMessage('User details view coming soon', 'info');
+}
+
+// Close modal when clicking outside
+window.onclick = function(event) {
+    const assignModal = document.getElementById('roleAssignmentModal');
+    const employeesModal = document.getElementById('roleEmployeesModal');
+    const bulkModal = document.getElementById('bulkRoleAssignmentModal');
+    
+    if (event.target === assignModal) {
+        closeModal('roleAssignmentModal');
+    }
+    if (event.target === employeesModal) {
+        closeModal('roleEmployeesModal');
+    }
+    if (event.target === bulkModal) {
+        closeModal('bulkRoleAssignmentModal');
+    }
+}
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Role management page loaded');
+    console.log('Total users:', {{ total_users or 0 }});
+    console.log('Role distribution:', roleUsersData);
+});
+</script>
+{% endblock %}

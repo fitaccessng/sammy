@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Construction Admin Dashboard | SammyA{% endblock %}</title>
+    
+    <!-- Primary BoxIcons CDN with preload -->
+    <link rel="preload" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css"></noscript>
+    
+    <!-- Fallback BoxIcons CDNs -->
+    <link href="https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link href="https://unpkg.com/boxicons@latest/css/boxicons.min.css" rel="stylesheet" crossorigin="anonymous">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+        
+        /* Enhanced BoxIcons Support */
+        .bx {
+            font-family: 'boxicons' !important;
+            font-style: normal;
+            font-weight: normal;
+            font-variant: normal;
+            text-transform: none;
+            line-height: 1;
+            display: inline-block;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-size: inherit;
+            vertical-align: middle;
+        }
+        
+        /* Ensure icons are visible with proper loading */
+        i[class^="bx-"], i[class*=" bx-"], 
+        i[class^="bxs-"], i[class*=" bxs-"],
+        i[class^="bxl-"], i[class*=" bxl-"] {
+            font-family: 'boxicons' !important;
+            font-style: normal !important;
+            font-weight: normal !important;
+            display: inline-block !important;
+            line-height: 1 !important;
+            vertical-align: middle !important;
+            min-width: 1em;
+            text-align: center;
+        }
+        
+        /* Force icon visibility */
+        .bx:before, [class*="bx-"]:before, [class*="bxs-"]:before, [class*="bxl-"]:before {
+            font-family: 'boxicons' !important;
+        }
+        
+        /* Fallback for specific icons if font fails to load */
+        .bx-fallback {
+            display: inline-block !important;
+            width: 1em;
+            height: 1em;
+            text-align: center;
+            font-size: inherit;
+            line-height: 1;
+            vertical-align: middle;
+        }
+        
+        /* Common icon fallbacks with improved visibility */
+        .bx-arrow-back:before, .bx-arrow-back.bx-fallback:before { content: '←'; }
+        .bx-plus:before, .bx-plus.bx-fallback:before { content: '+'; }
+        .bx-edit:before, .bx-edit.bx-fallback:before { content: '✏️'; }
+        .bx-trash:before, .bx-trash.bx-fallback:before { content: '🗑️'; }
+        .bx-check:before, .bx-check.bx-fallback:before { content: '✓'; }
+        .bx-time:before, .bx-time.bx-fallback:before { content: '⏰'; }
+        .bx-clock:before, .bx-clock.bx-fallback:before { content: '🕐'; }
+        .bx-target-lock:before, .bx-target-lock.bx-fallback:before { content: '🎯'; }
+        .bx-check-circle:before, .bx-check-circle.bx-fallback:before { content: '✅'; }
+        .bx-time-five:before, .bx-time-five.bx-fallback:before { content: '⏱️'; }
+        .bx-trending-up:before, .bx-trending-up.bx-fallback:before { content: '📈'; }
+        .bx-list-ul:before, .bx-list-ul.bx-fallback:before { content: '📋'; }
+        .bx-error-circle:before, .bx-error-circle.bx-fallback:before { content: '❌'; }
+        .bx-info-circle:before, .bx-info-circle.bx-fallback:before { content: 'ℹ️'; }
+        .bx-calendar:before, .bx-calendar.bx-fallback:before { content: '📅'; }
+        .bx-folder:before, .bx-folder.bx-fallback:before { content: '📁'; }
+        .bx-user:before, .bx-user.bx-fallback:before { content: '👤'; }
+        .bx-cog:before, .bx-cog.bx-fallback:before { content: '⚙️'; }
+        .bx-home:before, .bx-home.bx-fallback:before { content: '🏠'; }
+        .bx-menu:before, .bx-menu.bx-fallback:before { content: '☰'; }
+        .bx-x:before, .bx-x.bx-fallback:before { content: '✕'; }
+        .bx-search:before, .bx-search.bx-fallback:before { content: '🔍'; }
+        .bx-filter:before, .bx-filter.bx-fallback:before { content: '🔽'; }
+        .bx-download:before, .bx-download.bx-fallback:before { content: '⬇️'; }
+        .bx-upload:before, .bx-upload.bx-fallback:before { content: '⬆️'; }
+        .bx-refresh:before, .bx-refresh.bx-fallback:before { content: '🔄'; }
+        .bx-save:before, .bx-save.bx-fallback:before { content: '💾'; }
+        .bx-print:before, .bx-print.bx-fallback:before { content: '🖨️'; }
+        .bx-share:before, .bx-share.bx-fallback:before { content: '📤'; }
+        .bx-star:before, .bx-star.bx-fallback:before { content: '⭐'; }
+        .bx-heart:before, .bx-heart.bx-fallback:before { content: '❤️'; }
+        .bx-like:before, .bx-like.bx-fallback:before { content: '👍'; }
+        .bx-dislike:before, .bx-dislike.bx-fallback:before { content: '👎'; }
+        .bx-comment:before, .bx-comment.bx-fallback:before { content: '💬'; }
+        .bx-message:before, .bx-message.bx-fallback:before { content: '📧'; }
+        .bx-phone:before, .bx-phone.bx-fallback:before { content: '📞'; }
+        .bx-map:before, .bx-map.bx-fallback:before { content: '🗺️'; }
+        .bx-location:before, .bx-location.bx-fallback:before { content: '📍'; }
+        .bx-dollar:before, .bx-dollar.bx-fallback:before { content: '💲'; }
+        .bx-cart:before, .bx-cart.bx-fallback:before { content: '🛒'; }
+        .bx-package:before, .bx-package.bx-fallback:before { content: '📦'; }
+        .bx-truck:before, .bx-truck.bx-fallback:before { content: '🚚'; }
+        .bx-building:before, .bx-building.bx-fallback:before { content: '🏢'; }
+        .bx-building-house:before, .bx-building-house.bx-fallback:before { content: '🏠'; }
+        .bx-wrench:before, .bx-wrench.bx-fallback:before { content: '🔧'; }
+        .bx-hammer:before, .bx-hammer.bx-fallback:before { content: '🔨'; }
+        .bx-hard-hat:before, .bx-hard-hat.bx-fallback:before { content: '⛑️'; }
+        .bx-clipboard:before, .bx-clipboard.bx-fallback:before { content: '📋'; }
+        .bx-notepad:before, .bx-notepad.bx-fallback:before { content: '📝'; }
+        .bx-file:before, .bx-file.bx-fallback:before { content: '📄'; }
+        .bx-folder-open:before, .bx-folder-open.bx-fallback:before { content: '📂'; }
+        .bx-archive:before, .bx-archive.bx-fallback:before { content: '🗃️'; }
+        .bx-lock:before, .bx-lock.bx-fallback:before { content: '🔒'; }
+        .bx-unlock:before, .bx-unlock.bx-fallback:before { content: '🔓'; }
+        .bx-shield:before, .bx-shield.bx-fallback:before { content: '🛡️'; }
+        .bx-warning:before, .bx-warning.bx-fallback:before { content: '⚠️'; }
+        .bx-error:before, .bx-error.bx-fallback:before { content: '❗'; }
+        .bx-question-mark:before, .bx-question-mark.bx-fallback:before { content: '❓'; }
+        .bx-chevron-down:before, .bx-chevron-down.bx-fallback:before { content: '▼'; }
+        .bx-chevron-right:before, .bx-chevron-right.bx-fallback:before { content: '▶'; }
+        .bx-chevron-left:before, .bx-chevron-left.bx-fallback:before { content: '◀'; }
+        .bx-chevron-up:before, .bx-chevron-up.bx-fallback:before { content: '▲'; }
+        .bx-bar-chart-alt-2:before, .bx-bar-chart-alt-2.bx-fallback:before { content: '📊'; }
+        .bx-log-out:before, .bx-log-out.bx-fallback:before { content: '↩️'; }
+        
+        /* Solid variants */
+        .bxs-dashboard:before, .bxs-dashboard.bx-fallback:before { content: '📊'; }
+        .bxs-user:before, .bxs-user.bx-fallback:before { content: '👤'; }
+        .bxs-group:before, .bxs-group.bx-fallback:before { content: '👥'; }
+        .bxs-briefcase:before, .bxs-briefcase.bx-fallback:before { content: '💼'; }
+        .bxs-package:before, .bxs-package.bx-fallback:before { content: '📦'; }
+        .bxs-truck:before, .bxs-truck.bx-fallback:before { content: '🚚'; }
+        .bxs-clipboard:before, .bxs-clipboard.bx-fallback:before { content: '📋'; }
+        .bxs-file-find:before, .bxs-file-find.bx-fallback:before { content: '🔍'; }
+        .bxs-cog:before, .bxs-cog.bx-fallback:before { content: '⚙️'; }
+        .bxs-log-out:before, .bxs-log-out.bx-fallback:before { content: '↩️'; }
+        .bxs-user-account:before, .bxs-user-account.bx-fallback:before { content: '👤'; }
+        .bxs-notepad:before, .bxs-notepad.bx-fallback:before { content: '📝'; }
+        .bxs-customize:before, .bxs-customize.bx-fallback:before { content: '⚙️'; }
+        .bxs-building-house:before, .bxs-building-house.bx-fallback:before { content: '🏠'; }
+        .bxs-folder-plus:before, .bxs-folder-plus.bx-fallback:before { content: '📁➕'; }
+        .bxs-flag:before, .bxs-flag.bx-fallback:before { content: '🚩'; }
+        .bxs-wrench:before, .bxs-wrench.bx-fallback:before { content: '🔧'; }
+        .bxs-building:before, .bxs-building.bx-fallback:before { content: '🏢'; }
+        .bxs-cart:before, .bxs-cart.bx-fallback:before { content: '🛒'; }
+        .bxs-error:before, .bxs-error.bx-fallback:before { content: '❌'; }
+        .bxs-bell-ring:before, .bxs-bell-ring.bx-fallback:before { content: '🔔'; }
+        .bxs-calendar:before, .bxs-calendar.bx-fallback:before { content: '📅'; }
+        .bxs-analyse:before, .bxs-analyse.bx-fallback:before { content: '📊'; }
+        .bxs-file-export:before, .bxs-file-export.bx-fallback:before { content: '📤'; }
+        .bxs-bell:before, .bxs-bell.bx-fallback:before { content: '🔔'; }
+        .bxs-data:before, .bxs-data.bx-fallback:before { content: '📊'; }
+        
+        /* Additional specific icons used in sidebar */
+        .bxs-wrench-plus:before, .bxs-wrench-plus.bx-fallback:before { content: '🔧➕'; }
+        .bxs-building-plus:before, .bxs-building-plus.bx-fallback:before { content: '🏢➕'; }
+        .bxs-package-plus:before, .bxs-package-plus.bx-fallback:before { content: '📦➕'; }
+        .bxs-cart-add:before, .bxs-cart-add.bx-fallback:before { content: '🛒➕'; }
+        .bxs-error-alt:before, .bxs-error-alt.bx-fallback:before { content: '⚠️'; }
+        .bxs-bell-plus:before, .bxs-bell-plus.bx-fallback:before { content: '🔔➕'; }
+        .bxs-calendar-plus:before, .bxs-calendar-plus.bx-fallback:before { content: '📅➕'; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .sidebar {
+            width: 280px;
+            transition: all 0.3s ease;
+        }
+        .main-content {
+            margin-left: 280px;
+            transition: all 0.3s ease;
+        }
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-280px);
+                position: fixed;
+                z-index: 50;
+                height: 100vh;
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .sidebar.active {
+                transform: translateX(0);
+            }
+        }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .metric-card {
+            border-left: 4px solid var(--primary);
+        }
+        .progress-bar {
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .notification-dot {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: var(--danger);
+        }
+        .nav-item {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .nav-item.active {
+            background-color: rgba(255, 255, 255, 0.15);
+        }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background-color: white;
+        }
+        .hamburger {
+            display: none;
+        }
+        @media (max-width: 1024px) {
+            .hamburger {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    {% include 'components/flash.html' %}
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="sidebar bg-gray-900 text-white fixed h-full overflow-y-auto">
+            <div class="p-5 border-b border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h1 class="text-xl font-bold flex items-center">
+                        <i class='bx bx-building-house mr-2'></i>
+                        <span>SammyA</span>
+                    </h1>
+                    <button id="sidebar-close" class="lg:hidden">
+                        <i class='bx bx-x text-2xl'></i>
+                    </button>
+                </div>
+                <p class="text-gray-400 text-sm mt-1">Construction Management</p>
+            </div>
+            <nav class="p-4 space-y-1">
+                {% block sidebar %}
+                <!-- Collapsible Sidebar Sections -->
+                <div x-data="{ open: {dashboard: true, admin: false, projects: false, inventory: false, orders: false, monitoring: false, scheduling: false, analytics: false, files: false, user: false} }" class="space-y-2">
+                    <!-- Dashboard Section -->
+                    <div>
+                        <button @click="open.dashboard = !open.dashboard" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Dashboard</span>
+                            <i :class="open.dashboard ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.dashboard" class="space-y-1">
+                            <a href="{{ url_for('admin.dashboard') }}" class="nav-item flex items-center p-3 rounded-lg relative">
+                                <i class='bx bxs-dashboard mr-3'></i>
+                                <span>Overview</span>
+                            </a>
+                            <a href="{{ url_for('admin.oversight_reports_view') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-data mr-3'></i>
+                                <span>Reports</span>
+                            </a>
+                        </div>
+                    </div>
+                   
+                    <!-- Admin Management Section -->
+                    <div class="pt-2">
+                        <button @click="open.admin = !open.admin" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Admin Management</span>
+                            <i :class="open.admin ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.admin" class="space-y-1">
+                            <a href="{{ url_for('admin.roles_view') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-user-account mr-3'></i>
+                                <span>Roles</span>
+                            </a>
+                            <a href="{{ url_for('admin.reporting_lines_view') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-notepad mr-3'></i>
+                                <span>Reporting Lines</span>
+                            </a>
+                            <a href="{{ url_for('admin.approval_hierarchy_view') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bx-bar-chart-alt-2 mr-3'></i>
+                                <span>Approval Hierarchy</span>
+                            </a>
+                            <a href="{{ url_for('admin.permissions_view') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-customize mr-3'></i>
+                                <span>Permissions</span>
+                            </a>
+                        </div>
+                    </div>
+                 
+                    <!-- Projects Section -->
+                    <div class="pt-2">
+                        <button @click="open.projects = !open.projects" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Projects</span>
+                            <i :class="open.projects ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.projects" class="space-y-1">
+                            <a href="{{ url_for('admin.projects') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-building-house mr-3'></i>
+                                <span>All Projects</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_project') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-folder-plus mr-3'></i>
+                                <span>Add Project</span>
+                            </a>
+                            <a href="{{ url_for('admin.all_milestones', project_id=1) }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-flag mr-3'></i>
+                                <span>Milestones</span>
+                            </a>
+                           
+                        </div>
+                    </div>
+                   
+                    <!-- Inventory Section -->
+                    <div class="pt-2">
+                        <button @click="open.inventory = !open.inventory" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Inventory</span>
+                            <i :class="open.inventory ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.inventory" class="space-y-1">
+                            <a href="{{ url_for('admin.equipment') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-wrench mr-3'></i>
+                                <span>Equipment</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_equipment') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-wrench-plus mr-3'></i>
+                                <span>Add Equipment</span>
+                            </a>
+                            <a href="{{ url_for('admin.assets') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-building mr-3'></i>
+                                <span>Assets</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_asset') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-building-plus mr-3'></i>
+                                <span>Add Asset</span>
+                            </a>
+                            <a href="{{ url_for('admin.stock') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-package mr-3'></i>
+                                <span>Stock</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_stock') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-package-plus mr-3'></i>
+                                <span>Add Stock</span>
+                            </a>
+                        </div>
+                    </div>
+                   
+                    <!-- Orders & Purchases Section -->
+                    <div class="pt-2">
+                        <button @click="open.orders = !open.orders" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Orders & Purchases</span>
+                            <i :class="open.orders ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.orders" class="space-y-1">
+                            <a href="{{ url_for('admin.orders') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-cart mr-3'></i>
+                                <span>Purchase Orders</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_order') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-cart-add mr-3'></i>
+                                <span>Add Order</span>
+                            </a>
+                            <a href="{{ url_for('admin.suppliers') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-building mr-3'></i>
+                                <span>Suppliers</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_supplier') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-building-plus mr-3'></i>
+                                <span>Add Supplier</span>
+                            </a>
+                        </div>
+                    </div>
+                  
+                    <!-- Monitoring Section -->
+                    <div class="pt-2">
+                        <button @click="open.monitoring = !open.monitoring" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Monitoring</span>
+                            <i :class="open.monitoring ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.monitoring" class="space-y-1">
+                            <a href="{{ url_for('admin.incidents') }}" class="nav-item flex items-center p-3 rounded-lg relative">
+                                <i class='bx bxs-error mr-3'></i>
+                                <span>Incidents</span>
+                                <span class="ml-auto bg-yellow-500 text-white text-xs px-2 py-0.5 rounded-full">{{ incident_count or 0 }}</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_incident') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-error-alt mr-3'></i>
+                                <span>Add Incident</span>
+                            </a>
+                            <a href="{{ url_for('admin.alerts') }}" class="nav-item flex items-center p-3 rounded-lg relative">
+                                <i class='bx bxs-bell-ring mr-3'></i>
+                                <span>Alerts</span>
+                                <span class="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">{{ alert_count or 0 }}</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_alert') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-bell-plus mr-3'></i>
+                                <span>Add Alert</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Scheduling Section -->
+                    <div class="pt-2">
+                        <button @click="open.scheduling = !open.scheduling" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Scheduling</span>
+                            <i :class="open.scheduling ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.scheduling" class="space-y-1">
+                            <a href="{{ url_for('admin.schedules') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-calendar mr-3'></i>
+                                <span>Schedules</span>
+                            </a>
+                            <a href="{{ url_for('admin.add_general_schedule') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-calendar-plus mr-3'></i>
+                                <span>Add Schedule</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- Analytics Section -->
+                    <div class="pt-2">
+                        <button @click="open.analytics = !open.analytics" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>Analytics</span>
+                            <i :class="open.analytics ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.analytics" class="space-y-1">
+                            <a href="{{ url_for('admin.analytics_custom') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-analyse mr-3'></i>
+                                <span>Custom Analytics</span>
+                            </a>
+                            <a href="{{ url_for('admin.analytics_export_csv') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-file-export mr-3'></i>
+                                <span>Export Analytics</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- File Management Section -->
+                    <div class="pt-2">
+                        <button @click="open.files = !open.files" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>File Management</span>
+                            <i :class="open.files ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.files" class="space-y-1">
+                            <a href="{{ url_for('files.search_files') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-file-find mr-3'></i>
+                                <span>Search Files</span>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <!-- User Section -->
+                    <div class="pt-2">
+                        <button @click="open.user = !open.user" class="flex items-center w-full text-xs uppercase text-gray-500 tracking-wider mb-3 focus:outline-none">
+                            <span>User</span>
+                            <i :class="open.user ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
+                        </button>
+                        <div x-show="open.user" class="space-y-1">
+                            <a href="{{ url_for('admin.profile') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bxs-user mr-3'></i>
+                                <span>Profile</span>
+                            </a>
+                            <a href="{{ url_for('admin.logout') }}" class="nav-item flex items-center p-3 rounded-lg">
+                                <i class='bx bx-log-out mr-3'></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endblock %}
+            </nav>
+           
+        </aside>
+        <div class="main-content flex-1">
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <div class="flex items-center">
+                        <button id="sidebar-toggle" class="hamburger mr-4 text-gray-700">
+                            <i class='bx bx-menu text-2xl'></i>
+                        </button>
+                        <h1 class="text-xl font-semibold text-gray-800">{% block header %}Dashboard Overview{% endblock %}</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <button class="p-2 rounded-full hover:bg-gray-100 relative">
+                                <i class='bx bxs-bell text-xl text-gray-600'></i>
+                                <span class="notification-dot"></span>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <button id="user-menu-button" class="flex items-center space-x-2">
+                                <img src="https://ui-avatars.com/api/?name=Admin+User&background=2563eb&color=fff" 
+                                     alt="Profile" class="w-8 h-8 rounded-full">
+                                <span class="text-gray-700">Admin</span>
+                                <i class='bx bx-chevron-down text-gray-500'></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            <div class="p-6 space-y-6">
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+    <script>
+        // Sidebar toggle functionality
+        const sidebar = document.querySelector('.sidebar');
+        const sidebarToggle = document.getElementById('sidebar-toggle');
+        const sidebarClose = document.getElementById('sidebar-close');
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+        sidebarClose.addEventListener('click', () => {
+            sidebar.classList.remove('active');
+        });
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth < 1024 && 
+                !sidebar.contains(e.target) && 
+                !sidebarToggle.contains(e.target) &&
+                sidebar.classList.contains('active')) {
+                sidebar.classList.remove('active');
+            }
+        });
+        // User menu functionality
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userMenu = document.getElementById('user-menu');
+        userMenuButton.addEventListener('click', () => {
+            userMenu.classList.toggle('hidden');
+        });
+        // Close user menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenuButton.contains(e.target) && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+    </script>
+    
+    <!-- Enhanced BoxIcons Verification and Fallback Script -->
+    <script>
+        // Enhanced BoxIcons loading and verification
+        (function() {
+            let boxIconsLoaded = false;
+            let loadAttempts = 0;
+            const maxAttempts = 3;
+            
+            // Check if BoxIcons loaded successfully
+            function checkBoxIconsLoaded() {
+                const testElement = document.createElement('i');
+                testElement.className = 'bx bx-home';
+                testElement.style.visibility = 'hidden';
+                testElement.style.position = 'absolute';
+                testElement.style.fontSize = '16px';
+                document.body.appendChild(testElement);
+                
+                const computedStyle = window.getComputedStyle(testElement);
+                const fontFamily = computedStyle.fontFamily;
+                const width = testElement.offsetWidth;
+                
+                document.body.removeChild(testElement);
+                
+                // Check if boxicons font family is applied and has proper dimensions
+                const isLoaded = fontFamily.includes('boxicons') || width > 0;
+                console.log('BoxIcons check:', { fontFamily, width, isLoaded });
+                return isLoaded;
+            }
+            
+            // Apply fallback styles to all icons
+            function applyFallbacks() {
+                console.log('Applying BoxIcons fallbacks...');
+                
+                // Add fallback class to all bx icons
+                const icons = document.querySelectorAll('[class*="bx"]');
+                icons.forEach(icon => {
+                    icon.classList.add('bx-fallback');
+                    // Ensure visibility
+                    icon.style.display = 'inline-block';
+                    icon.style.minWidth = '1em';
+                    icon.style.textAlign = 'center';
+                });
+                
+                console.log(`Applied fallbacks to ${icons.length} icons`);
+            }
+            
+            // Load alternative CDN
+            function loadAlternativeCDN() {
+                if (loadAttempts >= maxAttempts) {
+                    console.warn('Max BoxIcons load attempts reached, using fallbacks only');
+                    applyFallbacks();
+                    return;
+                }
+                
+                loadAttempts++;
+                console.log(`Loading BoxIcons alternative CDN (attempt ${loadAttempts})`);
+                
+                const fallbackLink = document.createElement('link');
+                fallbackLink.rel = 'stylesheet';
+                fallbackLink.href = `https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css?v=${Date.now()}`;
+                fallbackLink.crossOrigin = 'anonymous';
+                
+                fallbackLink.onload = function() {
+                    console.log('Alternative BoxIcons CDN loaded successfully');
+                    setTimeout(verifyAndFallback, 100);
+                };
+                
+                fallbackLink.onerror = function() {
+                    console.warn('Alternative BoxIcons CDN failed to load');
+                    setTimeout(loadAlternativeCDN, 500);
+                };
+                
+                document.head.appendChild(fallbackLink);
+            }
+            
+            // Main verification and fallback function
+            function verifyAndFallback() {
+                if (checkBoxIconsLoaded()) {
+                    console.log('✅ BoxIcons loaded successfully');
+                    boxIconsLoaded = true;
+                    
+                    // Ensure all icons are properly styled
+                    const allBoxIcons = document.querySelectorAll('[class*="bx"]');
+                    allBoxIcons.forEach(icon => {
+                        icon.style.fontFamily = 'boxicons';
+                        icon.style.display = 'inline-block';
+                        icon.style.lineHeight = '1';
+                        icon.style.verticalAlign = 'middle';
+                    });
+                    
+                    console.log(`✅ Verified ${allBoxIcons.length} BoxIcons on page`);
+                } else {
+                    console.warn('❌ BoxIcons not loaded properly, trying alternative...');
+                    loadAlternativeCDN();
+                }
+            }
+            
+            // Initialize when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    setTimeout(verifyAndFallback, 200);
+                });
+            } else {
+                setTimeout(verifyAndFallback, 200);
+            }
+            
+            // Force reload function for manual troubleshooting
+            window.reloadBoxIcons = function() {
+                console.log('🔄 Manually reloading BoxIcons...');
+                
+                const existingLinks = document.querySelectorAll('link[href*="boxicons"]');
+                existingLinks.forEach(link => link.remove());
+                
+                loadAttempts = 0;
+                
+                const newLink = document.createElement('link');
+                newLink.rel = 'stylesheet';
+                newLink.href = `https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css?v=${Date.now()}`;
+                newLink.crossOrigin = 'anonymous';
+                
+                newLink.onload = function() {
+                    console.log('🔄 BoxIcons manually reloaded');
+                    setTimeout(verifyAndFallback, 100);
+                };
+                
+                document.head.appendChild(newLink);
+            };
+            
+            // Debug function
+            window.debugBoxIcons = function() {
+                console.log('🔍 BoxIcons Debug Info:');
+                console.log('Loaded:', boxIconsLoaded);
+                console.log('Load attempts:', loadAttempts);
+                
+                const icons = document.querySelectorAll('[class*="bx"]');
+                console.log('Total icons found:', icons.length);
+                
+                if (icons.length > 0) {
+                    const firstIcon = icons[0];
+                    const styles = window.getComputedStyle(firstIcon);
+                    console.log('First icon styles:', {
+                        fontFamily: styles.fontFamily,
+                        display: styles.display,
+                        fontSize: styles.fontSize,
+                        width: firstIcon.offsetWidth,
+                        height: firstIcon.offsetHeight
+                    });
+                }
+                
+                return { boxIconsLoaded, loadAttempts, iconCount: icons.length };
+            };
+            
+        })();
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+</body>
+</html>

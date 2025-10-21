@@ -1,0 +1,229 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Add Supplier - Construction Management System{% endblock %}
+
+{% block header %}Add Supplier{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<style>
+    .modern-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        border: 1px solid #e5e7eb;
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        border-radius: 12px;
+        transition: all 0.3s;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+        color: white;
+    }
+
+    .btn-secondary-modern {
+        background: #f3f4f6;
+        color: #374151;
+        border: 1px solid #d1d5db;
+    }
+
+    .form-input {
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: all 0.3s;
+        background: white;
+        width: 100%;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: #374151;
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .form-label.required::after {
+        content: " *";
+        color: #ef4444;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid #3b82f6;
+    }
+</style>
+
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Add Supplier</h1>
+            <p class="text-gray-600">Add a new supplier to your vendor database</p>
+        </div>
+        <a href="{{ url_for('admin.suppliers') }}" class="btn-modern btn-secondary-modern mt-4 sm:mt-0">
+            <i class='bx bx-arrow-back'></i>
+            Back to Suppliers
+        </a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg bg-{{ 'red-100' if category == 'danger' or category == 'error' else 'green-100' }} text-{{ 'red-700' if category == 'danger' or category == 'error' else 'green-700' }} border border-{{ 'red-200' if category == 'danger' or category == 'error' else 'green-200' }}">
+                    <i class='bx {{ 'bx-error' if category == 'danger' or category == 'error' else 'bx-check-circle' }} mr-2'></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Add Supplier Form -->
+    <div class="modern-card p-8">
+        <form method="POST" action="{{ url_for('admin.add_supplier') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            
+            <!-- Basic Information -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-info-circle mr-2'></i>
+                    Basic Information
+                </h2>
+                
+                <div class="form-grid">
+                    <div>
+                        <label for="name" class="form-label required">Company Name</label>
+                        <input type="text" id="name" name="name" class="form-input" placeholder="Enter company name" required>
+                    </div>
+
+                    <div>
+                        <label for="contact_person" class="form-label">Contact Person</label>
+                        <input type="text" id="contact_person" name="contact_person" class="form-input" placeholder="Main contact person">
+                    </div>
+
+                    <div>
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" name="email" class="form-input" placeholder="supplier@example.com">
+                    </div>
+
+                    <div>
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="tel" id="phone" name="phone" class="form-input" placeholder="Phone number">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label for="address" class="form-label">Address</label>
+                    <textarea id="address" name="address" class="form-input" rows="3" placeholder="Complete business address"></textarea>
+                </div>
+            </div>
+
+            <!-- Business Information -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-building mr-2'></i>
+                    Business Information
+                </h2>
+                
+                <div class="form-grid">
+                    <div>
+                        <label for="tax_id" class="form-label">Tax ID / VAT Number</label>
+                        <input type="text" id="tax_id" name="tax_id" class="form-input" placeholder="Tax identification number">
+                    </div>
+
+                    <div>
+                        <label for="payment_terms" class="form-label">Payment Terms</label>
+                        <select id="payment_terms" name="payment_terms" class="form-input">
+                            <option value="">Select payment terms</option>
+                            <option value="Net 30">Net 30 days</option>
+                            <option value="Net 15">Net 15 days</option>
+                            <option value="Net 7">Net 7 days</option>
+                            <option value="COD">Cash on Delivery</option>
+                            <option value="Prepaid">Prepaid</option>
+                            <option value="Credit Card">Credit Card</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label for="rating" class="form-label">Initial Rating (1-5)</label>
+                        <select id="rating" name="rating" class="form-input">
+                            <option value="">No rating</option>
+                            <option value="1">1 Star - Poor</option>
+                            <option value="2">2 Stars - Below Average</option>
+                            <option value="3">3 Stars - Average</option>
+                            <option value="4">4 Stars - Good</option>
+                            <option value="5">5 Stars - Excellent</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Notes -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-note mr-2'></i>
+                    Additional Notes
+                </h2>
+                
+                <div>
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea id="notes" name="notes" class="form-input" rows="4" placeholder="Any additional notes about this supplier..."></textarea>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                <button type="submit" class="btn-modern btn-primary-modern flex-1 sm:flex-none">
+                    <i class='bx bx-check'></i>
+                    Add Supplier
+                </button>
+                <a href="{{ url_for('admin.suppliers') }}" class="btn-modern btn-secondary-modern flex-1 sm:flex-none">
+                    <i class='bx bx-x'></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

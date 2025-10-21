@@ -1,0 +1,1169 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Analytics Dashboard - Construction Management System{% endblock %}
+
+{% block header %}Analytics Dashboard{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --indigo-color: #6366f1;
+        --indigo-light: #eef2ff;
+        --purple-color: #8b5cf6;
+        --purple-light: #f3f4f6;
+        --orange-color: #f97316;
+        --orange-light: #fff7ed;
+        --cyan-color: #06b6d4;
+        --cyan-light: #ecfeff;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Modern Card Styling */
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+    }
+
+    .modern-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    /* Enhanced Button Styles */
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.625rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        letter-spacing: 0.025em;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+        color: white;
+        border: 1px solid transparent;
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #3730a3 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-sm-modern {
+        padding: 0.4rem 0.875rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    /* Statistics Cards */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        border-left: 4px solid;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .stat-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    .stat-card.project-card { border-left-color: var(--primary-color); }
+    .stat-card.financial-card { border-left-color: var(--success-color); }
+    .stat-card.procurement-card { border-left-color: var(--warning-color); }
+    .stat-card.hr-card { border-left-color: var(--cyan-color); }
+    .stat-card.asset-card { border-left-color: var(--purple-color); }
+    .stat-card.incident-card { border-left-color: var(--danger-color); }
+    .stat-card.equipment-card { border-left-color: var(--orange-color); }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .stat-title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .stat-icon {
+        width: 24px;
+        height: 24px;
+        color: inherit;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--gray-900);
+        margin-bottom: 0.5rem;
+        font-family: 'Monaco', 'Menlo', monospace;
+    }
+
+    .stat-description {
+        font-size: 0.875rem;
+        color: var(--gray-600);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 0.75rem;
+        background: rgba(0,0,0,0.02);
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.05);
+        transition: var(--transition);
+    }
+
+    .stat-item:hover {
+        background: rgba(0,0,0,0.05);
+    }
+
+    .stat-item-value {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: inherit;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .stat-item-label {
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 500;
+    }
+
+    /* Growth Indicators */
+    .growth-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .growth-positive {
+        background: var(--success-light);
+        color: #065f46;
+    }
+
+    .growth-negative {
+        background: var(--danger-light);
+        color: #dc2626;
+    }
+
+    .growth-neutral {
+        background: var(--gray-100);
+        color: var(--gray-600);
+    }
+
+    /* Chart Containers */
+    .chart-container {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        margin-bottom: 2rem;
+        border: 1px solid var(--gray-200);
+    }
+
+    .chart-header {
+        display: flex;
+        align-items: center;
+        justify-content: between;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .chart-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .chart-wrapper {
+        position: relative;
+        height: 300px;
+        width: 100%;
+    }
+
+    /* Filter Bar */
+    .filter-bar {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .filter-select {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        background: white;
+        color: var(--gray-700);
+        font-size: 0.875rem;
+        transition: var(--transition);
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Metric Comparison */
+    .metric-comparison {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gray-200);
+    }
+
+    .metric-comparison small {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        color: var(--gray-500);
+        font-size: 0.75rem;
+    }
+
+    /* Summary Stats */
+    .summary-stats {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--indigo-color) 100%);
+        color: white;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 2rem;
+    }
+
+    .summary-item {
+        text-align: center;
+    }
+
+    .summary-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        font-family: 'Monaco', 'Menlo', monospace;
+    }
+
+    .summary-label {
+        font-size: 1rem;
+        opacity: 0.9;
+        font-weight: 500;
+    }
+
+    /* Section Title */
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--gray-800);
+        margin: 2rem 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .summary-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .summary-value {
+            font-size: 2rem;
+        }
+        
+        .filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .chart-wrapper {
+            height: 250px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .summary-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            padding: 1rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Analytics Dashboard</h2>
+        <p class="text-gray-600">Comprehensive business intelligence across all modules</p>
+    </div>
+    <button onclick="exportData()" class="btn-primary-modern btn-sm-modern">
+        <i class='bx bx-download'></i>
+        Export Data
+    </button>
+</div>
+
+<!-- Summary Statistics -->
+<div class="summary-stats">
+    <h2 class="text-xl font-semibold mb-6 text-center">Key Performance Indicators</h2>
+    <div class="summary-grid">
+        <div class="summary-item">
+            <div class="summary-value">{{ "{:,}".format(analytics.project_analytics.total_projects) }}</div>
+            <div class="summary-label">Total Projects</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-value">₦{{ "{:,.0f}".format(analytics.financial_analytics.total_order_value) }}</div>
+            <div class="summary-label">Total Order Value</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-value">{{ "{:,}".format(analytics.hr_analytics.total_employees) }}</div>
+            <div class="summary-label">Total Employees</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-value">{{ "{:,}".format(analytics.asset_analytics.total_assets) }}</div>
+            <div class="summary-label">Total Assets</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Bar -->
+<div class="filter-bar">
+    <div class="filter-group">
+        <label class="text-sm font-medium text-gray-700">Time Period:</label>
+        <select id="timePeriod" class="filter-select">
+            <option value="12months">Last 12 Months</option>
+            <option value="6months">Last 6 Months</option>
+            <option value="3months">Last 3 Months</option>
+            <option value="1month">This Month</option>
+        </select>
+    </div>
+    <div class="filter-group">
+        <label class="text-sm font-medium text-gray-700">Module:</label>
+        <select id="moduleFilter" class="filter-select">
+            <option value="all">All Modules</option>
+            <option value="projects">Projects</option>
+            <option value="finance">Finance</option>
+            <option value="hr">Human Resources</option>
+            <option value="procurement">Procurement</option>
+            <option value="assets">Assets</option>
+            <option value="incidents">Incidents</option>
+        </select>
+    </div>
+</div>
+
+<!-- Project Analytics -->
+<h2 class="section-title">
+    <i class='bx bx-building'></i>
+    Project Management
+</h2>
+<div class="stats-grid">
+    <div class="stat-card project-card">
+        <div class="stat-header">
+            <div class="stat-title">
+                <i class='bx bx-building stat-icon'></i>
+                Projects Overview
+            </div>
+            {% if analytics.growth_rates.projects %}
+            <div class="growth-indicator growth-{{ 'positive' if analytics.growth_rates.projects > 0 else 'negative' if analytics.growth_rates.projects < 0 else 'neutral' }}">
+                <i class='bx bx-trending-{{ 'up' if analytics.growth_rates.projects > 0 else 'down' if analytics.growth_rates.projects < 0 else 'up' }}'></i>
+                {{ analytics.growth_rates.projects }}%
+            </div>
+            {% endif %}
+        </div>
+        <div class="stat-value">{{ analytics.project_analytics.total_projects }}</div>
+        <div class="stat-description">
+            <i class='bx bx-buildings'></i>
+            Total projects in system
+        </div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.project_analytics.active_projects }}</span>
+                <span class="stat-item-label">Active</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.project_analytics.completed_projects }}</span>
+                <span class="stat-item-label">Completed</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.project_analytics.planning_projects }}</span>
+                <span class="stat-item-label">Planning</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.project_analytics.on_hold_projects }}</span>
+                <span class="stat-item-label">On Hold</span>
+            </div>
+        </div>
+        <div class="metric-comparison">
+            <small><i class='bx bx-calendar'></i> This Month: {{ analytics.project_analytics.projects_this_month }}</small>
+            <small><i class='bx bx-money'></i> Avg Budget: ₦{{ "{:,.0f}".format(analytics.project_analytics.avg_budget) }}</small>
+        </div>
+    </div>
+
+    <!-- Financial Analytics -->
+    <div class="stat-card financial-card">
+        <div class="stat-header">
+            <div class="stat-title">
+                <i class='bx bx-money stat-icon'></i>
+                Financial Overview
+            </div>
+        </div>
+        <div class="stat-value">₦{{ "{:,.0f}".format(analytics.financial_analytics.total_order_value) }}</div>
+        <div class="stat-description">
+            <i class='bx bx-wallet'></i>
+            Total order value
+        </div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.financial_analytics.total_orders }}</span>
+                <span class="stat-item-label">Orders</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.financial_analytics.pending_orders }}</span>
+                <span class="stat-item-label">Pending</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.financial_analytics.approved_orders }}</span>
+                <span class="stat-item-label">Approved</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.financial_analytics.rejected_orders }}</span>
+                <span class="stat-item-label">Rejected</span>
+            </div>
+        </div>
+        <div class="metric-comparison">
+            <small><i class='bx bx-trending-up'></i> Pending: ₦{{ "{:,.0f}".format(analytics.financial_analytics.pending_order_value) }}</small>
+            <small><i class='bx bx-check-circle'></i> Approved: ₦{{ "{:,.0f}".format(analytics.financial_analytics.approved_order_value) }}</small>
+        </div>
+    </div>
+
+    <!-- HR Analytics -->
+    <div class="stat-card hr-card">
+        <div class="stat-header">
+            <div class="stat-title">
+                <i class='bx bx-group stat-icon'></i>
+                Human Resources
+            </div>
+        </div>
+        <div class="stat-value">{{ analytics.hr_analytics.total_employees }}</div>
+        <div class="stat-description">
+            <i class='bx bx-user'></i>
+            Total employees
+        </div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.hr_analytics.active_employees }}</span>
+                <span class="stat-item-label">Active</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.hr_analytics.departments }}</span>
+                <span class="stat-item-label">Departments</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.hr_analytics.new_hires_this_month }}</span>
+                <span class="stat-item-label">New Hires</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.hr_analytics.positions }}</span>
+                <span class="stat-item-label">Positions</span>
+            </div>
+        </div>
+        <div class="metric-comparison">
+            <small><i class='bx bx-money'></i> Total Payroll: ₦{{ "{:,.0f}".format(analytics.hr_analytics.total_payroll) }}</small>
+            <small><i class='bx bx-calculator'></i> Avg Salary: ₦{{ "{:,.0f}".format(analytics.hr_analytics.avg_salary) }}</small>
+        </div>
+    </div>
+
+    <!-- Procurement Analytics -->
+    <div class="stat-card procurement-card">
+        <div class="stat-header">
+            <div class="stat-title">
+                <i class='bx bx-package stat-icon'></i>
+                Procurement
+            </div>
+        </div>
+        <div class="stat-value">{{ analytics.procurement_analytics.total_suppliers }}</div>
+        <div class="stat-description">
+            <i class='bx bx-store'></i>
+            Total suppliers
+        </div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.procurement_analytics.active_suppliers }}</span>
+                <span class="stat-item-label">Active</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.procurement_analytics.total_stock_items }}</span>
+                <span class="stat-item-label">Stock Items</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.procurement_analytics.low_stock_items }}</span>
+                <span class="stat-item-label">Low Stock</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.procurement_analytics.out_of_stock_items }}</span>
+                <span class="stat-item-label">Out of Stock</span>
+            </div>
+        </div>
+        <div class="metric-comparison">
+            <small><i class='bx bx-box'></i> Stock Quantity: {{ "{:,}".format(analytics.procurement_analytics.total_stock_quantity) }}</small>
+            <small><i class='bx bx-calendar'></i> This Month: {{ analytics.procurement_analytics.suppliers_this_month }}</small>
+        </div>
+    </div>
+
+    <!-- Asset Analytics -->
+    <div class="stat-card asset-card">
+        <div class="stat-header">
+            <div class="stat-title">
+                <i class='bx bx-briefcase-alt-2 stat-icon'></i>
+                Asset Management
+            </div>
+        </div>
+        <div class="stat-value">{{ analytics.asset_analytics.total_assets }}</div>
+        <div class="stat-description">
+            <i class='bx bx-archive'></i>
+            Total assets
+        </div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.asset_analytics.active_assets }}</span>
+                <span class="stat-item-label">Active</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.asset_analytics.maintenance_assets }}</span>
+                <span class="stat-item-label">Maintenance</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.asset_analytics.retired_assets }}</span>
+                <span class="stat-item-label">Retired</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.asset_analytics.assets_this_month }}</span>
+                <span class="stat-item-label">New</span>
+            </div>
+        </div>
+        <div class="metric-comparison">
+            <small><i class='bx bx-calendar'></i> This Month: {{ analytics.asset_analytics.assets_this_month }}</small>
+            <small><i class='bx bx-wrench'></i> Maintenance: {{ analytics.asset_analytics.maintenance_assets }}</small>
+        </div>
+    </div>
+
+    <!-- Incident Analytics -->
+    <div class="stat-card incident-card">
+        <div class="stat-header">
+            <div class="stat-title">
+                <i class='bx bx-error-circle stat-icon'></i>
+                Incident Management
+            </div>
+        </div>
+        <div class="stat-value">{{ analytics.incident_analytics.total_incidents }}</div>
+        <div class="stat-description">
+            <i class='bx bx-shield-alt-2'></i>
+            Total incidents
+        </div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.incident_analytics.open_incidents }}</span>
+                <span class="stat-item-label">Open</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.incident_analytics.critical_incidents }}</span>
+                <span class="stat-item-label">Critical</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.incident_analytics.high_incidents }}</span>
+                <span class="stat-item-label">High</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.incident_analytics.closed_incidents }}</span>
+                <span class="stat-item-label">Closed</span>
+            </div>
+        </div>
+        <div class="metric-comparison">
+            <small><i class='bx bx-calendar'></i> This Month: {{ analytics.incident_analytics.incidents_this_month }}</small>
+            <small><i class='bx bx-trending-down'></i> Medium: {{ analytics.incident_analytics.medium_incidents }}</small>
+        </div>
+    </div>
+
+    <!-- Equipment Analytics -->
+    <div class="stat-card equipment-card">
+        <div class="stat-header">
+            <div class="stat-title">
+                <i class='bx bx-cog stat-icon'></i>
+                Equipment
+            </div>
+        </div>
+        <div class="stat-value">{{ analytics.equipment_analytics.total_equipment }}</div>
+        <div class="stat-description">
+            <i class='bx bx-wrench'></i>
+            Total equipment
+        </div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.equipment_analytics.active_equipment }}</span>
+                <span class="stat-item-label">Active</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.equipment_analytics.maintenance_equipment }}</span>
+                <span class="stat-item-label">Maintenance</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.equipment_analytics.retired_equipment }}</span>
+                <span class="stat-item-label">Retired</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ "{:,.1f}".format(analytics.equipment_analytics.avg_machine_hours) }}</span>
+                <span class="stat-item-label">Avg Hours</span>
+            </div>
+        </div>
+        <div class="metric-comparison">
+            <small><i class='bx bx-time'></i> Avg Hours: {{ "{:,.1f}".format(analytics.equipment_analytics.avg_machine_hours) }}</small>
+            <small><i class='bx bx-droplet'></i> Diesel: {{ "{:,.1f}".format(analytics.equipment_analytics.total_diesel_consumption) }}L</small>
+        </div>
+    </div>
+
+    <!-- Schedule Analytics -->
+    <div class="stat-card project-card">
+        <div class="stat-header">
+            <div class="stat-title">
+                <i class='bx bx-calendar stat-icon'></i>
+                Schedules
+            </div>
+        </div>
+        <div class="stat-value">{{ analytics.schedule_analytics.total_schedules }}</div>
+        <div class="stat-description">
+            <i class='bx bx-time-five'></i>
+            Total schedules
+        </div>
+        <div class="stat-grid">
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.schedule_analytics.active_schedules }}</span>
+                <span class="stat-item-label">Active</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.schedule_analytics.completed_schedules }}</span>
+                <span class="stat-item-label">Completed</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.schedule_analytics.pending_schedules }}</span>
+                <span class="stat-item-label">Pending</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-item-value">{{ analytics.schedule_analytics.overdue_schedules }}</span>
+                <span class="stat-item-label">Overdue</span>
+            </div>
+        </div>
+        <div class="metric-comparison">
+            <small><i class='bx bx-calendar'></i> This Month: {{ analytics.schedule_analytics.schedules_this_month }}</small>
+            <small><i class='bx bx-time'></i> Overdue: {{ analytics.schedule_analytics.overdue_schedules }}</small>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<h2 class="section-title">
+    <i class='bx bx-line-chart'></i>
+    Trend Analysis
+</h2>
+
+<!-- Monthly Trends Chart -->
+<div class="chart-container">
+    <div class="chart-header">
+        <h3 class="chart-title">
+            <i class='bx bx-trending-up'></i>
+            Monthly Trends (Last 12 Months)
+        </h3>
+    </div>
+    <div class="chart-wrapper">
+        <canvas id="monthlyTrendsChart"></canvas>
+    </div>
+</div>
+
+<!-- Financial Overview Chart -->
+<div class="chart-container">
+    <div class="chart-header">
+        <h3 class="chart-title">
+            <i class='bx bx-bar-chart-alt-2'></i>
+            Financial Overview
+        </h3>
+    </div>
+    <div class="chart-wrapper">
+        <canvas id="financialChart"></canvas>
+    </div>
+</div>
+
+<!-- Module Distribution Chart -->
+<div class="chart-container">
+    <div class="chart-header">
+        <h3 class="chart-title">
+            <i class='bx bx-pie-chart-alt-2'></i>
+            Module Activity Distribution
+        </h3>
+    </div>
+    <div class="chart-wrapper">
+        <canvas id="moduleDistributionChart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Debug: Check if Chart.js is loaded
+console.log('Chart.js available:', typeof Chart !== 'undefined');
+
+// Debug: Analytics data from backend
+const analyticsData = {{ analytics|tojson }};
+console.log('Analytics data received:', analyticsData);
+
+// Initialize all charts when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM Content Loaded - initializing charts...');
+    
+    // Add a small delay to ensure everything is ready
+    setTimeout(() => {
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js is not loaded!');
+            return;
+        }
+        
+        console.log('Chart.js is available, initializing charts...');
+        initializeCharts();
+    }, 500);
+});
+
+function initializeCharts() {
+    console.log('Starting chart initialization...');
+    
+    try {
+        console.log('Initializing monthly trends chart...');
+        initializeMonthlyTrendsChart();
+        
+        console.log('Initializing financial chart...');
+        initializeFinancialChart();
+        
+        console.log('Initializing module distribution chart...');
+        initializeModuleDistributionChart();
+        
+        console.log('All charts initialized successfully');
+    } catch (error) {
+        console.error('Error during chart initialization:', error);
+    }
+}
+
+function initializeMonthlyTrendsChart() {
+    const canvas = document.getElementById('monthlyTrendsChart');
+    console.log('Monthly trends canvas found:', !!canvas);
+    
+    if (!canvas) {
+        console.error('Monthly trends canvas not found');
+        return;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Could not get 2D context');
+        return;
+    }
+    
+    // Check data availability
+    if (!analyticsData || !analyticsData.monthly_trends) {
+        console.warn('No monthly trends data available');
+        // Create a simple placeholder
+        ctx.fillStyle = '#666';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    console.log('Monthly trends data:', analyticsData.monthly_trends);
+    
+    const monthLabels = analyticsData.monthly_trends.map(item => item.month_name || 'Unknown');
+    console.log('Month labels:', monthLabels);
+    
+    try {
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Projects',
+                        data: analyticsData.monthly_trends.map(item => item.projects || 0),
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Purchase Orders',
+                        data: analyticsData.monthly_trends.map(item => item.orders || 0),
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Incidents',
+                        data: analyticsData.monthly_trends.map(item => item.incidents || 0),
+                        borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Month'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Count'
+                        }
+                    }
+                }
+            }
+        });
+        console.log('Monthly trends chart created successfully:', chart);
+    } catch (error) {
+        console.error('Error creating monthly trends chart:', error);
+    }
+}
+
+function initializeFinancialChart() {
+    const canvas = document.getElementById('financialChart');
+    console.log('Financial canvas found:', !!canvas);
+    
+    if (!canvas) {
+        console.error('Financial canvas not found');
+        return;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Could not get 2D context for financial chart');
+        return;
+    }
+    
+    if (!analyticsData || !analyticsData.monthly_trends) {
+        console.warn('No financial data available');
+        ctx.fillStyle = '#666';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    const monthLabels = analyticsData.monthly_trends.map(item => item.month_name || 'Unknown');
+    
+    try {
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: monthLabels,
+                datasets: [
+                    {
+                        label: 'Order Value (₦)',
+                        data: analyticsData.monthly_trends.map(item => item.order_value || 0),
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: '#3b82f6',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Expenses (₦)',
+                        data: analyticsData.monthly_trends.map(item => item.expenses || 0),
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: '#ef4444',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Month'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Amount (₦)'
+                        }
+                    }
+                }
+            }
+        });
+        console.log('Financial chart created successfully:', chart);
+    } catch (error) {
+        console.error('Error creating financial chart:', error);
+    }
+}
+
+function initializeModuleDistributionChart() {
+    const canvas = document.getElementById('moduleDistributionChart');
+    console.log('Module distribution canvas found:', !!canvas);
+    
+    if (!canvas) {
+        console.error('Module distribution canvas not found');
+        return;
+    }
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Could not get 2D context for module chart');
+        return;
+    }
+    
+    if (!analyticsData) {
+        console.warn('No analytics data available');
+        ctx.fillStyle = '#666';
+        ctx.font = '16px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('No data available', canvas.width / 2, canvas.height / 2);
+        return;
+    }
+    
+    const moduleData = [
+        { label: 'Projects', value: (analyticsData.project_analytics && analyticsData.project_analytics.total_projects) || 0, color: '#3b82f6' },
+        { label: 'Assets', value: (analyticsData.asset_analytics && analyticsData.asset_analytics.total_assets) || 0, color: '#8b5cf6' },
+        { label: 'Employees', value: (analyticsData.hr_analytics && analyticsData.hr_analytics.total_employees) || 0, color: '#06b6d4' },
+        { label: 'Orders', value: (analyticsData.financial_analytics && analyticsData.financial_analytics.total_orders) || 0, color: '#10b981' },
+        { label: 'Incidents', value: (analyticsData.incident_analytics && analyticsData.incident_analytics.total_incidents) || 0, color: '#ef4444' },
+        { label: 'Equipment', value: (analyticsData.equipment_analytics && analyticsData.equipment_analytics.total_equipment) || 0, color: '#f97316' }
+    ];
+    
+    console.log('Module data for chart:', moduleData);
+    
+    try {
+        const chart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: moduleData.map(item => item.label),
+                datasets: [{
+                    data: moduleData.map(item => item.value),
+                    backgroundColor: moduleData.map(item => item.color),
+                    borderWidth: 2,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+        console.log('Module distribution chart created successfully:', chart);
+    } catch (error) {
+        console.error('Error creating module distribution chart:', error);
+    }
+}
+
+function exportData() {
+    console.log('Exporting analytics data...');
+    try {
+        if (!analyticsData) {
+            console.error('No analytics data to export');
+            alert('No data available to export');
+            return;
+        }
+        
+        // Create CSV content
+        let csvContent = "Module,Metric,Value\n";
+        
+        // Add project data
+        if (analyticsData.project_analytics) {
+            csvContent += `Projects,Total,${analyticsData.project_analytics.total_projects || 0}\n`;
+            csvContent += `Projects,Active,${analyticsData.project_analytics.active_projects || 0}\n`;
+            csvContent += `Projects,Completed,${analyticsData.project_analytics.completed_projects || 0}\n`;
+        }
+        
+        // Create and download file
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        if (link.download !== undefined) {
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", `analytics_export_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            console.log('Data exported successfully');
+        }
+    } catch (error) {
+        console.error('Error exporting data:', error);
+        alert('Error exporting data. Check console for details.');
+    }
+}
+
+// Filter functionality with error handling
+document.addEventListener('DOMContentLoaded', function() {
+    try {
+        const timePeriodSelect = document.getElementById('timePeriod');
+        const moduleFilterSelect = document.getElementById('moduleFilter');
+        
+        if (timePeriodSelect) {
+            timePeriodSelect.addEventListener('change', function() {
+                console.log('Time period changed:', this.value);
+            });
+        }
+        
+        if (moduleFilterSelect) {
+            moduleFilterSelect.addEventListener('change', function() {
+                console.log('Module filter changed:', this.value);
+            });
+        }
+    } catch (error) {
+        console.error('Error setting up filters:', error);
+    }
+});
+</script>
+{% endblock %}

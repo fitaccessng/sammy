@@ -11,7 +11,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Total Queries</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ stats.total_queries }}</h3>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ stats.total }}</h3>
                 </div>
                 <div class="bg-blue-100 p-3 rounded-full">
                     <i class='bx bx-message-dots text-2xl text-blue-600'></i>
@@ -61,44 +61,60 @@
         <!-- New Query Form -->
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Register New Query</h3>
-            <form id="queryForm" class="space-y-4">
+            <form id="queryForm" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Staff Member</label>
-                    <select class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
-                        <option>Select Staff</option>
-                        <option>John Doe</option>
-                        <option>Jane Smith</option>
+                    <label class="block text-sm font-medium text-gray-700">Staff Member *</label>
+                    <select name="employee_id" required class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Staff</option>
+                        {% for employee in all_employees %}
+                        <option value="{{ employee.id }}">{{ employee.name }}{% if employee.department %} - {{ employee.department }}{% endif %}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Query Type</label>
-                    <select class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
-                        <option>Salary</option>
-                        <option>Benefits</option>
-                        <option>Work Environment</option>
-                        <option>Performance Review</option>
-                        <option>Other</option>
+                    <label class="block text-sm font-medium text-gray-700">Subject *</label>
+                    <input type="text" name="subject" required maxlength="128" 
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+                           placeholder="Brief subject of the query">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Query Category *</label>
+                    <select name="category" required class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.name }}">{{ category.name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Priority</label>
-                    <select class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
-                        <option>Low</option>
-                        <option>Medium</option>
-                        <option>High</option>
-                        <option>Urgent</option>
+                    <label class="block text-sm font-medium text-gray-700">Priority *</label>
+                    <select name="priority" required class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Priority</option>
+                        <option value="Low">Low</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent</option>
                     </select>
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea rows="4" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                    <label class="block text-sm font-medium text-gray-700">Description *</label>
+                    <textarea name="description" required rows="4" 
+                              class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+                              placeholder="Detailed description of the query"></textarea>
                 </div>
 
-                <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                    Submit Query
+                <button type="submit" id="submitBtn" 
+                        class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50">
+                    <span id="submitText">Submit Query</span>
+                    <span id="loadingText" class="hidden">
+                        <i class='bx bx-loader bx-spin'></i> Submitting...
+                    </span>
                 </button>
             </form>
         </div>
@@ -108,48 +124,79 @@
             <div class="flex justify-between items-center mb-4">
                 <h3 class="text-lg font-semibold text-gray-800">Recent Queries</h3>
                 <div class="flex space-x-2">
-                    <select class="rounded-md p-2 border border-gray-300 shadow-sm text-sm">
-                        <option>All Status</option>
-                        <option>Pending</option>
-                        <option>In Progress</option>
-                        <option>Resolved</option>
+                    <select id="statusFilter" class="rounded-md p-2 border border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">All Status</option>
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
                     </select>
-                    <select class="rounded-md p-2 border border-gray-300 shadow-sm text-sm">
-                        <option>All Types</option>
-                        <option>Salary</option>
-                        <option>Benefits</option>
-                        <option>Work Environment</option>
+                    <select id="categoryFilter" class="rounded-md p-2 border border-gray-300 shadow-sm text-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">All Categories</option>
+                        {% for category in categories %}
+                        <option value="{{ category.name }}">{{ category.name }}</option>
+                        {% endfor %}
                     </select>
                 </div>
             </div>
             
-            <div class="space-y-4">
+            <div class="space-y-4" id="queriesContainer">
+                {% if queries %}
                 {% for query in queries %}
-                <div class="border rounded-lg p-4">
+                <div class="border rounded-lg p-4 query-item" 
+                     data-status="{{ query.status }}" 
+                     data-category="{{ query.category }}">
                     <div class="flex justify-between items-start">
                         <div class="flex items-start space-x-4">
                             <img class="h-10 w-10 rounded-full" 
-                                 src="https://ui-avatars.com/api/?name={{ query.staff_name }}" 
-                                 alt="{{ query.staff_name }}">
+                                 src="https://ui-avatars.com/api/?name={{ query.staff|urlencode }}&background=random" 
+                                 alt="{{ query.staff }}">
                             <div>
-                                <h4 class="text-sm font-medium text-gray-900">{{ query.staff_name }}</h4>
-                                <p class="text-sm text-gray-500">{{ query.query_type }}</p>
+                                <h4 class="text-sm font-medium text-gray-900">{{ query.staff }}</h4>
+                                <p class="text-sm text-gray-500">{{ query.department }}</p>
+                                <p class="text-sm font-medium text-gray-700 mt-1">{{ query.subject }}</p>
                             </div>
                         </div>
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                            {% if query.status == 'Pending' %}bg-yellow-100 text-yellow-800
-                            {% elif query.status == 'In Progress' %}bg-blue-100 text-blue-800
-                            {% else %}bg-green-100 text-green-800{% endif %}">
-                            {{ query.status }}
-                        </span>
+                        <div class="flex flex-col items-end space-y-2">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {% if query.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                {% elif query.status == 'In Progress' %}bg-blue-100 text-blue-800
+                                {% elif query.status == 'Resolved' %}bg-green-100 text-green-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ query.status }}
+                            </span>
+                            <span class="px-2 inline-flex text-xs leading-5 font-medium rounded-full 
+                                {% if query.priority == 'Low' %}bg-gray-100 text-gray-700
+                                {% elif query.priority == 'Medium' %}bg-blue-100 text-blue-700
+                                {% elif query.priority == 'High' %}bg-orange-100 text-orange-700
+                                {% elif query.priority == 'Urgent' %}bg-red-100 text-red-700
+                                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                                {{ query.priority }}
+                            </span>
+                        </div>
                     </div>
                     <p class="mt-2 text-sm text-gray-600">{{ query.description }}</p>
                     <div class="mt-3 flex justify-between items-center">
-                        <span class="text-xs text-gray-500">{{ query.created_at }}</span>
-                        <button class="text-sm text-blue-600 hover:text-blue-800">View Details</button>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-xs text-gray-500">
+                                <i class='bx bx-time'></i> {{ query.submitted_at }}
+                            </span>
+                            <span class="text-xs text-blue-600 font-medium">
+                                <i class='bx bx-tag'></i> {{ query.category }}
+                            </span>
+                        </div>
+                        <button class="text-sm text-blue-600 hover:text-blue-800 font-medium" 
+                                data-query-id="{{ query.id }}" onclick="viewQueryDetails(this)">
+                            <i class='bx bx-show'></i> View Details
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
+                {% else %}
+                <div class="text-center py-8">
+                    <i class='bx bx-message-dots text-4xl text-gray-400'></i>
+                    <p class="text-gray-500 mt-2">No queries found</p>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -160,13 +207,114 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const queryForm = document.getElementById('queryForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const loadingText = document.getElementById('loadingText');
+    const statusFilter = document.getElementById('statusFilter');
+    const categoryFilter = document.getElementById('categoryFilter');
     
+    // Form submission handling
     if (queryForm) {
         queryForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            // Add form submission logic here
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.classList.add('hidden');
+            loadingText.classList.remove('hidden');
+            
+            try {
+                const formData = new FormData(queryForm);
+                
+                const response = await fetch('{{ url_for("hr.staff_queries") }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+                
+                if (response.ok) {
+                    // Show success message
+                    showNotification('Query submitted successfully!', 'success');
+                    queryForm.reset();
+                    
+                    // Refresh the page to show the new query
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    const errorData = await response.json();
+                    showNotification(errorData.error || 'Error submitting query', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification('Network error. Please try again.', 'error');
+            } finally {
+                // Reset button state
+                submitBtn.disabled = false;
+                submitText.classList.remove('hidden');
+                loadingText.classList.add('hidden');
+            }
         });
     }
+    
+    // Filter functionality
+    function filterQueries() {
+        const selectedStatus = statusFilter.value.toLowerCase();
+        const selectedCategory = categoryFilter.value.toLowerCase();
+        const queryItems = document.querySelectorAll('.query-item');
+        
+        queryItems.forEach(item => {
+            const itemStatus = item.dataset.status.toLowerCase();
+            const itemCategory = item.dataset.category.toLowerCase();
+            
+            const statusMatch = !selectedStatus || itemStatus === selectedStatus;
+            const categoryMatch = !selectedCategory || itemCategory === selectedCategory;
+            
+            if (statusMatch && categoryMatch) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    }
+    
+    // Add filter event listeners
+    if (statusFilter) {
+        statusFilter.addEventListener('change', filterQueries);
+    }
+    
+    if (categoryFilter) {
+        categoryFilter.addEventListener('change', filterQueries);
+    }
 });
+
+// View query details function
+function viewQueryDetails(button) {
+    const queryId = button.dataset.queryId;
+    // Redirect to query details page
+    window.location.href = `/hr/queries/${queryId}`;
+}
+
+// Notification function
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+    }`;
+    notification.textContent = message;
+    
+    // Add to page
+    document.body.appendChild(notification);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
 </script>
 {% endblock %}

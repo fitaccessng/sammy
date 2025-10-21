@@ -1,3 +1,6 @@
+
+# --- Multi-level Approval Endpoint ---
+
 from flask import Blueprint, render_template, request, jsonify, current_app, flash, send_file, session,redirect, url_for
 from datetime import datetime, timedelta
 from utils.decorators import role_required
@@ -5,21 +8,401 @@ from utils.constants import Roles
 import pandas as pd
 from io import BytesIO
 import os
+from sqlalchemy.exc import SQLAlchemyError
+from flask import session
+from extensions import db
+from models import Settings
 
 procurement_bp = Blueprint("procurement", __name__, url_prefix='/procurement')
 
+# Dashboard Route
+# Search Endpoint
+@procurement_bp.route("/search", methods=["GET", "POST"])
+@role_required([Roles.HQ_PROCUREMENT])
+def search():
+    try:
+        query = request.args.get('q', '').strip() if request.method == 'GET' else request.form.get('q', '').strip()
+        results = {'assets': [], 'purchases': [], 'suppliers': []}
+        if query:
+            # Search assets
+            results['assets'] = InventoryItem.query.filter(
+                (InventoryItem.code.ilike(f"%{query}%")) |
+                (InventoryItem.description.ilike(f"%{query}%")) |
+                (InventoryItem.category.ilike(f"%{query}%"))
+            ).all()
+            # Search purchases
+            results['purchases'] = ProcurementRequest.query.filter(
+                (ProcurementRequest.item_name.ilike(f"%{query}%")) |
+                (ProcurementRequest.status.ilike(f"%{query}%"))
+            ).all()
+            # Search suppliers
+            results['suppliers'] = Vendor.query.filter(
+                (Vendor.name.ilike(f"%{query}%")) |
+                (Vendor.category.ilike(f"%{query}%"))
+            ).all()
+        return render_template('procurement/search/index.html', query=query, results=results)
+    except Exception as e:
+        current_app.logger.error(f"Search error: {str(e)}")
+        flash("Error performing search", "error")
+        return render_template('error.html'), 500
+# Notifications Endpoint
+@procurement_bp.route("/notifications")
+@role_required([Roles.HQ_PROCUREMENT])
+def notifications():
+    try:
+        alerts = Alert.query.order_by(Alert.created_at.desc()).limit(50).all()
+        alert_data = [
+            {
+                'id': a.id,
+                'title': a.title,
+                'type': a.type,
+                'description': a.description,
+                'status': a.status,
+                'severity': a.severity,
+                'created_at': a.created_at.strftime('%Y-%m-%d %H:%M:%S') if a.created_at else ''
+            }
+            for a in alerts
+        ]
+        return render_template('procurement/notifications/index.html', alerts=alert_data)
+    except Exception as e:
+        current_app.logger.error(f"Notifications error: {str(e)}")
+        flash("Error loading notifications", "error")
+        return render_template('error.html'), 500
+# Budget Endpoint
+@procurement_bp.route("/budget")
+@role_required([Roles.HQ_PROCUREMENT])
+def budget():
+    try:
+        # Summarize by project and category
+        budgets = Budget.query.all()
+        budget_summary = {}
+        for b in budgets:
+            key = f"{b.project_id}:{b.category}"
+            if key not in budget_summary:
+                budget_summary[key] = {
+                    'project_id': b.project_id,
+                    'category': b.category,
+                    'allocated': 0.0,
+                    'spent': 0.0,
+                    'remaining': 0.0
+                }
+            budget_summary[key]['allocated'] += b.allocated_amount
+            budget_summary[key]['spent'] += b.spent_amount
+            budget_summary[key]['remaining'] = budget_summary[key]['allocated'] - budget_summary[key]['spent']
+        summary_list = list(budget_summary.values())
+        return render_template('procurement/budget/index.html', summary=summary_list)
+    except Exception as e:
+        current_app.logger.error(f"Budget error: {str(e)}")
+        flash("Error loading budget data", "error")
+        return render_template('error.html'), 500
+# Maintenance Endpoint
+@procurement_bp.route("/maintenance")
+@role_required([Roles.HQ_PROCUREMENT])
+def maintenance():
+    try:
+        # Assets due for maintenance (maintenance_due in next 30 days)
+        from datetime import datetime, timedelta
+        today = datetime.utcnow().date()
+        soon = today + timedelta(days=30)
+        due_soon = InventoryItem.query.filter(
+            InventoryItem.maintenance_due != None,
+            InventoryItem.maintenance_due >= today,
+            InventoryItem.maintenance_due <= soon
+        ).all()
+
+        # Overdue maintenance
+        overdue = InventoryItem.query.filter(
+            InventoryItem.maintenance_due != None,
+            InventoryItem.maintenance_due < today
+        ).all()
+
+        # Maintenance history (assets with past due dates)
+        history = InventoryItem.query.filter(
+            InventoryItem.maintenance_due != None,
+            InventoryItem.maintenance_due < today
+        ).order_by(InventoryItem.maintenance_due.desc()).limit(20).all()
+
+        maintenance_data = {
+            'due_soon': due_soon,
+            'overdue': overdue,
+            'history': history
+        }
+        return render_template('procurement/maintenance/index.html', data=maintenance_data)
+    except Exception as e:
+        current_app.logger.error(f"Maintenance error: {str(e)}")
+        flash("Error loading maintenance data", "error")
+        return render_template('error.html'), 500
+# Analytics Endpoint
+@procurement_bp.route("/analytics")
+@role_required([Roles.HQ_PROCUREMENT])
+def analytics():
+    try:
+        # Top categories by spend
+        category_spend = db.session.query(
+            ProcurementRequest.item_name,
+            db.func.sum(ProcurementRequest.price * ProcurementRequest.qty).label('total_spend')
+        ).group_by(ProcurementRequest.item_name).order_by(db.desc('total_spend')).limit(5).all()
+
+        # Spend by month (last 6 months)
+        spend_by_month = db.session.query(
+            db.func.strftime('%Y-%m', ProcurementRequest.created_at),
+            db.func.sum(ProcurementRequest.price * ProcurementRequest.qty)
+        ).group_by(db.func.strftime('%Y-%m', ProcurementRequest.created_at)).order_by(db.desc(db.func.strftime('%Y-%m', ProcurementRequest.created_at))).limit(6).all()
+
+        # Supplier performance (number of completed requests per supplier)
+        supplier_performance = db.session.query(
+            Vendor.name,
+            db.func.count(ProcurementRequest.id)
+        ).join(ProcurementRequest, ProcurementRequest.vendor_id == Vendor.id).filter(ProcurementRequest.status == 'completed').group_by(Vendor.name).order_by(db.desc(db.func.count(ProcurementRequest.id))).limit(5).all()
+
+        analytics_data = {
+            'category_spend': [{'item_name': c[0], 'total_spend': c[1]} for c in category_spend],
+            'spend_by_month': [{'month': m[0], 'total_spend': m[1]} for m in spend_by_month],
+            'supplier_performance': [{'supplier': s[0], 'completed_orders': s[1]} for s in supplier_performance]
+        }
+        return render_template('procurement/analytics/index.html', data=analytics_data)
+    except Exception as e:
+        current_app.logger.error(f"Analytics error: {str(e)}")
+        flash("Error loading analytics", "error")
+        return render_template('error.html'), 500
+@procurement_bp.route("/purchases")
+@role_required([Roles.HQ_PROCUREMENT])
+def purchases():
+    try:
+        total_orders = ProcurementRequest.query.count()
+        pending = ProcurementRequest.query.filter(ProcurementRequest.status == 'pending').count()
+        in_transit = ProcurementRequest.query.filter(ProcurementRequest.status.ilike('%transit%')).count() if hasattr(ProcurementRequest, 'status') else 0
+        completed = ProcurementRequest.query.filter(ProcurementRequest.status == 'completed').count() if hasattr(ProcurementRequest, 'status') else 0
+        # Budget info
+        total_budget = db.session.query(db.func.sum(Budget.allocated_amount)).scalar() or 0
+        utilized = db.session.query(db.func.sum(ProcurementRequest.price * ProcurementRequest.qty)).filter(ProcurementRequest.status == 'disbursed').scalar() or 0
+        remaining = total_budget - utilized
+        purchase_data = {
+            'stats': {
+                'total_orders': total_orders,
+                'pending': pending,
+                'in_transit': in_transit,
+                'completed': completed
+            },
+            'budget': {
+                'total': total_budget,
+                'utilized': utilized,
+                'remaining': remaining
+            }
+        }
+        return render_template('procurement/purchases/index.html', data=purchase_data)
+    except Exception as e:
+        current_app.logger.error(f"Purchase management error: {str(e)}")
+        flash("Error loading purchases", "error")
+        return render_template('error.html'), 500
+
+@procurement_bp.route("/suppliers")
+@role_required([Roles.HQ_PROCUREMENT])
+def suppliers():
+    try:
+        total = Vendor.query.count()
+        active = Vendor.query.filter(Vendor.validated == True).count()
+        # Blacklisted logic: if 'blacklisted' field exists
+        blacklisted = 0
+        if hasattr(Vendor, 'blacklisted'):
+            blacklisted = Vendor.query.filter(Vendor.blacklisted == True).count()
+        # Pending review: not validated and not blacklisted
+        if hasattr(Vendor, 'blacklisted'):
+            pending_review = Vendor.query.filter(Vendor.validated == False, Vendor.blacklisted == False).count()
+        else:
+            pending_review = Vendor.query.filter(Vendor.validated == False).count()
+        supplier_data = {
+            'stats': {
+                'total': total,
+                'active': active,
+                'blacklisted': blacklisted,
+                'pending_review': pending_review
+            }
+        }
+        return render_template('procurement/suppliers/index.html', data=supplier_data)
+    except Exception as e:
+        current_app.logger.error(f"Supplier management error: {str(e)}")
+        flash("Error loading suppliers", "error")
+        return render_template('error.html'), 500
+
+# Asset Tracking Route
+@procurement_bp.route("/tracking")
+@role_required([Roles.HQ_PROCUREMENT])
+def tracking():
+    try:
+        total_tracked = InventoryItem.query.count()
+        in_use = InventoryItem.query.filter(InventoryItem.qty_available > 0).count()
+        in_transit = InventoryItem.query.filter(InventoryItem.status.ilike('%transit%')).count() if hasattr(InventoryItem, 'status') else 0
+        in_maintenance = InventoryItem.query.filter(InventoryItem.status.ilike('%maintenance%')).count() if hasattr(InventoryItem, 'status') else 0
+        tracking_data = {
+            'stats': {
+                'total_tracked': total_tracked,
+                'in_use': in_use,
+                'in_transit': in_transit,
+                'in_maintenance': in_maintenance
+            }
+        }
+        return render_template('procurement/tracking/index.html', data=tracking_data)
+    except Exception as e:
+        current_app.logger.error(f"Asset tracking error: {str(e)}")
+        flash("Error loading tracking data", "error")
+        return render_template('error.html'), 500
+
+# API: Get Asset Details
+@procurement_bp.route("/api/assets/<int:asset_id>")
+@role_required([Roles.HQ_PROCUREMENT])
+def get_asset(asset_id):
+    try:
+        asset = InventoryItem.query.get_or_404(asset_id)
+        asset_data = {
+            'id': asset.id,
+            'code': asset.code,
+            'name': asset.description,
+            'category': asset.category,
+            'qty_available': asset.qty_available,
+            'unit_cost': asset.unit_cost,
+            'uom': asset.uom,
+            'total_cost': asset.total_cost,
+            'price_change': asset.price_change,
+            'status': getattr(asset, 'status', 'Active'),
+            'group': asset.group,
+            'created_at': asset.created_at.strftime('%Y-%m-%d') if asset.created_at else None,
+            'updated_at': asset.updated_at.strftime('%Y-%m-%d') if asset.updated_at else None
+        }
+        return jsonify(asset_data)
+    except Exception as e:
+        current_app.logger.error(f"Asset fetch error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# API: Get Purchase Details
+@procurement_bp.route("/api/purchases/<int:purchase_id>")
+@role_required([Roles.HQ_PROCUREMENT])
+def get_purchase(purchase_id):
+    try:
+        purchase = ProcurementRequest.query.get_or_404(purchase_id)
+        purchase_data = {
+            'id': purchase.id,
+            'project_id': purchase.project_id,
+            'item_name': purchase.item_name,
+            'price': purchase.price,
+            'qty': purchase.qty,
+            'unit': purchase.unit,
+            'status': purchase.status,
+            'current_approver': purchase.current_approver,
+            'created_at': purchase.created_at.strftime('%Y-%m-%d') if purchase.created_at else None,
+            'updated_at': purchase.updated_at.strftime('%Y-%m-%d') if purchase.updated_at else None
+        }
+        return jsonify(purchase_data)
+    except Exception as e:
+        current_app.logger.error(f"Purchase fetch error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# Asset CRUD Endpoints
+@procurement_bp.route("/assets/add", methods=['POST'])
+@role_required([Roles.HQ_PROCUREMENT])
+def add_asset():
+    try:
+        data = request.get_json()
+        asset = InventoryItem(
+            code=data.get('code'),
+            description=data.get('description'),
+            group=data.get('group'),
+            category=data.get('category'),
+            qty_available=data.get('qty_available', 0.0),
+            unit_cost=data.get('unit_cost'),
+            uom=data.get('uom'),
+            total_cost=data.get('total_cost', 0.0),
+            price_change=data.get('price_change', 0.0)
+        )
+        db.session.add(asset)
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Asset added successfully', 'id': asset.id})
+    except Exception as e:
+        current_app.logger.error(f"Add asset error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@procurement_bp.route("/assets/update/<int:asset_id>", methods=['POST'])
+@role_required([Roles.HQ_PROCUREMENT])
+def update_asset(asset_id):
+    try:
+        data = request.get_json()
+        asset = InventoryItem.query.get_or_404(asset_id)
+        asset.code = data.get('code', asset.code)
+        asset.description = data.get('description', asset.description)
+        asset.group = data.get('group', asset.group)
+        asset.category = data.get('category', asset.category)
+        asset.qty_available = data.get('qty_available', asset.qty_available)
+        asset.unit_cost = data.get('unit_cost', asset.unit_cost)
+        asset.uom = data.get('uom', asset.uom)
+        asset.total_cost = data.get('total_cost', asset.total_cost)
+        asset.price_change = data.get('price_change', asset.price_change)
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Asset updated successfully'})
+    except Exception as e:
+        current_app.logger.error(f"Update asset error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@procurement_bp.route("/assets/delete/<int:asset_id>", methods=['POST'])
+@role_required([Roles.HQ_PROCUREMENT])
+def delete_asset(asset_id):
+    try:
+        asset = InventoryItem.query.get_or_404(asset_id)
+        db.session.delete(asset)
+        db.session.commit()
+        return jsonify({'status': 'success', 'message': 'Asset deleted successfully'})
+    except Exception as e:
+        current_app.logger.error(f"Delete asset error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+from utils.email import send_email
+from models import User, ProcurementRequest, Vendor, InventoryItem, Budget, Report
+# Reports Endpoint
+@procurement_bp.route("/reports")
+@role_required([Roles.HQ_PROCUREMENT])
+def reports():
+    try:
+        reports = Report.query.order_by(Report.uploaded_at.desc()).all()
+        report_data = [
+            {
+                'id': r.id,
+                'filename': r.filename,
+                'type': r.type,
+                'uploaded_at': r.uploaded_at.strftime('%Y-%m-%d %H:%M:%S') if r.uploaded_at else '',
+                'uploader': User.query.get(r.uploader_id).name if r.uploader_id else 'Unknown',
+                'date': r.date.strftime('%Y-%m-%d') if r.date else ''
+            }
+            for r in reports
+        ]
+        return render_template('procurement/reports/index.html', reports=report_data)
+    except Exception as e:
+        current_app.logger.error(f"Reports error: {str(e)}")
+        flash("Error loading reports", "error")
+        return render_template('error.html'), 500
 # Dashboard Route
 @procurement_bp.route("/")
 @role_required([Roles.HQ_PROCUREMENT])
 def procurement_home():
     try:
+        total_assets = InventoryItem.query.count()
+        pending_requests = ProcurementRequest.query.filter(ProcurementRequest.status == 'pending').count()
+        # Maintenance due: count assets with a 'maintenance_due' flag or similar, else 0
+        maintenance_due = 0
+        if hasattr(InventoryItem, 'maintenance_due'):
+            maintenance_due = InventoryItem.query.filter_by(maintenance_due=True).count()
+        # Total purchases: all procurement requests
+        total_purchases = ProcurementRequest.query.count()
+        # Budget utilized: sum of all disbursed requests / total budget
+        disbursed_sum = db.session.query(db.func.sum(ProcurementRequest.price * ProcurementRequest.qty)).filter(ProcurementRequest.status == 'disbursed').scalar() or 0
+        # Try to get total budget from Budget model
+        total_budget = db.session.query(db.func.sum(Budget.allocated_amount)).scalar() or 0
+        budget_utilized = (disbursed_sum / total_budget * 100) if total_budget else 0
+        active_suppliers = Vendor.query.filter(Vendor.validated == True).count()
         summary = {
-            'total_assets': 1245,
-            'pending_requests': 8,
-            'maintenance_due': 12,
-            'total_purchases': 156,
-            'budget_utilized': 75.5,  # percentage
-            'active_suppliers': 24
+            'total_assets': total_assets,
+            'pending_requests': pending_requests,
+            'maintenance_due': maintenance_due,
+            'total_purchases': total_purchases,
+            'budget_utilized': round(budget_utilized, 2),
+            'active_suppliers': active_suppliers
         }
         return render_template('procurement/index.html', summary=summary)
     except Exception as e:
@@ -32,635 +415,66 @@ def procurement_home():
 @role_required([Roles.HQ_PROCUREMENT])
 def assets():
     try:
-        assets_data = {
-            'stats': {
-                'total': 1245,
-                'active': 1180,
-                'maintenance': 45,
-                'retired': 20
-            },
-            'categories': [
-                {'id': 1, 'name': 'Vehicles'},
-                {'id': 2, 'name': 'Equipment'},
-                {'id': 3, 'name': 'IT Hardware'},
-                {'id': 4, 'name': 'Furniture'}
-            ]
+        assets = InventoryItem.query.all()
+        categories = list(set([a.category for a in assets if a.category]))
+        # Maintenance: count assets with a 'maintenance_due' flag or similar
+        maintenance = 0
+        retired = 0
+        if hasattr(InventoryItem, 'maintenance_due'):
+            maintenance = InventoryItem.query.filter_by(maintenance_due=True).count()
+        if hasattr(InventoryItem, 'status'):
+            retired = InventoryItem.query.filter(InventoryItem.status.ilike('%retired%')).count()
+        stats = {
+            'total': len(assets),
+            'active': len([a for a in assets if (not hasattr(a, 'status') or (a.status and a.status.lower() == 'active')) and a.qty_available > 0]),
+            'maintenance': maintenance,
+            'retired': retired
         }
+        categories_data = [{'id': idx+1, 'name': cat} for idx, cat in enumerate(categories)]
+        assets_data = {'stats': stats, 'categories': categories_data}
         return render_template('procurement/assets/index.html', data=assets_data)
     except Exception as e:
         current_app.logger.error(f"Asset management error: {str(e)}")
         flash("Error loading assets", "error")
         return render_template('error.html'), 500
 
-# Purchase Management Routes
-@procurement_bp.route("/purchases")
-@role_required([Roles.HQ_PROCUREMENT])
-def purchases():
-    try:
-        purchase_data = {
-            'stats': {
-                'total_orders': 156,
-                'pending': 12,
-                'in_transit': 8,
-                'completed': 136
-            },
-            'budget': {
-                'total': 5000000,
-                'utilized': 3775000,
-                'remaining': 1225000
-            }
-        }
-        return render_template('procurement/purchases/index.html', data=purchase_data)
-    except Exception as e:
-        current_app.logger.error(f"Purchase management error: {str(e)}")
-        flash("Error loading purchases", "error")
-        return render_template('error.html'), 500
-
-# Supplier Management Routes
-@procurement_bp.route("/suppliers")
-@role_required([Roles.HQ_PROCUREMENT])
-def suppliers():
-    try:
-        supplier_data = {
-            'stats': {
-                'total': 24,
-                'active': 18,
-                'blacklisted': 2,
-                'pending_review': 4
-            }
-        }
-        return render_template('procurement/suppliers/index.html', data=supplier_data)
-    except Exception as e:
-        current_app.logger.error(f"Supplier management error: {str(e)}")
-        flash("Error loading suppliers", "error")
-        return render_template('error.html'), 500
-
-# Asset Tracking Routes
-@procurement_bp.route("/tracking")
-@role_required([Roles.HQ_PROCUREMENT])
-def tracking():
-    try:
-        tracking_data = {
-            'stats': {
-                'total_tracked': 850,
-                'in_use': 780,
-                'in_transit': 45,
-                'in_maintenance': 25
-            }
-        }
-        return render_template('procurement/tracking/index.html', data=tracking_data)
-    except Exception as e:
-        current_app.logger.error(f"Asset tracking error: {str(e)}")
-        flash("Error loading tracking data", "error")
-        return render_template('error.html'), 500
-
-# API Routes for AJAX requests
-@procurement_bp.route("/api/assets/<int:asset_id>")
-@role_required([Roles.HQ_PROCUREMENT])
-def get_asset(asset_id):
-    try:
-        # Mock asset data - replace with database query
-        asset = {
-            'id': asset_id,
-            'name': 'Toyota Hilux',
-            'category': 'Vehicles',
-            'purchase_date': '2024-01-15',
-            'status': 'Active',
-            'location': 'Site A',
-            'last_maintenance': '2025-08-15',
-            'next_maintenance': '2025-11-15',
-            'value': 2500000,
-            'condition': 'Good',
-            'assigned_to': 'John Doe (Site Manager)'
-        }
-        return jsonify(asset)
-    except Exception as e:
-        current_app.logger.error(f"Asset fetch error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/api/purchases/<int:purchase_id>")
-@role_required([Roles.HQ_PROCUREMENT])
-def get_purchase(purchase_id):
-    try:
-        # Mock purchase data - replace with database query
-        purchase = {
-            'id': purchase_id,
-            'order_number': 'PO-2025-001',
-            'supplier': 'ABC Supplies Ltd',
-            'items': [
-                {'name': 'Laptop', 'quantity': 5, 'price': 250000},
-                {'name': 'Printer', 'quantity': 2, 'price': 150000}
-            ],
-            'status': 'In Transit',
-            'order_date': '2025-09-01',
-            'expected_delivery': '2025-09-15',
-            'total_amount': 1550000,
-            'tracking_number': 'TRK123456789',
-            'notes': 'Urgent delivery required'
-        }
-        return jsonify(purchase)
-    except Exception as e:
-        current_app.logger.error(f"Purchase fetch error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-# New Asset Routes
-@procurement_bp.route("/assets/add", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def add_asset():
-    try:
-        data = request.get_json()
-        # Add asset to database logic here
-        return jsonify({'status': 'success', 'message': 'Asset added successfully'})
-    except Exception as e:
-        current_app.logger.error(f"Add asset error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/assets/update/<int:asset_id>", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def update_asset(asset_id):
-    try:
-        data = request.get_json()
-        # Update asset in database logic here
-        return jsonify({'status': 'success', 'message': 'Asset updated successfully'})
-    except Exception as e:
-        current_app.logger.error(f"Update asset error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/assets/delete/<int:asset_id>", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def delete_asset(asset_id):
-    try:
-        # Delete asset from database logic here
-        return jsonify({'status': 'success', 'message': 'Asset deleted successfully'})
-    except Exception as e:
-        current_app.logger.error(f"Delete asset error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-# New Purchase Routes
-@procurement_bp.route("/purchases/create", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def create_purchase():
-    try:
-        data = request.get_json()
-        # Create purchase order logic here
-        return jsonify({'status': 'success', 'message': 'Purchase order created successfully'})
-    except Exception as e:
-        current_app.logger.error(f"Create purchase error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/purchases/update/<int:purchase_id>", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def update_purchase(purchase_id):
-    try:
-        data = request.get_json()
-        # Update purchase order logic here
-        return jsonify({'status': 'success', 'message': 'Purchase order updated successfully'})
-    except Exception as e:
-        current_app.logger.error(f"Update purchase error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/purchases/cancel/<int:purchase_id>", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def cancel_purchase(purchase_id):
-    try:
-        # Cancel purchase order logic here
-        return jsonify({'status': 'success', 'message': 'Purchase order cancelled successfully'})
-    except Exception as e:
-        current_app.logger.error(f"Cancel purchase error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-# Supplier Management Routes
-@procurement_bp.route("/suppliers/add", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def add_supplier():
-    try:
-        data = request.get_json()
-        # Add supplier logic here
-        return jsonify({'status': 'success', 'message': 'Supplier added successfully'})
-    except Exception as e:
-        current_app.logger.error(f"Add supplier error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/suppliers/<int:supplier_id>")
-@role_required([Roles.HQ_PROCUREMENT])
-def get_supplier(supplier_id):
-    try:
-        # Mock supplier data
-        supplier = {
-            'id': supplier_id,
-            'name': 'ABC Supplies Ltd',
-            'contact_person': 'John Smith',
-            'email': 'john@abcsupplies.com',
-            'phone': '+2348012345678',
-            'address': '123 Business District, Lagos',
-            'rating': 4.5,
-            'category': 'IT Equipment',
-            'payment_terms': 'Net 30',
-            'status': 'Active'
-        }
-        return jsonify(supplier)
-    except Exception as e:
-        current_app.logger.error(f"Get supplier error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-# Reports and Analytics
-@procurement_bp.route("/reports")
-@role_required([Roles.HQ_PROCUREMENT])
-def reports():
-    try:
-        return render_template('procurement/reports/index.html')
-    except Exception as e:
-        current_app.logger.error(f"Reports error: {str(e)}")
-        flash("Error loading reports", "error")
-        return render_template('error.html'), 500
-
-@procurement_bp.route("/reports/generate", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def generate_report():
-    try:
-        report_type = request.form.get('type')
-        start_date = request.form.get('start_date')
-        end_date = request.form.get('end_date')
-        
-        # Generate report logic here
-        if report_type == 'assets':
-            # Mock asset report data
-            data = {
-                'total_assets': 1245,
-                'assets_by_category': [
-                    {'category': 'Vehicles', 'count': 45},
-                    {'category': 'Equipment', 'count': 320},
-                    {'category': 'IT Hardware', 'count': 650},
-                    {'category': 'Furniture', 'count': 230}
-                ],
-                'maintenance_summary': {
-                    'due_this_month': 12,
-                    'overdue': 3,
-                    'completed_this_month': 8
-                }
-            }
-        elif report_type == 'purchases':
-            # Mock purchase report data
-            data = {
-                'total_spent': 3775000,
-                'purchases_by_category': [
-                    {'category': 'IT Equipment', 'amount': 1850000},
-                    {'category': 'Office Supplies', 'amount': 450000},
-                    {'category': 'Vehicles', 'amount': 1250000},
-                    {'category': 'Maintenance', 'amount': 225000}
-                ],
-                'top_suppliers': [
-                    {'supplier': 'ABC Supplies', 'amount': 1250000},
-                    {'supplier': 'Tech Solutions', 'amount': 850000},
-                    {'supplier': 'Office World', 'amount': 450000}
-                ]
-            }
-        
-        return jsonify({'status': 'success', 'data': data})
-    except Exception as e:
-        current_app.logger.error(f"Generate report error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/reports/export")
-@role_required([Roles.HQ_PROCUREMENT])
-def export_report():
-    try:
-        report_type = request.args.get('type')
-        
-        # Create Excel report
-        if report_type == 'assets':
-            data = {
-                'Asset ID': [1, 2, 3, 4, 5],
-                'Name': ['Laptop Dell XPS', 'Printer HP LaserJet', 'Vehicle Toyota Hilux', 'Desk Executive', 'Chair Ergonomic'],
-                'Category': ['IT Hardware', 'IT Hardware', 'Vehicles', 'Furniture', 'Furniture'],
-                'Status': ['Active', 'Maintenance', 'Active', 'Active', 'Retired'],
-                'Value': [450000, 150000, 2500000, 75000, 25000]
-            }
-        elif report_type == 'purchases':
-            data = {
-                'PO Number': ['PO-2025-001', 'PO-2025-002', 'PO-2025-003'],
-                'Supplier': ['ABC Supplies', 'Tech Solutions', 'Office World'],
-                'Order Date': ['2025-09-01', '2025-09-05', '2025-09-10'],
-                'Status': ['Delivered', 'In Transit', 'Processing'],
-                'Amount': [1550000, 850000, 450000]
-            }
-        
-        df = pd.DataFrame(data)
-        output = BytesIO()
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-            df.to_excel(writer, sheet_name='Report', index=False)
-        
-        output.seek(0)
-        
-        return send_file(
-            output,
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            as_attachment=True,
-            download_name=f'{report_type}_report_{datetime.now().strftime("%Y%m%d")}.xlsx'
-        )
-    except Exception as e:
-        current_app.logger.error(f"Export report error: {str(e)}")
-        flash("Error exporting report", "error")
-        return redirect(url_for('procurement.reports'))
-
-# Maintenance Management
-@procurement_bp.route("/maintenance")
-@role_required([Roles.HQ_PROCUREMENT])
-def maintenance():
-    try:
-        maintenance_data = {
-            'stats': {
-                'scheduled': 15,
-                'in_progress': 8,
-                'completed': 25,
-                'overdue': 3
-            }
-        }
-        return render_template('procurement/maintenance/index.html', data=maintenance_data)
-    except Exception as e:
-        current_app.logger.error(f"Maintenance error: {str(e)}")
-        flash("Error loading maintenance data", "error")
-        return render_template('error.html'), 500
-
-@procurement_bp.route("/maintenance/schedule", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def schedule_maintenance():
-    try:
-        data = request.get_json()
-        # Schedule maintenance logic here
-        return jsonify({'status': 'success', 'message': 'Maintenance scheduled successfully'})
-    except Exception as e:
-        current_app.logger.error(f"Schedule maintenance error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-# Budget Management
-@procurement_bp.route("/budget")
-@role_required([Roles.HQ_PROCUREMENT])
-def budget():
-    try:
-        budget_data = {
-            'total_budget': 5000000,
-            'utilized': 3775000,
-            'remaining': 1225000,
-            'breakdown': [
-                {'category': 'IT Equipment', 'allocated': 2000000, 'spent': 1850000},
-                {'category': 'Office Supplies', 'allocated': 500000, 'spent': 450000},
-                {'category': 'Vehicles', 'allocated': 2000000, 'spent': 1250000},
-                {'category': 'Maintenance', 'allocated': 500000, 'spent': 225000}
-            ]
-        }
-        return render_template('procurement/budget/index.html', data=budget_data)
-    except Exception as e:
-        current_app.logger.error(f"Budget error: {str(e)}")
-        flash("Error loading budget data", "error")
-        return render_template('error.html'), 500
-
-# Notification endpoints
-@procurement_bp.route("/api/notifications")
-@role_required([Roles.HQ_PROCUREMENT])
-def get_notifications():
-    try:
-        # Mock notifications
-        notifications = [
-            {
-                'id': 1,
-                'type': 'maintenance',
-                'message': '3 assets due for maintenance this week',
-                'timestamp': '2025-09-02 14:30',
-                'priority': 'high'
-            },
-            {
-                'id': 2,
-                'type': 'purchase',
-                'message': 'Purchase order PO-2025-005 is delayed',
-                'timestamp': '2025-09-02 10:15',
-                'priority': 'medium'
-            },
-            {
-                'id': 3,
-                'type': 'supplier',
-                'message': 'New supplier registration requires approval',
-                'timestamp': '2025-09-01 16:45',
-                'priority': 'low'
-            }
-        ]
-        return jsonify(notifications)
-    except Exception as e:
-        current_app.logger.error(f"Notifications error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-# Search functionality
-@procurement_bp.route("/api/search")
-@role_required([Roles.HQ_PROCUREMENT])
-def search():
-    try:
-        query = request.args.get('q', '')
-        # Mock search results
-        results = {
-            'assets': [
-                {'id': 1, 'name': 'Laptop Dell XPS', 'type': 'IT Hardware'},
-                {'id': 2, 'name': 'Printer HP LaserJet', 'type': 'IT Hardware'}
-            ],
-            'purchases': [
-                {'id': 1, 'order_number': 'PO-2025-001', 'supplier': 'ABC Supplies'},
-                {'id': 2, 'order_number': 'PO-2025-002', 'supplier': 'Tech Solutions'}
-            ],
-            'suppliers': [
-                {'id': 1, 'name': 'ABC Supplies Ltd', 'category': 'IT Equipment'},
-                {'id': 2, 'name': 'Tech Solutions', 'category': 'IT Equipment'}
-            ]
-        }
-        return jsonify(results)
-    except Exception as e:
-        current_app.logger.error(f"Search error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/inventory")
-@role_required([Roles.HQ_PROCUREMENT])
-def inventory():
-    try:
-        # Mock inventory data - replace with database queries
-        data = {
-            'stats': {
-                'total_items': 856,
-                'low_stock': 23,
-                'out_of_stock': 12,
-                'pending_orders': 8
-            },
-            'categories': [
-                {'id': 1, 'name': 'IT Equipment'},
-                {'id': 2, 'name': 'Office Supplies'},
-                {'id': 3, 'name': 'Vehicles'},
-                {'id': 4, 'name': 'Furniture'}
-            ],
-            'inventory': [
-                {
-                    'code': 'INV001',
-                    'name': 'Laptop Dell XPS',
-                    'description': 'Dell XPS 15 Core i7',
-                    'category': 'IT Equipment',
-                    'quantity': 5,
-                    'reorder_point': 3,
-                    'location': 'Store Room A',
-                    'status': 'In Stock',
-                    'image': 'https://via.placeholder.com/40'
-                },
-                # Add more mock items as needed
-            ]
-        }
-        return render_template('procurement/tracking/inventory.html', data=data)
-    except Exception as e:
-        current_app.logger.error(f"Inventory error: {str(e)}")
-        flash("Error loading inventory data", "error")
-        return render_template('error.html'), 500
-
-# Add inventory API endpoints
-@procurement_bp.route("/inventory/add", methods=['POST'])
-@role_required([Roles.HQ_PROCUREMENT])
-def add_inventory():
-    try:
-        data = request.get_json()
-        # Add inventory item logic here
-        return jsonify({'status': 'success', 'message': 'Item added successfully'})
-    except Exception as e:
-        current_app.logger.error(f"Add inventory error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/inventory/<string:item_code>")
-@role_required([Roles.HQ_PROCUREMENT])
-def get_inventory_item(item_code):
-    try:
-        # Mock item data - replace with database query
-        item = {
-            'code': item_code,
-            'name': 'Sample Item',
-            'description': 'Sample Description',
-            'category': 'IT Equipment',
-            'quantity': 10,
-            'reorder_point': 5,
-            'location': 'Store Room A',
-            'status': 'In Stock'
-        }
-        return jsonify(item)
-    except Exception as e:
-        current_app.logger.error(f"Get inventory item error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@procurement_bp.route("/analytics")
-@role_required([Roles.HQ_PROCUREMENT])
-def analytics():
-    try:
-        # Ensure all numeric values are proper Python types
-        analytics_data = {
-            'overview': {
-                'total_spend': float(3775000),
-                'total_orders': int(156),
-                'active_suppliers': int(24),
-                'efficiency_score': float(85)
-            },
-            'trends': {
-                'monthly_spend': [
-                    {'month': str('Jan'), 'amount': float(250000)},
-                    {'month': str('Feb'), 'amount': float(320000)},
-                    {'month': str('Mar'), 'amount': float(280000)},
-                    {'month': str('Apr'), 'amount': float(350000)},
-                    {'month': str('May'), 'amount': float(420000)},
-                    {'month': str('Jun'), 'amount': float(380000)}
-                ],
-                'top_categories': [
-                    {'category': str('IT Equipment'), 'spend': float(1850000)},
-                    {'category': str('Vehicles'), 'spend': float(1250000)},
-                    {'category': str('Office Supplies'), 'spend': float(450000)},
-                    {'category': str('Maintenance'), 'spend': float(225000)}
-                ]
-            },
-            'performance': {
-                'delivery_time': float(4.5),
-                'order_accuracy': float(96.5),
-                'supplier_reliability': float(92.8),
-                'budget_variance': float(-2.3)
-            }
-        }
-        return render_template('procurement/analytics/index.html', data=analytics_data)
-    except Exception as e:
-        current_app.logger.error(f"Analytics error: {str(e)}")
-        flash("Error loading analytics data", "error")
-        return render_template('error.html'), 500
-
-# Profile Route
-@procurement_bp.route("/profile")
-@role_required([Roles.HQ_PROCUREMENT])
-def profile():
-    try:
-        profile_data = {
-            'user': {
-                'name': 'John Doe',
-                'email': 'john.doe@sammy.com',
-                'role': 'Procurement Officer',
-                'department': 'HQ Procurement',
-                'joined_date': '2024-01-15',
-                'last_login': '2025-09-03 10:00:00'
-            },
-            'stats': {
-                'purchases_initiated': 45,
-                'assets_managed': 156,
-                'suppliers_handled': 12,
-                'reports_generated': 28
-            },
-            'recent_activity': [
-                {
-                    'action': 'Created Purchase Order',
-                    'reference': 'PO-2025-045',
-                    'timestamp': '2025-09-02 15:30:00'
-                },
-                {
-                    'action': 'Updated Asset Status',
-                    'reference': 'AST-2025-089',
-                    'timestamp': '2025-09-02 14:15:00'
-                },
-                {
-                    'action': 'Generated Report',
-                    'reference': 'RPT-2025-028',
-                    'timestamp': '2025-09-02 11:45:00'
-                }
-            ]
-        }
-        return render_template('procurement/profile/index.html', data=profile_data)
-    except Exception as e:
-        current_app.logger.error(f"Profile error: {str(e)}")
-        flash("Error loading profile data", "error")
-        return render_template('error.html'), 500
-
 # Settings Route
+
 @procurement_bp.route("/settings")
 @role_required([Roles.HQ_PROCUREMENT])
 def settings():
     try:
+        settings_obj = Settings.query.first()
+        if not settings_obj:
+            # Create default settings if not present
+            settings_obj = Settings()
+            db.session.add(settings_obj)
+            db.session.commit()
         settings_data = {
             'user_settings': {
                 'notifications': {
-                    'email_alerts': True,
-                    'browser_notifications': True,
-                    'sms_alerts': False
+                    'email_alerts': settings_obj.email_alerts,
+                    'browser_notifications': settings_obj.browser_notifications,
+                    'sms_alerts': settings_obj.sms_alerts
                 },
                 'display': {
-                    'theme': 'light',
-                    'language': 'en',
-                    'timezone': 'Africa/Lagos'
+                    'theme': settings_obj.theme,
+                    'language': settings_obj.language,
+                    'timezone': settings_obj.timezone
                 }
             },
             'system_settings': {
                 'approval_thresholds': {
-                    'purchase_limit': 500000,
-                    'asset_value_limit': 1000000
+                    'purchase_limit': settings_obj.purchase_limit,
+                    'asset_value_limit': settings_obj.asset_value_limit
                 },
                 'reorder_points': {
-                    'minimum_stock': 10,
-                    'warning_threshold': 20
+                    'minimum_stock': settings_obj.minimum_stock,
+                    'warning_threshold': settings_obj.warning_threshold
                 },
                 'workflow': {
-                    'require_approval': True,
-                    'auto_reorder': False
+                    'require_approval': settings_obj.require_approval,
+                    'auto_reorder': settings_obj.auto_reorder
                 }
             }
         }
@@ -675,8 +489,37 @@ def settings():
 def update_settings():
     try:
         data = request.get_json()
-        # Update settings logic here
+        settings_obj = Settings.query.first()
+        if not settings_obj:
+            settings_obj = Settings()
+            db.session.add(settings_obj)
+        # User settings
+        user_settings = data.get('user_settings', {})
+        notifications = user_settings.get('notifications', {})
+        display = user_settings.get('display', {})
+        settings_obj.email_alerts = notifications.get('email_alerts', settings_obj.email_alerts)
+        settings_obj.browser_notifications = notifications.get('browser_notifications', settings_obj.browser_notifications)
+        settings_obj.sms_alerts = notifications.get('sms_alerts', settings_obj.sms_alerts)
+        settings_obj.theme = display.get('theme', settings_obj.theme)
+        settings_obj.language = display.get('language', settings_obj.language)
+        settings_obj.timezone = display.get('timezone', settings_obj.timezone)
+        # System settings
+        system_settings = data.get('system_settings', {})
+        approval_thresholds = system_settings.get('approval_thresholds', {})
+        reorder_points = system_settings.get('reorder_points', {})
+        workflow = system_settings.get('workflow', {})
+        settings_obj.purchase_limit = approval_thresholds.get('purchase_limit', settings_obj.purchase_limit)
+        settings_obj.asset_value_limit = approval_thresholds.get('asset_value_limit', settings_obj.asset_value_limit)
+        settings_obj.minimum_stock = reorder_points.get('minimum_stock', settings_obj.minimum_stock)
+        settings_obj.warning_threshold = reorder_points.get('warning_threshold', settings_obj.warning_threshold)
+        settings_obj.require_approval = workflow.get('require_approval', settings_obj.require_approval)
+        settings_obj.auto_reorder = workflow.get('auto_reorder', settings_obj.auto_reorder)
+        db.session.commit()
         return jsonify({'status': 'success', 'message': 'Settings updated successfully'})
+    except SQLAlchemyError as e:
+        db.session.rollback()
+        current_app.logger.error(f"Update settings error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
     except Exception as e:
         current_app.logger.error(f"Update settings error: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -685,12 +528,154 @@ def update_settings():
 @procurement_bp.route('/logout')
 @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT])
 def logout():
-    try:
-        # Clear all session data
-        session.clear()
-        flash("Successfully logged out", "success")
-        return redirect(url_for('auth.login'))
-    except Exception as e:
-        current_app.logger.error(f"Logout error: {str(e)}")
-        flash("Error during logout", "error")
-        return redirect(url_for('procurement.procurement_home'))
+    # Profile Route
+    @procurement_bp.route("/profile")
+    @role_required([Roles.HQ_PROCUREMENT])
+    def profile():
+        try:
+            user_id = session.get('user_id')
+            user = User.query.get(user_id) if user_id else None
+            if not user:
+                flash("User not found", "error")
+                return render_template('error.html'), 404
+            purchases_initiated = ProcurementRequest.query.filter_by(requested_by=user.id).count() if hasattr(ProcurementRequest, 'requested_by') else 0
+            assets_managed = InventoryItem.query.filter_by(assigned_to=user.id).count() if hasattr(InventoryItem, 'assigned_to') else 0
+            suppliers_handled = Vendor.query.filter_by(added_by=user.id).count() if hasattr(Vendor, 'added_by') else 0
+            reports_generated = 0  # Implement if report logs exist
+            recent_activity = []
+            if hasattr(ProcurementRequest, 'requested_by'):
+                recent_reqs = ProcurementRequest.query.filter_by(requested_by=user.id).order_by(ProcurementRequest.created_at.desc()).limit(3).all()
+                for req in recent_reqs:
+                    recent_activity.append({
+                        'action': 'Created Purchase Order',
+                        'reference': f'PO-{req.id}',
+                        'timestamp': req.created_at.strftime('%Y-%m-%d %H:%M:%S') if req.created_at else ''
+                    })
+            profile_data = {
+                'user': {
+                    'name': user.name,
+                    'email': user.email,
+                    'role': user.role,
+                    'department': getattr(user, 'department', ''),
+                    'joined_date': user.created_at.strftime('%Y-%m-%d') if hasattr(user, 'created_at') and user.created_at else '',
+                    'last_login': user.last_login.strftime('%Y-%m-%d %H:%M:%S') if hasattr(user, 'last_login') and user.last_login else ''
+                },
+                'stats': {
+                    'purchases_initiated': purchases_initiated,
+                    'assets_managed': assets_managed,
+                    'suppliers_handled': suppliers_handled,
+                    'reports_generated': reports_generated
+                },
+                'recent_activity': recent_activity
+            }
+            return render_template('procurement/profile/index.html', data=profile_data)
+        except Exception as e:
+            current_app.logger.error(f"Profile error: {str(e)}")
+            flash("Error loading profile data", "error")
+            return render_template('error.html'), 500
+    return jsonify({'message': f'Procurement request advanced to {req.current_approver}'})
+# --- Inventory CRUD Endpoints ---
+@procurement_bp.route('/inventory', methods=['GET'])
+@role_required([Roles.HQ_PROCUREMENT, Roles.PROCUREMENT_OFFICER])
+def get_inventory():
+    items = InventoryItem.query.all()
+    result = [
+        {
+            'id': i.id,
+            'code': i.code,
+            'description': i.description,
+            'group': i.group,
+            'category': i.category,
+            'qty_available': i.qty_available,
+            'unit_cost': i.unit_cost,
+            'uom': i.uom,
+            'total_cost': i.total_cost,
+            'price_change': i.price_change
+        } for i in items
+    ]
+    return jsonify(result)
+
+@procurement_bp.route('/inventory', methods=['POST'])
+@role_required([Roles.HQ_PROCUREMENT, Roles.PROCUREMENT_OFFICER])
+def create_inventory_item():
+    data = request.get_json()
+    item = InventoryItem(
+        code=data.get('code'),
+        description=data.get('description'),
+        group=data.get('group'),
+        category=data.get('category'),
+        qty_available=data.get('qty_available', 0.0),
+        unit_cost=data.get('unit_cost'),
+        uom=data.get('uom'),
+        total_cost=data.get('total_cost', 0.0),
+        price_change=data.get('price_change', 0.0)
+    )
+    db.session.add(item)
+    db.session.commit()
+    return jsonify({'message': 'Inventory item created', 'id': item.id}), 201
+
+@procurement_bp.route('/inventory/<int:item_id>', methods=['PUT'])
+@role_required([Roles.HQ_PROCUREMENT, Roles.PROCUREMENT_OFFICER])
+def update_inventory_item(item_id):
+    item = InventoryItem.query.get_or_404(item_id)
+    data = request.get_json()
+    item.code = data.get('code', item.code)
+    item.description = data.get('description', item.description)
+    item.group = data.get('group', item.group)
+    item.category = data.get('category', item.category)
+    item.qty_available = data.get('qty_available', item.qty_available)
+    item.unit_cost = data.get('unit_cost', item.unit_cost)
+    item.uom = data.get('uom', item.uom)
+    item.total_cost = data.get('total_cost', item.total_cost)
+    item.price_change = data.get('price_change', item.price_change)
+    db.session.commit()
+    return jsonify({'message': 'Inventory item updated'})
+
+@procurement_bp.route('/inventory/<int:item_id>', methods=['DELETE'])
+@role_required([Roles.HQ_PROCUREMENT, Roles.PROCUREMENT_OFFICER])
+def delete_inventory_item(item_id):
+    item = InventoryItem.query.get_or_404(item_id)
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({'message': 'Inventory item deleted'})
+# --- Vendor Creation & Validation Endpoint ---
+@procurement_bp.route('/vendor', methods=['POST'])
+@role_required([Roles.HQ_PROCUREMENT, Roles.PROCUREMENT_OFFICER])
+def create_vendor():
+    data = request.get_json()
+    name = data.get('name')
+    category = data.get('category')
+    payment_terms = data.get('payment_terms')
+    existing = Vendor.query.filter_by(name=name, category=category).first()
+    if existing:
+        return jsonify({'message': 'Vendor already exists', 'id': existing.id, 'validated': existing.validated}), 200
+    vendor = Vendor(
+        name=name,
+        category=category,
+        payment_terms=payment_terms,
+        validated=True  # Assume validated on creation for now
+    )
+    db.session.add(vendor)
+    db.session.commit()
+    return jsonify({'message': 'Vendor created', 'id': vendor.id, 'validated': vendor.validated}), 201
+from extensions import db
+from models import ProcurementRequest, Vendor, InventoryItem, Project
+# --- Procurement Requisition Endpoint ---
+@procurement_bp.route('/requisition', methods=['POST'])
+@role_required([Roles.HQ_PROCUREMENT, Roles.PROJECT_MANAGER])
+def create_requisition():
+    data = request.get_json()
+    req = ProcurementRequest(
+        project_id=data.get('project_id'),
+        item_name=data.get('item_name'),
+        price=data.get('price'),
+        qty=data.get('qty'),
+        unit=data.get('unit'),
+        status='pending',
+        current_approver='Procurement Manager',
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    db.session.add(req)
+    db.session.commit()
+    return jsonify({'message': 'Requisition request created', 'id': req.id}), 201

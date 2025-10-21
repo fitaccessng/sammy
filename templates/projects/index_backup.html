@@ -1,0 +1,86 @@
+# Backup - JavaScript functions to add:
+
+<script>
+async function updateProjectStatus(projectId, newStatus) {
+    try {
+        const response = await fetch(`/projects/api/projects/${projectId}/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ status: newStatus })
+        });
+        const result = await response.json();
+        if (result.status === 'success') {
+            showNotification(`Project status updated to ${newStatus}`, 'success');
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            showNotification('Error updating project status', 'error');
+        }
+    } catch (error) {
+        showNotification('Error updating project status', 'error');
+    }
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+        type === 'success' ? 'bg-green-500 text-white' : 
+        type === 'error' ? 'bg-red-500 text-white' : 
+        'bg-blue-500 text-white'
+    }`;
+    notification.innerHTML = `<span>${message}</span>`;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+function searchProjects() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const projectCards = document.querySelectorAll('.project-card');
+    projectCards.forEach(card => {
+        const projectName = card.dataset.name || '';
+        const projectManager = card.dataset.manager || '';
+        if (projectName.includes(searchTerm) || projectManager.includes(searchTerm)) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function filterProjects() {
+    const statusValue = document.getElementById('statusFilter').value;
+    const projectCards = document.querySelectorAll('.project-card');
+    projectCards.forEach(card => {
+        const projectStatus = card.dataset.status;
+        if (statusValue === 'all' || projectStatus === statusValue) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function toggleProjectMenu(projectId) {
+    const menu = document.getElementById(`projectMenu-${projectId}`);
+    if (menu && menu.classList.contains('hidden')) {
+        menu.classList.remove('hidden');
+    } else if (menu) {
+        menu.classList.add('hidden');
+    }
+}
+
+async function viewProjectDetails(projectId) {
+    showNotification('Viewing project details...', 'info');
+}
+
+function refreshProjects() {
+    showNotification('Refreshing...', 'info');
+    setTimeout(() => location.reload(), 500);
+}
+
+function exportProjects() {
+    showNotification('Export coming soon!', 'info');
+}
+</script>

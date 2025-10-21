@@ -1,0 +1,980 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Purchase Orders - Construction Management System{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
+        border: 1px solid var(--gray-200);
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        outline: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #1e3a8a 100%);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary-modern {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary-modern:hover {
+        background: var(--gray-200);
+        color: var(--gray-800);
+        transform: translateY(-1px);
+    }
+
+    .btn-success-modern {
+        background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-warning-modern {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+        color: white;
+    }
+
+    .btn-danger-modern {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+
+    .status-draft { background: var(--gray-100); color: var(--gray-800); }
+    .status-pending { background: var(--warning-light); color: var(--warning-color); }
+    .status-approved { background: var(--success-light); color: var(--success-color); }
+    .status-rejected { background: var(--danger-light); color: var(--danger-color); }
+    .status-ordered { background: var(--primary-light); color: var(--primary-color); }
+    .status-delivered { background: var(--success-light); color: var(--success-color); }
+    .status-cancelled { background: var(--gray-100); color: var(--gray-600); }
+
+    .priority-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .priority-low { background: var(--gray-100); color: var(--gray-600); }
+    .priority-normal { background: var(--primary-light); color: var(--primary-color); }
+    .priority-high { background: var(--warning-light); color: var(--warning-color); }
+    .priority-urgent { background: var(--danger-light); color: var(--danger-color); }
+
+    .filter-section {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-input {
+        padding: 0.75rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow-md);
+        border-left: 4px solid var(--primary-color);
+        transition: var(--transition);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background-color: white;
+        margin: 5% auto;
+        padding: 2rem;
+        border-radius: var(--border-radius);
+        width: 90%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+        position: relative;
+        animation: modalFadeIn 0.3s ease-out;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.7);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+        }
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            margin: 10% auto;
+            width: 95%;
+            padding: 1rem;
+        }
+    }
+
+    /* CSS-only Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(2px);
+    }
+
+    .modal:target,
+    .modal.show {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background-color: #fefefe;
+        margin: 0;
+        padding: 20px;
+        border: 1px solid #888;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        position: relative;
+        animation: modalFadeIn 0.3s;
+    }
+
+    .modal-content-large {
+        background-color: #fefefe;
+        margin: 0;
+        padding: 30px;
+        border: 1px solid #888;
+        border-radius: 8px;
+        width: 95%;
+        max-width: 800px;
+        position: relative;
+        animation: modalFadeIn 0.3s;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    @keyframes modalFadeIn {
+        from { opacity: 0; transform: translateY(-50px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #1f2937;
+    }
+
+    .modal-close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        text-decoration: none;
+        line-height: 1;
+    }
+
+    .modal-close:hover {
+        color: #000;
+    }
+
+    .modal-body {
+        margin-bottom: 20px;
+    }
+
+    .modal-footer {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+    }
+
+    .btn-modal {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        font-weight: 500;
+    }
+
+    .btn-modal-danger {
+        background-color: #dc2626;
+        color: white;
+    }
+
+    .btn-modal-danger:hover {
+        background-color: #b91c1c;
+    }
+
+    .btn-modal-secondary {
+        background-color: #6b7280;
+        color: white;
+    }
+
+    .btn-modal-secondary:hover {
+        background-color: #4b5563;
+    }
+
+    .btn-modal-success {
+        background-color: #059669;
+        color: white;
+    }
+
+    .btn-modal-success:hover {
+        background-color: #047857;
+    }
+</style>
+
+<!-- View Order Modal (Server-side triggered) -->
+{% if view_order %}
+<div class="modal show" id="view-order-modal">
+    <div class="modal-content-large">
+        <div class="modal-header">
+            <h3 class="modal-title">Purchase Order Details</h3>
+            <a href="{{ url_for('admin.orders') }}" class="modal-close">&times;</a>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Order Information -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-800 border-b pb-2">Order Information</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Order Number:</span>
+                            <span class="font-medium">{{ view_order.order_number }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Status:</span>
+                            <span class="px-2 py-1 text-xs rounded-full 
+                                {% if view_order.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                {% elif view_order.status == 'Approved' %}bg-green-100 text-green-800
+                                {% elif view_order.status == 'Rejected' %}bg-red-100 text-red-800
+                                {% elif view_order.status == 'Draft' %}bg-gray-100 text-gray-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ view_order.status }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Priority:</span>
+                            <span class="px-2 py-1 text-xs rounded 
+                                {% if view_order.priority == 'High' %}bg-red-100 text-red-800
+                                {% elif view_order.priority == 'Urgent' %}bg-red-200 text-red-900
+                                {% elif view_order.priority == 'Normal' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ view_order.priority }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Created:</span>
+                            <span class="font-medium">{{ view_order.created_at.strftime('%Y-%m-%d %H:%M') if view_order.created_at else 'N/A' }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Expected Delivery:</span>
+                            <span class="font-medium">{{ view_order.expected_delivery.strftime('%Y-%m-%d') if view_order.expected_delivery else 'Not specified' }}</span>
+                        </div>
+                        {% if view_order.project %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Project:</span>
+                            <span class="font-medium">{{ view_order.project.name }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Supplier Information -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-800 border-b pb-2">Supplier Information</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Supplier Name:</span>
+                            <span class="font-medium">{{ view_order.supplier_name }}</span>
+                        </div>
+                        {% if view_order.supplier_contact %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Contact Person:</span>
+                            <span class="font-medium">{{ view_order.supplier_contact }}</span>
+                        </div>
+                        {% endif %}
+                        {% if view_order.supplier_email %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Email:</span>
+                            <span class="font-medium">{{ view_order.supplier_email }}</span>
+                        </div>
+                        {% endif %}
+                        {% if view_order.supplier_phone %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Phone:</span>
+                            <span class="font-medium">{{ view_order.supplier_phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            {% if view_order.description %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Description</h4>
+                <p class="text-gray-700">{{ view_order.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Line Items -->
+            {% if view_order.line_items %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Order Items</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-medium text-gray-700">Item</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-700">Description</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-700">Qty</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-700">Unit</th>
+                                <th class="px-3 py-2 text-right font-medium text-gray-700">Unit Price</th>
+                                <th class="px-3 py-2 text-right font-medium text-gray-700">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for item in view_order.line_items %}
+                            <tr>
+                                <td class="px-3 py-2 font-medium">{{ item.item_name }}</td>
+                                <td class="px-3 py-2 text-gray-600">{{ item.description or '-' }}</td>
+                                <td class="px-3 py-2 text-center">{{ item.quantity }}</td>
+                                <td class="px-3 py-2">{{ item.unit or '-' }}</td>
+                                <td class="px-3 py-2 text-right">₦{{ "{:,.2f}".format(item.unit_price) }}</td>
+                                <td class="px-3 py-2 text-right font-medium">₦{{ "{:,.2f}".format(item.line_total) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Financial Summary -->
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Financial Summary</h4>
+                <div class="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Subtotal:</span>
+                        <span class="font-medium">₦{{ "{:,.2f}".format(view_order.subtotal) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Tax ({{ view_order.tax_rate }}%):</span>
+                        <span class="font-medium">₦{{ "{:,.2f}".format(view_order.tax_amount) }}</span>
+                    </div>
+                    <div class="flex justify-between border-t pt-2 font-semibold text-lg">
+                        <span>Total Amount:</span>
+                        <span class="text-blue-600">₦{{ "{:,.2f}".format(view_order.total_amount) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Information -->
+            {% if view_order.delivery_address %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Delivery Information</h4>
+                <p class="text-gray-700">{{ view_order.delivery_address }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            {% if view_order.notes %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Notes</h4>
+                <p class="text-gray-700">{{ view_order.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <a href="{{ url_for('admin.orders') }}" class="btn-modal btn-modal-secondary">Close</a>
+            {% if view_order.status in ['Draft', 'Pending'] %}
+            <a href="{{ url_for('admin.orders', view_order=view_order.id) }}#approve-modal-{{ view_order.id }}" class="btn-modal btn-modal-success">Approve</a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Purchase Orders</h1>
+            <p class="text-gray-600">Manage construction purchase orders and supplier relationships</p>
+        </div>
+        <a href="{{ url_for('admin.add_order') }}" class="btn-modern btn-primary-modern mt-4 sm:mt-0">
+            <i class='bx bx-plus'></i>
+            New Purchase Order
+        </a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg bg-{{ 'red-100' if category == 'danger' or category == 'error' else 'green-100' }} text-{{ 'red-700' if category == 'danger' or category == 'error' else 'green-700' }} border border-{{ 'red-200' if category == 'danger' or category == 'error' else 'green-200' }}">
+                    <i class='bx {{ 'bx-error' if category == 'danger' or category == 'error' else 'bx-check-circle' }} mr-2'></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Statistics Cards -->
+    {% if order_stats %}
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Orders</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ order_stats.total_orders }}</p>
+                </div>
+                <i class='bx bx-receipt text-3xl text-blue-500'></i>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Pending Approval</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ order_stats.pending_orders }}</p>
+                </div>
+                <i class='bx bx-time text-3xl text-yellow-500'></i>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Approved Orders</p>
+                    <p class="text-2xl font-bold text-green-600">{{ order_stats.approved_orders }}</p>
+                </div>
+                <i class='bx bx-check-circle text-3xl text-green-500'></i>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Value</p>
+                    <p class="text-2xl font-bold text-purple-600">₦{{ "{:,.2f}".format(order_stats.total_value) }}</p>
+                </div>
+                <i class='bx bx-naira text-3xl text-purple-500'></i>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Filters Section -->
+    <form method="GET" class="filter-section">
+        <h3 class="font-semibold text-gray-800 mb-4">
+            <i class='bx bx-filter mr-2'></i>
+            Filter Orders
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="status" class="form-input w-full">
+                    <option value="">All Statuses</option>
+                    <option value="Draft" {{ 'selected' if status_filter == 'Draft' }}>Draft</option>
+                    <option value="Pending" {{ 'selected' if status_filter == 'Pending' }}>Pending</option>
+                    <option value="Approved" {{ 'selected' if status_filter == 'Approved' }}>Approved</option>
+                    <option value="Rejected" {{ 'selected' if status_filter == 'Rejected' }}>Rejected</option>
+                    <option value="Ordered" {{ 'selected' if status_filter == 'Ordered' }}>Ordered</option>
+                    <option value="Delivered" {{ 'selected' if status_filter == 'Delivered' }}>Delivered</option>
+                    <option value="Cancelled" {{ 'selected' if status_filter == 'Cancelled' }}>Cancelled</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                <select name="priority" class="form-input w-full">
+                    <option value="">All Priorities</option>
+                    <option value="Low" {{ 'selected' if priority_filter == 'Low' }}>Low</option>
+                    <option value="Normal" {{ 'selected' if priority_filter == 'Normal' }}>Normal</option>
+                    <option value="High" {{ 'selected' if priority_filter == 'High' }}>High</option>
+                    <option value="Urgent" {{ 'selected' if priority_filter == 'Urgent' }}>Urgent</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Supplier</label>
+                <input type="text" name="supplier" value="{{ supplier_filter }}" placeholder="Search suppliers..." class="form-input w-full">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                <select name="project" class="form-input w-full">
+                    <option value="">All Projects</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}" {{ 'selected' if project_filter == project.id|string }}>{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="flex gap-4 mt-4">
+            <button type="submit" class="btn-modern btn-primary-modern">
+                <i class='bx bx-search'></i>
+                Apply Filters
+            </button>
+            <a href="{{ url_for('admin.orders') }}" class="btn-modern btn-secondary-modern">
+                <i class='bx bx-x'></i>
+                Clear Filters
+            </a>
+        </div>
+    </form>
+
+    <!-- Purchase Orders Table -->
+    <div class="modern-card overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order Details</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">Project</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">Priority</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for order in purchase_orders %}
+                    <tr class="hover:bg-gray-50 transition-colors duration-200">
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div>
+                                <div class="text-sm font-medium text-gray-900">{{ order.order_number }}</div>
+                                <div class="text-sm text-gray-500">{{ order.created_at.strftime('%Y-%m-%d') }}</div>
+                                {% if order.expected_delivery %}
+                                <div class="text-xs text-blue-600">
+                                    <i class='bx bx-truck mr-1'></i>
+                                    Due: {{ order.expected_delivery.strftime('%Y-%m-%d') }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">{{ order.supplier_name }}</div>
+                            {% if order.supplier_contact %}
+                            <div class="text-sm text-gray-500">{{ order.supplier_contact }}</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap hidden md:table-cell">
+                            {% if order.project %}
+                            <div class="text-sm text-gray-900">{{ order.project.name }}</div>
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <span class="status-badge status-{{ order.status.lower() }}">{{ order.status }}</span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap hidden lg:table-cell">
+                            <span class="priority-badge priority-{{ order.priority.lower() }}">{{ order.priority }}</span>
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">₦{{ "{:,.2f}".format(order.total_amount or 0) }}</div>
+                            {% if order.line_items %}
+                            <div class="text-xs text-gray-500">{{ order.line_items|length }} items</div>
+                            {% endif %}
+                        </td>
+                        <td class="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex flex-col sm:flex-row gap-1">
+                                <a href="{{ url_for('admin.orders', view_order=order.id) }}" 
+                                   class="inline-flex items-center px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors duration-200">
+                                    <i class='bx bx-show text-sm mr-1'></i>
+                                    View
+                                </a>
+                                {% if order.status in ['Draft', 'Pending'] %}
+                                <a href="#approve-modal-{{ order.id }}" 
+                                   class="inline-flex items-center px-2 py-1 text-xs bg-green-100 text-green-700 rounded hover:bg-green-200 transition-colors duration-200">
+                                    <i class='bx bx-check text-sm mr-1'></i>
+                                    Approve
+                                </a>
+                                <form method="POST" action="{{ url_for('admin.reject_order_form', order_id=order.id) }}" style="display: inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                                    <button type="submit"
+                                            class="inline-flex items-center px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors duration-200">
+                                        <i class='bx bx-x text-sm mr-1'></i>
+                                        Reject
+                                    </button>
+                                </form>
+                                {% endif %}
+                                {% if order.status in ['Draft', 'Rejected'] %}
+                                <a href="#delete-modal-{{ order.id }}" 
+                                   class="inline-flex items-center px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors duration-200">
+                                    <i class='bx bx-trash text-sm mr-1'></i>
+                                    Delete
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-4 py-8 text-center text-gray-500">
+                            <i class='bx bx-receipt text-4xl mb-2'></i>
+                            <p>No purchase orders found</p>
+                            <a href="{{ url_for('admin.add_order') }}" class="text-blue-600 hover:text-blue-800 underline">Create your first purchase order</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Approval and Delete Modals -->
+{% for order in orders %}
+<!-- Approve Modal -->
+<div id="approve-modal-{{ order.id }}" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Approve Purchase Order</h3>
+            <a href="#" class="modal-close">&times;</a>
+        </div>
+        <div class="modal-body">
+            <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+            <p><strong>Supplier:</strong> {{ order.supplier_name }}</p>
+            <p><strong>Total Amount:</strong> ₦{{ "{:,.2f}".format(order.total_amount) }}</p>
+            <p class="mt-4">Are you sure you want to approve this purchase order?</p>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn-modal btn-modal-secondary">Cancel</a>
+            <form method="POST" action="{{ url_for('admin.approve_order', order_id=order.id) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                <button type="submit" class="btn-modal btn-modal-success">
+                    <i class='bx bx-check'></i> Approve Order
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="delete-modal-{{ order.id }}" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Delete Purchase Order</h3>
+            <a href="#" class="modal-close">&times;</a>
+        </div>
+        <div class="modal-body">
+            <p><strong>Order Number:</strong> {{ order.order_number }}</p>
+            <p><strong>Supplier:</strong> {{ order.supplier_name }}</p>
+            <p><strong>Status:</strong> {{ order.status }}</p>
+            <p class="mt-4 text-red-600"><strong>Warning:</strong> This action cannot be undone. Are you sure you want to delete this purchase order?</p>
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn-modal btn-modal-secondary">Cancel</a>
+            <form method="POST" action="{{ url_for('admin.delete_order_form', order_id=order.id) }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                <button type="submit" class="btn-modal btn-modal-danger">
+                    <i class='bx bx-trash'></i> Delete Order
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Modal -->
+<div id="view-modal-{{ order.id }}" class="modal">
+    <div class="modal-content-large">
+        <div class="modal-header">
+            <h3 class="modal-title">Purchase Order Details</h3>
+            <a href="#" class="modal-close">&times;</a>
+        </div>
+        <div class="modal-body">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Order Information -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-800 border-b pb-2">Order Information</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Order Number:</span>
+                            <span class="font-medium">{{ order.order_number }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Status:</span>
+                            <span class="px-2 py-1 text-xs rounded-full 
+                                {% if order.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                {% elif order.status == 'Approved' %}bg-green-100 text-green-800
+                                {% elif order.status == 'Rejected' %}bg-red-100 text-red-800
+                                {% elif order.status == 'Draft' %}bg-gray-100 text-gray-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Priority:</span>
+                            <span class="px-2 py-1 text-xs rounded 
+                                {% if order.priority == 'High' %}bg-red-100 text-red-800
+                                {% elif order.priority == 'Urgent' %}bg-red-200 text-red-900
+                                {% elif order.priority == 'Normal' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ order.priority }}
+                            </span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Created:</span>
+                            <span class="font-medium">{{ order.created_at.strftime('%Y-%m-%d %H:%M') if order.created_at else 'N/A' }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Expected Delivery:</span>
+                            <span class="font-medium">{{ order.expected_delivery.strftime('%Y-%m-%d') if order.expected_delivery else 'Not specified' }}</span>
+                        </div>
+                        {% if order.project %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Project:</span>
+                            <span class="font-medium">{{ order.project.name }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Supplier Information -->
+                <div class="space-y-4">
+                    <h4 class="font-semibold text-gray-800 border-b pb-2">Supplier Information</h4>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Supplier Name:</span>
+                            <span class="font-medium">{{ order.supplier_name }}</span>
+                        </div>
+                        {% if order.supplier_contact %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Contact Person:</span>
+                            <span class="font-medium">{{ order.supplier_contact }}</span>
+                        </div>
+                        {% endif %}
+                        {% if order.supplier_email %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Email:</span>
+                            <span class="font-medium">{{ order.supplier_email }}</span>
+                        </div>
+                        {% endif %}
+                        {% if order.supplier_phone %}
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Phone:</span>
+                            <span class="font-medium">{{ order.supplier_phone }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description -->
+            {% if order.description %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Description</h4>
+                <p class="text-gray-700">{{ order.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Line Items -->
+            {% if order.line_items %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Order Items</h4>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-medium text-gray-700">Item</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-700">Description</th>
+                                <th class="px-3 py-2 text-center font-medium text-gray-700">Qty</th>
+                                <th class="px-3 py-2 text-left font-medium text-gray-700">Unit</th>
+                                <th class="px-3 py-2 text-right font-medium text-gray-700">Unit Price</th>
+                                <th class="px-3 py-2 text-right font-medium text-gray-700">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for item in order.line_items %}
+                            <tr>
+                                <td class="px-3 py-2 font-medium">{{ item.item_name }}</td>
+                                <td class="px-3 py-2 text-gray-600">{{ item.description or '-' }}</td>
+                                <td class="px-3 py-2 text-center">{{ item.quantity }}</td>
+                                <td class="px-3 py-2">{{ item.unit or '-' }}</td>
+                                <td class="px-3 py-2 text-right">₦{{ "{:,.2f}".format(item.unit_price) }}</td>
+                                <td class="px-3 py-2 text-right font-medium">₦{{ "{:,.2f}".format(item.line_total) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Financial Summary -->
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Financial Summary</h4>
+                <div class="bg-gray-50 p-4 rounded-lg space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Subtotal:</span>
+                        <span class="font-medium">₦{{ "{:,.2f}".format(order.subtotal) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-gray-600">Tax ({{ order.tax_rate }}%):</span>
+                        <span class="font-medium">₦{{ "{:,.2f}".format(order.tax_amount) }}</span>
+                    </div>
+                    <div class="flex justify-between border-t pt-2 font-semibold text-lg">
+                        <span>Total Amount:</span>
+                        <span class="text-blue-600">₦{{ "{:,.2f}".format(order.total_amount) }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Delivery Information -->
+            {% if order.delivery_address %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Delivery Information</h4>
+                <p class="text-gray-700">{{ order.delivery_address }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            {% if order.notes %}
+            <div class="mt-6">
+                <h4 class="font-semibold text-gray-800 border-b pb-2 mb-3">Notes</h4>
+                <p class="text-gray-700">{{ order.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+        <div class="modal-footer">
+            <a href="#" class="btn-modal btn-modal-secondary">Close</a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

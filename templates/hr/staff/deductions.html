@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Staff Deductions - {{ employee.name }} | SammyA HR{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-6">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-900">Staff Deductions</h1>
+                    <p class="text-gray-600">{{ employee.name }} - {{ employee.staff_code or 'N/A' }}</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{{ url_for('hr.add_staff_deduction', staff_id=employee.id) }}" 
+                       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                        <i class='bx bx-plus mr-2'></i>Add Deduction
+                    </a>
+                    <a href="{{ url_for('hr.staff') }}" 
+                       class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200">
+                        <i class='bx bx-arrow-back mr-2'></i>Back to Staff
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Summary Card -->
+        <div class="bg-white rounded-lg shadow mb-6 p-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600">Employee Name</p>
+                    <p class="font-semibold">{{ employee.name }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Department</p>
+                    <p class="font-semibold">{{ employee.department or 'N/A' }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600">Position</p>
+                    <p class="font-semibold">{{ employee.position or employee.role or 'N/A' }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Deductions List -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">Active Deductions</h2>
+            </div>
+            
+            {% if deductions %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created By</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for deduction, creator in deductions %}
+                        <tr>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                    {% if deduction.deduction_type == 'loan' %}bg-yellow-100 text-yellow-800
+                                    {% elif deduction.deduction_type == 'advance' %}bg-blue-100 text-blue-800
+                                    {% elif deduction.deduction_type == 'disciplinary' %}bg-red-100 text-red-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ deduction.deduction_type.title() }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                ₦{{ "{:,.2f}".format(deduction.amount) }}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">
+                                <div class="max-w-xs truncate" title="{{ deduction.reason }}">
+                                    {{ deduction.reason }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                    {% if deduction.status == 'active' %}bg-green-100 text-green-800
+                                    {% elif deduction.status == 'completed' %}bg-blue-100 text-blue-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ deduction.status.title() }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {{ creator.name if creator else 'Unknown' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ deduction.created_at.strftime('%Y-%m-%d') }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                {% if deduction.status == 'active' %}
+                                <form method="POST" action="{{ url_for('hr.toggle_deduction_status', deduction_id=deduction.id) }}" class="inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="text-red-600 hover:text-red-900" 
+                                            onclick="return confirm('Are you sure you want to cancel this deduction?')">
+                                        Cancel
+                                    </button>
+                                </form>
+                                {% elif deduction.status == 'cancelled' %}
+                                <form method="POST" action="{{ url_for('hr.toggle_deduction_status', deduction_id=deduction.id) }}" class="inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="text-green-600 hover:text-green-900">
+                                        Reactivate
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-gray-400">Applied</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class='bx bx-receipt text-4xl text-gray-400 mb-4'></i>
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Deductions Found</h3>
+                <p class="text-gray-500 mb-4">This employee has no active deductions.</p>
+                <a href="{{ url_for('hr.add_staff_deduction', staff_id=employee.id) }}" 
+                   class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
+                    <i class='bx bx-plus mr-2'></i>Add First Deduction
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

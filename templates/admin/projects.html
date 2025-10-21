@@ -1,0 +1,741 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Projects Management - Construction Management System{% endblock %}
+
+{% block header %}Projects Management{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --indigo-color: #6366f1;
+        --indigo-light: #eef2ff;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Modern Card Styling */
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+    }
+
+    .modern-card:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-1px);
+    }
+
+    /* Enhanced Button Styles */
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.625rem 1.25rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        letter-spacing: 0.025em;
+    }
+
+    .btn-modern:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+
+    .btn-modern:active {
+        transform: translateY(1px);
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+        color: white;
+        border: 1px solid transparent;
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #3730a3 100%);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-primary-modern:focus {
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+    }
+
+    .btn-success-modern {
+        background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+        color: white;
+        border: 1px solid transparent;
+    }
+
+    .btn-success-modern:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(16, 185, 129, 0.4);
+    }
+
+    .btn-success-modern:focus {
+        box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-warning-modern {
+        background: linear-gradient(135deg, var(--warning-color) 0%, #d97706 100%);
+        color: white;
+        border: 1px solid transparent;
+    }
+
+    .btn-warning-modern:hover {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-warning-modern:focus {
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.5);
+    }
+
+    .btn-sm-modern {
+        padding: 0.4rem 0.875rem;
+        font-size: 0.8rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .btn-lg-modern {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        border-radius: 12px;
+    }
+
+    /* Button Icon Spacing */
+    .btn-modern i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .btn-sm-modern i {
+        margin-right: 0.375rem;
+        font-size: 0.875rem;
+    }
+
+    /* Button Group Styling */
+    .btn-group {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .btn-group.justify-center {
+        justify-content: center;
+    }
+
+    /* Responsive button group for mobile */
+    @media (max-width: 768px) {
+        .btn-group {
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+        
+        .btn-sm-modern {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+        }
+    }
+
+    /* Dropdown Styles */
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        z-index: 1000;
+        display: none;
+        min-width: 160px;
+        background: white;
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        margin-top: 4px;
+    }
+
+    .dropdown-menu.show {
+        display: block;
+    }
+
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        color: var(--gray-700);
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        border-radius: 6px;
+        margin: 2px;
+    }
+
+    .dropdown-item:hover {
+        background: var(--gray-50);
+        color: var(--gray-900);
+    }
+
+    .dropdown-item i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+        width: 16px;
+    }
+
+    .dropdown-toggle::after {
+        display: none;
+    }
+
+    /* Secondary Button Style */
+    .btn-secondary-modern {
+        background: white;
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-secondary-modern:hover {
+        background: var(--gray-50);
+        border-color: var(--gray-400);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    /* Danger Button Style */
+    .btn-danger-modern {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        color: white;
+        border: 1px solid transparent;
+    }
+
+    .btn-danger-modern:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(239, 68, 68, 0.4);
+    }
+
+    .btn-danger-modern:focus {
+        box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5);
+    }
+
+    /* Form Styles */
+    .form-input-modern {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .form-input-modern:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Status Badges */
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .badge-planning { background: var(--gray-100); color: var(--gray-700); }
+    .badge-active { background: var(--success-light); color: #065f46; }
+    .badge-in-progress { background: var(--primary-light); color: var(--primary-dark); }
+    .badge-completed { background: var(--indigo-light); color: var(--indigo-color); }
+    .badge-on-hold { background: var(--warning-light); color: #92400e; }
+    .badge-cancelled { background: var(--danger-light); color: #dc2626; }
+
+    /* Table Styles */
+    .table-modern {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .table-modern th {
+        background: var(--gray-50);
+        padding: 0.75rem;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.75rem;
+        color: var(--gray-500);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .table-modern td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid var(--gray-100);
+        vertical-align: middle;
+    }
+
+    .table-modern tbody tr:hover {
+        background: var(--gray-50);
+    }
+
+    /* Progress Bar */
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--gray-200);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--success-color), var(--primary-color));
+        border-radius: 4px;
+        transition: width 0.3s ease;
+    }
+
+    /* Budget display */
+    .budget-amount {
+        font-family: 'Monaco', 'Menlo', monospace;
+        font-weight: 600;
+    }
+
+    /* Project priority indicators */
+    .priority-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.5rem;
+    }
+
+    .priority-high { background: var(--danger-color); }
+    .priority-medium { background: var(--warning-color); }
+    .priority-low { background: var(--success-color); }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .mobile-hidden {
+            display: none;
+        }
+        
+        .mobile-stack {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .mobile-full {
+            width: 100%;
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Projects Management</h2>
+        <p class="text-gray-600">Manage construction projects, timelines, and budgets</p>
+    </div>
+    <a href="{{ url_for('admin.add_project') }}" class="btn-primary-modern btn-lg-modern">
+        <i class='bx bx-plus'></i>
+        New Project
+    </a>
+</div>
+
+<!-- Statistics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <!-- Total Projects Card -->
+    <div class="modern-card p-6 border-l-4 border-blue-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Projects</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.total_projects }}</h3>
+                <p class="text-blue-500 text-sm mt-2">
+                    <i class='bx bx-buildings'></i>
+                    All projects
+                </p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-full">
+                <i class='bx bxs-buildings text-2xl text-blue-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Projects Card -->
+    <div class="modern-card p-6 border-l-4 border-green-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Active Projects</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.active_projects }}</h3>
+                <p class="text-green-500 text-sm mt-2">
+                    <i class='bx bx-play-circle'></i>
+                    In progress
+                </p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-full">
+                <i class='bx bxs-play-circle text-2xl text-green-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Completed Projects Card -->
+    <div class="modern-card p-6 border-l-4 border-purple-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Completed Projects</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.completed_projects }}</h3>
+                <p class="text-purple-500 text-sm mt-2">
+                    <i class='bx bx-check-circle'></i>
+                    Finished
+                </p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-full">
+                <i class='bx bxs-check-circle text-2xl text-purple-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Total Budget Card -->
+    <div class="modern-card p-6 border-l-4 border-orange-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Budget</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2 budget-amount">₦{{ "{:,.0f}".format(project_stats.total_budget) }}</h3>
+                <p class="text-orange-500 text-sm mt-2">
+                    <i class='bx bx-money'></i>
+                    Project budgets
+                </p>
+            </div>
+            <div class="bg-orange-100 p-3 rounded-full">
+                <i class='bx bxs-wallet text-2xl text-orange-600'></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="modern-card">
+    <!-- Header -->
+    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <i class='bx bxs-folder-open mr-2 text-blue-600'></i>
+                All Projects
+            </h3>
+            <div class="flex space-x-2">
+                <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Status</option>
+                    <option value="planning">Planning</option>
+                    <option value="active">Active</option>
+                    <option value="in progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="on hold">On Hold</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <input type="text" id="searchProjects" placeholder="Search projects..." 
+                       class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="p-6">
+        {% if projects %}
+        <div class="overflow-x-auto">
+            <table class="table-modern" id="projectsTable">
+                <thead>
+                    <tr>
+                        <th>Project Details</th>
+                        <th>Project Manager</th>
+                        <th>Timeline</th>
+                        <th>Budget</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for project in projects %}
+                    <tr class="project-row hover:bg-gray-50 transition-colors" 
+                        data-name="{{ project.name|lower }}" 
+                        data-status="{{ (project.status or 'planning')|lower }}"
+                        data-manager="{{ (project.project_manager or '')|lower }}">
+                        <td>
+                            <div class="flex items-start">
+                                <!-- Priority Indicator -->
+                                {% set budget_amount = project.budget or 0 %}
+                                {% if budget_amount > 10000000 %}
+                                    <span class="priority-indicator priority-high" title="High Priority"></span>
+                                {% elif budget_amount > 5000000 %}
+                                    <span class="priority-indicator priority-medium" title="Medium Priority"></span>
+                                {% else %}
+                                    <span class="priority-indicator priority-low" title="Low Priority"></span>
+                                {% endif %}
+
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ project.name }}</div>
+                                    {% if project.description %}
+                                    <div class="text-xs text-gray-500 mt-1 max-w-xs truncate">{{ project.description }}</div>
+                                    {% endif %}
+                                    <div class="text-xs text-gray-400 mt-1">
+                                        <i class='bx bx-calendar'></i>
+                                        Created: {{ project.created_at.strftime('%Y-%m-%d') if project.created_at else 'N/A' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs mr-3">
+                                    {% if project.project_manager %}
+                                        {{ project.project_manager[:2].upper() }}
+                                    {% else %}
+                                        <i class='bx bx-user'></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ project.project_manager or 'Unassigned' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">Project Manager</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                {% if project.start_date and project.end_date %}
+                                    <div class="text-gray-900 font-medium">
+                                        {{ project.start_date.strftime('%Y-%m-%d') }} to {{ project.end_date.strftime('%Y-%m-%d') }}
+                                    </div>
+                                    <!-- Progress Calculation -->
+                                    {% set total_days = (project.end_date - project.start_date).days %}
+                                    {% set current_date = current_date_obj %}
+                                    {% if total_days > 0 %}
+                                        {% set days_elapsed = (current_date - project.start_date).days %}
+                                        {% set progress = ((days_elapsed / total_days * 100) | round(1)) %}
+                                        {% if progress < 0 %}{% set progress = 0 %}{% endif %}
+                                        {% if progress > 100 %}{% set progress = 100 %}{% endif %}
+                                    {% else %}
+                                        {% set progress = 50 %}
+                                    {% endif %}
+                                    <div class="mt-2">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: {{ progress }}%"></div>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mt-1">{{ progress }}% timeline elapsed</div>
+                                    </div>
+                                {% else %}
+                                    <div class="text-gray-500">Timeline not set</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                {% if project.budget %}
+                                    <div class="text-gray-900 font-medium budget-amount">₦{{ "{:,.0f}".format(project.budget) }}</div>
+                                    <div class="text-xs text-gray-500">Total budget</div>
+                                {% else %}
+                                    <div class="text-gray-500">Not specified</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% set status = (project.status or 'planning')|lower %}
+                            <span class="status-badge badge-{{ status.replace(' ', '-') }}">
+                                {{ project.status or 'Planning' }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="relative dropdown-container">
+                                <!-- Primary Actions (Always Visible) -->
+                                <div class="btn-group justify-center">
+                                    <a href="{{ url_for('admin.project_details', project_id=project.id) }}" 
+                                       class="btn-primary-modern btn-sm-modern" 
+                                       title="View Project Details">
+                                        <i class='bx bx-show'></i>
+                                        View
+                                    </a>
+                                    <a href="{{ url_for('project.edit_project', project_id=project.id) }}" 
+                                       class="btn-warning-modern btn-sm-modern" 
+                                       title="Edit Project">
+                                        <i class='bx bx-edit'></i>
+                                        Edit
+                                    </a>
+                                    
+                                    <!-- Dropdown for Additional Actions -->
+                                    <div class="dropdown">
+                                        <button class="btn-secondary-modern btn-sm-modern dropdown-toggle" 
+                                                type="button" 
+                                                onclick="toggleDropdown(this)"
+                                                title="More Actions">
+                                            <i class='bx bx-dots-vertical-rounded'></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a href="{{ url_for('admin.milestones', project_id=project.id) }}" 
+                                               class="dropdown-item">
+                                                <i class='bx bx-target-lock'></i>
+                                                View Milestones
+                                            </a>
+                                            <a href="{{ url_for('admin.add_milestone', project_id=project.id) }}" 
+                                               class="dropdown-item">
+                                                <i class='bx bx-plus'></i>
+                                                Add Milestone
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <i class='bx bx-buildings text-6xl text-gray-300 mb-4'></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
+            <p class="text-gray-500 mb-6">Get started by creating your first construction project.</p>
+            <a href="{{ url_for('admin.add_project') }}" class="btn-primary-modern btn-lg-modern">
+                <i class='bx bx-plus'></i>
+                Create First Project
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Search and filter functionality
+document.getElementById('searchProjects').addEventListener('input', filterProjects);
+document.getElementById('statusFilter').addEventListener('change', filterProjects);
+
+function filterProjects() {
+    const searchTerm = document.getElementById('searchProjects').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+    const rows = document.querySelectorAll('.project-row');
+    
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const status = row.dataset.status;
+        const manager = row.dataset.manager;
+        
+        const matchesSearch = name.includes(searchTerm) || manager.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+        
+        if (matchesSearch && matchesStatus) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+// Dropdown functionality
+function toggleDropdown(button) {
+    const dropdown = button.parentElement;
+    const menu = dropdown.querySelector('.dropdown-menu');
+    const isOpen = menu.classList.contains('show');
+    
+    // Close all other dropdowns
+    document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
+        if (openMenu !== menu) {
+            openMenu.classList.remove('show');
+        }
+    });
+    
+    // Toggle current dropdown
+    if (isOpen) {
+        menu.classList.remove('show');
+    } else {
+        menu.classList.add('show');
+    }
+    
+    // Position dropdown to avoid overflow
+    const rect = dropdown.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const menuWidth = 160; // Approximate menu width
+    
+    if (rect.right + menuWidth > viewportWidth) {
+        menu.style.right = '0';
+        menu.style.left = 'auto';
+    } else {
+        menu.style.left = '0';
+        menu.style.right = 'auto';
+    }
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+});
+
+// Close dropdowns on escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+});
+
+// Add moment.js functionality for dates (simple implementation)
+function moment() {
+    return {
+        date: function() {
+            return new Date();
+        }
+    };
+}
+</script>
+{% endblock %}

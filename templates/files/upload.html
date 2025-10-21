@@ -1,0 +1,470 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Upload File - Construction Management System{% endblock %}
+
+{% block header %}Upload File{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Upload Form */
+    .upload-form {
+        max-width: 600px;
+        margin: 0 auto;
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-input, .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .form-input:focus, .form-textarea:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    /* File Upload Area */
+    .file-upload-area {
+        border: 2px dashed var(--gray-300);
+        border-radius: var(--border-radius);
+        padding: 3rem 2rem;
+        text-align: center;
+        background: var(--gray-50);
+        transition: var(--transition);
+        cursor: pointer;
+        position: relative;
+    }
+
+    .file-upload-area:hover {
+        border-color: var(--primary-color);
+        background: var(--primary-light);
+    }
+
+    .file-upload-area.dragover {
+        border-color: var(--primary-color);
+        background: var(--primary-light);
+        transform: scale(1.02);
+    }
+
+    .file-upload-icon {
+        font-size: 3rem;
+        color: var(--gray-400);
+        margin-bottom: 1rem;
+    }
+
+    .file-upload-text {
+        color: var(--gray-600);
+        font-size: 1.125rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .file-upload-subtext {
+        color: var(--gray-500);
+        font-size: 0.875rem;
+    }
+
+    .file-input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+    }
+
+    /* Selected File Display */
+    .selected-file {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: var(--success-light);
+        border: 1px solid var(--success-color);
+        border-radius: 8px;
+        display: none;
+    }
+
+    .selected-file.show {
+        display: block;
+    }
+
+    .file-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .file-icon {
+        width: 40px;
+        height: 40px;
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--success-color);
+        font-size: 1.5rem;
+    }
+
+    .file-details h4 {
+        margin: 0;
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--gray-800);
+    }
+
+    .file-details p {
+        margin: 0.25rem 0 0 0;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+
+    /* Button Styles */
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        letter-spacing: 0.025em;
+        gap: 0.5rem;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #4f46e5 100%);
+        color: white;
+    }
+
+    .btn-primary-modern:hover:not(:disabled) {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #3730a3 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.4);
+    }
+
+    .btn-primary-modern:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+
+    .btn-secondary {
+        background: white;
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary:hover {
+        background: var(--gray-50);
+    }
+
+    /* Progress Bar */
+    .upload-progress {
+        margin-top: 1rem;
+        display: none;
+    }
+
+    .upload-progress.show {
+        display: block;
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: var(--gray-200);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+        width: 0%;
+        transition: width 0.3s ease;
+    }
+
+    .progress-text {
+        text-align: center;
+        margin-top: 0.5rem;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+</style>
+
+<!-- Page Header -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800 mb-2">Upload File</h2>
+        <p class="text-gray-600">Upload documents, images, and other files</p>
+    </div>
+    <a href="{{ url_for('files.search_files') }}" class="btn-secondary btn-modern">
+        <i class='bx bx-arrow-back'></i>
+        Back to Files
+    </a>
+</div>
+
+<!-- Upload Form -->
+<form id="uploadForm" method="POST" enctype="multipart/form-data" class="upload-form">
+    {{ form.hidden_tag() }}
+    
+    <!-- File Upload Area -->
+    <div class="form-group">
+        <label class="form-label">Select File</label>
+        <div class="file-upload-area" id="uploadArea">
+            <div class="file-upload-icon">
+                <i class='bx bx-cloud-upload'></i>
+            </div>
+            <div class="file-upload-text">
+                Drop files here or click to browse
+            </div>
+            <div class="file-upload-subtext">
+                Supported formats: PDF, DOCX, XLSX, JPG, PNG, TXT (Max 10MB)
+            </div>
+            {{ form.file(class="file-input", id="fileInput", accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png,.txt", required=True) }}
+        </div>
+        
+        <!-- Selected File Display -->
+        <div class="selected-file" id="selectedFile">
+            <div class="file-info">
+                <div class="file-icon">
+                    <i class='bx bx-file' id="fileIcon"></i>
+                </div>
+                <div class="file-details">
+                    <h4 id="fileName"></h4>
+                    <p id="fileSize"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Progress -->
+        <div class="upload-progress" id="uploadProgress">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">Uploading...</div>
+        </div>
+    </div>
+
+    <!-- File Name -->
+    <div class="form-group">
+        <label class="form-label" for="name">Display Name</label>
+        {{ form.name(class="form-input", id="name", placeholder="Enter a display name for the file", required=True) }}
+    </div>
+
+    <!-- Folder -->
+    <div class="form-group">
+        <label class="form-label" for="folder">Folder (Optional)</label>
+        {{ form.folder(class="form-input", id="folder", placeholder="e.g., Documents, Images, Reports") }}
+    </div>
+
+    <!-- Tags -->
+    <div class="form-group">
+        <label class="form-label" for="tags">Tags (Optional)</label>
+        {{ form.tags(class="form-input", id="tags", placeholder="e.g., contract, blueprint, report (comma-separated)") }}
+    </div>
+
+    <!-- Submit Button -->
+    <div class="form-group">
+        <button type="submit" class="btn-primary-modern btn-modern w-full" id="submitBtn">
+            <i class='bx bx-cloud-upload'></i>
+            Upload File
+        </button>
+    </div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFile = document.getElementById('selectedFile');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const fileIcon = document.getElementById('fileIcon');
+    const nameInput = document.getElementById('name');
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadProgress = document.getElementById('uploadProgress');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+
+    // File type icons
+    const fileIcons = {
+        'pdf': 'bx-file-doc',
+        'doc': 'bx-file-doc',
+        'docx': 'bx-file-doc',
+        'xls': 'bx-table',
+        'xlsx': 'bx-table',
+        'jpg': 'bx-image',
+        'jpeg': 'bx-image',
+        'png': 'bx-image',
+        'txt': 'bx-file-txt'
+    };
+
+    // Drag and drop handlers
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(files[0]);
+        }
+    });
+
+    // File input change handler
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            handleFileSelect(e.target.files[0]);
+        }
+    });
+
+    function handleFileSelect(file) {
+        // Validate file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB');
+            fileInput.value = '';
+            return;
+        }
+
+        // Update selected file display
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        
+        // Set appropriate icon
+        const extension = file.name.split('.').pop().toLowerCase();
+        const iconClass = fileIcons[extension] || 'bx-file';
+        fileIcon.className = `bx ${iconClass}`;
+        
+        // Auto-fill name if empty
+        if (!nameInput.value) {
+            nameInput.value = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+        }
+        
+        selectedFile.classList.add('show');
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // Form submission with progress
+    uploadForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        if (!fileInput.files.length) {
+            alert('Please select a file to upload');
+            return;
+        }
+
+        const formData = new FormData(uploadForm);
+        
+        // Show progress
+        submitBtn.disabled = true;
+        uploadProgress.classList.add('show');
+        
+        const xhr = new XMLHttpRequest();
+        
+        xhr.upload.addEventListener('progress', function(e) {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                progressFill.style.width = percentComplete + '%';
+                progressText.textContent = `Uploading... ${Math.round(percentComplete)}%`;
+            }
+        });
+        
+        xhr.addEventListener('load', function() {
+            if (xhr.status === 200) {
+                progressText.textContent = 'Upload complete!';
+                setTimeout(() => {
+                    window.location.href = "{{ url_for('files.search_files') }}";
+                }, 1000);
+            } else {
+                alert('Upload failed. Please try again.');
+                submitBtn.disabled = false;
+                uploadProgress.classList.remove('show');
+            }
+        });
+        
+        xhr.addEventListener('error', function() {
+            alert('Upload failed. Please try again.');
+            submitBtn.disabled = false;
+            uploadProgress.classList.remove('show');
+        });
+        
+        xhr.open('POST', uploadForm.action);
+        xhr.send(formData);
+    });
+});
+</script>
+{% endblock %}

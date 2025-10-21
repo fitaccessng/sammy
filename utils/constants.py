@@ -15,6 +15,7 @@ class Roles:
     FINANCE_STAFF = 'finance_staff'
     HR_STAFF = 'hr_staff'
     PROCUREMENT_STAFF = 'procurement_staff'
+    PROCUREMENT_OFFICER = 'procurement_officer'
     QUARRY_STAFF = 'quarry_staff'
     PROJECT_STAFF = 'project_staff'
 

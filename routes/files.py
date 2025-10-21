@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request, session
+from flask import Blueprint, render_template, redirect, url_for, flash, request, session, send_file, jsonify, current_app
+from flask_login import current_user
 from utils.decorators import role_required
 from utils.constants import Roles
 from models import db, UploadedFile
@@ -19,6 +20,7 @@ ALLOWED_EXTENSIONS = {'pdf', 'docx', 'xlsx', 'jpg', 'png', 'txt'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 class FileUploadForm(FlaskForm):
+    name = StringField('Display Name', validators=[DataRequired(), Length(max=255)])
     file = FileField('File', validators=[DataRequired()])
     folder = StringField('Folder', validators=[Length(max=100)])
     tags = StringField('Tags', validators=[Length(max=200)])
@@ -27,32 +29,53 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @files_bp.route('/files/upload', methods=['GET', 'POST'])
-@role_required([Roles.SUPER_HQ])
+@role_required([Roles.SUPER_HQ, Roles.HQ_HR])  # Added HQ_HR role
 def upload_file():
     form = FileUploadForm()
     if form.validate_on_submit():
         file = form.file.data
+        name = form.name.data.strip()
         folder = form.folder.data.strip() or 'default'
         tags = form.tags.data.strip()
+        
         if not allowed_file(file.filename):
             flash('File type not allowed.', 'danger')
             return redirect(url_for('files.upload_file'))
+            
         filename = secure_filename(file.filename)
         folder_path = os.path.join(UPLOAD_FOLDER, folder)
         os.makedirs(folder_path, exist_ok=True)
         file_path = os.path.join(folder_path, filename)
+        
+        # Check file size
         file.seek(0, os.SEEK_END)
         size = file.tell()
         file.seek(0)
         if size > MAX_FILE_SIZE:
-            flash('File exceeds maximum size.', 'danger')
+            flash('File exceeds maximum size (10MB).', 'danger')
             return redirect(url_for('files.upload_file'))
+        
         file.save(file_path)
-        uploaded = UploadedFile(filename=filename, folder=folder, tags=tags, path=file_path, uploaded_by=session.get('user'))
+        
+        # Get file type
+        file_type = guess_type(filename)[0]
+        
+        # Create database record
+        uploaded = UploadedFile(
+            filename=filename,
+            name=name,
+            folder=folder,
+            tags=tags,
+            path=file_path,
+            file_size=size,
+            file_type=file_type,
+            uploaded_by=current_user.id if current_user.is_authenticated else None
+        )
         db.session.add(uploaded)
         db.session.commit()
+        
         flash('File uploaded successfully!', 'success')
-        return redirect(url_for('files.upload_file'))
+        return redirect(url_for('files.search_files'))
     return render_template('files/upload.html', form=form)
 
 @files_bp.route('/folders/create', methods=['POST'])
@@ -109,3 +132,13 @@ def file_detail(file_id):
         flash('File deleted!', 'success')
         return redirect(url_for('files.search_files'))
     return render_template('files/detail.html', file=file_record)
+
+@files_bp.route('/files/<int:file_id>/download')
+@role_required([Roles.SUPER_HQ])
+def download_file(file_id):
+    file_record = UploadedFile.query.get_or_404(file_id)
+    try:
+        return send_file(file_record.path, as_attachment=True, download_name=file_record.filename)
+    except Exception as e:
+        flash('File not found or could not be downloaded.', 'danger')
+        return redirect(url_for('files.search_files'))

@@ -1,0 +1,748 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Add Purchase Order - Construction Management System{% endblock %}
+
+{% block header %}Add Purchase Order{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-md);
+        transition: var(--transition);
+        border: 1px solid var(--gray-200);
+    }
+
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        border-radius: var(--border-radius);
+        transition: var(--transition);
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        outline: none;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .btn-lg-modern {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+
+    .btn-primary-modern {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+        color: white;
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, var(--primary-dark) 0%, #1e3a8a 100%);
+        box-shadow: var(--shadow-lg);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary-modern {
+        background: var(--gray-100);
+        color: var(--gray-700);
+        border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary-modern:hover {
+        background: var(--gray-200);
+        color: var(--gray-800);
+        transform: translateY(-1px);
+    }
+
+    .btn-success-modern {
+        background: linear-gradient(135deg, var(--success-color) 0%, #059669 100%);
+        color: white;
+    }
+
+    .btn-danger-modern {
+        background: linear-gradient(135deg, var(--danger-color) 0%, #dc2626 100%);
+        color: white;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .form-label {
+        font-weight: 500;
+        color: var(--gray-700);
+        font-size: 0.875rem;
+    }
+
+    .form-label.required::after {
+        content: " *";
+        color: var(--danger-color);
+    }
+
+    .form-input {
+        padding: 0.75rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background: white;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px var(--primary-light);
+    }
+
+    .form-select {
+        background-image: url("data:image/svg+xml;charset=utf-8,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+    .line-items-table {
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 1rem;
+    }
+
+    .line-items-table th,
+    .line-items-table td {
+        padding: 0.75rem;
+        border-bottom: 1px solid var(--gray-200);
+    }
+
+    .line-items-table th {
+        background: var(--gray-50);
+        font-weight: 600;
+        color: var(--gray-700);
+    }
+
+    .totals-section {
+        background: var(--gray-50);
+        border: 1px solid var(--gray-200);
+        border-radius: 8px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+
+    .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        font-size: 0.875rem;
+        color: var(--gray-600);
+    }
+
+    .breadcrumb a {
+        color: var(--primary-color);
+        text-decoration: none;
+        transition: var(--transition);
+    }
+
+    .breadcrumb a:hover {
+        color: var(--primary-dark);
+        text-decoration: underline;
+    }
+
+    @media (max-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .btn-modern {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
+    .form-group {
+        animation: fadeInUp 0.3s ease-out;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .btn-modern:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    .loading-spinner {
+        width: 1rem;
+        height: 1rem;
+        border: 2px solid transparent;
+        border-top: 2px solid currentColor;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .supplier-search {
+        position: relative;
+    }
+
+    .supplier-suggestions {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        box-shadow: var(--shadow-lg);
+        z-index: 10;
+        max-height: 200px;
+        overflow-y: auto;
+        display: none;
+    }
+
+    .supplier-suggestion {
+        padding: 0.75rem;
+        cursor: pointer;
+        border-bottom: 1px solid var(--gray-100);
+        transition: var(--transition);
+    }
+
+    .supplier-suggestion:hover {
+        background: var(--gray-50);
+    }
+
+    .supplier-suggestion:last-child {
+        border-bottom: none;
+    }
+</style>
+
+<div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{{ url_for('admin.dashboard') }}">
+            <i class='bx bx-home'></i>
+            Dashboard
+        </a>
+        <i class='bx bx-chevron-right'></i>
+        <a href="{{ url_for('admin.orders') }}">Purchase Orders</a>
+        <i class='bx bx-chevron-right'></i>
+        <span>Add New Order</span>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+        <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">Add Purchase Order</h1>
+            <p class="text-gray-600">Create a new purchase order for construction materials and services</p>
+        </div>
+        <a href="{{ url_for('admin.orders') }}" class="btn-modern btn-secondary-modern mt-4 sm:mt-0">
+            <i class='bx bx-arrow-back'></i>
+            Back to Orders
+        </a>
+    </div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mb-6">
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg bg-{{ 'red-100' if category == 'danger' or category == 'error' else 'green-100' }} text-{{ 'red-700' if category == 'danger' or category == 'error' else 'green-700' }} border border-{{ 'red-200' if category == 'danger' or category == 'error' else 'green-200' }}">
+                    <i class='bx {{ 'bx-error' if category == 'danger' or category == 'error' else 'bx-check-circle' }} mr-2'></i>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- Add Purchase Order Form -->
+    <div class="modern-card p-8">
+        <form method="POST" action="{{ url_for('admin.add_order') }}" id="addOrderForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            
+            <!-- Basic Information Section -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-info-circle mr-2'></i>
+                    Order Information
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="project_id" class="form-label">Project</label>
+                        <select id="project_id" name="project_id" class="form-input form-select">
+                            <option value="">Select project (optional)</option>
+                            {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="priority" class="form-label">Priority</label>
+                        <select id="priority" name="priority" class="form-input form-select">
+                            <option value="Low">Low</option>
+                            <option value="Normal" selected>Normal</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="expected_delivery" class="form-label">Expected Delivery</label>
+                        <input type="date" 
+                               id="expected_delivery" 
+                               name="expected_delivery" 
+                               class="form-input" 
+                               min="{{ datetime.now().strftime('%Y-%m-%d') }}">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" 
+                              name="description" 
+                              class="form-input" 
+                              rows="3"
+                              placeholder="Brief description of the purchase order..."></textarea>
+                </div>
+            </div>
+
+            <!-- Supplier Information Section -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-building mr-2'></i>
+                    Supplier Information
+                </h2>
+                
+                <div class="form-grid">
+                    <div class="form-group supplier-search">
+                        <label for="supplier_name" class="form-label required">Supplier Name</label>
+                        <input type="text" 
+                               id="supplier_name" 
+                               name="supplier_name" 
+                               class="form-input" 
+                               placeholder="Enter supplier name"
+                               required
+                               autocomplete="off"
+                               oninput="searchSuppliers(this.value)">
+                        <div id="supplierSuggestions" class="supplier-suggestions"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="supplier_contact" class="form-label">Contact Person</label>
+                        <input type="text" 
+                               id="supplier_contact" 
+                               name="supplier_contact" 
+                               class="form-input" 
+                               placeholder="Contact person name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="supplier_email" class="form-label">Email</label>
+                        <input type="email" 
+                               id="supplier_email" 
+                               name="supplier_email" 
+                               class="form-input" 
+                               placeholder="supplier@example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="supplier_phone" class="form-label">Phone</label>
+                        <input type="tel" 
+                               id="supplier_phone" 
+                               name="supplier_phone" 
+                               class="form-input" 
+                               placeholder="Phone number">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="delivery_address" class="form-label">Delivery Address</label>
+                    <textarea id="delivery_address" 
+                              name="delivery_address" 
+                              class="form-input" 
+                              rows="3"
+                              placeholder="Delivery address for this order..."></textarea>
+                </div>
+            </div>
+
+            <!-- Line Items Section -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-list-ul mr-2'></i>
+                    Order Items
+                </h2>
+
+                <div class="overflow-x-auto">
+                    <table class="line-items-table w-full" id="lineItemsTable">
+                        <thead>
+                            <tr>
+                                <th>Item Name</th>
+                                <th>Description</th>
+                                <th>Quantity</th>
+                                <th>Unit</th>
+                                <th>Unit Price</th>
+                                <th>Total</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lineItemsBody">
+                            <!-- Line items will be added here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <button type="button" onclick="addLineItem()" class="btn-modern btn-success-modern mt-4">
+                    <i class='bx bx-plus'></i>
+                    Add Item
+                </button>
+            </div>
+
+            <!-- Totals Section -->
+            <div class="totals-section">
+                <h3 class="font-semibold text-gray-800 mb-4">
+                    <i class='bx bx-calculator mr-2'></i>
+                    Order Totals
+                </h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="form-group">
+                        <label for="tax_rate" class="form-label">Tax Rate (%)</label>
+                        <input type="number" 
+                               id="tax_rate" 
+                               name="tax_rate" 
+                               class="form-input" 
+                               placeholder="0.00"
+                               step="0.01"
+                               min="0"
+                               max="100"
+                               oninput="calculateTotals()">
+                    </div>
+                </div>
+
+                <div class="mt-6 space-y-2">
+                    <div class="flex justify-between">
+                        <span class="font-medium">Subtotal:</span>
+                        <span id="subtotalDisplay">₦0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="font-medium">Tax:</span>
+                        <span id="taxDisplay">₦0.00</span>
+                    </div>
+                    <div class="flex justify-between text-lg font-bold border-t pt-2">
+                        <span>Total:</span>
+                        <span id="totalDisplay">₦0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="mb-8">
+                <h2 class="section-header">
+                    <i class='bx bx-note mr-2'></i>
+                    Additional Notes
+                </h2>
+                
+                <div class="form-group">
+                    <label for="notes" class="form-label">Notes</label>
+                    <textarea id="notes" 
+                              name="notes" 
+                              class="form-input" 
+                              rows="4"
+                              placeholder="Any additional notes, terms, or special instructions..."></textarea>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+                <button type="submit" class="btn-modern btn-lg-modern btn-primary-modern flex-1 sm:flex-none" id="submitBtn">
+                    <i class='bx bx-check'></i>
+                    Create Purchase Order
+                </button>
+                <button type="button" onclick="saveDraft()" class="btn-modern btn-lg-modern btn-secondary-modern flex-1 sm:flex-none">
+                    <i class='bx bx-save'></i>
+                    Save as Draft
+                </button>
+                <a href="{{ url_for('admin.orders') }}" class="btn-modern btn-lg-modern btn-secondary-modern flex-1 sm:flex-none">
+                    <i class='bx bx-x'></i>
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Supplier data
+const suppliers = {{ suppliers|tojson if suppliers else '[]' }};
+const stockItems = {{ stock_items|tojson if stock_items else '[]' }};
+
+let lineItemCount = 0;
+
+// Initialize with one line item
+document.addEventListener('DOMContentLoaded', function() {
+    addLineItem();
+});
+
+function searchSuppliers(query) {
+    const suggestions = document.getElementById('supplierSuggestions');
+    
+    if (query.length < 2) {
+        suggestions.style.display = 'none';
+        return;
+    }
+    
+    const matches = suppliers.filter(supplier => 
+        supplier.name.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    if (matches.length > 0) {
+        suggestions.innerHTML = matches.map(supplier => `
+            <div class="supplier-suggestion" onclick="selectSupplier('${supplier.name}', '${supplier.contact_person || ''}', '${supplier.email || ''}', '${supplier.phone || ''}')">
+                <div class="font-medium">${supplier.name}</div>
+                ${supplier.contact_person ? `<div class="text-sm text-gray-500">${supplier.contact_person}</div>` : ''}
+            </div>
+        `).join('');
+        suggestions.style.display = 'block';
+    } else {
+        suggestions.style.display = 'none';
+    }
+}
+
+function selectSupplier(name, contact, email, phone) {
+    document.getElementById('supplier_name').value = name;
+    document.getElementById('supplier_contact').value = contact;
+    document.getElementById('supplier_email').value = email;
+    document.getElementById('supplier_phone').value = phone;
+    document.getElementById('supplierSuggestions').style.display = 'none';
+}
+
+function addLineItem() {
+    lineItemCount++;
+    const tbody = document.getElementById('lineItemsBody');
+    const row = document.createElement('tr');
+    row.id = `lineItem${lineItemCount}`;
+    
+    row.innerHTML = `
+        <td>
+            <input type="text" name="item_name[]" class="form-input w-full" placeholder="Item name" required>
+        </td>
+        <td>
+            <input type="text" name="item_description[]" class="form-input w-full" placeholder="Description">
+        </td>
+        <td>
+            <input type="number" name="item_quantity[]" class="form-input w-full" placeholder="1" step="0.01" min="0" required oninput="calculateLineTotal(${lineItemCount})">
+        </td>
+        <td>
+            <input type="text" name="item_unit[]" class="form-input w-full" placeholder="units">
+        </td>
+        <td>
+            <input type="number" name="item_price[]" class="form-input w-full" placeholder="0.00" step="0.01" min="0" required oninput="calculateLineTotal(${lineItemCount})">
+        </td>
+        <td>
+            <span class="font-medium" id="lineTotal${lineItemCount}">₦0.00</span>
+        </td>
+        <td>
+            <button type="button" onclick="removeLineItem(${lineItemCount})" class="btn-modern btn-danger-modern">
+                <i class='bx bx-trash'></i>
+            </button>
+        </td>
+    `;
+    
+    tbody.appendChild(row);
+}
+
+function removeLineItem(id) {
+    const row = document.getElementById(`lineItem${id}`);
+    if (row) {
+        row.remove();
+        calculateTotals();
+    }
+}
+
+function calculateLineTotal(id) {
+    const row = document.getElementById(`lineItem${id}`);
+    const quantity = parseFloat(row.querySelector('input[name="item_quantity[]"]').value) || 0;
+    const price = parseFloat(row.querySelector('input[name="item_price[]"]').value) || 0;
+    const total = quantity * price;
+    
+    document.getElementById(`lineTotal${id}`).textContent = `₦${total.toFixed(2)}`;
+    calculateTotals();
+}
+
+function calculateTotals() {
+    const rows = document.querySelectorAll('#lineItemsBody tr');
+    let subtotal = 0;
+    
+    rows.forEach(row => {
+        const quantity = parseFloat(row.querySelector('input[name="item_quantity[]"]').value) || 0;
+        const price = parseFloat(row.querySelector('input[name="item_price[]"]').value) || 0;
+        subtotal += quantity * price;
+    });
+    
+    const taxRate = parseFloat(document.getElementById('tax_rate').value) || 0;
+    const taxAmount = subtotal * (taxRate / 100);
+    const total = subtotal + taxAmount;
+    
+    document.getElementById('subtotalDisplay').textContent = `₦${subtotal.toFixed(2)}`;
+    document.getElementById('taxDisplay').textContent = `₦${taxAmount.toFixed(2)}`;
+    document.getElementById('totalDisplay').textContent = `₦${total.toFixed(2)}`;
+}
+
+function saveDraft() {
+    // Add a hidden field to indicate draft status
+    const form = document.getElementById('addOrderForm');
+    const draftInput = document.createElement('input');
+    draftInput.type = 'hidden';
+    draftInput.name = 'status';
+    draftInput.value = 'Draft';
+    form.appendChild(draftInput);
+    
+    // Submit the form
+    form.submit();
+}
+
+function validateForm() {
+    const supplierName = document.getElementById('supplier_name').value.trim();
+    
+    if (!supplierName) {
+        alert('Please enter a supplier name');
+        return false;
+    }
+    
+    const lineItems = document.querySelectorAll('#lineItemsBody tr');
+    if (lineItems.length === 0) {
+        alert('Please add at least one line item');
+        return false;
+    }
+    
+    // Validate line items
+    for (let row of lineItems) {
+        const itemName = row.querySelector('input[name="item_name[]"]').value.trim();
+        const quantity = parseFloat(row.querySelector('input[name="item_quantity[]"]').value);
+        const price = parseFloat(row.querySelector('input[name="item_price[]"]').value);
+        
+        if (!itemName) {
+            alert('Please enter item names for all line items');
+            return false;
+        }
+        
+        if (!quantity || quantity <= 0) {
+            alert('Please enter valid quantities for all line items');
+            return false;
+        }
+        
+        if (!price || price < 0) {
+            alert('Please enter valid prices for all line items');
+            return false;
+        }
+    }
+    
+    return true;
+}
+
+document.getElementById('addOrderForm').addEventListener('submit', function(e) {
+    if (!validateForm()) {
+        e.preventDefault();
+        return;
+    }
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const originalContent = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<div class="loading-spinner"></div> Creating...';
+    
+    setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalContent;
+    }, 10000);
+});
+
+// Hide supplier suggestions when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.supplier-search')) {
+        document.getElementById('supplierSuggestions').style.display = 'none';
+    }
+});
+
+// Calculate totals when tax rate changes
+document.getElementById('tax_rate').addEventListener('input', calculateTotals);
+</script>
+{% endblock %}

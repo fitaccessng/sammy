@@ -1,0 +1,136 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Query Details | SammyA HR{% endblock %}
+{% block header %}Query Details{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Query Header -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-800">{{ query.subject }}</h2>
+                <p class="text-sm text-gray-500 mt-1">Query #{{ query.id }}</p>
+            </div>
+            <span class="px-3 py-1 inline-flex text-sm leading-5 font-semibold rounded-full 
+                {% if query.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                {% elif query.status == 'In Progress' %}bg-blue-100 text-blue-800
+                {% elif query.status == 'Resolved' %}bg-green-100 text-green-800
+                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                {{ query.status }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Query Information -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Staff Information -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Staff Information</h3>
+            <div class="space-y-3">
+                <div class="flex items-center space-x-3">
+                    <img class="h-12 w-12 rounded-full" 
+                         src="https://ui-avatars.com/api/?name={{ query.staff|urlencode }}&background=random" 
+                         alt="{{ query.staff }}">
+                    <div>
+                        <p class="font-medium text-gray-900">{{ query.staff }}</p>
+                        <p class="text-sm text-gray-500">{{ query.department }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Query Details -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Query Details</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Category</label>
+                    <p class="text-gray-900">{{ query.category }}</p>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Priority</label>
+                    <span class="px-2 inline-flex text-xs leading-5 font-medium rounded-full 
+                        {% if query.priority == 'Low' %}bg-gray-100 text-gray-700
+                        {% elif query.priority == 'Medium' %}bg-blue-100 text-blue-700
+                        {% elif query.priority == 'High' %}bg-orange-100 text-orange-700
+                        {% elif query.priority == 'Urgent' %}bg-red-100 text-red-700
+                        {% else %}bg-gray-100 text-gray-700{% endif %}">
+                        {{ query.priority }}
+                    </span>
+                </div>
+                <div>
+                    <label class="text-sm font-medium text-gray-500">Submitted At</label>
+                    <p class="text-gray-900">{{ query.submitted_at }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Query Description -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Description</h3>
+        <p class="text-gray-700 leading-relaxed">{{ query.description }}</p>
+    </div>
+
+    <!-- Status Update Form -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Update Status</h3>
+        <form id="statusUpdateForm" method="POST" action="{{ url_for('hr.update_query_status', query_id=query.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            <div class="flex items-center space-x-4">
+                <select name="status" class="rounded-md p-2 border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <option value="Pending" {% if query.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="In Progress" {% if query.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                    <option value="Resolved" {% if query.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                </select>
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                    Update Status
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <a href="{{ url_for('hr.staff_queries') }}" 
+           class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+            <i class='bx bx-arrow-back'></i> Back to Queries
+        </a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusForm = document.getElementById('statusUpdateForm');
+    
+    if (statusForm) {
+        statusForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(statusForm);
+            
+            fetch(statusForm.action, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    // Redirect back to queries list
+                    window.location.href = "{{ url_for('hr.staff_queries') }}";
+                } else {
+                    alert('Error updating status');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Network error');
+            });
+        });
+    }
+});
+</script>
+{% endblock %}

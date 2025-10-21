@@ -1,43 +1,130 @@
 {% extends "projects/base.html" %}
 
-{% block title %}Projects Dashboard | SammyA{% endblock %}
-{% block header %}Projects Dashboard{% endblock %}
+{% block title %}My Projects | SammyA{% endblock %}
+{% block header %}My Projects{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
+    <!-- User Info Header -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-900">Welcome, {{ current_user.name }}</h2>
+                <p class="text-sm text-gray-600">
+                    Role: {{ current_user.role }} • 
+                    Showing projects you're assigned to or managing
+                </p>
+            </div>
+            <div class="text-right">
+                <p class="text-2xl font-bold text-indigo-600">{{ project_stats.total_projects }}</p>
+                <p class="text-sm text-gray-500">Your Projects</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Active Projects</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ project_stats.active_projects }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-play-circle text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Completed</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ project_stats.completed_projects }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-check-circle text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Planning</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ project_stats.planning_projects }}</h3>
+                </div>
+                <div class="bg-yellow-100 p-3 rounded-full">
+                    <i class='bx bx-clock text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Completion Rate</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ "%.0f"|format(project_stats.completion_rate) }}%</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-trending-up text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Actions -->
     <div class="flex justify-between">
         <div class="flex space-x-3">
+            {% if current_user.has_role('SUPER_HQ') or current_user.has_role('PROJECT_MANAGER') %}
             <a href="{{ url_for('project.create_project') }}" 
                class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                 Create New Project
             </a>
+            {% endif %}
             <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Export Projects
+                Export My Projects
             </button>
         </div>
         <div class="flex space-x-3">
-            <input type="text" placeholder="Search projects..." 
+            <input type="text" placeholder="Search my projects..." 
                    class="px-4 py-2 border rounded-lg">
         </div>
     </div>
 
     <!-- Projects Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% if projects %}
         {% for project in projects %}
         <div class="bg-white rounded-lg shadow">
             <div class="p-6">
                 <div class="flex justify-between items-start">
                     <h3 class="text-lg font-semibold text-gray-900">{{ project.name }}</h3>
-                    <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                          {% if project.status == 'Active' %}bg-green-100 text-green-800
-                          {% elif project.status == 'Planning' %}bg-yellow-100 text-yellow-800
-                          {% else %}bg-gray-100 text-gray-800{% endif %}">
-                        {{ project.status }}
-                    </span>
+                    <div class="flex flex-col space-y-1">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                              {% if project.status == 'Active' %}bg-green-100 text-green-800
+                              {% elif project.status == 'Planning' %}bg-yellow-100 text-yellow-800
+                              {% elif project.status == 'Completed' %}bg-blue-100 text-blue-800
+                              {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ project.status }}
+                        </span>
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                            {% if project.is_manager %}Manager{% else %}{{ project.user_role }}{% endif %}
+                        </span>
+                    </div>
                 </div>
                 
                 <div class="mt-4 space-y-2">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Your Role:</span>
+                        <span class="text-gray-900 font-medium">
+                            {% if project.is_manager %}
+                                <i class='bx bx-crown text-yellow-500 mr-1'></i>Project Manager
+                            {% else %}
+                                <i class='bx bx-user text-blue-500 mr-1'></i>{{ project.user_role }}
+                            {% endif %}
+                        </span>
+                    </div>
                     <div class="flex justify-between text-sm">
                         <span class="text-gray-500">Manager:</span>
                         <span class="text-gray-900">{{ project.manager }}</span>
@@ -46,29 +133,344 @@
                         <span class="text-gray-500">Created:</span>
                         <span class="text-gray-900">{{ project.created_at }}</span>
                     </div>
+                    {% if project.budget %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Budget:</span>
+                        <span class="text-gray-900">₦{{ "{:,.0f}".format(project.budget) }}</span>
+                    </div>
+                    {% endif %}
+                    {% if project.progress %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Progress:</span>
+                        <span class="text-gray-900">{{ "%.1f"|format(project.progress) }}%</span>
+                    </div>
+                    <!-- Progress Bar -->
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" 
+                             style="width: {{ project.progress }}%"></div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if project.days_remaining is not none %}
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-500">Timeline:</span>
+                        <span class="{% if project.is_overdue %}text-red-600{% elif project.days_remaining < 7 %}text-orange-600{% else %}text-gray-900{% endif %}">
+                            {% if project.is_overdue %}
+                                Overdue by {{ project.days_remaining|abs }} days
+                            {% else %}
+                                {{ project.days_remaining }} days remaining
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
                 </div>
 
+                {% if project.description %}
                 <div class="mt-4">
-                    <h4 class="text-sm font-medium text-gray-700 mb-2">Staff Assigned:</h4>
-                    <div class="space-y-1">
-                        {% for role, name in project.staff.items() %}
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-500">{{ role }}:</span>
-                            <span class="text-gray-900">{{ name }}</span>
-                        </div>
-                        {% endfor %}
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Description:</h4>
+                    <p class="text-sm text-gray-600">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                </div>
+                {% endif %}
+
+                <!-- Team Info -->
+                <div class="mt-4 pt-4 border-t">
+                    <div class="flex justify-between text-xs text-gray-500">
+                        <span>Team: {{ project.staff_count }} members</span>
+                        <span>Priority: {{ project.priority }}</span>
                     </div>
                 </div>
 
                 <div class="mt-6 flex justify-end space-x-3">
+                    <button onclick="viewProjectDetails({{ project.id }})" 
+                            class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                        <i class='bx bx-show mr-1'></i>View Details
+                    </button>
                     <a href="{{ url_for('project.project_details', project_id=project.id) }}" 
-                       class="text-indigo-600 hover:text-indigo-900">View Details</a>
+                       class="text-blue-600 hover:text-blue-900 text-sm font-medium">
+                        <i class='bx bx-link-external mr-1'></i>Full View
+                    </a>
+                    {% if project.is_manager or current_user.has_role('SUPER_HQ') %}
                     <a href="{{ url_for('project.edit_project', project_id=project.id) }}" 
-                       class="text-gray-600 hover:text-gray-900">Edit</a>
+                       class="text-gray-600 hover:text-gray-900 text-sm font-medium">
+                        <i class='bx bx-edit mr-1'></i>Edit
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% endfor %}
+        {% else %}
+        <!-- No Projects State -->
+        <div class="col-span-full">
+            <div class="text-center py-12">
+                <i class='bx bx-folder-open text-6xl text-gray-400'></i>
+                <h3 class="text-xl font-medium text-gray-900 mt-4">No Projects Assigned</h3>
+                <p class="text-gray-500 mt-2">You haven't been assigned to any projects yet.</p>
+                {% if current_user.has_role('SUPER_HQ') or current_user.has_role('PROJECT_MANAGER') %}
+                <p class="text-gray-500 text-sm mt-1">As a {{ current_user.role }}, you can create new projects.</p>
+                <a href="{{ url_for('project.create_project') }}" 
+                   class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    <i class='bx bx-plus mr-2'></i>Create Your First Project
+                </a>
+                {% else %}
+                <p class="text-gray-500 text-sm mt-1">Contact your project manager to get assigned to projects.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Project Details Modal -->
+    <div id="projectDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Project Details</h3>
+                <button onclick="closeProjectDetailsModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-xl'></i>
+                </button>
+            </div>
+            <div id="projectDetailsContent" class="space-y-4">
+                <!-- Project details content will be populated by JavaScript -->
+                <div class="text-center py-8">
+                    <i class='bx bx-loader bx-spin text-3xl text-gray-400'></i>
+                    <p class="text-gray-500 mt-2">Loading project details...</p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+// Project Details Modal Functions
+async function viewProjectDetails(projectId) {
+    try {
+        // Show modal first
+        document.getElementById('projectDetailsModal').classList.remove('hidden');
+        document.getElementById('projectDetailsModal').classList.add('flex');
+        
+        // Show loading state
+        document.getElementById('projectDetailsContent').innerHTML = `
+            <div class="text-center py-8">
+                <i class='bx bx-loader bx-spin text-3xl text-gray-400'></i>
+                <p class="text-gray-500 mt-2">Loading project details...</p>
+            </div>
+        `;
+        
+        // Make API call
+        const response = await fetch(`/project/api/projects/${projectId}/details`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        
+        if (result.status === 'success') {
+            displayProjectDetails(result.project);
+        } else {
+            showError('Failed to load project details: ' + (result.error || 'Unknown error'));
+        }
+    } catch (error) {
+        console.error('Error loading project details:', error);
+        showError('Error loading project details: ' + error.message);
+    }
+}
+
+function displayProjectDetails(project) {
+    const content = document.getElementById('projectDetailsContent');
+    
+    const formatCurrency = (amount) => {
+        return new Intl.NumberFormat('en-NG', {
+            style: 'currency',
+            currency: 'NGN'
+        }).format(amount || 0);
+    };
+    
+    content.innerHTML = `
+        <div class="space-y-6">
+            <!-- Project Header -->
+            <div class="border-b pb-4">
+                <h4 class="text-xl font-semibold text-gray-900 mb-2">${project.name}</h4>
+                <p class="text-gray-600">${project.description || 'No description provided'}</p>
+                
+                <div class="flex items-center space-x-3 mt-3">
+                    <span class="px-3 py-1 text-sm font-semibold rounded-full 
+                        ${getStatusColor(project.status)}">
+                        ${project.status}
+                    </span>
+                    ${project.health_status ? `
+                        <span class="px-3 py-1 text-sm font-semibold rounded-full 
+                            ${getHealthColor(project.health_status)}">
+                            ${project.health_status}
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+            
+            <!-- Project Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="space-y-4">
+                    <h5 class="font-semibold text-gray-900">Project Information</h5>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Manager:</span>
+                            <span class="font-medium">${project.manager}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Progress:</span>
+                            <span class="font-medium">${project.progress}%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Created:</span>
+                            <span class="font-medium">${formatDate(project.created_at)}</span>
+                        </div>
+                        ${project.start_date ? `
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Start Date:</span>
+                                <span class="font-medium">${project.start_date}</span>
+                            </div>
+                        ` : ''}
+                        ${project.end_date ? `
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">End Date:</span>
+                                <span class="font-medium ${project.is_overdue ? 'text-red-600' : ''}">${project.end_date}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                <div class="space-y-4">
+                    <h5 class="font-semibold text-gray-900">Budget & Resources</h5>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Budget:</span>
+                            <span class="font-medium">${formatCurrency(project.budget)}</span>
+                        </div>
+                        ${project.spent ? `
+                            <div class="flex justify-between">
+                                <span class="text-gray-500">Spent:</span>
+                                <span class="font-medium">${formatCurrency(project.spent)}</span>
+                            </div>
+                        ` : ''}
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Milestones:</span>
+                            <span class="font-medium">${project.completed_milestones || 0}/${project.milestone_count || 0}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-500">Team Size:</span>
+                            <span class="font-medium">${project.team_size || 0} members</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="bg-gray-50 rounded-lg p-4">
+                <div class="flex justify-between text-sm mb-2">
+                    <span class="text-gray-600">Overall Progress</span>
+                    <span class="font-medium">${project.progress}%</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-indigo-600 h-3 rounded-full transition-all duration-300" 
+                         style="width: ${project.progress}%"></div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="flex space-x-3 pt-4 border-t">
+                <a href="/project/project/${project.id}" 
+                   class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
+                    <i class='bx bx-show mr-2'></i>Full Project View
+                </a>
+                <button onclick="closeProjectDetailsModal()" 
+                        class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function showError(message) {
+    const content = document.getElementById('projectDetailsContent');
+    content.innerHTML = `
+        <div class="text-center py-8">
+            <i class='bx bx-error-circle text-3xl text-red-500'></i>
+            <p class="text-red-600 mt-2 font-medium">Error</p>
+            <p class="text-gray-500 text-sm mt-1">${message}</p>
+            <button onclick="closeProjectDetailsModal()" 
+                    class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
+                Close
+            </button>
+        </div>
+    `;
+}
+
+function closeProjectDetailsModal() {
+    document.getElementById('projectDetailsModal').classList.add('hidden');
+    document.getElementById('projectDetailsModal').classList.remove('flex');
+}
+
+// Helper functions
+function getStatusColor(status) {
+    switch(status) {
+        case 'Active':
+        case 'In Progress':
+            return 'bg-green-100 text-green-800';
+        case 'Completed':
+            return 'bg-blue-100 text-blue-800';
+        case 'Planning':
+            return 'bg-yellow-100 text-yellow-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function getHealthColor(health) {
+    switch(health) {
+        case 'Good':
+            return 'bg-green-100 text-green-800';
+        case 'Warning':
+            return 'bg-orange-100 text-orange-800';
+        case 'Critical':
+            return 'bg-red-100 text-red-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function formatDate(dateString) {
+    if (!dateString) return 'Not set';
+    try {
+        return new Date(dateString).toLocaleDateString('en-GB');
+    } catch (e) {
+        return dateString;
+    }
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(e) {
+    const modal = document.getElementById('projectDetailsModal');
+    if (e.target === modal) {
+        closeProjectDetailsModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeProjectDetailsModal();
+    }
+});
+</script>
+{% endblock %}
 {% endblock %}

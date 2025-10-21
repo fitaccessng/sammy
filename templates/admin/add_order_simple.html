@@ -1,0 +1,254 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Add Purchase Order - Construction Management System{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto py-8">
+    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="bg-blue-600 px-6 py-4">
+            <h1 class="text-2xl font-bold text-white">Create New Purchase Order</h1>
+        </div>
+        
+        <form method="POST" class="p-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            
+            <!-- Basic Order Information -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Order Information</h2>
+                    
+                    <div class="mb-4">
+                        <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                        <select id="priority" name="priority" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="Low">Low</option>
+                            <option value="Normal" selected>Normal</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="project_id" class="block text-sm font-medium text-gray-700 mb-1">Project</label>
+                        <select id="project_id" name="project_id" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select a project (optional)</option>
+                            {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="expected_delivery" class="block text-sm font-medium text-gray-700 mb-1">Expected Delivery Date</label>
+                        <input type="date" id="expected_delivery" name="expected_delivery" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="description" name="description" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Brief description of the order"></textarea>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Supplier Information</h2>
+                    
+                    <div class="mb-4">
+                        <label for="supplier_name" class="block text-sm font-medium text-gray-700 mb-1">Supplier Name <span class="text-red-500">*</span></label>
+                        <input type="text" id="supplier_name" name="supplier_name" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter supplier name">
+                        <small class="text-gray-500">Select from existing suppliers:</small>
+                        <select onchange="fillSupplierInfo(this)" class="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md text-sm">
+                            <option value="">-- Select Existing Supplier --</option>
+                            {% for supplier in suppliers %}
+                            <option value="{{ supplier.name }}" 
+                                    data-contact="{{ supplier.contact_person or '' }}" 
+                                    data-email="{{ supplier.email or '' }}" 
+                                    data-phone="{{ supplier.phone or '' }}">
+                                {{ supplier.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="supplier_contact" class="block text-sm font-medium text-gray-700 mb-1">Contact Person</label>
+                        <input type="text" id="supplier_contact" name="supplier_contact" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Contact person name">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="supplier_email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="supplier_email" name="supplier_email" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="supplier@example.com">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="supplier_phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                        <input type="tel" id="supplier_phone" name="supplier_phone" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="+234-xxx-xxx-xxxx">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Line Items -->
+            <div class="mb-8">
+                <h2 class="text-lg font-semibold text-gray-800 mb-4">Order Items</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full border border-gray-200 rounded-lg">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="border border-gray-200 px-4 py-2 text-left">Item Name</th>
+                                <th class="border border-gray-200 px-4 py-2 text-left">Description</th>
+                                <th class="border border-gray-200 px-4 py-2 text-center">Quantity</th>
+                                <th class="border border-gray-200 px-4 py-2 text-left">Unit</th>
+                                <th class="border border-gray-200 px-4 py-2 text-right">Unit Price (₦)</th>
+                                <th class="border border-gray-200 px-4 py-2 text-right">Total (₦)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lineItemsBody">
+                            <!-- Line Item 1 -->
+                            <tr>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="text" name="item_name[]" class="w-full px-2 py-1 border border-gray-300 rounded" placeholder="Item name" required>
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="text" name="item_description[]" class="w-full px-2 py-1 border border-gray-300 rounded" placeholder="Description">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="number" name="item_quantity[]" class="w-full px-2 py-1 border border-gray-300 rounded text-center" placeholder="1" step="0.01" min="0" required>
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="text" name="item_unit[]" class="w-full px-2 py-1 border border-gray-300 rounded" placeholder="kg, pcs, m">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="number" name="item_price[]" class="w-full px-2 py-1 border border-gray-300 rounded text-right" placeholder="0.00" step="0.01" min="0" required>
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2 text-right font-medium">
+                                    Calculate manually
+                                </td>
+                            </tr>
+                            <!-- Line Item 2 -->
+                            <tr>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="text" name="item_name[]" class="w-full px-2 py-1 border border-gray-300 rounded" placeholder="Item name">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="text" name="item_description[]" class="w-full px-2 py-1 border border-gray-300 rounded" placeholder="Description">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="number" name="item_quantity[]" class="w-full px-2 py-1 border border-gray-300 rounded text-center" placeholder="1" step="0.01" min="0">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="text" name="item_unit[]" class="w-full px-2 py-1 border border-gray-300 rounded" placeholder="kg, pcs, m">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="number" name="item_price[]" class="w-full px-2 py-1 border border-gray-300 rounded text-right" placeholder="0.00" step="0.01" min="0">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2 text-right font-medium">
+                                    Calculate manually
+                                </td>
+                            </tr>
+                            <!-- Line Item 3 -->
+                            <tr>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="text" name="item_name[]" class="w-full px-2 py-1 border border-gray-300 rounded" placeholder="Item name">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="text" name="item_description[]" class="w-full px-2 py-1 border border-gray-300 rounded" placeholder="Description">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="number" name="item_quantity[]" class="w-full px-2 py-1 border border-gray-300 rounded text-center" placeholder="1" step="0.01" min="0">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="text" name="item_unit[]" class="w-full px-2 py-1 border border-gray-300 rounded" placeholder="kg, pcs, m">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2">
+                                    <input type="number" name="item_price[]" class="w-full px-2 py-1 border border-gray-300 rounded text-right" placeholder="0.00" step="0.01" min="0">
+                                </td>
+                                <td class="border border-gray-200 px-2 py-2 text-right font-medium">
+                                    Calculate manually
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">Note: You can calculate totals manually. Enter at least one item with quantity and price.</p>
+            </div>
+            
+            <!-- Tax and Totals -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Additional Information</h2>
+                    
+                    <div class="mb-4">
+                        <label for="delivery_address" class="block text-sm font-medium text-gray-700 mb-1">Delivery Address</label>
+                        <textarea id="delivery_address" name="delivery_address" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter delivery address"></textarea>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+                        <textarea id="notes" name="notes" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Additional notes or special instructions"></textarea>
+                    </div>
+                </div>
+                
+                <div>
+                    <h2 class="text-lg font-semibold text-gray-800 mb-4">Tax Information</h2>
+                    
+                    <div class="mb-4">
+                        <label for="tax_rate" class="block text-sm font-medium text-gray-700 mb-1">Tax Rate (%)</label>
+                        <input type="number" id="tax_rate" name="tax_rate" value="7.5" step="0.01" min="0" max="100" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <small class="text-gray-500">Default VAT rate in Nigeria is 7.5%</small>
+                    </div>
+                    
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-sm text-gray-600 mb-2">Note: Totals will be calculated automatically when the order is saved.</p>
+                        <div class="space-y-1">
+                            <div class="flex justify-between">
+                                <span>Subtotal:</span>
+                                <span>Calculated on save</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Tax:</span>
+                                <span>Calculated on save</span>
+                            </div>
+                            <div class="flex justify-between font-bold border-t pt-1">
+                                <span>Total:</span>
+                                <span>Calculated on save</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Actions -->
+            <div class="flex gap-4">
+                <button type="submit" name="status" value="Pending" class="flex-1 bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors duration-200">
+                    <i class='bx bx-check mr-2'></i>
+                    Create Order
+                </button>
+                <button type="submit" name="status" value="Draft" class="flex-1 bg-gray-600 text-white px-6 py-3 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200">
+                    <i class='bx bx-save mr-2'></i>
+                    Save as Draft
+                </button>
+                <a href="{{ url_for('admin.orders') }}" class="flex-1 bg-gray-300 text-gray-700 px-6 py-3 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors duration-200 text-center">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Simple JavaScript only for supplier dropdown -->
+<script>
+function fillSupplierInfo(select) {
+    if (select.value) {
+        const option = select.options[select.selectedIndex];
+        document.getElementById('supplier_name').value = select.value;
+        document.getElementById('supplier_contact').value = option.dataset.contact || '';
+        document.getElementById('supplier_email').value = option.dataset.email || '';
+        document.getElementById('supplier_phone').value = option.dataset.phone || '';
+    }
+}
+</script>
+{% endblock %}

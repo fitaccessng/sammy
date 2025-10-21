@@ -5,13 +5,28 @@
 
 {% block content %}
 <div class="space-y-6">
+    <!-- Action Buttons -->
+    <div class="flex justify-end space-x-3 mb-6">
+        <button onclick="openModal('generatePayrollModal')" 
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+            <i class='bx bx-plus text-lg mr-2'></i>
+            Generate Payroll
+        </button>
+        <a href="{{ url_for('hr.payroll_staff') }}" 
+           class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 flex items-center">
+            <i class='bx bx-user-check text-lg mr-2'></i>
+            Staff Payroll
+        </a>
+    </div>
+
     <!-- Payroll Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Total Payroll</p>
-                    <h3 class="text-xl font-bold text-gray-800">₦{{ '{:,}'.format(payroll.total_payroll) }}</h3>
+                    <p class="text-gray-500 text-sm">Gross Payroll</p>
+                    <h3 class="text-xl font-bold text-gray-800">₦{{ "{:,.0f}".format(payroll.total_gross or 0) }}</h3>
+                    <p class="text-xs text-gray-400">{{ payroll.current_month }} {{ payroll.current_year }}</p>
                 </div>
                 <div class="bg-blue-100 p-3 rounded-full">
                     <i class='bx bx-money text-2xl text-blue-600'></i>
@@ -22,11 +37,12 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Regular Staff</p>
-                    <h3 class="text-2xl font-bold text-green-600">{{ payroll.regular_staff }}</h3>
+                    <p class="text-gray-500 text-sm">Total Deductions</p>
+                    <h3 class="text-xl font-bold text-red-600">₦{{ "{:,.0f}".format(payroll.total_deductions or 0) }}</h3>
+                    <p class="text-xs text-gray-400">Tax, Pension, Custom</p>
                 </div>
-                <div class="bg-green-100 p-3 rounded-full">
-                    <i class='bx bx-user-check text-2xl text-green-600'></i>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bx-minus-circle text-2xl text-red-600'></i>
                 </div>
             </div>
         </div>
@@ -34,11 +50,25 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Contract Staff</p>
-                    <h3 class="text-2xl font-bold text-yellow-600">{{ payroll.contract_staff }}</h3>
+                    <p class="text-gray-500 text-sm">Net Payroll</p>
+                    <h3 class="text-xl font-bold text-green-600">₦{{ "{:,.0f}".format(payroll.total_payroll or 0) }}</h3>
+                    <p class="text-xs text-gray-400">Take-home pay</p>
                 </div>
-                <div class="bg-yellow-100 p-3 rounded-full">
-                    <i class='bx bx-user text-2xl text-yellow-600'></i>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-check-circle text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Employees</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ payroll.employee_count or 0 }}</h3>
+                    <p class="text-xs text-gray-400">Active staff</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-user-check text-2xl text-purple-600'></i>
                 </div>
             </div>
         </div>
@@ -47,178 +77,612 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Next Payday</p>
-                    <h3 class="text-xl font-bold text-purple-600">{{ payroll.next_payday }}</h3>
+                    <h3 class="text-lg font-bold text-indigo-600">{{ payroll.next_payday }}</h3>
+                    <p class="text-xs text-gray-400">Expected payment date</p>
                 </div>
-                <div class="bg-purple-100 p-3 rounded-full">
-                    <i class='bx bx-calendar-star text-2xl text-purple-600'></i>
+                <div class="bg-indigo-100 p-3 rounded-full">
+                    <i class='bx bx-calendar-star text-2xl text-indigo-600'></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Payroll Actions -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Run Payroll -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Run Payroll</h3>
-            <form id="payrollForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Pay Period</label>
-                    <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        <option>September 2025</option>
-                        <option>October 2025</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Staff Category</label>
-                    <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        <option>All Staff</option>
-                        <option>Regular Staff</option>
-                        <option>Contract Staff</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Payment Date</label>
-                    <input type="date" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                </div>
-
-                <div class="pt-4">
-                    <button type="submit" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                        Process Payroll
-                    </button>
-                </div>
-            </form>
+    <!-- Approval Status Section -->
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Payroll Approval Status</h3>
         </div>
-
-        <!-- Payslip Generator -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Generate Payslips</h3>
-            <form id="payslipForm" class="space-y-4">
+        <div class="p-6">
+            <div class="flex items-center justify-between">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Month</label>
-                    <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        <option>September 2025</option>
-                        <option>August 2025</option>
-                    </select>
+                    <p class="text-sm text-gray-600">Current Month Payroll</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ payroll.current_month }} {{ payroll.current_year }}</p>
+                    {% if payroll.approval_status %}
+                    <span class="inline-flex px-3 py-1 text-xs font-semibold rounded-full mt-2
+                        {% if payroll.approval_status == 'draft' %}bg-gray-100 text-gray-800
+                        {% elif payroll.approval_status == 'pending_admin' %}bg-yellow-100 text-yellow-800
+                        {% elif payroll.approval_status == 'approved_by_admin' %}bg-blue-100 text-blue-800
+                        {% elif payroll.approval_status == 'processed_by_finance' %}bg-green-100 text-green-800
+                        {% elif payroll.approval_status == 'rejected' %}bg-red-100 text-red-800
+                        {% endif %}">
+                        {% if payroll.approval_status == 'draft' %}Draft - Ready for Submission
+                        {% elif payroll.approval_status == 'pending_admin' %}Pending Admin Approval
+                        {% elif payroll.approval_status == 'approved_by_admin' %}Ready for Finance Processing
+                        {% elif payroll.approval_status == 'processed_by_finance' %}Processed - Ready for Payment
+                        {% elif payroll.approval_status == 'rejected' %}Rejected - Needs Revision
+                        {% endif %}
+                    </span>
+                    {% endif %}
+                    
+                    {% if payroll.approval_details and payroll.approval_details.employee_count %}
+                    <div class="mt-2 text-sm text-gray-600">
+                        <span class="font-medium">{{ payroll.approval_details.employee_count }} employees</span> • 
+                        <span class="font-medium">₦{{ "{:,.0f}".format(payroll.approval_details.total_amount) }}</span>
+                    </div>
+                    {% endif %}
                 </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Staff</label>
-                    <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        <option>All Staff</option>
-                        <option>Selected Staff</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Format</label>
-                    <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                        <option>PDF</option>
-                        <option>Excel</option>
-                    </select>
-                </div>
-
-                <div class="pt-4">
-                    <button type="submit" class="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
-                        Generate Payslips
+                <div class="flex space-x-2">
+                    {% if payroll.approval_status == 'draft' and payroll.has_current_payroll %}
+                    <a href="{{ url_for('hr.review_draft_payroll') }}" 
+                       class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+                        <i class='bx bx-edit text-lg mr-2'></i>
+                        Review & Edit Draft
+                    </a>
+                    <button onclick="openModal('submitApprovalModal')" 
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center">
+                        <i class='bx bx-check-circle text-lg mr-2'></i>
+                        Submit for Approval
                     </button>
+                    {% elif payroll.approval_status == 'pending_admin' and current_user.role in ['SUPER_HQ'] %}
+                    <button onclick="openModal('adminApprovalModal')" 
+                            class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 flex items-center">
+                        <i class='bx bx-shield-check text-lg mr-2'></i>
+                        Admin Review
+                    </button>
+                    {% elif payroll.approval_status == 'approved_by_admin' and current_user.role in ['SUPER_HQ'] %}
+                    <button onclick="openModal('financeProcessModal')" 
+                            class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center">
+                        <i class='bx bx-credit-card text-lg mr-2'></i>
+                        Finance Process
+                    </button>
+                    {% endif %}
                 </div>
-            </form>
-        </div>
-
-        <!-- Quick Actions -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
-            <div class="grid grid-cols-2 gap-4">
-                <button class="p-3 bg-blue-50 rounded-lg text-blue-700 hover:bg-blue-100 transition-colors">
-                    <i class='bx bx-file mb-1 text-2xl'></i>
-                    <span class="block text-sm">Payroll Report</span>
-                </button>
-                <button class="p-3 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors">
-                    <i class='bx bx-bank mb-1 text-2xl'></i>
-                    <span class="block text-sm">Bank Transfers</span>
-                </button>
-                <button class="p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors">
-                    <i class='bx bx-receipt mb-1 text-2xl'></i>
-                    <span class="block text-sm">Tax Reports</span>
-                </button>
-                <button class="p-3 bg-yellow-50 rounded-lg text-yellow-700 hover:bg-yellow-100 transition-colors">
-                    <i class='bx bx-history mb-1 text-2xl'></i>
-                    <span class="block text-sm">Payment History</span>
-                </button>
             </div>
+            
+            {% if payroll.approval_status in ['pending_admin', 'approved_by_admin', 'processed_by_finance'] %}
+            <div class="mt-6 bg-gray-50 rounded-lg p-4">
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Approval Timeline</h4>
+                <div class="space-y-3">
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
+                        <div class="flex-1">
+                            <span class="text-sm font-medium text-gray-900">Submitted by HR</span>
+                            {% if payroll.approval_details and payroll.approval_details.submitted_at %}
+                            <span class="text-xs text-gray-500 ml-2">{{ payroll.approval_details.submitted_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 {% if payroll.approval_status in ['approved_by_admin', 'processed_by_finance'] %}bg-green-500{% elif payroll.approval_status == 'pending_admin' %}bg-yellow-500{% else %}bg-gray-300{% endif %} rounded-full mr-3"></div>
+                        <div class="flex-1">
+                            <span class="text-sm font-medium text-gray-900">Admin Review</span>
+                            {% if payroll.approval_details and payroll.approval_details.admin_approved_at %}
+                            <span class="text-xs text-gray-500 ml-2">{{ payroll.approval_details.admin_approved_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-3 h-3 {% if payroll.approval_status == 'processed_by_finance' %}bg-green-500{% elif payroll.approval_status == 'approved_by_admin' %}bg-blue-500 animate-pulse{% else %}bg-gray-300{% endif %} rounded-full mr-3"></div>
+                        <div class="flex-1">
+                            <span class="text-sm font-medium text-gray-900">Finance Processing</span>
+                            {% if payroll.approval_details and payroll.approval_details.finance_processed_at %}
+                            <span class="text-xs text-gray-500 ml-2">{{ payroll.approval_details.finance_processed_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if payroll.approval_status == 'rejected' and payroll.approval_details and payroll.approval_details.rejection_reason %}
+            <div class="mt-4 bg-red-50 border border-red-200 rounded-lg p-4">
+                <h4 class="text-sm font-medium text-red-900 mb-2">Rejection Reason</h4>
+                <p class="text-sm text-red-700">{{ payroll.approval_details.rejection_reason }}</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 
-    <!-- Recent Payroll Activities -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Recent Payroll Activities</h3>
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Payroll Actions -->
+        <div class="lg:col-span-2">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Payroll Processing</h3>
+                </div>
+                <div class="p-6">
+                    <!-- Quick Actions -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <button onclick="openModal('generatePayrollModal')" 
+                                class="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                            <div class="text-center">
+                                <i class='bx bx-plus text-3xl text-gray-400 mb-2'></i>
+                                <h4 class="text-sm font-medium text-gray-900">Generate New Payroll</h4>
+                                <p class="text-xs text-gray-500">Create payroll for current period</p>
+                            </div>
+                        </button>
+
+                        <a href="{{ url_for('hr.payroll_staff') }}" 
+                           class="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-colors">
+                            <div class="text-center">
+                                <i class='bx bx-user-check text-3xl text-gray-400 mb-2'></i>
+                                <h4 class="text-sm font-medium text-gray-900">View Staff Payroll</h4>
+                                <p class="text-xs text-gray-500">Check individual payroll details</p>
+                            </div>
+                        </a>
+                    </div>
+
+                    <!-- Current Status -->
+                    {% if payroll.pending_payrolls > 0 %}
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i class='bx bx-error text-xl text-yellow-600 mr-2'></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-yellow-800">Pending Payroll Items</h4>
+                                <p class="text-sm text-yellow-700">{{ payroll.pending_payrolls }} payroll items require attention</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div class="flex items-center">
+                            <i class='bx bx-check-circle text-xl text-green-600 mr-2'></i>
+                            <div>
+                                <h4 class="text-sm font-medium text-green-800">All Caught Up</h4>
+                                <p class="text-sm text-green-700">No pending payroll items</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for activity in activities %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {{ activity.date }}
-                        </td>
-                        <td class="px-6 py-4 text-sm text-gray-900">
-                            {{ activity.description }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ₦{{ '{:,}'.format(activity.amount) }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                {% if activity.status == 'Completed' %}bg-green-100 text-green-800
-                                {% elif activity.status == 'Processing' %}bg-yellow-100 text-yellow-800
-                                {% else %}bg-red-100 text-red-800{% endif %}">
-                                {{ activity.status }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-blue-600 hover:text-blue-900">View Details</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        <!-- Recent Activities -->
+        <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">Recent Activities</h3>
+                </div>
+                <div class="p-6">
+                    {% if activities %}
+                        <div class="space-y-4">
+                            {% for activity in activities %}
+                            <div class="flex items-start space-x-3">
+                                <div class="flex-shrink-0">
+                                    <div class="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900">{{ activity.description }}</p>
+                                    <p class="text-sm text-gray-500">₦{{ "%.2f"|format((activity.amount or 0)|float) }}</p>
+                                    <p class="text-xs text-gray-400">{{ activity.date }}</p>
+                                </div>
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    {{ activity.status }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-8">
+                            <i class='bx bx-time text-4xl text-gray-400 mb-2'></i>
+                            <p class="text-sm text-gray-500">No recent activities</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
         </div>
     </div>
 </div>
-{% endblock %}
 
-{% block extra_js %}
+<!-- Generate Payroll Modal -->
+<div id="generatePayrollModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Generate Payroll</h3>
+            <button onclick="closeModal('generatePayrollModal')" class="modal-close">
+                <i class='bx bx-x text-xl'></i>
+            </button>
+        </div>
+        
+        <form action="{{ url_for('hr.generate_payroll') }}" method="POST" class="modal-body">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pay Period Start</label>
+                        <input type="date" name="period_start" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Pay Period End</label>
+                        <input type="date" name="period_end" required 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex items-center">
+                        <i class='bx bx-info-circle text-blue-600 mr-2'></i>
+                        <div>
+                            <h4 class="text-sm font-medium text-blue-800">Payroll Generation Process</h4>
+                            <p class="text-sm text-blue-700">This will generate payroll for all active employees with calculated deductions and net pay.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('generatePayrollModal')" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                    Generate Payroll
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Submit for Approval Modal -->
+<div id="submitApprovalModal" class="modal-overlay">
+    <div class="modal-container">
+        <div class="modal-header">
+            <h3>Submit Payroll for Approval</h3>
+            <button onclick="closeModal('submitApprovalModal')" class="modal-close">
+                <i class='bx bx-x'></i>
+            </button>
+        </div>
+        <form method="POST" action="{{ url_for('hr.submit_payroll_for_approval') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" name="period" value="{{ payroll.current_year }}-{{ '%02d'|format(payroll.current_month_num) }}">
+            
+            <div class="modal-body">
+                <div class="space-y-4">
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class='bx bx-info-circle text-yellow-400 text-lg'></i>
+                            </div>
+                            <div class="ml-3">
+                                <h3 class="text-sm font-medium text-yellow-800">Submission Notice</h3>
+                                <div class="mt-2 text-sm text-yellow-700">
+                                    <p>You are about to submit the payroll for <strong>{{ payroll.current_month }} {{ payroll.current_year }}</strong> for approval.</p>
+                                    <ul class="list-disc pl-5 mt-2 space-y-1">
+                                        <li>Total Amount: ₦{{ "{:,.2f}".format(payroll.total_payroll or 0) }}</li>
+                                        <li>Staff Count: {{ payroll.regular_staff + payroll.contract_staff }}</li>
+                                        <li>Once submitted, you cannot modify the payroll</li>
+                                        <li>The payroll will require admin and finance approval</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="text-sm text-gray-600 mb-2">Please confirm that you have:</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="checkbox" required class="mr-2">
+                                <span class="text-sm">Reviewed all employee payroll data</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" required class="mr-2">
+                                <span class="text-sm">Verified all deductions are correct</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="checkbox" required class="mr-2">
+                                <span class="text-sm">Confirmed total payroll amount</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer">
+                <button type="button" onclick="closeModal('submitApprovalModal')" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                    <i class='bx bx-check-circle mr-2'></i>Submit for Approval
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Submit for Approval Modal -->
+<div id="submitApprovalModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Submit Payroll for Approval</h3>
+            <button onclick="closeModal('submitApprovalModal')" class="text-gray-400 hover:text-gray-600">
+                <i class='bx bx-x text-2xl'></i>
+            </button>
+        </div>
+        
+        <form method="POST" action="{{ url_for('hr.submit_payroll_for_approval') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <div class="space-y-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <h4 class="font-medium text-blue-900 mb-2">Payroll Summary</h4>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <span class="text-blue-700">Period:</span>
+                            <span class="font-medium">{{ payroll.current_month }} {{ payroll.current_year }}</span>
+                        </div>
+                        <div>
+                            <span class="text-blue-700">Employees:</span>
+                            <span class="font-medium">{{ payroll.employee_count or 0 }}</span>
+                        </div>
+                        <div>
+                            <span class="text-blue-700">Gross Total:</span>
+                            <span class="font-medium">₦{{ "{:,.0f}".format(payroll.total_gross or 0) }}</span>
+                        </div>
+                        <div>
+                            <span class="text-blue-700">Net Total:</span>
+                            <span class="font-medium">₦{{ "{:,.0f}".format(payroll.total_payroll or 0) }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 class="font-medium text-yellow-900 mb-2">Pre-submission Checklist</h4>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center">
+                            <input type="checkbox" required class="mr-2">
+                            <span class="text-yellow-800">All employee salaries have been verified</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" required class="mr-2">
+                            <span class="text-yellow-800">Deductions have been reviewed and applied correctly</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" required class="mr-2">
+                            <span class="text-yellow-800">Payroll calculations are accurate</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <input type="hidden" name="period_year" value="{{ payroll.current_year }}">
+                <input type="hidden" name="period_month" value="{{ payroll.current_month_num }}">
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closeModal('submitApprovalModal')" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center">
+                    <i class='bx bx-check-circle mr-2'></i>
+                    Submit for Approval
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Admin Approval Modal -->
+<div id="adminApprovalModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Admin Payroll Review</h3>
+            <button onclick="closeModal('adminApprovalModal')" class="text-gray-400 hover:text-gray-600">
+                <i class='bx bx-x text-2xl'></i>
+            </button>
+        </div>
+        
+        <div class="space-y-6">
+            <!-- Approve Form -->
+            <form method="POST" action="{{ url_for('hr.approve_payroll', payroll_id=payroll.approval_details.id) if payroll.approval_details else '#' }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                    <h4 class="font-medium text-green-900 mb-2">Approve Payroll</h4>
+                    <p class="text-sm text-green-800 mb-3">
+                        By approving, this payroll will be sent to finance for processing.
+                    </p>
+                    <button type="submit" 
+                            class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 flex items-center">
+                        <i class='bx bx-shield-check mr-2'></i>
+                        Approve Payroll
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Reject Form -->
+            <form method="POST" action="{{ url_for('hr.reject_payroll', payroll_id=payroll.approval_details.id) if payroll.approval_details else '#' }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <h4 class="font-medium text-red-900 mb-3">Reject Payroll</h4>
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-red-800 mb-1">Rejection Reason</label>
+                        <textarea name="rejection_reason" rows="3" required
+                                  class="w-full p-2 border border-red-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                                  placeholder="Please provide a detailed reason for rejection..."></textarea>
+                    </div>
+                    <button type="submit" 
+                            class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 flex items-center">
+                        <i class='bx bx-x-circle mr-2'></i>
+                        Reject Payroll
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Finance Process Modal -->
+<div id="financeProcessModal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-lg font-semibold text-gray-900">Finance Processing</h3>
+            <button onclick="closeModal('financeProcessModal')" class="text-gray-400 hover:text-gray-600">
+                <i class='bx bx-x text-2xl'></i>
+            </button>
+        </div>
+        
+        <form method="POST" action="{{ url_for('hr.process_payroll', payroll_id=payroll.approval_details.id) if payroll.approval_details else '#' }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <div class="space-y-4">
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <h4 class="font-medium text-purple-900 mb-2">Payment Processing</h4>
+                    <p class="text-sm text-purple-800 mb-3">
+                        This will mark the payroll as processed and ready for payment disbursement.
+                    </p>
+                    
+                    <div class="grid grid-cols-2 gap-4 text-sm mb-4">
+                        <div>
+                            <span class="text-purple-700">Total Amount:</span>
+                            <span class="font-medium">₦{{ "{:,.0f}".format(payroll.approval_details.total_amount) if payroll.approval_details else '0' }}</span>
+                        </div>
+                        <div>
+                            <span class="text-purple-700">Employees:</span>
+                            <span class="font-medium">{{ payroll.approval_details.employee_count if payroll.approval_details else '0' }}</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h4 class="font-medium text-yellow-900 mb-2">Finance Checklist</h4>
+                    <div class="space-y-2 text-sm">
+                        <label class="flex items-center">
+                            <input type="checkbox" required class="mr-2">
+                            <span class="text-yellow-800">Payment accounts have sufficient funds</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" required class="mr-2">
+                            <span class="text-yellow-800">Bank transfer files have been prepared</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="checkbox" required class="mr-2">
+                            <span class="text-yellow-800">Statutory remittances are ready</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="flex justify-end space-x-3 mt-6">
+                <button type="button" onclick="closeModal('financeProcessModal')" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 flex items-center">
+                    <i class='bx bx-credit-card mr-2'></i>
+                    Process Payment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const payrollForm = document.getElementById('payrollForm');
-    const payslipForm = document.getElementById('payslipForm');
-    
-    if (payrollForm) {
-        payrollForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            // Add payroll processing logic here
-        });
-    }
+// Modal functionality
+function openModal(modalId) {
+    document.getElementById(modalId).style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+}
 
-    if (payslipForm) {
-        payslipForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            // Add payslip generation logic here
-        });
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+    document.body.style.overflow = 'auto';
+}
+
+// Close modal when clicking outside
+document.addEventListener('click', function(event) {
+    if (event.target.classList.contains('modal-overlay')) {
+        event.target.style.display = 'none';
+        document.body.style.overflow = 'auto';
     }
 });
+
+// Auto-fill current month dates
+document.addEventListener('DOMContentLoaded', function() {
+    const now = new Date();
+    const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    
+    const startInput = document.querySelector('input[name="period_start"]');
+    const endInput = document.querySelector('input[name="period_end"]');
+    
+    if (startInput) startInput.value = firstDay.toISOString().split('T')[0];
+    if (endInput) endInput.value = lastDay.toISOString().split('T')[0];
+});
 </script>
+
+<style>
+/* Modal Styles */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, 0.5);
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 0.5rem;
+    max-width: 32rem;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.modal-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.modal-close {
+    color: #6b7280;
+    padding: 0.25rem;
+    border-radius: 0.25rem;
+}
+
+.modal-close:hover {
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0 1.5rem 1.5rem 1.5rem;
+}
+</style>
 {% endblock %}

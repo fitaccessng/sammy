@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Role Management</h2>
+    {% if message %}
+        <div class="alert alert-info">{{ message }}</div>
+    {% endif %}
+    <form method="post" class="mb-3">
+        <input type="hidden" name="action" value="add">
+        <div class="form-group">
+            <label for="name">Role Name</label>
+            <input type="text" class="form-control" name="name" id="name" required>
+        </div>
+        <button type="submit" class="btn btn-primary mt-2">Add Role</button>
+    </form>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for role in roles %}
+            <tr>
+                <form method="post">
+                    <td>{{ role.id }}</td>
+                    <td>
+                        <input type="text" name="name" value="{{ role.name }}" class="form-control" required>
+                        <input type="hidden" name="role_id" value="{{ role.id }}">
+                    </td>
+                    <td>
+                        <button type="submit" name="action" value="edit" class="btn btn-sm btn-success">Edit</button>
+                        <button type="submit" name="action" value="delete" class="btn btn-sm btn-danger" onclick="return confirm('Delete this role?');">Delete</button>
+                    </td>
+                </form>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

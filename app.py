@@ -28,9 +28,14 @@ def create_app():
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY')
     app.config['WTF_CSRF_SECRET_KEY'] = os.environ.get('WTF_CSRF_SECRET_KEY')
     app.config['WTF_CSRF_ENABLED'] = True
+    app.config['WTF_CSRF_TIME_LIMIT'] = 3600  # 1 hour CSRF token lifetime
     app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=60)  # Set session lifetime
     app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production
     app.config['SESSION_COOKIE_HTTPONLY'] = True
+    
+    # Template configuration for debugging
+    app.config['TEMPLATES_AUTO_RELOAD'] = True
+    app.config['DEBUG'] = True
     
     # Initialize CSRF protection with longer timeout
     csrf = CSRFProtect()
@@ -39,15 +44,28 @@ def create_app():
     # Add CSRF token to all templates
     @app.context_processor
     def inject_csrf_token():
-        token = generate_csrf()  # Call the function to generate token
-        return dict(csrf_token=token)
+        try:
+            from flask import has_request_context, request
+            if has_request_context() and request:
+                token = generate_csrf()  # Call the function to generate token
+                return dict(csrf_token=token)
+            else:
+                return dict(csrf_token='')
+        except Exception as e:
+            print(f"CSRF token generation error: {e}")
+            return dict(csrf_token='')
     
     # Error handlers
     @app.errorhandler(400)
     def bad_request_error(error):
         if "CSRF" in str(error):
-            flash("The form expired. Please try again.", "error")
-            return redirect(url_for('main.login'))
+            flash("The form expired. Please refresh the page and try again.", "error")
+            # Get the referer URL to redirect back to the form
+            from flask import request
+            referer = request.headers.get('Referer')
+            if referer:
+                return redirect(referer)
+            return redirect(url_for('admin.dashboard'))
         return render_template('errors/400.html'), 400
 
     @app.errorhandler(403)
@@ -102,9 +120,21 @@ def create_app():
     # Initialize LoginManager
     login_manager = LoginManager()
     login_manager.init_app(app)
-    from models import Employee
+    login_manager.login_view = 'main.login'  # Set the login route
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'info'
+    
+    from models import User  # Use User model instead of Employee
     @login_manager.user_loader
     def load_user(user_id):
-        return Employee.query.get(int(user_id))
+        from extensions import db
+        return db.session.get(User, int(user_id))
 
     return app
+
+if __name__ == '__main__':
+    app = create_app()
+    with app.app_context():
+        # Create tables if they don't exist
+        db.create_all()
+    app.run(debug=True, host='0.0.0.0', port=5000)

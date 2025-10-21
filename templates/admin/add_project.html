@@ -1,0 +1,2601 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Add New Project - Construction Management System{% endblock %}
+
+{% block header %}Add New Project{% endblock %}
+
+{% block head %}
+{{ super() }}
+<!-- Ensure BoxIcons is loaded -->
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<style>
+    /* Force BoxIcons to load properly */
+    @import url('https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css');
+    
+    /* Professional Design System */
+    :root {
+        --primary-color: #3b82f6;
+        --primary-light: #eff6ff;
+        --primary-dark: #1e40af;
+        --success-color: #10b981;
+        --success-light: #ecfdf5;
+        --warning-color: #f59e0b;
+        --warning-light: #fffbeb;
+        --danger-color: #ef4444;
+        --danger-light: #fef2f2;
+        --indigo-color: #6366f1;
+        --indigo-light: #eef2ff;
+        --gray-50: #f9fafb;
+        --gray-100: #f3f4f6;
+        --gray-200: #e5e7eb;
+        --gray-300: #d1d5db;
+        --gray-400: #9ca3af;
+        --gray-500: #6b7280;
+        --gray-600: #4b5563;
+        --gray-700: #374151;
+        --gray-800: #1f2937;
+        --gray-900: #111827;
+        --border-radius: 12px;
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Modern Card Styling */
+    .modern-card {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--gray-200);
+        transition: var(--transition);
+    }
+
+    .modern-card:hover {
+        box-shadow: var(--shadow-md);
+    }
+
+    /* Enhanced Professional Button System */
+    .btn-modern {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid transparent;
+        cursor: pointer;
+        text-decoration: none;
+        position: relative;
+        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        user-select: none;
+        white-space: nowrap;
+        text-align: center;
+        vertical-align: middle;
+        min-height: 44px;
+        letter-spacing: 0.025em;
+        box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-modern:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        z-index: 10;
+    }
+
+    .btn-modern:active {
+        transform: translateY(1px) scale(0.98);
+    }
+
+    .btn-modern:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Shimmer effect for premium feel */
+    .btn-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.6s;
+    }
+
+    .btn-modern:hover::before {
+        left: 100%;
+    }
+
+    /* Primary Button Variants */
+    .btn-primary-modern {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 50%, #1e3a8a 100%);
+        color: white;
+        border-color: #1e40af;
+        box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.3), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 50%, #312e81 100%);
+        border-color: #1e3a8a;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(59, 130, 246, 0.4), 0 4px 8px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    /* Success Button Variants */
+    .btn-success-modern {
+        background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+        color: white;
+        border-color: #059669;
+        box-shadow: 0 4px 12px 0 rgba(16, 185, 129, 0.3), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-success-modern:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+        border-color: #047857;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(16, 185, 129, 0.4), 0 4px 8px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    /* Warning Button Variants */
+    .btn-warning-modern {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
+        color: white;
+        border-color: #d97706;
+        box-shadow: 0 4px 12px 0 rgba(245, 158, 11, 0.3), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-warning-modern:hover {
+        background: linear-gradient(135deg, #d97706 0%, #b45309 50%, #92400e 100%);
+        border-color: #b45309;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(245, 158, 11, 0.4), 0 4px 8px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    /* Danger Button Variants */
+    .btn-danger-modern {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 50%, #b91c1c 100%);
+        color: white;
+        border-color: #dc2626;
+        box-shadow: 0 4px 12px 0 rgba(239, 68, 68, 0.3), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-danger-modern:hover {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 50%, #991b1b 100%);
+        border-color: #b91c1c;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(239, 68, 68, 0.4), 0 4px 8px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    /* Secondary Button Variants */
+    .btn-secondary-modern {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        color: #374151;
+        border-color: #d1d5db;
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-secondary-modern:hover {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-color: #9ca3af;
+        color: #1f2937;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    /* Outline Button Variants */
+    .btn-outline-modern {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-width: 2px;
+        border-style: solid;
+        box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-primary-outline {
+        color: #3b82f6;
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .btn-primary-outline:hover {
+        background: #3b82f6;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-success-outline {
+        color: #10b981;
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .btn-success-outline:hover {
+        background: #10b981;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(16, 185, 129, 0.3);
+    }
+
+    .btn-warning-outline {
+        color: #f59e0b;
+        border-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.05);
+    }
+
+    .btn-warning-outline:hover {
+        background: #f59e0b;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-danger-outline {
+        color: #ef4444;
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .btn-danger-outline:hover {
+        background: #ef4444;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(239, 68, 68, 0.3);
+    }
+
+    /* Button Size Variants */
+    .btn-sm-modern {
+        padding: 0.5rem 1rem;
+        font-size: 0.8125rem;
+        min-height: 36px;
+        border-radius: 8px;
+    }
+
+    .btn-lg-modern {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+        min-height: 52px;
+        border-radius: 16px;
+    }
+
+    .btn-xl-modern {
+        padding: 1.25rem 2.5rem;
+        font-size: 1.125rem;
+        min-height: 60px;
+        border-radius: 20px;
+    }
+
+    /* Icon Button Variants */
+    .btn-icon-modern {
+        padding: 0.75rem;
+        min-width: 44px;
+        justify-content: center;
+        border-radius: 12px;
+    }
+
+    .btn-icon-modern.btn-sm-modern {
+        padding: 0.5rem;
+        min-width: 36px;
+        border-radius: 8px;
+    }
+
+    .btn-icon-modern.btn-lg-modern {
+        padding: 1rem;
+        min-width: 52px;
+        border-radius: 16px;
+    }
+
+    /* Icon spacing within buttons */
+    .btn-modern i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+        line-height: 1;
+        display: inline-block;
+        vertical-align: middle;
+    }
+
+    .btn-modern i:only-child {
+        margin: 0;
+    }
+
+    .btn-modern i.bx-spin {
+        margin-right: 0.5rem;
+    }
+
+    /* Ensure BoxIcons are displayed properly - Enhanced */
+    .btn-modern i[class*="bx"]:before {
+        font-family: boxicons !important;
+        font-style: normal !important;
+        font-weight: normal !important;
+        display: inline-block !important;
+        text-decoration: inherit !important;
+        text-align: center !important;
+        font-variant: normal !important;
+        text-transform: none !important;
+        line-height: 1 !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+    }
+
+    /* Specific BoxIcon classes - Fallback */
+    .bx {
+        font-family: boxicons !important;
+        font-weight: 900 !important;
+        font-style: normal !important;
+    }
+
+    /* Common BoxIcon codes as fallback */
+    .bx-plus:before { content: "\ea13" !important; }
+    .bx-arrow-back:before { content: "\e965" !important; }
+    .bx-x:before { content: "\ea24" !important; }
+    .bx-check:before { content: "\e9c6" !important; }
+    .bx-trash:before { content: "\ea19" !important; }
+    .bx-user-plus:before { content: "\ea17" !important; }
+    .bx-money:before { content: "\ea06" !important; }
+    .bx-calendar:before { content: "\e9c1" !important; }
+    .bx-target-lock:before { content: "\ea16" !important; }
+    .bx-info-circle:before { content: "\e9fc" !important; }
+    .bx-user-check:before { content: "\ea15" !important; }
+    .bx-lightbulb:before { content: "\ea02" !important; }
+    .bx-check-circle:before { content: "\e9c7" !important; }
+    .bx-error-circle:before { content: "\e9e7" !important; }
+    .bx-chart-line:before { content: "\e9d3" !important; }
+
+    /* Ensure BoxIcons are displayed properly */
+    .btn-modern i[class*="bx"] {
+        font-family: boxicons !important;
+        font-style: normal;
+        font-weight: normal;
+        display: inline-block;
+        text-decoration: inherit;
+        width: 1em;
+        text-align: center;
+        font-variant: normal;
+        text-transform: none;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Icon button specific sizing */
+    .btn-icon-modern i {
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .btn-sm-modern i {
+        font-size: 0.9rem;
+    }
+
+    .btn-lg-modern i {
+        font-size: 1.1rem;
+    }
+
+    .btn-xl-modern i {
+        font-size: 1.25rem;
+    }
+
+    /* Responsive button groups */
+    .btn-group-modern {
+        display: inline-flex;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-group-modern .btn-modern {
+        border-radius: 0;
+        border-right-width: 1px;
+        margin-left: -1px;
+    }
+
+    .btn-group-modern .btn-modern:first-child {
+        border-top-left-radius: 12px;
+        border-bottom-left-radius: 12px;
+        margin-left: 0;
+    }
+
+    .btn-group-modern .btn-modern:last-child {
+        border-top-right-radius: 12px;
+        border-bottom-right-radius: 12px;
+        border-right-width: 2px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 640px) {
+        .btn-modern {
+            padding: 0.625rem 1.25rem;
+            font-size: 0.8125rem;
+            min-height: 40px;
+        }
+
+        .btn-lg-modern {
+            padding: 0.875rem 1.75rem;
+            font-size: 0.9375rem;
+            min-height: 48px;
+        }
+
+        .btn-xl-modern {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            min-height: 52px;
+        }
+
+        .btn-group-modern {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .btn-group-modern .btn-modern {
+            border-radius: 0;
+            border-right-width: 2px;
+            border-bottom-width: 1px;
+            margin-left: 0;
+            margin-top: -1px;
+        }
+
+        .btn-group-modern .btn-modern:first-child {
+            border-radius: 12px 12px 0 0;
+            margin-top: 0;
+        }
+
+        .btn-group-modern .btn-modern:last-child {
+            border-radius: 0 0 12px 12px;
+            border-bottom-width: 2px;
+        }
+    }
+
+    /* Loading state */
+    .btn-modern.loading {
+        pointer-events: none;
+    }
+
+    .btn-modern.loading i {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Utility classes for button layouts */
+    .flex {
+        display: flex;
+    }
+
+    .flex-1 {
+        flex: 1;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    .gap-3 {
+        gap: 0.75rem;
+    }
+
+    .gap-4 {
+        gap: 1rem;
+    }
+
+    .justify-between {
+        justify-content: space-between;
+    }
+
+    .items-center {
+        align-items: center;
+    }
+
+    .w-full {
+        width: 100%;
+    }
+
+    .btn-secondary-modern:hover {
+        background: var(--gray-50);
+        border-color: var(--gray-400);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    /* Form Styles */
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--gray-700);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-label.required::after {
+        content: " *";
+        color: var(--danger-color);
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: var(--transition);
+        background-color: white;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    .form-input:invalid {
+        border-color: var(--danger-color);
+    }
+
+    .form-textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+
+    .form-select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.5rem center;
+        background-repeat: no-repeat;
+        background-size: 1.5em 1.5em;
+        padding-right: 2.5rem;
+    }
+
+    /* Grid Layout */
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+        .form-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    /* Section Headers */
+    .section-header {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin-bottom: 1rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 2px solid var(--gray-200);
+    }
+
+    /* Button Icon Spacing */
+    .btn-modern i {
+        margin-right: 0.5rem;
+        font-size: 1rem;
+    }
+
+    /* Icon-only button styling */
+    .btn-icon-modern {
+        padding: 0.625rem;
+        min-width: 44px;
+        justify-content: center;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .btn-icon-modern i {
+        margin: 0;
+        font-size: 1.1rem;
+    }
+
+    /* Professional button enhancements */
+    .btn-modern {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        user-select: none;
+        white-space: nowrap;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .btn-modern:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Flexbox utilities for button groups */
+    .flex {
+        display: flex;
+    }
+
+    .flex-1 {
+        flex: 1;
+    }
+
+    .gap-2 {
+        gap: 0.5rem;
+    }
+
+    /* Enhanced Professional Button Redesign */
+    .btn-modern {
+        border: 2px solid transparent;
+        min-height: 44px;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        user-select: none;
+        white-space: nowrap;
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .btn-modern::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+        transition: left 0.5s;
+    }
+
+    .btn-modern:hover::before {
+        left: 100%;
+    }
+
+    .btn-modern:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none !important;
+        box-shadow: none !important;
+    }
+
+    /* Outline Button Variants */
+    .btn-outline-modern {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        border-width: 2px;
+        border-style: solid;
+        box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .btn-primary-outline {
+        color: #3b82f6;
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+    }
+
+    .btn-primary-outline:hover {
+        background: #3b82f6;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-success-outline {
+        color: #10b981;
+        border-color: #10b981;
+        background: rgba(16, 185, 129, 0.05);
+    }
+
+    .btn-success-outline:hover {
+        background: #10b981;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px 0 rgba(16, 185, 129, 0.3);
+    }
+
+    /* Enhanced existing buttons */
+    .btn-primary-modern {
+        background: linear-gradient(135deg, #3b82f6 0%, #1e40af 50%, #1e3a8a 100%);
+        border-color: #1e40af;
+        box-shadow: 0 4px 12px 0 rgba(59, 130, 246, 0.3), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-primary-modern:hover {
+        background: linear-gradient(135deg, #1e40af 0%, #1e3a8a 50%, #312e81 100%);
+        border-color: #1e3a8a;
+        box-shadow: 0 8px 20px 0 rgba(59, 130, 246, 0.4), 0 4px 8px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-success-modern {
+        background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%);
+        border-color: #059669;
+        box-shadow: 0 4px 12px 0 rgba(16, 185, 129, 0.3), 0 2px 4px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .btn-success-modern:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
+        border-color: #047857;
+        box-shadow: 0 8px 20px 0 rgba(16, 185, 129, 0.4), 0 4px 8px 0 rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-secondary-modern:hover {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        border-color: #9ca3af;
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.1);
+        color: #1f2937;
+    }
+
+    /* Milestone specific styles */
+    .milestone-item {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .milestone-item:hover {
+        border-color: #3b82f6;
+        box-shadow: 0 8px 25px 0 rgba(59, 130, 246, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .milestone-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(180deg, #3b82f6, #10b981);
+    }
+
+    .milestone-placeholder {
+        transition: all 0.3s ease;
+    }
+
+    .milestone-placeholder:hover {
+        border-color: #3b82f6;
+        background-color: #f8fafc;
+    }
+
+    .space-y-4 > * + * {
+        margin-top: 1rem;
+    }
+
+    .justify-between {
+        justify-content: space-between;
+    }
+
+    .items-center {
+        align-items: center;
+    }
+
+    .mb-0 {
+        margin-bottom: 0;
+    }
+
+    /* Role Assignment Cards */
+    .role-assignment-card {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .role-assignment-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background: linear-gradient(180deg, #3b82f6, #8b5cf6);
+    }
+
+    .role-assignment-card:hover {
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.1);
+        transform: translateY(-1px);
+    }
+
+    /* Budget Category Cards */
+    .budget-category-card {
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .budget-category-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 3px;
+        height: 100%;
+        background: linear-gradient(180deg, #10b981, #3b82f6);
+    }
+
+    .budget-category-card:hover {
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
+        transform: translateY(-1px);
+    }
+
+    /* Enhanced form styling for new sections */
+    .employee-list select[multiple] {
+        min-height: 80px;
+        background-image: none;
+        padding-right: 1rem;
+    }
+
+    .employee-list select[multiple]:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Budget input enhancements */
+    .budget-percentage:focus,
+    .budget-amount:focus {
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
+
+    /* Progress bar styling */
+    .progress-bar-container {
+        background: #e5e7eb;
+        border-radius: 9999px;
+        height: 8px;
+        overflow: hidden;
+    }
+
+    .progress-bar-fill {
+        background: linear-gradient(90deg, #10b981, #3b82f6);
+        height: 100%;
+        border-radius: 9999px;
+        transition: width 0.3s ease;
+    }
+
+    /* Alert styling for budget validation */
+    .budget-alert {
+        padding: 0.75rem;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+
+    .budget-alert.warning {
+        background: #fffbeb;
+        border: 1px solid #f59e0b;
+        color: #92400e;
+    }
+
+    .budget-alert.error {
+        background: #fef2f2;
+        border: 1px solid #ef4444;
+        color: #dc2626;
+    }
+
+    .budget-alert.success {
+        background: #ecfdf5;
+        border: 1px solid #10b981;
+        color: #065f46;
+    }
+
+    /* Error styling */
+    .form-error {
+        color: var(--danger-color);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Success styling */
+    .form-success {
+        color: var(--success-color);
+        font-size: 0.75rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Manager info card */
+    .manager-info-card {
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        border: 1px solid #bfdbfe;
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+    }
+
+    /* Budget suggestions */
+    .budget-suggestion {
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border: 1px solid #a7f3d0;
+        border-radius: 6px;
+        padding: 0.75rem;
+        margin-top: 0.5rem;
+    }
+
+    .budget-suggestion button {
+        background: var(--success-color);
+        color: white;
+        border: none;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: var(--transition);
+    }
+
+    .budget-suggestion button:hover {
+        background: #059669;
+        transform: translateY(-1px);
+    }
+
+    /* Option group styling */
+    optgroup {
+        font-weight: 600;
+        color: var(--gray-700);
+        background-color: var(--gray-50);
+    }
+
+    optgroup option {
+        font-weight: 400;
+        color: var(--gray-600);
+        background-color: white;
+        padding-left: 1rem;
+    }
+
+    /* Enhanced select styling for better UX */
+    .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+    }
+
+    /* Grid improvements for responsive design */
+    @media (max-width: 767px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .manager-info-card .grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Modal styling */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+        animation: fadeIn 0.2s ease-out;
+    }
+
+    .modal-content {
+        background: white;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+        max-width: 500px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: slideIn 0.2s ease-out;
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--gray-800);
+        margin: 0;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--gray-400);
+        padding: 0.25rem;
+        border-radius: 4px;
+        transition: var(--transition);
+    }
+
+    .modal-close:hover {
+        color: var(--gray-600);
+        background-color: var(--gray-100);
+    }
+
+    .modal-body {
+        padding: 1.5rem;
+    }
+
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--gray-200);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    /* Hide modal by default */
+    .modal-overlay.hidden {
+        display: none;
+    }
+
+    /* Animation keyframes */
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @keyframes slideIn {
+        from { 
+            opacity: 0;
+            transform: translateY(-20px) scale(0.95);
+        }
+        to { 
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+</style>
+
+<!-- Page Header -->
+<div class="flex justify-between items-start mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-gray-800 mb-2">Add New Project</h1>
+        <p class="text-gray-600">Create a new construction project with timeline and budget details</p>
+    </div>
+    <a href="{{ url_for('admin.projects') }}" class="btn-modern btn-secondary-modern">
+        <i class='bx bx-arrow-back'></i>
+        Back to Projects
+    </a>
+</div>
+
+<!-- Add Project Form -->
+<div class="modern-card p-8">
+    <form class="" method="POST" action="{{ url_for('admin.add_project') }}" id="addProjectForm">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+        <!-- Basic Information Section -->
+        <div class="mb-8">
+            <h2 class="section-header">
+                <i class='bx bx-info-circle mr-2'></i>
+                Basic Information
+            </h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="name" class="form-label required">Project Name</label>
+                    <input type="text" 
+                           id="name" 
+                           name="name" 
+                           class="form-input" 
+                           placeholder="Enter project name"
+                           required
+                           maxlength="128">
+                    <div class="form-error" id="nameError"></div>
+                </div>
+
+                <div class="form-group">
+                    <label for="status" class="form-label">Status</label>
+                    <select id="status" name="status" class="form-input form-select">
+                        <option value="Planning">Planning</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="On Hold">On Hold</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description" class="form-label">Description</label>
+                <textarea id="description" 
+                          name="description" 
+                          class="form-input form-textarea" 
+                          placeholder="Enter project description, scope, and objectives"
+                          rows="4"></textarea>
+            </div>
+        </div>
+
+        <!-- Project Management Section -->
+        <div class="mb-8">
+            <h2 class="section-header">
+                <i class='bx bx-user-check mr-2'></i>
+                Project Management & Team Roles
+            </h2>
+            
+            <!-- Role-based Team Assignment -->
+            <div class="mb-6">
+                <label class="form-label">Team Role Assignments</label>
+                <div id="roleAssignments" class="space-y-4">
+                    {% for role in roles %}
+                    <div class="role-assignment-card p-4 border border-gray-200 rounded-lg bg-gray-50">
+                        <div class="flex justify-between items-center mb-3">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xs mr-3">
+                                    {{ role[:2].upper() }}
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800">{{ role }}</h4>
+                                    <p class="text-xs text-gray-500">Role assignment</p>
+                                </div>
+                            </div>
+                            <button type="button" 
+                                    class="btn-modern btn-sm-modern btn-primary-modern"
+                                    onclick="addEmployeeToRole('{{ role }}')"
+                                    title="Add Employee to {{ role }}">
+                                <i class='bx bx-plus'></i>
+                                Add Employee
+                            </button>
+                        </div>
+                        
+                        <div class="employee-list" id="employees_{{ role|replace(' ', '_') }}">
+                            <select class="form-input form-select" name="role_employees[{{ role }}][]" multiple>
+                                {% for employee in employees %}
+                                    {% if employee.role == role %}
+                                    <option value="{{ employee.id }}" selected>
+                                        {{ employee.name }}{% if employee.position %} - {{ employee.position }}{% endif %}
+                                    </option>
+                                    {% endif %}
+                                {% endfor %}
+                            </select>
+                            <div class="text-xs text-gray-500 mt-1">
+                                Hold Ctrl/Cmd to select multiple employees for this role
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    <!-- Add New Role Card -->
+                    <div class="role-assignment-card p-4 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                        <div class="text-center">
+                            <button type="button" 
+                                    class="btn-modern btn-success-modern"
+                                    onclick="openAddRoleModal()"
+                                    title="Add New Role">
+                                <i class='bx bx-plus'></i>
+                                Add New Role
+                            </button>
+                            <p class="text-xs text-gray-500 mt-2">Create a new role and assign employees</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Project Manager Selection -->
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="role_filter" class="form-label">Filter by Role/Department</label>
+                    <div class="flex gap-2">
+                        <select id="role_filter" name="role_filter" class="form-input form-select flex-1">
+                            <option value="">All Roles & Departments</option>
+                            <optgroup label="Roles">
+                                {% for role in roles %}
+                                <option value="role:{{ role }}">{{ role }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            <optgroup label="Departments">
+                                {% for department in departments %}
+                                <option value="department:{{ department }}">{{ department }} Department</option>
+                                {% endfor %}
+                            </optgroup>
+                        </select>
+                        <button type="button" 
+                                class="btn-modern btn-icon-modern btn-success-modern" 
+                                onclick="openAddRoleModal()"
+                                title="Add New Role/Department">
+                            <i class='bx bx-plus'></i>
+                        </button>
+                    </div>
+                    <div class="form-success" id="roleHelp">
+                        <i class='bx bx-info-circle'></i>
+                        Select a role or department to filter available project managers
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="project_manager" class="form-label">Project Manager</label>
+                    <div class="flex gap-2">
+                        <select id="project_manager" name="project_manager" class="form-input form-select flex-1">
+                            <option value="">Select Project Manager</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.name }}" 
+                                    data-role="{{ employee.role or '' }}" 
+                                    data-department="{{ employee.department or '' }}"
+                                    data-position="{{ employee.position or '' }}"
+                                    data-employee-id="{{ employee.id }}">
+                                {{ employee.name }}
+                                {% if employee.position %} - {{ employee.position }}{% endif %}
+                                {% if employee.department %} ({{ employee.department }}){% endif %}
+                                {% if employee.role %} [{{ employee.role }}]{% endif %}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" 
+                                class="btn-modern btn-icon-modern btn-primary-modern" 
+                                onclick="openAddEmployeeModal()"
+                                title="Add New Employee">
+                            <i class='bx bx-user-plus'></i>
+                        </button>
+                    </div>
+                    <div id="managerInfo" class="mt-2 p-3 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                        <div class="text-sm text-blue-800">
+                            <div class="font-medium mb-1">Selected Manager Details:</div>
+                            <div id="managerDetails"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Management Section -->
+        <div class="mb-8">
+            <h2 class="section-header">
+                <i class='bx bx-money mr-2'></i>
+                Budget Management & Categories
+            </h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="total_budget" class="form-label required">Total Project Budget</label>
+                    <input type="number" 
+                           id="total_budget" 
+                           name="total_budget" 
+                           class="form-input" 
+                           placeholder="0.00"
+                           min="0"
+                           step="0.01"
+                           required>
+                    <div id="budgetSuggestions" class="mt-2 space-y-1 hidden">
+                        <div class="text-xs font-medium text-gray-600 mb-2">💡 Budget Suggestions:</div>
+                    </div>
+                    <div class="form-success" id="budgetHelp">
+                        <i class='bx bx-info-circle'></i>
+                        Total budget will be distributed across categories below
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="budget_distribution_method" class="form-label">Distribution Method</label>
+                    <select id="budget_distribution_method" name="budget_distribution_method" class="form-input form-select">
+                        <option value="percentage">Percentage Distribution</option>
+                        <option value="fixed">Fixed Amount Distribution</option>
+                        <option value="manual">Manual Distribution</option>
+                    </select>
+                    <div class="form-success">
+                        <i class='bx bx-info-circle'></i>
+                        Choose how to distribute the total budget across categories
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Categories -->
+            <div class="mt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="form-label mb-0">Budget Categories</label>
+                    <button type="button" 
+                            class="btn-modern btn-warning-modern"
+                            onclick="addBudgetCategory()"
+                            title="Add Budget Category">
+                        <i class='bx bx-plus'></i>
+                        Add Category
+                    </button>
+                </div>
+                
+                <div id="budgetCategories" class="space-y-3">
+                    <!-- Default Budget Categories -->
+                    <div class="budget-category-card p-4 border border-gray-200 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                            <div class="form-group mb-0">
+                                <label class="form-label text-sm">Category Name</label>
+                                <select class="form-input form-select text-sm" name="budget_category_names[]">
+                                    <option value="General Construction">General Construction</option>
+                                    <option value="Materials & Procurement">Materials & Procurement</option>
+                                    <option value="Labor & Payroll">Labor & Payroll</option>
+                                    <option value="Equipment & Machinery">Equipment & Machinery</option>
+                                    <option value="Engineering & Design">Engineering & Design</option>
+                                    <option value="Site Preparation">Site Preparation</option>
+                                    <option value="Infrastructure">Infrastructure</option>
+                                    <option value="Safety & Compliance">Safety & Compliance</option>
+                                    <option value="Administrative">Administrative</option>
+                                    <option value="Contingency">Contingency</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label text-sm">Percentage (%)</label>
+                                <input type="number" 
+                                       class="form-input text-sm budget-percentage" 
+                                       name="budget_percentages[]"
+                                       placeholder="0"
+                                       min="0"
+                                       max="100"
+                                       step="0.1"
+                                       onchange="updateBudgetDistribution()">
+                            </div>
+                            <div class="form-group mb-0">
+                                <label class="form-label text-sm">Amount</label>
+                                <input type="number" 
+                                       class="form-input text-sm budget-amount" 
+                                       name="budget_amounts[]"
+                                       placeholder="0.00"
+                                       min="0"
+                                       step="0.01"
+                                       readonly>
+                            </div>
+                            <div class="form-group mb-0">
+                                <button type="button" 
+                                        class="btn-modern btn-icon-modern btn-sm-modern btn-danger-modern w-full"
+                                        onclick="removeBudgetCategory(this)"
+                                        title="Remove Category">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Budget Summary -->
+                <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                    <div class="flex justify-between items-center text-sm">
+                        <span class="font-medium text-gray-700">Total Allocated:</span>
+                        <span id="totalAllocated" class="font-bold text-blue-600">₦0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center text-sm mt-1">
+                        <span class="font-medium text-gray-700">Remaining:</span>
+                        <span id="remainingBudget" class="font-bold text-green-600">₦0.00</span>
+                    </div>
+                    <div class="mt-2">
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div id="budgetProgressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                        <div class="text-xs text-gray-500 mt-1 text-center">
+                            <span id="budgetProgressText">0% allocated</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Section -->
+        <div class="mb-8">
+            <h2 class="section-header">
+                <i class='bx bx-calendar mr-2'></i>
+                Project Timeline & Milestones
+            </h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="start_date" class="form-label">Start Date</label>
+                    <input type="date" 
+                           id="start_date" 
+                           name="start_date" 
+                           class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="end_date" class="form-label">End Date</label>
+                    <input type="date" 
+                           id="end_date" 
+                           name="end_date" 
+                           class="form-input">
+                    <div class="form-error" id="dateError"></div>
+                </div>
+            </div>
+
+            <!-- Milestone Section -->
+            <div class="mt-6">
+                <div class="flex justify-between items-center mb-4">
+                    <label class="form-label mb-0">Project Milestones</label>
+                    <button type="button" 
+                            class="btn-modern btn-primary-modern" 
+                            onclick="addMilestone()"
+                            title="Add Milestone">
+                        <i class='bx bx-plus'></i>
+                        Add Milestone
+                    </button>
+                </div>
+                
+                <div id="milestonesContainer" class="space-y-4">
+                    <div class="milestone-placeholder p-6 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-500">
+                        <i class='bx bx-target-lock text-3xl mb-2'></i>
+                        <p class="text-sm">No milestones added yet. Add milestones to track project progress.</p>
+                        <p class="text-xs mt-1">Milestones will be automatically distributed based on your project timeline.</p>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-start">
+                        <i class='bx bx-info-circle text-blue-500 text-lg mr-2 mt-0.5'></i>
+                        <div class="text-sm text-blue-700">
+                            <div class="font-medium mb-1">💡 Smart Timeline Tips:</div>
+                            <ul class="text-xs space-y-1 ml-4 list-disc">
+                                <li>Set project start and end dates first to enable milestone suggestions</li>
+                                <li>Milestones will be automatically distributed across your timeline</li>
+                                <li>You can adjust milestone dates after the project is created</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
+            <button type="submit" class="btn-modern btn-lg-modern btn-primary-modern flex-1 sm:flex-none">
+                <i class='bx bx-plus'></i>
+                Create Project
+            </button>
+            <a href="{{ url_for('admin.projects') }}" class="btn-modern btn-lg-modern btn-secondary-modern flex-1 sm:flex-none">
+                <i class='bx bx-x'></i>
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Add Role/Department Modal -->
+<div id="addRoleModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i class='bx bx-user-plus mr-2'></i>
+                Add New Role/Department
+            </h3>
+            <button type="button" class="btn-modern btn-icon-modern btn-secondary-modern" onclick="closeAddRoleModal()">
+                <i class='bx bx-x'></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addRoleForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="new_role" class="form-label required">Role Name</label>
+                        <input type="text" 
+                               id="new_role" 
+                               name="new_role" 
+                               class="form-input" 
+                               placeholder="e.g., Site Engineer, Safety Officer"
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label for="new_department" class="form-label required">Department</label>
+                        <input type="text" 
+                               id="new_department" 
+                               name="new_department" 
+                               class="form-input" 
+                               placeholder="e.g., Engineering, Construction"
+                               required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="role_description" class="form-label">Description</label>
+                    <textarea id="role_description" 
+                              name="role_description" 
+                              class="form-input form-textarea" 
+                              placeholder="Brief description of the role responsibilities"
+                              rows="3"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modern btn-secondary-modern" onclick="closeAddRoleModal()">
+                <i class='bx bx-x'></i>
+                Cancel
+            </button>
+            <button type="button" class="btn-modern btn-primary-modern" onclick="saveNewRole()">
+                <i class='bx bx-check'></i>
+                Add Role
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Employee Modal -->
+<div id="addEmployeeModal" class="modal-overlay hidden">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">
+                <i class='bx bx-user-plus mr-2'></i>
+                Add New Employee
+            </h3>
+            <button type="button" class="btn-modern btn-icon-modern btn-secondary-modern" onclick="closeAddEmployeeModal()">
+                <i class='bx bx-x'></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="addEmployeeForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="employee_name" class="form-label required">Full Name</label>
+                        <input type="text" 
+                               id="employee_name" 
+                               name="employee_name" 
+                               class="form-input" 
+                               placeholder="Enter employee full name"
+                               required>
+                    </div>
+                    <div class="form-group">
+                        <label for="employee_email" class="form-label">Email</label>
+                        <input type="email" 
+                               id="employee_email" 
+                               name="employee_email" 
+                               class="form-input" 
+                               placeholder="employee@company.com">
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="employee_role" class="form-label required">Role</label>
+                        <select id="employee_role" name="employee_role" class="form-input form-select" required>
+                            <option value="">Select Role</option>
+                            {% for role in roles %}
+                            <option value="{{ role }}">{{ role }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="employee_department" class="form-label required">Department</label>
+                        <select id="employee_department" name="employee_department" class="form-input form-select" required>
+                            <option value="">Select Department</option>
+                            {% for department in departments %}
+                            <option value="{{ department }}">{{ department }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="employee_position" class="form-label">Position</label>
+                    <input type="text" 
+                           id="employee_position" 
+                           name="employee_position" 
+                           class="form-input" 
+                           placeholder="e.g., Senior Engineer, Project Lead">
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn-modern btn-secondary-modern" onclick="closeAddEmployeeModal()">
+                <i class='bx bx-x'></i>
+                Cancel
+            </button>
+            <button type="button" class="btn-modern btn-primary-modern" onclick="saveNewEmployee()">
+                <i class='bx bx-check'></i>
+                Add Employee
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Ensure BoxIcons are loaded properly
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if BoxIcons font is loaded
+    function checkBoxIconsLoaded() {
+        // Create a test element to check if the font is loaded
+        const testElement = document.createElement('i');
+        testElement.className = 'bx bx-test';
+        testElement.style.position = 'absolute';
+        testElement.style.left = '-9999px';
+        testElement.style.fontSize = '16px';
+        document.body.appendChild(testElement);
+        
+        const computedStyle = window.getComputedStyle(testElement);
+        const fontFamily = computedStyle.getPropertyValue('font-family');
+        
+        document.body.removeChild(testElement);
+        
+        // If BoxIcons isn't loaded, try to reload it
+        if (!fontFamily.includes('boxicons')) {
+            console.warn('BoxIcons not detected, attempting to reload...');
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = 'https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css';
+            document.head.appendChild(link);
+        }
+    }
+    
+    // Check icons after a short delay
+    setTimeout(checkBoxIconsLoaded, 100);
+    
+    // Debug: Log icon elements
+    setTimeout(() => {
+        const iconElements = document.querySelectorAll('i[class*="bx"]');
+        console.log(`Found ${iconElements.length} BoxIcon elements:`, iconElements);
+        iconElements.forEach((icon, index) => {
+            console.log(`Icon ${index + 1}:`, icon.className, 'Style:', window.getComputedStyle(icon).fontFamily);
+        });
+    }, 500);
+    
+    // Form validation and enhancements
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('addProjectForm');
+    const startDateInput = document.getElementById('start_date');
+    const endDateInput = document.getElementById('end_date');
+    const nameInput = document.getElementById('name');
+    const budgetInput = document.getElementById('budget');
+    const roleFilterSelect = document.getElementById('role_filter');
+    const projectManagerSelect = document.getElementById('project_manager');
+    const managerInfo = document.getElementById('managerInfo');
+    const managerDetails = document.getElementById('managerDetails');
+    const budgetSuggestions = document.getElementById('budgetSuggestions');
+
+    // Budget suggestions from server
+    const budgetData = {{ budget_suggestions|tojson }};
+
+    // Store all manager options for filtering
+    const allManagerOptions = Array.from(projectManagerSelect.options).slice(1); // Skip the first empty option
+
+    // Set minimum date to today
+    const today = new Date().toISOString().split('T')[0];
+    startDateInput.min = today;
+    endDateInput.min = today;
+
+    // Role/Department filtering
+    roleFilterSelect.addEventListener('change', function() {
+        const filterValue = this.value;
+        
+        // Clear current manager selection
+        projectManagerSelect.selectedIndex = 0;
+        hideManagerInfo();
+        
+        // Remove all options except the first one
+        while (projectManagerSelect.children.length > 1) {
+            projectManagerSelect.removeChild(projectManagerSelect.lastChild);
+        }
+        
+        // Filter and add relevant options
+        let filteredOptions = allManagerOptions;
+        
+        if (filterValue) {
+            const [filterType, filterName] = filterValue.split(':');
+            
+            filteredOptions = allManagerOptions.filter(option => {
+                if (filterType === 'role') {
+                    return option.dataset.role === filterName;
+                } else if (filterType === 'department') {
+                    return option.dataset.department === filterName;
+                }
+                return true;
+            });
+            
+            // Show budget suggestions for departments
+            if (filterType === 'department' && budgetData[filterName]) {
+                showBudgetSuggestion(filterName, budgetData[filterName]);
+            } else {
+                hideBudgetSuggestions();
+            }
+        } else {
+            hideBudgetSuggestions();
+        }
+        
+        // Add filtered options back
+        filteredOptions.forEach(option => {
+            projectManagerSelect.appendChild(option.cloneNode(true));
+        });
+        
+        // Update count in role help text
+        const count = filteredOptions.length;
+        const roleHelp = document.getElementById('roleHelp');
+        if (filterValue && count > 0) {
+            roleHelp.innerHTML = `<i class='bx bx-check-circle'></i> Found ${count} manager(s) in selected ${filterValue.split(':')[0]}`;
+            roleHelp.className = 'form-success';
+        } else if (filterValue && count === 0) {
+            roleHelp.innerHTML = `<i class='bx bx-error-circle'></i> No managers found in selected ${filterValue.split(':')[0]}`;
+            roleHelp.className = 'form-error';
+        } else {
+            roleHelp.innerHTML = `<i class='bx bx-info-circle'></i> Select a role or department to filter available project managers`;
+            roleHelp.className = 'form-success';
+        }
+    });
+
+    // Project manager selection
+    projectManagerSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        
+        if (this.value && selectedOption.dataset.role) {
+            showManagerInfo(selectedOption);
+        } else {
+            hideManagerInfo();
+        }
+    });
+
+    function showManagerInfo(option) {
+        const role = option.dataset.role || 'Not specified';
+        const department = option.dataset.department || 'Not specified';
+        const position = option.dataset.position || 'Not specified';
+        
+        managerDetails.innerHTML = `
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div><span class="font-medium">Role:</span> ${role}</div>
+                <div><span class="font-medium">Department:</span> ${department}</div>
+                <div><span class="font-medium">Position:</span> ${position}</div>
+            </div>
+        `;
+        managerInfo.classList.remove('hidden');
+    }
+
+    function hideManagerInfo() {
+        managerInfo.classList.add('hidden');
+    }
+
+    function showBudgetSuggestion(department, avgBudget) {
+        const formattedBudget = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'NGN',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+        }).format(avgBudget);
+
+        budgetSuggestions.innerHTML = `
+            <div class="text-xs font-medium text-gray-600 mb-2">💡 Budget Suggestions:</div>
+            <div class="flex items-center justify-between p-2 bg-green-50 border border-green-200 rounded text-xs">
+                <span class="text-green-700">
+                    <i class='bx bx-chart-line'></i>
+                    Average ${department} project budget: <strong>${formattedBudget}</strong>
+                </span>
+                <button type="button" 
+                        class="text-green-600 hover:text-green-800 font-medium"
+                        onclick="document.getElementById('budget').value = ${avgBudget}; formatBudgetDisplay();">
+                    Use This
+                </button>
+            </div>
+        `;
+        budgetSuggestions.classList.remove('hidden');
+    }
+
+    function hideBudgetSuggestions() {
+        budgetSuggestions.classList.add('hidden');
+    }
+
+    // Date validation
+    function validateDates() {
+        const startDate = new Date(startDateInput.value);
+        const endDate = new Date(endDateInput.value);
+        const dateError = document.getElementById('dateError');
+
+        if (startDateInput.value && endDateInput.value) {
+            if (endDate <= startDate) {
+                dateError.textContent = 'End date must be after start date';
+                endDateInput.style.borderColor = 'var(--danger-color)';
+                return false;
+            } else {
+                dateError.textContent = '';
+                endDateInput.style.borderColor = 'var(--gray-300)';
+                return true;
+            }
+        }
+        return true;
+    }
+
+    // Update end date minimum when start date changes
+    startDateInput.addEventListener('change', function() {
+        if (this.value) {
+            endDateInput.min = this.value;
+            validateDates();
+        }
+    });
+
+    endDateInput.addEventListener('change', validateDates);
+
+    // Name validation
+    nameInput.addEventListener('input', function() {
+        const nameError = document.getElementById('nameError');
+        if (this.value.trim().length < 3) {
+            nameError.textContent = 'Project name must be at least 3 characters long';
+            this.style.borderColor = 'var(--danger-color)';
+        } else {
+            nameError.textContent = '';
+            this.style.borderColor = 'var(--gray-300)';
+        }
+    });
+
+    // Budget formatting
+    budgetInput.addEventListener('input', function() {
+        // Remove non-numeric characters except decimal point
+        this.value = this.value.replace(/[^0-9.]/g, '');
+        
+        // Ensure only one decimal point
+        const parts = this.value.split('.');
+        if (parts.length > 2) {
+            this.value = parts[0] + '.' + parts.slice(1).join('');
+        }
+        
+        // Limit decimal places to 2
+        if (parts[1] && parts[1].length > 2) {
+            this.value = parts[0] + '.' + parts[1].substring(0, 2);
+        }
+        
+        formatBudgetDisplay();
+    });
+
+    function formatBudgetDisplay() {
+        const value = parseFloat(budgetInput.value);
+        if (value > 0) {
+            const formatted = new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'NGN',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+            
+            budgetInput.title = `Formatted: ${formatted}`;
+        }
+    }
+
+    // Form submission validation
+    form.addEventListener('submit', function(e) {
+        if (!validateDates()) {
+            e.preventDefault();
+            return false;
+        }
+
+        if (nameInput.value.trim().length < 3) {
+            e.preventDefault();
+            nameInput.focus();
+            return false;
+        }
+
+        // Show loading state
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="bx bx-loader bx-spin"></i> Creating Project...';
+        submitBtn.disabled = true;
+
+        // Re-enable button after 5 seconds in case of error
+        setTimeout(() => {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+        }, 5000);
+    });
+
+    // Auto-focus on first input
+    nameInput.focus();
+
+    // Initialize budget formatting
+    budgetInput.addEventListener('blur', formatBudgetDisplay);
+
+    // Initialize milestone system
+    initializeMilestones();
+
+    // Initialize budget management
+    initializeBudgetManagement();
+});
+
+// Budget Management Functions
+function initializeBudgetManagement() {
+    const totalBudgetInput = document.getElementById('total_budget');
+    const distributionMethod = document.getElementById('budget_distribution_method');
+
+    totalBudgetInput.addEventListener('input', updateBudgetDistribution);
+    distributionMethod.addEventListener('change', handleDistributionMethodChange);
+
+    // Initialize with first category
+    updateBudgetDistribution();
+}
+
+function updateBudgetDistribution() {
+    const totalBudget = parseFloat(document.getElementById('total_budget').value) || 0;
+    const distributionMethod = document.getElementById('budget_distribution_method').value;
+    
+    const percentageInputs = document.querySelectorAll('.budget-percentage');
+    const amountInputs = document.querySelectorAll('.budget-amount');
+    
+    let totalAllocated = 0;
+    
+    if (distributionMethod === 'percentage') {
+        percentageInputs.forEach((input, index) => {
+            const percentage = parseFloat(input.value) || 0;
+            const amount = (totalBudget * percentage) / 100;
+            amountInputs[index].value = amount.toFixed(2);
+            totalAllocated += amount;
+        });
+    } else if (distributionMethod === 'fixed') {
+        amountInputs.forEach((input) => {
+            const amount = parseFloat(input.value) || 0;
+            totalAllocated += amount;
+        });
+        
+        // Update percentages based on amounts
+        percentageInputs.forEach((input, index) => {
+            const amount = parseFloat(amountInputs[index].value) || 0;
+            const percentage = totalBudget > 0 ? (amount / totalBudget) * 100 : 0;
+            input.value = percentage.toFixed(1);
+        });
+    }
+    
+    updateBudgetSummary(totalBudget, totalAllocated);
+}
+
+function updateBudgetSummary(totalBudget, totalAllocated) {
+    const totalAllocatedElement = document.getElementById('totalAllocated');
+    const remainingBudgetElement = document.getElementById('remainingBudget');
+    const progressBar = document.getElementById('budgetProgressBar');
+    const progressText = document.getElementById('budgetProgressText');
+    
+    const remaining = totalBudget - totalAllocated;
+    const percentage = totalBudget > 0 ? (totalAllocated / totalBudget) * 100 : 0;
+    
+    // Format currency
+    const formatter = new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0
+    });
+    
+    totalAllocatedElement.textContent = formatter.format(totalAllocated);
+    remainingBudgetElement.textContent = formatter.format(remaining);
+    
+    // Update progress bar
+    progressBar.style.width = `${Math.min(percentage, 100)}%`;
+    progressText.textContent = `${percentage.toFixed(1)}% allocated`;
+    
+    // Update colors based on allocation
+    if (percentage > 100) {
+        remainingBudgetElement.className = 'font-bold text-red-600';
+        progressBar.className = 'bg-red-600 h-2 rounded-full transition-all duration-300';
+        showBudgetAlert('Budget exceeded! Please adjust category allocations.', 'error');
+    } else if (percentage > 90) {
+        remainingBudgetElement.className = 'font-bold text-yellow-600';
+        progressBar.className = 'bg-yellow-500 h-2 rounded-full transition-all duration-300';
+        showBudgetAlert('Budget almost fully allocated.', 'warning');
+    } else {
+        remainingBudgetElement.className = 'font-bold text-green-600';
+        progressBar.className = 'bg-blue-600 h-2 rounded-full transition-all duration-300';
+        hideBudgetAlert();
+    }
+}
+
+function handleDistributionMethodChange() {
+    const method = document.getElementById('budget_distribution_method').value;
+    const percentageInputs = document.querySelectorAll('.budget-percentage');
+    const amountInputs = document.querySelectorAll('.budget-amount');
+    
+    if (method === 'percentage') {
+        percentageInputs.forEach(input => input.readOnly = false);
+        amountInputs.forEach(input => input.readOnly = true);
+    } else if (method === 'fixed') {
+        percentageInputs.forEach(input => input.readOnly = true);
+        amountInputs.forEach(input => input.readOnly = false);
+    } else {
+        percentageInputs.forEach(input => input.readOnly = false);
+        amountInputs.forEach(input => input.readOnly = false);
+    }
+    
+    updateBudgetDistribution();
+}
+
+function addBudgetCategory(name = '', percentage = 0) {
+    const container = document.getElementById('budgetCategories');
+    const categoryCount = container.querySelectorAll('.budget-category-card').length + 1;
+    
+    const categoryHtml = `
+        <div class="budget-category-card p-4 border border-gray-200 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                <div class="form-group mb-0">
+                    <label class="form-label text-sm">Category Name</label>
+                    <input type="text" 
+                           class="form-input text-sm" 
+                           name="budget_category_names[]"
+                           value="${name}"
+                           placeholder="Enter category name"
+                           required>
+                </div>
+                <div class="form-group mb-0">
+                    <label class="form-label text-sm">Percentage (%)</label>
+                    <input type="number" 
+                           class="form-input text-sm budget-percentage" 
+                           name="budget_percentages[]"
+                           value="${percentage}"
+                           placeholder="0"
+                           min="0"
+                           max="100"
+                           step="0.1"
+                           onchange="updateBudgetDistribution()">
+                </div>
+                <div class="form-group mb-0">
+                    <label class="form-label text-sm">Amount</label>
+                    <input type="number" 
+                           class="form-input text-sm budget-amount" 
+                           name="budget_amounts[]"
+                           placeholder="0.00"
+                           min="0"
+                           step="0.01"
+                           readonly>
+                </div>
+                <div class="form-group mb-0">
+                    <button type="button" 
+                            class="btn-modern btn-icon-modern btn-sm-modern btn-danger-modern w-full"
+                            onclick="removeBudgetCategory(this)"
+                            title="Remove Category">
+                        <i class='bx bx-trash'></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', categoryHtml);
+    
+    // Add animation
+    const newCategory = container.lastElementChild;
+    newCategory.style.opacity = '0';
+    newCategory.style.transform = 'translateY(20px)';
+    
+    setTimeout(() => {
+        newCategory.style.transition = 'all 0.3s ease';
+        newCategory.style.opacity = '1';
+        newCategory.style.transform = 'translateY(0)';
+    }, 10);
+    
+    updateBudgetDistribution();
+}
+
+function removeBudgetCategory(button) {
+    const categoryCard = button.closest('.budget-category-card');
+    
+    categoryCard.style.transition = 'all 0.3s ease';
+    categoryCard.style.opacity = '0';
+    categoryCard.style.transform = 'translateY(-20px)';
+    
+    setTimeout(() => {
+        categoryCard.remove();
+        updateBudgetDistribution();
+    }, 300);
+}
+
+function showBudgetAlert(message, type) {
+    hideBudgetAlert();
+    
+    const alertHtml = `
+        <div class="budget-alert ${type}">
+            <div class="flex items-center">
+                <i class='bx ${type === 'error' ? 'bx-error' : type === 'warning' ? 'bx-warning' : 'bx-check'} mr-2'></i>
+                <span>${message}</span>
+            </div>
+        </div>
+    `;
+    
+    const summaryContainer = document.querySelector('.mt-4.p-4.bg-gray-50');
+    summaryContainer.insertAdjacentHTML('afterend', alertHtml);
+}
+
+function hideBudgetAlert() {
+    const existingAlert = document.querySelector('.budget-alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+}
+
+// Role Management Functions
+function addEmployeeToRole(roleName) {
+    const allEmployees = {{ employees_data|tojson }};
+    const availableEmployees = allEmployees.filter(emp => emp.role !== roleName);
+    
+    if (availableEmployees.length === 0) {
+        showToast('No available employees for this role. Add new employees first.', 'warning');
+        return;
+    }
+    
+    const selectElement = document.querySelector(`#employees_${roleName.replace(/\s+/g, '_')} select`);
+    
+    // Create modal for employee selection
+    const modalHtml = `
+        <div class="modal-overlay" id="employeeRoleModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title">
+                        <i class='bx bx-user-plus mr-2'></i>
+                        Add Employee to ${roleName}
+                    </h3>
+                    <button type="button" class="modal-close" onclick="closeEmployeeRoleModal()">
+                        <i class='bx bx-x'></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label">Select Employees</label>
+                    <select id="employeeRoleSelect" class="form-input form-select" multiple style="min-height: 150px;">
+                        ${availableEmployees.map(emp => 
+                            `<option value="${emp.id}">${emp.name}${emp.position ? ' - ' + emp.position : ''}${emp.department ? ' (' + emp.department + ')' : ''}</option>`
+                        ).join('')}
+                    </select>
+                    <div class="text-xs text-gray-500 mt-2">
+                        Hold Ctrl/Cmd to select multiple employees
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-modern btn-secondary-modern" onclick="closeEmployeeRoleModal()">
+                        <i class='bx bx-x'></i>
+                        Cancel
+                    </button>
+                    <button type="button" class="btn-modern btn-primary-modern" onclick="assignEmployeesToRole('${roleName}')">
+                        <i class='bx bx-check'></i>
+                        Assign Employees
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+}
+
+function closeEmployeeRoleModal() {
+    const modal = document.getElementById('employeeRoleModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function assignEmployeesToRole(roleName) {
+    const selectedEmployees = Array.from(document.getElementById('employeeRoleSelect').selectedOptions);
+    const selectElement = document.querySelector(`#employees_${roleName.replace(/\s+/g, '_')} select`);
+    
+    selectedEmployees.forEach(option => {
+        // Add to role select if not already present
+        const existingOption = Array.from(selectElement.options).find(opt => opt.value === option.value);
+        if (!existingOption) {
+            const newOption = document.createElement('option');
+            newOption.value = option.value;
+            newOption.textContent = option.textContent;
+            newOption.selected = true;
+            selectElement.appendChild(newOption);
+        }
+    });
+    
+    showToast(`${selectedEmployees.length} employee(s) assigned to ${roleName}`, 'success');
+    closeEmployeeRoleModal();
+}
+
+// Milestone Management Functions
+let milestoneCounter = 0;
+
+function initializeMilestones() {
+    // Listen for date changes to auto-generate milestone suggestions
+    const startDate = document.getElementById('start_date');
+    const endDate = document.getElementById('end_date');
+    
+    startDate.addEventListener('change', updateMilestoneSuggestions);
+    endDate.addEventListener('change', updateMilestoneSuggestions);
+}
+
+function updateMilestoneSuggestions() {
+    const startDate = document.getElementById('start_date').value;
+    const endDate = document.getElementById('end_date').value;
+    const container = document.getElementById('milestonesContainer');
+    
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+        
+        if (totalDays > 0) {
+            // Show suggested milestones if none exist
+            const existingMilestones = container.querySelectorAll('.milestone-item');
+            if (existingMilestones.length === 0) {
+                showMilestoneSuggestions(start, end, totalDays);
+            }
+        }
+    }
+}
+
+function showMilestoneSuggestions(startDate, endDate, totalDays) {
+    const container = document.getElementById('milestonesContainer');
+    const placeholder = container.querySelector('.milestone-placeholder');
+    
+    if (placeholder) {
+        placeholder.style.display = 'none';
+    }
+    
+    // Create suggestion card
+    const suggestionCard = document.createElement('div');
+    suggestionCard.className = 'p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg';
+    suggestionCard.innerHTML = `
+        <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center">
+                <i class='bx bx-lightbulb text-blue-500 text-xl mr-2'></i>
+                <h4 class="font-semibold text-blue-800">Smart Milestone Suggestions</h4>
+            </div>
+            <button type="button" class="text-blue-500 hover:text-blue-700" onclick="dismissSuggestions()">
+                <i class='bx bx-x text-lg'></i>
+            </button>
+        </div>
+        <p class="text-blue-700 text-sm mb-4">Based on your ${totalDays}-day project timeline, here are some suggested milestones:</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${generateMilestoneSuggestionButtons(startDate, endDate, totalDays)}
+        </div>
+    `;
+    
+    container.appendChild(suggestionCard);
+}
+
+function generateMilestoneSuggestionButtons(startDate, endDate, totalDays) {
+    const suggestions = [];
+    
+    if (totalDays >= 30) {
+        suggestions.push({
+            name: 'Project Kickoff',
+            percentage: 5,
+            description: 'Initial setup and team mobilization'
+        });
+        suggestions.push({
+            name: 'Design Phase Complete',
+            percentage: 25,
+            description: 'All designs and plans finalized'
+        });
+        suggestions.push({
+            name: 'Mid-Project Review',
+            percentage: 50,
+            description: 'Progress assessment and adjustments'
+        });
+        suggestions.push({
+            name: 'Final Inspection',
+            percentage: 90,
+            description: 'Quality control and compliance check'
+        });
+    } else if (totalDays >= 14) {
+        suggestions.push({
+            name: 'Project Start',
+            percentage: 10,
+            description: 'Project initiation'
+        });
+        suggestions.push({
+            name: 'Midpoint Check',
+            percentage: 50,
+            description: 'Progress review'
+        });
+        suggestions.push({
+            name: 'Final Review',
+            percentage: 90,
+            description: 'Completion check'
+        });
+    } else {
+        suggestions.push({
+            name: 'Midpoint',
+            percentage: 50,
+            description: 'Progress checkpoint'
+        });
+    }
+    
+    return suggestions.map(suggestion => {
+        const dueDate = new Date(startDate.getTime() + (totalDays * suggestion.percentage / 100) * 24 * 60 * 60 * 1000);
+        const formattedDate = dueDate.toISOString().split('T')[0];
+        
+        return `
+            <button type="button" 
+                    class="btn-modern btn-outline-modern btn-primary-outline btn-sm-modern text-left"
+                    onclick="addSuggestedMilestone('${suggestion.name}', '${formattedDate}', '${suggestion.description}')">
+                <div class="font-medium">${suggestion.name}</div>
+                <div class="text-xs opacity-75">${formattedDate} • ${suggestion.description}</div>
+            </button>
+        `;
+    }).join('');
+}
+
+function addSuggestedMilestone(name, dueDate, description) {
+    addMilestone(name, dueDate, description);
+    dismissSuggestions();
+}
+
+function dismissSuggestions() {
+    const container = document.getElementById('milestonesContainer');
+    const suggestionCard = container.querySelector('.bg-gradient-to-r');
+    if (suggestionCard) {
+        suggestionCard.remove();
+    }
+    
+    // Show placeholder if no milestones exist
+    const milestones = container.querySelectorAll('.milestone-item');
+    if (milestones.length === 0) {
+        const placeholder = container.querySelector('.milestone-placeholder');
+        if (placeholder) {
+            placeholder.style.display = 'block';
+        }
+    }
+}
+
+function addMilestone(name = '', dueDate = '', description = '') {
+    milestoneCounter++;
+    const container = document.getElementById('milestonesContainer');
+    const placeholder = container.querySelector('.milestone-placeholder');
+    
+    // Hide placeholder
+    if (placeholder) {
+        placeholder.style.display = 'none';
+    }
+    
+    const milestoneId = `milestone_${milestoneCounter}`;
+    const milestoneHtml = `
+        <div class="milestone-item" id="${milestoneId}">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex items-center">
+                    <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm mr-3">
+                        M${milestoneCounter}
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-gray-800">Milestone ${milestoneCounter}</h4>
+                        <p class="text-xs text-gray-500">Project checkpoint</p>
+                    </div>
+                </div>
+                <button type="button" 
+                        class="btn-modern btn-icon-modern btn-danger-outline" 
+                        onclick="removeMilestone('${milestoneId}')"
+                        title="Remove Milestone">
+                    <i class='bx bx-trash'></i>
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="form-group mb-0">
+                    <label class="form-label text-sm">Milestone Name</label>
+                    <input type="text" 
+                           class="form-input text-sm" 
+                           name="milestone_names[]"
+                           value="${name}"
+                           placeholder="e.g., Foundation Complete"
+                           required>
+                </div>
+                <div class="form-group mb-0">
+                    <label class="form-label text-sm">Due Date</label>
+                    <input type="date" 
+                           class="form-input text-sm" 
+                           name="milestone_dates[]"
+                           value="${dueDate}"
+                           required>
+                </div>
+            </div>
+            
+            <div class="form-group mt-3 mb-0">
+                <label class="form-label text-sm">Description</label>
+                <textarea class="form-input form-textarea text-sm" 
+                          name="milestone_descriptions[]"
+                          placeholder="Describe what needs to be completed for this milestone"
+                          rows="2">${description}</textarea>
+            </div>
+        </div>
+    `;
+    
+    container.insertAdjacentHTML('beforeend', milestoneHtml);
+    
+    // Add animation
+    const newMilestone = document.getElementById(milestoneId);
+    newMilestone.style.opacity = '0';
+    newMilestone.style.transform = 'translateY(20px)';
+    
+    setTimeout(() => {
+        newMilestone.style.transition = 'all 0.3s ease';
+        newMilestone.style.opacity = '1';
+        newMilestone.style.transform = 'translateY(0)';
+    }, 10);
+    
+    // Focus on the name input
+    const nameInput = newMilestone.querySelector('input[name="milestone_names[]"]');
+    if (nameInput && !name) {
+        nameInput.focus();
+    }
+}
+
+function removeMilestone(milestoneId) {
+    const milestone = document.getElementById(milestoneId);
+    if (milestone) {
+        milestone.style.transition = 'all 0.3s ease';
+        milestone.style.opacity = '0';
+        milestone.style.transform = 'translateY(-20px)';
+        
+        setTimeout(() => {
+            milestone.remove();
+            
+            // Show placeholder if no milestones left
+            const container = document.getElementById('milestonesContainer');
+            const milestones = container.querySelectorAll('.milestone-item');
+            if (milestones.length === 0) {
+                const placeholder = container.querySelector('.milestone-placeholder');
+                if (placeholder) {
+                    placeholder.style.display = 'block';
+                }
+            }
+        }, 300);
+    }
+}
+
+// Modal Functions
+function openAddRoleModal() {
+    document.getElementById('addRoleModal').classList.remove('hidden');
+    document.getElementById('new_role').focus();
+}
+
+function closeAddRoleModal() {
+    document.getElementById('addRoleModal').classList.add('hidden');
+    document.getElementById('addRoleForm').reset();
+}
+
+function openAddEmployeeModal() {
+    document.getElementById('addEmployeeModal').classList.remove('hidden');
+    document.getElementById('employee_name').focus();
+}
+
+function closeAddEmployeeModal() {
+    document.getElementById('addEmployeeModal').classList.add('hidden');
+    document.getElementById('addEmployeeForm').reset();
+}
+
+function saveNewRole() {
+    const form = document.getElementById('addRoleForm');
+    const formData = new FormData(form);
+    
+    const newRole = formData.get('new_role').trim();
+    const newDepartment = formData.get('new_department').trim();
+    
+    if (!newRole || !newDepartment) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    // Add role to the select dropdown
+    const roleSelect = document.getElementById('role_filter');
+    const roleOptgroup = roleSelect.querySelector('optgroup[label="Roles"]');
+    const deptOptgroup = roleSelect.querySelector('optgroup[label="Departments"]');
+    
+    // Add role option
+    const roleOption = document.createElement('option');
+    roleOption.value = `role:${newRole}`;
+    roleOption.textContent = newRole;
+    roleOptgroup.appendChild(roleOption);
+    
+    // Add department option if not exists
+    const existingDeptOption = Array.from(deptOptgroup.options).find(opt => 
+        opt.textContent === `${newDepartment} Department`
+    );
+    
+    if (!existingDeptOption) {
+        const deptOption = document.createElement('option');
+        deptOption.value = `department:${newDepartment}`;
+        deptOption.textContent = `${newDepartment} Department`;
+        deptOptgroup.appendChild(deptOption);
+    }
+    
+    // Update employee role and department selects in the modal
+    const empRoleSelect = document.getElementById('employee_role');
+    const empDeptSelect = document.getElementById('employee_department');
+    
+    // Add to employee role select if not exists
+    if (!Array.from(empRoleSelect.options).find(opt => opt.value === newRole)) {
+        const empRoleOption = document.createElement('option');
+        empRoleOption.value = newRole;
+        empRoleOption.textContent = newRole;
+        empRoleSelect.appendChild(empRoleOption);
+    }
+    
+    // Add to employee department select if not exists
+    if (!Array.from(empDeptSelect.options).find(opt => opt.value === newDepartment)) {
+        const empDeptOption = document.createElement('option');
+        empDeptOption.value = newDepartment;
+        empDeptOption.textContent = newDepartment;
+        empDeptSelect.appendChild(empDeptOption);
+    }
+    
+    // Show success message
+    showToast(`Role "${newRole}" in "${newDepartment}" department added successfully!`, 'success');
+    
+    closeAddRoleModal();
+}
+
+function saveNewEmployee() {
+    const form = document.getElementById('addEmployeeForm');
+    const formData = new FormData(form);
+    
+    const name = formData.get('employee_name').trim();
+    const email = formData.get('employee_email').trim();
+    const role = formData.get('employee_role');
+    const department = formData.get('employee_department');
+    const position = formData.get('employee_position').trim();
+    
+    if (!name || !role || !department) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    // Add employee to the project manager select
+    const managerSelect = document.getElementById('project_manager');
+    const newOption = document.createElement('option');
+    newOption.value = name;
+    newOption.textContent = `${name}${position ? ' - ' + position : ''} (${department})${role ? ' [' + role + ']' : ''}`;
+    newOption.dataset.role = role;
+    newOption.dataset.department = department;
+    newOption.dataset.position = position;
+    newOption.dataset.employeeId = 'new-' + Date.now(); // Temporary ID
+    
+    managerSelect.appendChild(newOption);
+    
+    // Update the allManagerOptions array for filtering
+    if (window.allManagerOptions) {
+        window.allManagerOptions.push(newOption.cloneNode(true));
+    }
+    
+    // Show success message
+    showToast(`Employee "${name}" added successfully!`, 'success');
+    
+    closeAddEmployeeModal();
+}
+
+function showToast(message, type = 'info') {
+    // Create toast notification
+    const toast = document.createElement('div');
+    toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transition-all duration-300 transform translate-x-full`;
+    
+    const bgClass = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
+    toast.className += ` ${bgClass} text-white`;
+    
+    const icon = type === 'success' ? 'bx-check-circle' : type === 'error' ? 'bx-error-circle' : 'bx-info-circle';
+    
+    toast.innerHTML = `
+        <div class="flex items-center">
+            <i class='bx ${icon} text-lg mr-2'></i>
+            <span class="text-sm font-medium">${message}</span>
+        </div>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.classList.remove('translate-x-full');
+    }, 10);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-overlay')) {
+        if (e.target.id === 'addRoleModal') closeAddRoleModal();
+        if (e.target.id === 'addEmployeeModal') closeAddEmployeeModal();
+    }
+});
+
+// Close modals with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeAddRoleModal();
+        closeAddEmployeeModal();
+    }
+});
+</script>
+
+{% endblock %}

@@ -1,143 +1,481 @@
-{% extends "admin/base.html" %}
+{% extends "admin/base_simple.html" %}
 
-{% block title %}Construction Admin Dashboard | SammyA{% endblock %}
+{% block title %}Admin Dashboard - Construction Management System{% endblock %}
 
 {% block content %}
-<div class="p-6 space-y-6">
-    <!-- Key Metrics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Active Projects -->
-        <div class="card bg-white p-6 metric-card border-l-blue-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Active Projects</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ active_projects.count }}</h3>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-full">
-                    <i class='bx bx-building-house text-2xl text-blue-600'></i>
-                </div>
-            </div>
-            <div class="mt-4 flex items-center text-sm">
-                <span class="text-green-500 flex items-center mr-2">
-                    <i class='bx bx-up-arrow-alt'></i>
-                    {{ active_projects.change }}
-                </span>
-                <span class="text-gray-500">from last month</span>
-            </div>
+<!-- Page Header -->
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">Administration Dashboard</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <div class="btn-group me-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
         </div>
-        <!-- Site Workers -->
-        <div class="card bg-white p-6 metric-card border-l-green-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Total Workers</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ total_workers.count }}</h3>
-                </div>
-                <div class="bg-green-100 p-3 rounded-full">
-                    <i class='bx bx-hard-hat text-2xl text-green-600'></i>
-                </div>
-            </div>
-            <div class="mt-4 flex items-center text-sm">
-                <span class="text-green-500 flex items-center mr-2">
-                    <i class='bx bx-up-arrow-alt'></i>
-                    {{ total_workers.attendance_percent }}%
-                </span>
-                <span class="text-gray-500">attendance today</span>
-            </div>
-        </div>
-        <!-- Equipment -->
-        <div class="card bg-white p-6 metric-card border-l-yellow-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Equipment</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ equipment_status.available }}/{{ equipment_status.total }}</h3>
-                </div>
-                <div class="bg-yellow-100 p-3 rounded-full">
-                    <i class='bx bx-traffic-cone text-2xl text-yellow-600'></i>
-                </div>
-            </div>
-            <div class="mt-4 flex items-center text-sm">
-                <span class="text-yellow-500 mr-2">{{ equipment_status.maintenance }}</span>
-                <span class="text-gray-500">under maintenance</span>
-            </div>
-        </div>
-        <!-- Material Orders -->
-        <div class="card bg-white p-6 metric-card border-l-red-500">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Pending Orders</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ pending_orders.count }}</h3>
-                </div>
-                <div class="bg-red-100 p-3 rounded-full">
-                    <i class='bx bx-package text-2xl text-red-600'></i>
-                </div>
-            </div>
-            <div class="mt-4 flex items-center text-sm">
-                <span class="text-red-500 mr-2">{{ pending_orders.urgent }}</span>
-                <span class="text-gray-500">urgent deliveries</span>
-            </div>
-        </div>
-    </div>
-
-    <!-- Charts and Progress Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Project Progress -->
-        <div class="card bg-white p-6 lg:col-span-2">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Project Progress</h3>
-            <div class="space-y-5">
-                {% for project in project_progress %}
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium text-gray-700">{{ project.name }}</span>
-                        <span class="text-sm text-gray-500">{{ project.percent }}%</span>
-                    </div>
-                    <div class="progress-bar bg-gray-200">
-                        <div class="h-full rounded-full {{ project.color }}" style="width: {{ project.percent }}%"></div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        <!-- Recent Activity -->
-        <div class="card bg-white p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
-            <div class="space-y-4">
-                {% for activity in recent_activity %}
-                <div class="flex items-start">
-                    <div class="{{ activity.bg }} p-2 rounded-lg mt-1">
-                        <i class='bx {{ activity.icon }} {{ activity.icon_color }}'></i>
-                    </div>
-                    <div class="ml-3">
-                        <p class="text-sm font-medium text-gray-800">{{ activity.title }}</p>
-                        <p class="text-sm text-gray-500">{{ activity.description }}</p>
-                        <p class="text-xs text-gray-400 mt-1">{{ activity.time }}</p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Actions Section -->
-    <div class="card bg-white p-6">
-        <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {% for action in quick_actions %}
-            <a href="{{ action.url }}" class="flex flex-col items-center p-4 {{ action.bg }} rounded-lg {{ action.text }} hover:{{ action.hover }} transition-colors">
-                <i class='bx {{ action.icon }} text-2xl mb-2'></i>
-                <span class="text-sm text-center">{{ action.label }}</span>
-            </a>
-            {% endfor %}
-        </div>
-    </div>
-
-    <!-- Financial Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {% for item in financial_overview %}
-        <div class="card bg-white p-6">
-            <p class="text-gray-500 text-sm">{{ item.label }}</p>
-            <h3 class="text-2xl font-bold text-gray-800">{{ item.value }}</h3>
-        </div>
-        {% endfor %}
+        <button type="button" class="btn btn-sm btn-primary">
+            <i class="fas fa-download me-1"></i>
+            Generate Report
+        </button>
     </div>
 </div>
+
+<!-- Key Metrics Cards -->
+<div class="row g-4 mb-4">
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-primary-light p-3 rounded-3">
+                            <i class="fas fa-users text-primary fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="card-title text-muted mb-1">Total Roles</h6>
+                        <h3 class="mb-0 fw-bold text-dark">{{ summary.total_roles or 0 }}</h3>
+                        <small class="text-success">
+                            <i class="fas fa-arrow-up me-1"></i>
+                            Active roles in system
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-success-light p-3 rounded-3">
+                            <i class="fas fa-sitemap text-success fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="card-title text-muted mb-1">Reporting Lines</h6>
+                        <h3 class="mb-0 fw-bold text-dark">{{ summary.total_reporting_lines or 0 }}</h3>
+                        <small class="text-info">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Organizational structure
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-warning-light p-3 rounded-3">
+                            <i class="fas fa-layer-group text-warning fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="card-title text-muted mb-1">Approval Levels</h6>
+                        <h3 class="mb-0 fw-bold text-dark">{{ summary.total_approval_hierarchies or 0 }}</h3>
+                        <small class="text-warning">
+                            <i class="fas fa-check-circle me-1"></i>
+                            Workflow processes
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="bg-danger-light p-3 rounded-3">
+                            <i class="fas fa-key text-danger fs-4"></i>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="card-title text-muted mb-1">Permissions</h6>
+                        <h3 class="mb-0 fw-bold text-dark">{{ summary.total_permissions or 0 }}</h3>
+                        <small class="text-danger">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Access controls
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Management Sections -->
+<div class="row g-4 mb-4">
+    <!-- Quick Actions -->
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pb-0">
+                <h5 class="card-title mb-0">Administrative Actions</h5>
+                <p class="text-muted small mb-0">Quick access to key management functions</p>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('admin.roles_view') }}" class="text-decoration-none">
+                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
+                                <div class="bg-primary-light p-2 rounded-circle me-3">
+                                    <i class="fas fa-users text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 text-dark">Manage Roles</h6>
+                                    <small class="text-muted">Define system roles</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('admin.reporting_lines_view') }}" class="text-decoration-none">
+                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
+                                <div class="bg-success-light p-2 rounded-circle me-3">
+                                    <i class="fas fa-sitemap text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 text-dark">Reporting Lines</h6>
+                                    <small class="text-muted">Org structure</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('admin.approval_hierarchy_view') }}" class="text-decoration-none">
+                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
+                                <div class="bg-warning-light p-2 rounded-circle me-3">
+                                    <i class="fas fa-layer-group text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 text-dark">Approval Flow</h6>
+                                    <small class="text-muted">Workflow setup</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('admin.permissions_view') }}" class="text-decoration-none">
+                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
+                                <div class="bg-danger-light p-2 rounded-circle me-3">
+                                    <i class="fas fa-key text-danger"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 text-dark">Permissions</h6>
+                                    <small class="text-muted">Access control</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <a href="{{ url_for('admin.oversight_reports_view') }}" class="text-decoration-none">
+                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
+                                <div class="bg-info-light p-2 rounded-circle me-3">
+                                    <i class="fas fa-chart-bar text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0 text-dark">Reports</h6>
+                                    <small class="text-muted">System insights</small>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="d-flex align-items-center p-3 border rounded-3 text-muted">
+                            <div class="bg-secondary-light p-2 rounded-circle me-3">
+                                <i class="fas fa-cogs text-secondary"></i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0">Settings</h6>
+                                <small>Coming soon</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Status -->
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pb-0">
+                <h5 class="card-title mb-0">System Status</h5>
+                <p class="text-muted small mb-0">Current system health</p>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Database</span>
+                    <span class="badge bg-success">Online</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Authentication</span>
+                    <span class="badge bg-success">Active</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Total Employees</span>
+                    <span class="badge bg-primary">{{ summary.total_employees or 0 }}</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <span class="text-muted">Admin Users</span>
+                    <span class="badge bg-warning">1</span>
+                </div>
+                
+                <hr class="my-3">
+                
+                <div class="text-center">
+                    <p class="text-muted small mb-2">Last updated</p>
+                    <p class="text-dark fw-medium mb-0">{{ current_datetime.strftime('%B %d, %Y at %I:%M %p') if current_datetime else 'Just now' }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity & Analytics -->
+<div class="row g-4">
+    <div class="col-lg-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pb-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-0">Admin Management Overview</h5>
+                        <p class="text-muted small mb-0">Comprehensive system administration tools</p>
+                    </div>
+                    <button class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-sync me-1"></i>
+                        Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-md-3 mb-3">
+                        <div class="border-end">
+                            <h4 class="text-primary mb-1">{{ summary.total_roles or 0 }}</h4>
+                            <p class="text-muted small mb-0">System Roles</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border-end">
+                            <h4 class="text-success mb-1">{{ summary.total_reporting_lines or 0 }}</h4>
+                            <p class="text-muted small mb-0">Reporting Relationships</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="border-end">
+                            <h4 class="text-warning mb-1">{{ summary.total_approval_hierarchies or 0 }}</h4>
+                            <p class="text-muted small mb-0">Approval Workflows</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <h4 class="text-danger mb-1">{{ summary.total_permissions or 0 }}</h4>
+                        <p class="text-muted small mb-0">Access Permissions</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<style>
+/* Custom Admin Dashboard Styles */
+.hover-card {
+    transition: all 0.3s ease-in-out;
+    cursor: pointer;
+    border: 1px solid #e3e6f0 !important;
+}
+
+.hover-card:hover {
+    background-color: #f8f9fa !important;
+    transform: translateY(-3px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+    border-color: #d1d3e2 !important;
+}
+
+.card {
+    transition: all 0.3s ease-in-out;
+    border: 1px solid #e3e6f0;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+/* Custom background opacity classes for Bootstrap 5.1.3 compatibility */
+.bg-primary-light {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+}
+
+.bg-success-light {
+    background-color: rgba(25, 135, 84, 0.1) !important;
+}
+
+.bg-warning-light {
+    background-color: rgba(255, 193, 7, 0.1) !important;
+}
+
+.bg-danger-light {
+    background-color: rgba(220, 53, 69, 0.1) !important;
+}
+
+.bg-info-light {
+    background-color: rgba(13, 202, 240, 0.1) !important;
+}
+
+.bg-secondary-light {
+    background-color: rgba(108, 117, 125, 0.1) !important;
+}
+
+/* Fix for border-end on mobile */
+@media (max-width: 768px) {
+    .border-end {
+        border-right: none !important;
+        border-bottom: 1px solid #dee2e6;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .border-end:last-child {
+        border-bottom: none !important;
+        margin-bottom: 0;
+    }
+}
+
+/* Custom shadow utilities */
+.shadow-sm {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+/* Animation classes */
+.fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.6s ease-out;
+}
+
+.fade-in.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Custom metric card styling */
+.metric-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-left: 4px solid;
+}
+
+.metric-card.border-primary {
+    border-left-color: #0d6efd !important;
+}
+
+.metric-card.border-success {
+    border-left-color: #198754 !important;
+}
+
+.metric-card.border-warning {
+    border-left-color: #ffc107 !important;
+}
+
+.metric-card.border-danger {
+    border-left-color: #dc3545 !important;
+}
+
+/* Professional button styling */
+.btn {
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+/* Icon styling */
+.fs-4 {
+    font-size: 1.5rem !important;
+}
+
+/* Custom spacing */
+.p-3 {
+    padding: 1rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+    .btn-toolbar {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .btn-group {
+        width: 100%;
+    }
+    
+    .btn-group .btn {
+        flex: 1;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add fade-in animation to cards
+    const cards = document.querySelectorAll('.card');
+    cards.forEach((card, index) => {
+        card.classList.add('fade-in');
+        setTimeout(() => {
+            card.classList.add('show');
+        }, index * 150);
+    });
+    
+    // Add click effects for hover cards
+    const hoverCards = document.querySelectorAll('.hover-card');
+    hoverCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Add a subtle click animation
+            this.style.transform = 'scale(0.97) translateY(-3px)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 200);
+        });
+    });
+    
+    // Add smooth hover effects
+    const actionCards = document.querySelectorAll('a .hover-card');
+    actionCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.borderColor = '#0d6efd';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.borderColor = '#e3e6f0';
+        });
+    });
+    
+    // Update timestamp if exists
+    const timestamp = document.querySelector('[data-timestamp]');
+    if (timestamp) {
+        const now = new Date();
+        const options = { 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        };
+        timestamp.textContent = now.toLocaleDateString('en-US', options);
+    }
+});
+</script>
 {% endblock %}
