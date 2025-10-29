@@ -1,0 +1,1171 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Project Command Center - {{ project.name }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+    /* === CYBERPUNK THEME === */
+    :root {
+        --neon-cyan: #00ffff;
+        --neon-pink: #ff0080;
+        --neon-purple: #8000ff;
+        --neon-green: #00ff80;
+        --neon-orange: #ff8000;
+        --neon-yellow: #ffff00;
+        
+        --dark-void: #0a0a0b;
+        --dark-space: #141517;
+        --dark-matter: #1a1b1e;
+        --dark-energy: #2a2d32;
+        --dark-abyss: #0f1012;
+        
+        --glass-dark: rgba(20, 21, 23, 0.85);
+        --glass-light: rgba(255, 255, 255, 0.08);
+        --border-glow: rgba(0, 255, 255, 0.4);
+        
+        --shadow-neon: 0 0 20px rgba(0, 255, 255, 0.4);
+        --shadow-deep: 0 20px 40px rgba(0, 0, 0, 0.5);
+        --shadow-hologram: 0 0 40px rgba(128, 0, 255, 0.3);
+    }
+
+    /* === BASE STYLES === */
+    .cyber-command {
+        font-family: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif !important;
+        background: var(--dark-void) !important;
+        min-height: 100vh !important;
+        color: #ffffff !important;
+        position: relative !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Animated Grid Background */
+    .cyber-command::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            linear-gradient(rgba(10, 10, 11, 0.9), rgba(10, 10, 11, 0.9)),
+            repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 50px,
+                rgba(0, 255, 255, 0.03) 50px,
+                rgba(0, 255, 255, 0.03) 51px
+            ),
+            repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 50px,
+                rgba(0, 255, 255, 0.03) 50px,
+                rgba(0, 255, 255, 0.03) 51px
+            );
+        animation: gridMove 20s linear infinite;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    @keyframes gridMove {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+
+    /* Pulsing Energy Orbs */
+    .cyber-command::after {
+        content: '';
+        position: fixed;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(0, 255, 255, 0.1) 0%, transparent 70%);
+        top: -250px;
+        right: -250px;
+        animation: orbPulse 8s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 1;
+    }
+
+    @keyframes orbPulse {
+        0%, 100% { transform: scale(1); opacity: 0.3; }
+        50% { transform: scale(1.2); opacity: 0.6; }
+    }
+
+    /* === DASHBOARD LAYOUT === */
+    .dashboard-grid {
+        position: relative;
+        z-index: 10;
+        padding: 2rem;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    /* === COMMAND HEADER === */
+    .command-header {
+        background: var(--glass-dark) !important;
+        border: 1px solid var(--border-glow) !important;
+        border-radius: 20px !important;
+        padding: 2.5rem !important;
+        margin-bottom: 2rem !important;
+        position: relative !important;
+        overflow: hidden !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        box-shadow: var(--shadow-deep) !important;
+    }
+
+    .command-header::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, var(--neon-cyan), var(--neon-pink), var(--neon-purple), var(--neon-cyan));
+        z-index: -1;
+        border-radius: 20px;
+        animation: borderGlow 3s linear infinite;
+        opacity: 0.5;
+    }
+
+    @keyframes borderGlow {
+        0% { filter: hue-rotate(0deg); }
+        100% { filter: hue-rotate(360deg); }
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 2rem;
+    }
+
+    .header-title {
+        font-size: 2.8rem !important;
+        font-weight: 700 !important;
+        background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-pink) 50%, var(--neon-purple) 100%) !important;
+        -webkit-background-clip: text !important;
+        background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        color: transparent !important;
+        text-shadow: 0 0 30px rgba(0, 255, 255, 0.5) !important;
+        margin: 0 !important;
+        letter-spacing: -0.02em;
+    }
+
+    .header-subtitle {
+        color: rgba(255, 255, 255, 0.7) !important;
+        font-size: 1.2rem !important;
+        margin-top: 0.5rem !important;
+        font-weight: 400 !important;
+        text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+    }
+
+    .header-actions {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    /* === CYBER BUTTONS === */
+    .cyber-btn {
+        background: linear-gradient(135deg, var(--dark-energy) 0%, var(--dark-matter) 100%) !important;
+        border: 1px solid var(--neon-cyan) !important;
+        color: var(--neon-cyan) !important;
+        padding: 0.875rem 1.75rem !important;
+        border-radius: 12px !important;
+        font-weight: 600 !important;
+        text-decoration: none !important;
+        transition: all 0.3s ease !important;
+        position: relative !important;
+        overflow: hidden !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 0.75rem !important;
+        font-size: 0.9rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+        backdrop-filter: blur(10px) !important;
+    }
+
+    .cyber-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.2), transparent);
+        transition: left 0.6s;
+    }
+
+    .cyber-btn:hover {
+        box-shadow: var(--shadow-neon) !important;
+        border-color: var(--neon-pink) !important;
+        color: var(--neon-pink) !important;
+        text-decoration: none !important;
+        transform: translateY(-2px) !important;
+    }
+
+    .cyber-btn:hover::before {
+        left: 100%;
+    }
+
+    .cyber-btn.primary {
+        background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-pink) 100%) !important;
+        color: var(--dark-void) !important;
+        border: none !important;
+        font-weight: 700 !important;
+    }
+
+    .cyber-btn.primary:hover {
+        color: var(--dark-void) !important;
+        transform: translateY(-2px) scale(1.05) !important;
+        box-shadow: 0 10px 30px rgba(0, 255, 255, 0.4) !important;
+    }
+
+    /* === STATS MATRIX === */
+    .stats-matrix {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-module {
+        background: var(--glass-dark) !important;
+        border: 1px solid rgba(0, 255, 255, 0.2) !important;
+        border-radius: 16px !important;
+        padding: 2rem !important;
+        position: relative !important;
+        overflow: hidden !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    .stat-module::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--neon-cyan), var(--neon-pink));
+        transition: height 0.3s ease;
+    }
+
+    .stat-module:hover {
+        transform: translateY(-8px) scale(1.02) !important;
+        border-color: rgba(0, 255, 255, 0.5) !important;
+        box-shadow: var(--shadow-neon), var(--shadow-deep) !important;
+    }
+
+    .stat-module:hover::before {
+        height: 5px;
+    }
+
+    .stat-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .stat-icon {
+        width: 3.5rem;
+        height: 3.5rem;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        position: relative;
+        box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    }
+
+    .stat-icon.users { 
+        background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--neon-purple) 100%);
+        color: var(--dark-void);
+    }
+    .stat-icon.tasks { 
+        background: linear-gradient(135deg, var(--neon-pink) 0%, var(--neon-orange) 100%);
+        color: var(--dark-void);
+    }
+    .stat-icon.files { 
+        background: linear-gradient(135deg, var(--neon-green) 0%, var(--neon-cyan) 100%);
+        color: var(--dark-void);
+    }
+    .stat-icon.money { 
+        background: linear-gradient(135deg, var(--neon-orange) 0%, var(--neon-pink) 100%);
+        color: var(--dark-void);
+    }
+
+    .stat-label {
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.1em !important;
+    }
+
+    .stat-value {
+        font-size: 2.8rem !important;
+        font-weight: 800 !important;
+        color: var(--neon-cyan) !important;
+        text-shadow: 0 0 20px rgba(0, 255, 255, 0.5) !important;
+        margin-bottom: 0.5rem !important;
+        line-height: 1;
+    }
+
+    .stat-description {
+        font-size: 0.9rem !important;
+        color: rgba(255, 255, 255, 0.6) !important;
+        line-height: 1.4;
+    }
+
+    /* === ANALYTICS GRID === */
+    .analytics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .analytics-module {
+        background: var(--glass-dark) !important;
+        border: 1px solid rgba(128, 0, 255, 0.3) !important;
+        border-radius: 20px !important;
+        padding: 2.5rem !important;
+        position: relative !important;
+        overflow: hidden !important;
+        backdrop-filter: blur(25px) !important;
+        -webkit-backdrop-filter: blur(25px) !important;
+        transition: all 0.4s ease !important;
+        box-shadow: var(--shadow-deep) !important;
+    }
+
+    .analytics-module::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--neon-purple), var(--neon-pink), var(--neon-cyan));
+        animation: gradientShift 3s ease-in-out infinite;
+    }
+
+    @keyframes gradientShift {
+        0%, 100% { opacity: 0.8; }
+        50% { opacity: 1; }
+    }
+
+    .analytics-module:hover {
+        transform: translateY(-5px) !important;
+        border-color: rgba(128, 0, 255, 0.6) !important;
+        box-shadow: var(--shadow-hologram), var(--shadow-deep) !important;
+    }
+
+    .module-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .module-title {
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        margin: 0 !important;
+        text-shadow: 0 0 10px rgba(128, 0, 255, 0.3);
+    }
+
+    .module-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        background: linear-gradient(135deg, var(--neon-purple) 0%, var(--neon-cyan) 100%);
+        color: var(--dark-void);
+        box-shadow: 0 0 20px rgba(128, 0, 255, 0.4);
+    }
+
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+
+    /* === ACTIVITY FEED === */
+    .activity-feed {
+        background: var(--glass-dark) !important;
+        border: 1px solid rgba(0, 255, 128, 0.3) !important;
+        border-radius: 20px !important;
+        padding: 2.5rem !important;
+        position: relative !important;
+        overflow: hidden !important;
+        backdrop-filter: blur(25px) !important;
+        -webkit-backdrop-filter: blur(25px) !important;
+        box-shadow: var(--shadow-deep) !important;
+    }
+
+    .activity-feed::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--neon-green), var(--neon-cyan));
+    }
+
+    .feed-header {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .feed-title {
+        font-size: 1.5rem !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        margin: 0 !important;
+        text-shadow: 0 0 10px rgba(0, 255, 128, 0.3);
+    }
+
+    .feed-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        background: linear-gradient(135deg, var(--neon-green) 0%, var(--neon-cyan) 100%);
+        color: var(--dark-void);
+        box-shadow: 0 0 20px rgba(0, 255, 128, 0.4);
+    }
+
+    .activity-item {
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        border-radius: 12px !important;
+        padding: 1.5rem !important;
+        margin-bottom: 1rem !important;
+        transition: all 0.3s ease !important;
+        position: relative !important;
+        backdrop-filter: blur(10px) !important;
+    }
+
+    .activity-item:hover {
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(0, 255, 255, 0.4) !important;
+        transform: translateX(8px) !important;
+        box-shadow: 0 5px 20px rgba(0, 255, 255, 0.2) !important;
+    }
+
+    .activity-title {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+        margin-bottom: 0.75rem !important;
+        text-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+    }
+
+    .activity-description {
+        font-size: 0.95rem !important;
+        color: rgba(255, 255, 255, 0.7) !important;
+        margin-bottom: 1rem !important;
+        line-height: 1.5 !important;
+    }
+
+    .activity-meta {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        font-size: 0.85rem !important;
+        color: rgba(255, 255, 255, 0.5) !important;
+        flex-wrap: wrap;
+    }
+
+    .meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    /* === STATUS CHIPS === */
+    .status-chip {
+        background: rgba(0, 255, 255, 0.15) !important;
+        color: var(--neon-cyan) !important;
+        padding: 0.4rem 1rem !important;
+        border-radius: 20px !important;
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        text-transform: uppercase !important;
+        border: 1px solid rgba(0, 255, 255, 0.3) !important;
+        letter-spacing: 0.05em;
+        backdrop-filter: blur(10px);
+    }
+
+    .status-completed {
+        background: rgba(0, 255, 128, 0.15) !important;
+        color: var(--neon-green) !important;
+        border-color: rgba(0, 255, 128, 0.4) !important;
+    }
+
+    .status-in-progress {
+        background: rgba(255, 128, 0, 0.15) !important;
+        color: var(--neon-orange) !important;
+        border-color: rgba(255, 128, 0, 0.4) !important;
+    }
+
+    .status-pending {
+        background: rgba(255, 0, 128, 0.15) !important;
+        color: var(--neon-pink) !important;
+        border-color: rgba(255, 0, 128, 0.4) !important;
+    }
+
+    /* === NO DATA STATES === */
+    .no-data-state {
+        text-align: center;
+        padding: 3rem 2rem;
+        color: rgba(255, 255, 255, 0.5);
+    }
+
+    .no-data-icon {
+        font-size: 3.5rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.3;
+        color: var(--neon-cyan);
+        text-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    }
+
+    .no-data-text {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    /* === ANIMATIONS === */
+    .fade-in-up {
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .slide-in-left {
+        animation: slideInLeft 1s ease-out;
+    }
+
+    .pulse-glow {
+        animation: pulseGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes pulseGlow {
+        0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); }
+        50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8); }
+    }
+
+    /* === RESPONSIVE DESIGN === */
+    @media (max-width: 1024px) {
+        .analytics-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .dashboard-grid {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .dashboard-grid {
+            padding: 1rem;
+        }
+
+        .command-header {
+            padding: 2rem !important;
+        }
+
+        .header-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1.5rem;
+        }
+
+        .header-title {
+            font-size: 2.2rem !important;
+        }
+
+        .stats-matrix {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .analytics-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+
+        .stat-module,
+        .analytics-module,
+        .activity-feed {
+            padding: 1.5rem !important;
+        }
+
+        .stat-value {
+            font-size: 2.2rem !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-grid {
+            padding: 0.75rem;
+        }
+
+        .header-actions {
+            width: 100%;
+            flex-direction: column;
+        }
+
+        .cyber-btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .activity-meta {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cyber-command">
+    <div class="dashboard-grid">
+        <!-- Command Header -->
+        <div class="command-header fade-in-up">
+            <div class="header-content">
+                <div>
+                    <h1 class="header-title">🚀 PROJECT COMMAND CENTER</h1>
+                    <p class="header-subtitle">{{ project.name }} • Advanced Analytics Dashboard</p>
+                </div>
+                <div class="header-actions">
+                    <button onclick="exportReport()" class="cyber-btn primary">
+                        <i class="fas fa-download"></i>EXPORT DATA
+                    </button>
+                    <a href="{{ url_for('admin.project_details', project_id=project.id) }}" class="cyber-btn">
+                        <i class="fas fa-arrow-left"></i>RETURN TO BASE
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Matrix -->
+        <div class="stats-matrix slide-in-left">
+            <div class="stat-module">
+                <div class="stat-header">
+                    <div class="stat-icon users">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-label">Team Personnel</div>
+                </div>
+                <div class="stat-value">{{ total_employees | default(0) }}</div>
+                <div class="stat-description">Active team members deployed</div>
+            </div>
+
+            <div class="stat-module">
+                <div class="stat-header">
+                    <div class="stat-icon tasks">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="stat-label">Mission Objectives</div>
+                </div>
+                <div class="stat-value">{{ completed_milestones | default(0) }}/{{ total_milestones | default(0) }}</div>
+                <div class="stat-description">{{ "%.1f"|format(((completed_milestones | default(0))/(total_milestones | default(1))*100) if (total_milestones | default(0)) > 0 else 0) }}% mission completion</div>
+            </div>
+
+            <div class="stat-module">
+                <div class="stat-header">
+                    <div class="stat-icon files">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="stat-label">Data Archives</div>
+                </div>
+                <div class="stat-value">{{ total_documents | default(0) }}</div>
+                <div class="stat-description">Secure data files stored</div>
+            </div>
+
+            <div class="stat-module">
+                <div class="stat-header">
+                    <div class="stat-icon money">
+                        <i class="fas fa-credit-card"></i>
+                    </div>
+                    <div class="stat-label">Resource Credits</div>
+                </div>
+                <div class="stat-value">${{ "{:,.0f}".format(total_expenses | default(0)) }}</div>
+                <div class="stat-description">Total allocated resources</div>
+            </div>
+        </div>
+
+        <!-- Analytics Grid -->
+        <div class="analytics-grid fade-in-up">
+            <!-- Mission Progress -->
+            <div class="analytics-module">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-chart-pie"></i>
+                    </div>
+                    <h3 class="module-title">Mission Progress Analytics</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Equipment Status -->
+            {% if equipment_stats.total %}
+            <div class="analytics-module">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h3 class="module-title">Equipment Status Matrix</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="equipmentChart"></canvas>
+                </div>
+            </div>
+            {% else %}
+            <div class="analytics-module">
+                <div class="module-header">
+                    <div class="module-icon">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <h3 class="module-title">Equipment Status Matrix</h3>
+                </div>
+                <div class="no-data-state">
+                    <i class="fas fa-robot no-data-icon"></i>
+                    <p class="no-data-text">Equipment Systems Offline</p>
+                    <small>No equipment data available for monitoring</small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Activity Feed -->
+        <div class="activity-feed slide-in-left">
+            <div class="feed-header">
+                <div class="feed-icon">
+                    <i class="fas fa-satellite-dish"></i>
+                </div>
+                <h3 class="feed-title">Live Mission Activity Feed</h3>
+            </div>
+
+            {% if recent_activities %}
+                {% for milestone in recent_activities %}
+                <div class="activity-item">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap">
+                        <div class="flex-grow-1">
+                            <h4 class="activity-title">{{ milestone.title }}</h4>
+                            <p class="activity-description">{{ milestone.description or 'Mission details classified' }}</p>
+                            <div class="activity-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>{{ milestone.due_date.strftime('%Y-%m-%d') if milestone.due_date else 'No deadline set' }}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-user-astronaut"></i>
+                                    <span>{{ milestone.assigned_to or 'Unassigned operative' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2 mt-md-0">
+                            <span class="status-chip status-{{ milestone.status or 'pending' }}">
+                                {{ (milestone.status or 'pending').replace('_', ' ').upper() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="no-data-state">
+                    <i class="fas fa-satellite no-data-icon"></i>
+                    <p class="no-data-text">No Active Mission Signals</p>
+                    <small>Awaiting mission activity transmissions</small>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Cyber Progress Chart
+    const progressCtx = document.getElementById('progressChart');
+    if (progressCtx) {
+        const progressChart = new Chart(progressCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Mission Complete', 'Active Operations', 'Pending Tasks'],
+                datasets: [{
+                    data: [
+                        {{ milestone_completion_rate | default(0) }},
+                        {{ ((100 - (milestone_completion_rate | default(0))) * 0.4) | round(1) }},
+                        {{ ((100 - (milestone_completion_rate | default(0))) * 0.6) | round(1) }}
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 255, 128, 0.8)',
+                        'rgba(0, 255, 255, 0.8)',
+                        'rgba(255, 0, 128, 0.6)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 255, 128, 1)',
+                        'rgba(0, 255, 255, 1)',
+                        'rgba(255, 0, 128, 1)'
+                    ],
+                    borderWidth: 2,
+                    cutout: '75%',
+                    spacing: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 25,
+                            usePointStyle: true,
+                            font: {
+                                size: 11,
+                                weight: '600',
+                                family: 'Space Grotesk'
+                            },
+                            color: 'rgba(255, 255, 255, 0.8)'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(20, 21, 23, 0.95)',
+                        titleColor: '#00ffff',
+                        bodyColor: '#ffffff',
+                        borderColor: 'rgba(0, 255, 255, 0.4)',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed.toFixed(1) + '%';
+                            }
+                        }
+                    }
+                },
+                animation: {
+                    animateScale: true,
+                    animateRotate: true,
+                    duration: 2000,
+                    easing: 'easeOutQuart'
+                }
+            }
+        });
+    }
+
+    {% if equipment_stats.total %}
+    // Initialize Equipment Status Chart
+    const equipmentCtx = document.getElementById('equipmentChart');
+    if (equipmentCtx) {
+        const equipmentChart = new Chart(equipmentCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Operational', 'Maintenance', 'Offline'],
+                datasets: [{
+                    label: 'Units',
+                    data: [
+                        {{ equipment_stats.operational or 0 }},
+                        {{ equipment_stats.maintenance or 0 }},
+                        {{ (equipment_stats.total or 0) - (equipment_stats.operational or 0) - (equipment_stats.maintenance or 0) }}
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 255, 128, 0.8)',
+                        'rgba(255, 128, 0, 0.8)',
+                        'rgba(255, 0, 128, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 255, 128, 1)',
+                        'rgba(255, 128, 0, 1)',
+                        'rgba(255, 0, 128, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(20, 21, 23, 0.95)',
+                        titleColor: '#00ffff',
+                        bodyColor: '#ffffff',
+                        borderColor: 'rgba(0, 255, 255, 0.4)',
+                        borderWidth: 1
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            font: {
+                                family: 'Space Grotesk',
+                                weight: '500'
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 255, 255, 0.1)'
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            font: {
+                                family: 'Space Grotesk',
+                                weight: '600'
+                            }
+                        },
+                        grid: {
+                            display: false
+                        }
+                    }
+                },
+                animation: {
+                    duration: 2000,
+                    easing: 'easeOutCubic'
+                }
+            }
+        });
+    }
+    {% endif %}
+
+    // Add cyber scan animation to stats
+    const statModules = document.querySelectorAll('.stat-module');
+    statModules.forEach((module, index) => {
+        module.style.animationDelay = `${index * 0.1}s`;
+    });
+});
+
+// Enhanced Cyber Export Function
+function exportReport() {
+    try {
+        const reportData = {
+            project: '{{ project.name | e }}',
+            timestamp: new Date().toLocaleString(),
+            classification: 'CONFIDENTIAL',
+            stats: {
+                personnel: {{ total_employees | default(0) }},
+                objectives: '{{ completed_milestones | default(0) }}/{{ total_milestones | default(0) }}',
+                dataFiles: {{ total_documents | default(0) }},
+                credits: '{{ "${:,.2f}".format(total_expenses | default(0)) }}',
+                missionProgress: '{{ milestone_completion_rate | default(0) }}%'
+            }
+        };
+        
+        const reportText = `
+╔═══════════════════════════════════════════╗
+║        PROJECT COMMAND CENTER REPORT      ║
+║              CLASSIFIED DATA              ║
+╚═══════════════════════════════════════════╝
+
+MISSION: ${reportData.project}
+TIMESTAMP: ${reportData.timestamp}
+CLASSIFICATION: ${reportData.classification}
+
+════════════════════════════════════════════
+            OPERATIONAL STATISTICS
+════════════════════════════════════════════
+• Personnel Count: ${reportData.stats.personnel}
+• Mission Objectives: ${reportData.stats.objectives}
+• Data Archives: ${reportData.stats.dataFiles}
+• Resource Credits: ${reportData.stats.credits}
+• Mission Progress: ${reportData.stats.missionProgress}
+
+{% if equipment_stats.total %}
+════════════════════════════════════════════
+            EQUIPMENT MATRIX
+════════════════════════════════════════════
+• Total Units: {{ equipment_stats.total }}
+• Operational: {{ equipment_stats.operational or 0 }}
+• Maintenance: {{ equipment_stats.maintenance or 0 }}
+• Offline: {{ (equipment_stats.total or 0) - (equipment_stats.operational or 0) - (equipment_stats.maintenance or 0) }}
+{% endif %}
+
+════════════════════════════════════════════
+            MISSION ACTIVITY LOG
+════════════════════════════════════════════
+{% if recent_activities %}
+{% for milestone in recent_activities %}
+[${String(loop.index).padStart(2, '0')}] ${milestone.title | e}
+   Status: ${(milestone.status or 'PENDING').toUpperCase()}
+   ${milestone.due_date ? 'Deadline: ' + milestone.due_date.strftime('%Y-%m-%d') : 'No deadline'}
+   Agent: ${milestone.assigned_to || 'UNASSIGNED'}
+
+{% endfor %}
+{% else %}
+No mission activity recorded.
+{% endif %}
+
+════════════════════════════════════════════
+        END OF TRANSMISSION
+        Command Center v2.1
+════════════════════════════════════════════
+`;
+        
+        const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        
+        const projectCode = '{{ project.name | e }}'.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase();
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
+        
+        a.href = url;
+        a.download = `CMD_${projectCode}_REPORT_${timestamp}.txt`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Show cyber notification
+        showCyberNotification('REPORT EXPORTED SUCCESSFULLY', 'success');
+        
+    } catch (error) {
+        console.error('Export failed:', error);
+        showCyberNotification('EXPORT FAILED - SYSTEM ERROR', 'error');
+    }
+}
+
+// Cyber-themed notification system
+function showCyberNotification(message, type) {
+    const notification = document.createElement('div');
+    const isSuccess = type === 'success';
+    
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${isSuccess ? 
+            'linear-gradient(135deg, rgba(0, 255, 128, 0.9), rgba(0, 255, 255, 0.9))' : 
+            'linear-gradient(135deg, rgba(255, 0, 128, 0.9), rgba(255, 128, 0, 0.9))'};
+        color: var(--dark-void);
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        font-family: 'Space Grotesk', monospace;
+        font-weight: 700;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        z-index: 10000;
+        box-shadow: 0 0 30px ${isSuccess ? 'rgba(0, 255, 128, 0.6)' : 'rgba(255, 0, 128, 0.6)'};
+        border: 2px solid ${isSuccess ? 'rgba(0, 255, 128, 0.8)' : 'rgba(255, 0, 128, 0.8)'};
+        animation: cyberSlideIn 0.5s ease-out;
+        backdrop-filter: blur(10px);
+        max-width: 300px;
+        word-wrap: break-word;
+    `;
+    notification.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <i class="fas ${isSuccess ? 'fa-check-circle' : 'fa-exclamation-triangle'}"></i>
+            <span>${message}</span>
+        </div>
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'cyberSlideOut 0.5s ease-in';
+        setTimeout(() => {
+            if (notification.parentNode) {
+                document.body.removeChild(notification);
+            }
+        }, 500);
+    }, 4000);
+}
+
+// Add cyber animations to document
+const cyberStyle = document.createElement('style');
+cyberStyle.textContent = `
+    @keyframes cyberSlideIn {
+        from { 
+            transform: translateX(100px) scale(0.8); 
+            opacity: 0; 
+        }
+        to { 
+            transform: translateX(0) scale(1); 
+            opacity: 1; 
+        }
+    }
+    @keyframes cyberSlideOut {
+        from { 
+            transform: translateX(0) scale(1); 
+            opacity: 1; 
+        }
+        to { 
+            transform: translateX(100px) scale(0.8); 
+            opacity: 0; 
+        }
+    }
+`;
+document.head.appendChild(cyberStyle);
+
+// Add interactive hover effects
+document.addEventListener('DOMContentLoaded', function() {
+    const interactiveElements = document.querySelectorAll('.stat-module, .analytics-module, .activity-item');
+    
+    interactiveElements.forEach(element => {
+        element.addEventListener('mouseenter', function() {
+            this.style.transform = this.style.transform + ' scale(1.02)';
+        });
+        
+        element.addEventListener('mouseleave', function() {
+            this.style.transform = this.style.transform.replace(' scale(1.02)', '');
+        });
+    });
+});
+</script>
+{% endblock %}

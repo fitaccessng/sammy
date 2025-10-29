@@ -10,7 +10,7 @@ from extensions import db
 from models import (Role, ReportingLine, ApprovalHierarchy, Permission, Payroll, Employee, 
                    Project, Asset, Stock, PurchaseOrder, PurchaseOrderLineItem, Supplier, 
                    Incident, Alert, Schedule, Milestone, User, Budget, Expense, Task, Equipment, 
-                   Document, StaffAssignment, BOQItem, ProjectActivity, ProjectDocument)
+                   Document, StaffAssignment, EmployeeAssignment, BOQItem, ProjectActivity, ProjectDocument, ProcurementRequest)
 from utils.decorators import role_required
 from utils.constants import Roles
 from utils.email import send_verification_email
@@ -213,7 +213,8 @@ def assign_role():
         employee = Employee.query.get(employee_id)
         if not employee:
             current_app.logger.error(f"Employee not found with ID: {employee_id}")
-            return jsonify({'status': 'error', 'message': 'Employee not found'})
+            flash('Employee not found', 'error')
+            return redirect(url_for('admin.roles'))
         
         current_app.logger.info(f"Found employee: {employee.name}")
         
@@ -246,7 +247,8 @@ def assign_role():
             
             if not selected_role:
                 current_app.logger.error(f"Invalid role ID: {role_id}")
-                return jsonify({'status': 'error', 'message': 'Invalid role selected'})
+                flash('Invalid role selected', 'error')
+                return redirect(url_for('admin.roles'))
         
         current_app.logger.info(f"Selected role: {selected_role}")
         
@@ -271,14 +273,8 @@ def assign_role():
         current_app.logger.info(f"Role assignment: {employee.name} (ID: {employee.id}) - {old_role_name} → {new_role_name}")
         current_app.logger.info("=== ASSIGN ROLE DEBUG END ===")
         
-        return jsonify({
-            'status': 'success',
-            'message': message,
-            'employee_id': employee.id,
-            'old_role': old_role,
-            'new_role': employee.role,
-            'new_role_name': new_role_name
-        })
+        flash(message, 'success')
+        return redirect(url_for('admin.roles'))
     
     except Exception as e:
         db.session.rollback()
@@ -286,7 +282,8 @@ def assign_role():
         current_app.logger.error(f"Exception type: {type(e)}")
         import traceback
         current_app.logger.error(f"Traceback: {traceback.format_exc()}")
-        return jsonify({'status': 'error', 'message': f'Error assigning role: {str(e)}'})
+        flash(f'Error assigning role: {str(e)}', 'error')
+        return redirect(url_for('admin.roles'))
 
 @admin_bp.route('/assign-employee-role', methods=['POST'])
 @role_required([Roles.SUPER_HQ])  
@@ -304,7 +301,8 @@ def remove_employee_role():
         # Get the employee
         employee = Employee.query.get(employee_id)
         if not employee:
-            return jsonify({'status': 'error', 'message': 'Employee not found'})
+            flash('Employee not found', 'error')
+            return redirect(url_for('admin.roles'))
         
         # Remove employee role
         old_role = employee.role
@@ -332,16 +330,14 @@ Construction Management Team"""
         except Exception as email_error:
             current_app.logger.warning(f'Failed to send role removal email to {employee.email}: {str(email_error)}')
         
-        return jsonify({
-            'status': 'success', 
-            'message': f'Role removed successfully for {employee.name}',
-            'employee_id': employee_id
-        })
+        flash(f'Role removed successfully for {employee.name}', 'success')
+        return redirect(url_for('admin.roles'))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f'Error removing role: {str(e)}')
-        return jsonify({'status': 'error', 'message': f'Error removing role: {str(e)}'})
+        flash(f'Error removing role: {str(e)}', 'error')
+        return redirect(url_for('admin.roles'))
 
 # Reporting Lines Management Views
 @admin_bp.route('/reporting-lines-view')
@@ -619,13 +615,19 @@ def oversight_reports_view():
 @admin_bp.route('/roles', methods=['POST', 'GET'])
 def manage_roles():
     if request.method == 'POST':
-        data = request.get_json()
-        role = Role(name=data.get('name'))
-        db.session.add(role)
-        db.session.commit()
-        return jsonify({'status': 'success', 'id': role.id})
-    roles = Role.query.all()
-    return jsonify([{'id': r.id, 'name': r.name} for r in roles])
+        data = request.get_json() if request.is_json else request.form
+        role_name = data.get('name')
+        if role_name:
+            role = Role(name=role_name)
+            db.session.add(role)
+            db.session.commit()
+            flash(f'Role "{role_name}" created successfully', 'success')
+        else:
+            flash('Role name is required', 'error')
+        return redirect(url_for('admin.roles'))
+    
+    # For GET requests, redirect to the roles view page
+    return redirect(url_for('admin.roles_view'))
 
 # POST/GET /admin/reporting-lines
 @admin_bp.route('/reporting-lines', methods=['POST', 'GET'])
@@ -638,15 +640,18 @@ def manage_reporting_lines():
             
             # Validation
             if not manager_id or not staff_id:
-                return jsonify({'status': 'error', 'message': 'Both manager and staff must be selected'}), 400
+                flash('Both manager and staff must be selected', 'error')
+                return redirect(url_for('admin.reporting_lines_view'))
                 
             if manager_id == staff_id:
-                return jsonify({'status': 'error', 'message': 'An employee cannot report to themselves'}), 400
+                flash('An employee cannot report to themselves', 'error')
+                return redirect(url_for('admin.reporting_lines_view'))
                 
             # Check if reporting line already exists
             existing = ReportingLine.query.filter_by(manager_id=manager_id, staff_id=staff_id).first()
             if existing:
-                return jsonify({'status': 'error', 'message': 'This reporting relationship already exists'}), 400
+                flash('This reporting relationship already exists', 'error')
+                return redirect(url_for('admin.reporting_lines_view'))
             
             rl = ReportingLine(manager_id=manager_id, staff_id=staff_id)
             db.session.add(rl)
@@ -667,15 +672,17 @@ def manage_reporting_lines():
                 send_email(staff.email, subject, body)
                 
             current_app.logger.info(f"Reporting line created: {staff.name if staff else staff_id} reports to {manager.name if manager else manager_id}")
-            return jsonify({'status': 'success', 'id': rl.id, 'message': 'Reporting line created successfully'})
+            flash('Reporting line created successfully', 'success')
+            return redirect(url_for('admin.reporting_lines_view'))
             
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(f"Error creating reporting line: {str(e)}")
-            return jsonify({'status': 'error', 'message': f'Error creating reporting line: {str(e)}'}), 500
+            flash(f'Error creating reporting line: {str(e)}', 'error')
+            return redirect(url_for('admin.reporting_lines_view'))
             
-    lines = ReportingLine.query.all()
-    return jsonify([{'id': l.id, 'manager_id': l.manager_id, 'staff_id': l.staff_id} for l in lines])
+    # For GET requests, redirect to the reporting lines view page
+    return redirect(url_for('admin.reporting_lines_view'))
 
 # DELETE /admin/reporting-lines/<id>
 @admin_bp.route('/reporting-lines/<int:line_id>', methods=['DELETE'])
@@ -693,18 +700,14 @@ def delete_reporting_line(line_id):
         
         current_app.logger.info(f"Reporting line deleted: {staff.name if staff else reporting_line.staff_id} no longer reports to {manager.name if manager else reporting_line.manager_id}")
         
-        return jsonify({
-            'status': 'success', 
-            'message': 'Reporting line removed successfully'
-        })
+        flash('Reporting line removed successfully', 'success')
+        return redirect(url_for('admin.manage_reporting_lines'))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Error deleting reporting line {line_id}: {str(e)}")
-        return jsonify({
-            'status': 'error', 
-            'message': f'Error removing reporting line: {str(e)}'
-        }), 500
+        flash(f'Error removing reporting line: {str(e)}', 'error')
+        return redirect(url_for('admin.manage_reporting_lines'))
 
 # POST/GET /admin/approval-hierarchy
 @admin_bp.route('/approval-hierarchy', methods=['POST', 'GET'])
@@ -1094,17 +1097,13 @@ def delete_milestone(milestone_id):
         db.session.delete(milestone)
         db.session.commit()
         
-        return jsonify({
-            'success': True, 
-            'message': f'Milestone "{title}" deleted successfully!'
-        })
+        flash(f'Milestone "{title}" deleted successfully!', 'success')
+        return redirect(url_for('admin.milestones', project_id=project_id))
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False, 
-            'message': f'Error deleting milestone: {str(e)}'
-        }), 500
+        flash(f'Error deleting milestone: {str(e)}', 'error')
+        return redirect(url_for('admin.projects'))
 
 # ==================== ASSET AND INVENTORY MANAGEMENT ====================
 
@@ -1244,17 +1243,13 @@ def retire_asset(asset_id):
         
         db.session.commit()
         
-        return jsonify({
-            'success': True,
-            'message': f'Asset "{asset_name}" retired successfully!'
-        })
+        flash(f'Asset "{asset_name}" retired successfully!', 'success')
+        return redirect(url_for('admin.assets'))
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        flash(f'Error retiring asset: {str(e)}', 'error')
+        return redirect(url_for('admin.assets'))
 
 @admin_bp.route('/delete-asset/<int:asset_id>', methods=['POST'])
 @role_required([Roles.SUPER_HQ])
@@ -1391,7 +1386,9 @@ def adjust_stock_quantity(stock_id):
     """Adjust stock quantity"""
     try:
         stock_item = Stock.query.get_or_404(stock_id)
-        data = request.get_json()
+        
+        # Try JSON first, then form data
+        data = request.get_json() or request.form
         
         adjustment_type = data.get('adjustment_type')
         quantity = int(data.get('quantity', 0))
@@ -1413,18 +1410,13 @@ def adjust_stock_quantity(stock_id):
         if reason:
             flash_message += f' (Reason: {reason})'
         
-        return jsonify({
-            'success': True,
-            'message': flash_message,
-            'new_quantity': stock_item.quantity
-        })
+        flash(flash_message, 'success')
+        return redirect(url_for('admin.stock'))
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        flash(f'Error adjusting stock: {str(e)}', 'error')
+        return redirect(url_for('admin.stock'))
 
 @admin_bp.route('/delete-stock/<int:stock_id>', methods=['POST'])
 @role_required([Roles.SUPER_HQ])
@@ -2443,10 +2435,8 @@ def approve_order(order_id):
         purchase_order = PurchaseOrder.query.get_or_404(order_id)
         
         if purchase_order.status not in ['Draft', 'Pending']:
-            return jsonify({
-                'success': False,
-                'message': 'Order cannot be approved in current status'
-            }), 400
+            flash('Order cannot be approved in current status', 'error')
+            return redirect(url_for('admin.orders'))
         
         purchase_order.status = 'Approved'
         purchase_order.approved_by = session.get('user_id')
@@ -2467,17 +2457,12 @@ def approve_order(order_id):
                     send_order_notification(employee.email, purchase_order.order_number, 'Approved')
         
         flash(f'Purchase order {purchase_order.order_number} approved successfully!', 'success')
-        return jsonify({
-            'success': True,
-            'message': 'Purchase order approved successfully'
-        })
+        return redirect(url_for('admin.orders'))
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        flash(f'Error approving purchase order: {str(e)}', 'error')
+        return redirect(url_for('admin.orders'))
 
 @admin_bp.route('/order/<int:order_id>/reject', methods=['POST'])
 @role_required([Roles.SUPER_HQ])
@@ -2485,14 +2470,13 @@ def reject_order(order_id):
     """Reject purchase order"""
     try:
         purchase_order = PurchaseOrder.query.get_or_404(order_id)
-        data = request.get_json()
+        # Try JSON first, then form data
+        data = request.get_json() or request.form
         rejection_reason = data.get('reason', 'No reason provided')
         
         if purchase_order.status not in ['Draft', 'Pending']:
-            return jsonify({
-                'success': False,
-                'message': 'Order cannot be rejected in current status'
-            }), 400
+            flash('Order cannot be rejected in current status', 'error')
+            return redirect(url_for('admin.orders'))
         
         purchase_order.status = 'Rejected'
         purchase_order.notes = f"{purchase_order.notes or ''}\n\nRejection reason: {rejection_reason}"
@@ -2512,17 +2496,12 @@ def reject_order(order_id):
                     send_order_notification(employee.email, purchase_order.order_number, 'Rejected', rejection_reason)
         
         flash(f'Purchase order {purchase_order.order_number} rejected.', 'warning')
-        return jsonify({
-            'success': True,
-            'message': 'Purchase order rejected'
-        })
+        return redirect(url_for('admin.orders'))
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        flash(f'Error rejecting purchase order: {str(e)}', 'error')
+        return redirect(url_for('admin.orders'))
 
 @admin_bp.route('/order/<int:order_id>/reject-form', methods=['GET', 'POST'])
 @role_required([Roles.SUPER_HQ])
@@ -2589,7 +2568,7 @@ def delete_order_form(order_id):
         flash(f'Error deleting order: {str(e)}', 'error')
         return redirect(url_for('admin.orders'))
 
-@admin_bp.route('/order/<int:order_id>/delete', methods=['DELETE'])
+@admin_bp.route('/order/<int:order_id>/delete', methods=['POST', 'DELETE'])
 @role_required([Roles.SUPER_HQ])
 def delete_order(order_id):
     """Delete purchase order"""
@@ -2597,27 +2576,20 @@ def delete_order(order_id):
         purchase_order = PurchaseOrder.query.get_or_404(order_id)
         
         if purchase_order.status in ['Approved', 'Ordered', 'Delivered']:
-            return jsonify({
-                'success': False,
-                'message': 'Cannot delete order in current status'
-            }), 400
+            flash('Cannot delete order in current status', 'error')
+            return redirect(url_for('admin.orders'))
         
         order_number = purchase_order.order_number
         db.session.delete(purchase_order)
         db.session.commit()
         
         flash(f'Purchase order {order_number} deleted successfully.', 'success')
-        return jsonify({
-            'success': True,
-            'message': 'Purchase order deleted successfully'
-        })
+        return redirect(url_for('admin.orders'))
         
     except Exception as e:
         db.session.rollback()
-        return jsonify({
-            'success': False,
-            'message': str(e)
-        }), 500
+        flash(f'Error deleting purchase order: {str(e)}', 'error')
+        return redirect(url_for('admin.orders'))
 
 # Supplier Management Routes
 
@@ -2849,7 +2821,8 @@ def assign_staff(project_id):
         staff_id = request.form.get('staff_id')
         
         if not staff_role or not staff_id:
-            return jsonify({'status': 'error', 'message': 'Role and staff member are required'})
+            flash('Role and staff member are required', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Validate project exists
         project = Project.query.get_or_404(project_id)
@@ -2857,7 +2830,8 @@ def assign_staff(project_id):
         # Validate staff member exists
         staff_member = User.query.get(staff_id)
         if not staff_member:
-            return jsonify({'status': 'error', 'message': 'Staff member not found'})
+            flash('Staff member not found', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Check if staff is already assigned to this project
         existing_assignment = StaffAssignment.query.filter_by(
@@ -2866,7 +2840,8 @@ def assign_staff(project_id):
         ).first()
         
         if existing_assignment:
-            return jsonify({'status': 'error', 'message': f'{staff_member.name} is already assigned to this project'})
+            flash(f'{staff_member.name} is already assigned to this project', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Create new assignment
         assignment = StaffAssignment(
@@ -2881,15 +2856,14 @@ def assign_staff(project_id):
         
         current_app.logger.info(f"Staff {staff_member.name} (ID: {staff_id}) assigned as {staff_role} to project {project_id}")
         
-        return jsonify({
-            'status': 'success', 
-            'message': f'{staff_member.name} assigned as {staff_role} to {project.name}'
-        })
+        flash(f'{staff_member.name} assigned as {staff_role} to {project.name}', 'success')
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Assign staff error: {str(e)}", exc_info=True)
-        return jsonify({'status': 'error', 'message': f'Error assigning staff: {str(e)}'})
+        flash(f'Error assigning staff: {str(e)}', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
 # Remove staff from project
@@ -2901,7 +2875,8 @@ def remove_staff(project_id):
         staff_id = request.form.get('staff_id')
         
         if not staff_id:
-            return jsonify({'status': 'error', 'message': 'Staff ID is required'})
+            flash('Staff ID is required', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         assignment = StaffAssignment.query.filter_by(
             project_id=project_id, 
@@ -2909,7 +2884,8 @@ def remove_staff(project_id):
         ).first()
         
         if not assignment:
-            return jsonify({'status': 'error', 'message': 'Staff assignment not found'})
+            flash('Staff assignment not found', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         staff_member = User.query.get(staff_id)
         staff_name = staff_member.name if staff_member else f'Staff {staff_id}'
@@ -2919,15 +2895,14 @@ def remove_staff(project_id):
         
         current_app.logger.info(f"Staff {staff_name} (ID: {staff_id}) removed from project {project_id}")
         
-        return jsonify({
-            'status': 'success', 
-            'message': f'{staff_name} removed from project'
-        })
+        flash(f'{staff_name} removed from project', 'success')
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Remove staff error: {str(e)}", exc_info=True)
-        return jsonify({'status': 'error', 'message': f'Error removing staff: {str(e)}'})
+        flash(f'Error removing staff: {str(e)}', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
 # Delete project endpoint
@@ -2958,15 +2933,14 @@ def delete_project(project_id):
         
         current_app.logger.info(f"Project {project_name} (ID: {project_id}) deleted by {current_user.name}")
         
-        return jsonify({
-            'status': 'success', 
-            'message': f'Project "{project_name}" deleted successfully'
-        })
+        flash(f'Project "{project_name}" deleted successfully', 'success')
+        return redirect(url_for('admin.projects'))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Delete project error: {str(e)}", exc_info=True)
-        return jsonify({'status': 'error', 'message': f'Error deleting project: {str(e)}'})
+        flash(f'Error deleting project: {str(e)}', 'error')
+        return redirect(url_for('admin.projects'))
 
 
 # Update project status endpoint
@@ -2978,7 +2952,8 @@ def update_project_status(project_id):
         new_status = request.form.get('status')
         
         if not new_status:
-            return jsonify({'status': 'error', 'message': 'Status is required'})
+            flash('Status is required', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         project = Project.query.get_or_404(project_id)
         old_status = project.status
@@ -2995,21 +2970,14 @@ def update_project_status(project_id):
         
         current_app.logger.info(f"Project {project_id} status updated from {old_status} to {new_status}")
         
-        return jsonify({
-            'status': 'success',
-            'message': f'Project status updated to {new_status}',
-            'project': {
-                'id': project.id,
-                'name': project.name,
-                'status': project.status,
-                'progress': project.progress
-            }
-        })
+        flash(f'Project status updated to {new_status}', 'success')
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Update project status error: {str(e)}", exc_info=True)
-        return jsonify({'status': 'error', 'message': f'Error updating status: {str(e)}'})
+        flash(f'Error updating status: {str(e)}', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
 # Update project progress endpoint
@@ -3021,7 +2989,8 @@ def update_project_progress(project_id):
         progress = float(request.form.get('progress', 0))
         
         if progress < 0 or progress > 100:
-            return jsonify({'status': 'error', 'message': 'Progress must be between 0 and 100'})
+            flash('Progress must be between 0 and 100', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         project = Project.query.get_or_404(project_id)
         old_progress = project.progress
@@ -3038,21 +3007,14 @@ def update_project_progress(project_id):
         
         current_app.logger.info(f"Project {project_id} progress updated from {old_progress}% to {progress}%")
         
-        return jsonify({
-            'status': 'success',
-            'message': f'Project progress updated to {progress}%',
-            'project': {
-                'id': project.id,
-                'name': project.name,
-                'status': project.status,
-                'progress': project.progress
-            }
-        })
+        flash(f'Project progress updated to {progress}%', 'success')
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         db.session.rollback()
         current_app.logger.error(f"Update project progress error: {str(e)}", exc_info=True)
-        return jsonify({'status': 'error', 'message': f'Error updating progress: {str(e)}'})
+        flash(f'Error updating progress: {str(e)}', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
 # Get project progress for admin dashboard
@@ -3087,11 +3049,11 @@ def get_project_progress(project_id):
         return jsonify({'error': 'Error fetching project progress'}), 500
 
 
-@admin_bp.route('/<int:project_id>')
+@admin_bp.route('/projects/<int:project_id>')
 @login_required
-@role_required([Roles.SUPER_HQ])
 def project_details(project_id):
     try:
+        current_app.logger.info(f"User {current_user.id} accessing project {project_id}")
         project = Project.query.get_or_404(project_id)
         
         # Check if user has access to this project
@@ -3103,8 +3065,11 @@ def project_details(project_id):
         is_manager = project.project_manager == current_user.name
         is_super_hq = current_user.has_role(Roles.SUPER_HQ)
         
+        current_app.logger.info(f"Access check - assignment: {bool(user_assignment)}, manager: {is_manager}, super_hq: {is_super_hq}")
+        
         # Allow access if user is assigned, is the manager, or is SUPER_HQ
         if not (user_assignment or is_manager or is_super_hq):
+            current_app.logger.warning(f"Access denied for user {current_user.id} to project {project_id}")
             flash("You don't have access to this project.", "error")
             return redirect(url_for('admin.projects'))
         
@@ -3113,11 +3078,76 @@ def project_details(project_id):
             User, StaffAssignment.staff_id == User.id
         ).filter(StaffAssignment.project_id == project_id).all()
         
-        # Get available staff for assignment (exclude already assigned staff)
-        assigned_staff_ids = [assignment.staff_id for assignment, _ in staff_assignments]
-        available_staff = User.query.filter(
-            User.id.notin_(assigned_staff_ids) if assigned_staff_ids else True
-        ).all()
+        # Get employee assignments with employee details
+        employee_assignments = db.session.query(EmployeeAssignment, Employee.name).join(
+            Employee, EmployeeAssignment.employee_id == Employee.id
+        ).filter(EmployeeAssignment.project_id == project_id).all()
+        
+        # Combine both types of assignments for display
+        all_assignments = []
+        
+        # Add staff assignments
+        for assignment, staff_name in staff_assignments:
+            all_assignments.append({
+                'assignment': assignment,
+                'staff_name': staff_name,
+                'type': 'user',
+                'role': assignment.role,
+                'assigned_at': assignment.assigned_at,
+                'id': assignment.staff_id
+            })
+        
+        # Add employee assignments
+        for assignment, employee_name in employee_assignments:
+            all_assignments.append({
+                'assignment': assignment,
+                'staff_name': employee_name,
+                'type': 'employee',
+                'role': assignment.role,
+                'assigned_at': assignment.assigned_at,
+                'id': f"emp_{assignment.employee_id}"
+            })
+        
+        # Get ALL available staff and employees for assignment
+        # Get all Users (Staff)
+        all_users = User.query.all()
+        
+        # Get all Employees
+        all_employees = Employee.query.all()
+        
+        # Create a combined list with type identification
+        available_staff = []
+        
+        # Add all users (existing logic - show as available even if assigned)
+        for user in all_users:
+            is_assigned = any(assignment['id'] == user.id for assignment in all_assignments)
+            
+            available_staff.append({
+                'id': user.id,
+                'name': user.name,
+                'email': user.email,
+                'role': user.role,
+                'type': 'user',
+                'display_info': f"{user.role} | {user.email}",
+                'is_assigned': is_assigned
+            })
+        
+        # Add all employees with unique negative IDs to avoid conflicts
+        for employee in all_employees:
+            employee_id = f"emp_{employee.id}"
+            is_assigned = any(assignment['id'] == employee_id for assignment in all_assignments)
+            
+            available_staff.append({
+                'id': employee_id,  # Prefix to distinguish from users
+                'name': employee.name,
+                'email': employee.email or 'No email',
+                'role': employee.role or employee.position or 'Employee',
+                'type': 'employee',
+                'display_info': f"{employee.department or 'No Dept'} | {employee.role or employee.position or 'Employee'}",
+                'is_assigned': is_assigned,
+                'staff_code': employee.staff_code,
+                'department': employee.department
+            })
         
         # Get milestones with status counts
         milestones = Milestone.query.filter_by(project_id=project_id).all()
@@ -3167,11 +3197,11 @@ def project_details(project_id):
             else:
                 days_remaining = (project.end_date - today).days
         
-        # Team statistics
-        team_size = len(staff_assignments)
+        # Team statistics (combine both user and employee assignments)
+        team_size = len(all_assignments)
         team_roles = {}
-        for assignment, staff_name in staff_assignments:
-            role = assignment.role if hasattr(assignment, 'role') else 'Unknown'
+        for assignment_data in all_assignments:
+            role = assignment_data['role'] or 'Unknown'
             if role in team_roles:
                 team_roles[role] += 1
             else:
@@ -3198,13 +3228,30 @@ def project_details(project_id):
                                 key=lambda x: x.updated_at, reverse=True)[:3]
         
         # BOQ calculations
-        boq_items = BOQItem.query.filter_by(project_id=project_id).all()
-        total_boq_cost = sum(item.total_cost for item in boq_items if hasattr(item, 'total_cost'))
+        boq_items = []
+        total_boq_cost = 0
+        try:
+            boq_items = BOQItem.query.filter_by(project_id=project_id).all()
+            total_boq_cost = sum(item.total_cost for item in boq_items if hasattr(item, 'total_cost') and item.total_cost)
+        except Exception as boq_error:
+            current_app.logger.warning(f"BOQ query error: {str(boq_error)}")
+
+        # Get documents and activity log safely
+        documents = []
+        activity_log = []
+        try:
+            documents = ProjectDocument.query.filter_by(project_id=project_id).all()
+        except Exception as doc_error:
+            current_app.logger.warning(f"Document query error: {str(doc_error)}")
+        
+        try:
+            activity_log = ProjectActivity.query.filter_by(project_id=project_id).order_by(ProjectActivity.created_at.desc()).limit(10).all()
+        except Exception as activity_error:
+            current_app.logger.warning(f"Activity query error: {str(activity_error)}")
 
         return render_template('admin/view_project.html',
                              project=project,
-                             staff_assignments=[{'assignment': assignment, 'staff_name': staff_name}
-                                              for assignment, staff_name in staff_assignments],
+                             staff_assignments=all_assignments,
                              available_staff=available_staff,
                              milestones=milestones,
                              schedules=schedules,
@@ -3236,12 +3283,14 @@ def project_details(project_id):
                              # Additional data for enhanced template
                              boq_items=boq_items,
                              total_boq_cost=total_boq_cost,
-                             documents=ProjectDocument.query.filter_by(project_id=project_id).all(),
-                             activity_log=ProjectActivity.query.filter_by(project_id=project_id).order_by(ProjectActivity.created_at.desc()).limit(10).all())
+                             documents=documents,
+                             activity_log=activity_log)
     except Exception as e:
         current_app.logger.error(f"Admin project details error: {str(e)}", exc_info=True)
-        flash("Error loading project details", "error")
-        return render_template('error.html'), 500
+        current_app.logger.error(f"Error type: {type(e).__name__}")
+        current_app.logger.error(f"Error args: {e.args}")
+        flash(f"Error loading project details: {str(e)}", "error")
+        return redirect(url_for('admin.projects'))
 
 
 # ===== ENHANCED PROJECT MANAGEMENT ROUTES =====
@@ -3258,53 +3307,105 @@ def assign_staff_new(project_id):
         role = request.form.get('role')
         
         if not staff_id or not role:
-            return jsonify({'success': False, 'message': 'Staff ID and role are required'}), 400
+            flash('Staff ID and role are required', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
-        # Check if staff is already assigned
-        existing_assignment = StaffAssignment.query.filter_by(
-            project_id=project_id, 
-            staff_id=staff_id
-        ).first()
-        
-        if existing_assignment:
-            return jsonify({'success': False, 'message': 'Staff member is already assigned to this project'}), 400
-        
-        # Get staff member details
-        staff_member = User.query.get(staff_id)
-        if not staff_member:
-            return jsonify({'success': False, 'message': 'Staff member not found'}), 404
-        
-        # Create new assignment
-        assignment = StaffAssignment(
-            project_id=project_id,
-            staff_id=staff_id,
-            role=role,
-            assigned_at=datetime.utcnow()
-        )
-        
-        db.session.add(assignment)
-        
-        # Log activity
-        activity = ProjectActivity(
-            project_id=project_id,
-            user_id=current_user.id,
-            action_type='staff_assigned',
-            description=f'{staff_member.name} was assigned as {role}',
-            user_name=current_user.name
-        )
-        db.session.add(activity)
-        
-        db.session.commit()
-        
-        return jsonify({
-            'success': True, 
-            'message': f'{staff_member.name} has been assigned as {role}'
-        })
+        # Handle employee IDs (prefixed with 'emp_')
+        if str(staff_id).startswith('emp_'):
+            # This is an employee from HR database
+            employee_id = str(staff_id).replace('emp_', '')
+            employee = Employee.query.get(employee_id)
+            
+            if not employee:
+                flash('Employee not found', 'error')
+                return redirect(url_for('admin.project_details', project_id=project_id))
+            
+            # Check if employee is already assigned
+            existing_assignment = EmployeeAssignment.query.filter_by(
+                project_id=project_id, 
+                employee_id=employee_id
+            ).first()
+            
+            if existing_assignment:
+                flash('Employee is already assigned to this project', 'warning')
+                return redirect(url_for('admin.project_details', project_id=project_id))
+            
+            # Create new employee assignment
+            assignment = EmployeeAssignment(
+                project_id=project_id,
+                employee_id=employee_id,
+                role=role,
+                assigned_at=datetime.utcnow(),
+                assigned_by=current_user.id,
+                status='Active'
+            )
+            
+            db.session.add(assignment)
+            
+            # Log activity
+            activity = ProjectActivity(
+                project_id=project_id,
+                user_id=current_user.id,
+                action_type='employee_assigned',
+                description=f'{employee.name} was assigned as {role}',
+                user_name=current_user.name
+            )
+            db.session.add(activity)
+            
+            db.session.commit()
+            
+            flash(f'{employee.name} has been assigned as {role}', 'success')
+            return redirect(url_for('admin.project_details', project_id=project_id))
+            
+        else:
+            # This is a regular user
+            # Check if staff is already assigned
+            existing_assignment = StaffAssignment.query.filter_by(
+                project_id=project_id, 
+                staff_id=staff_id
+            ).first()
+            
+            if existing_assignment:
+                flash('Staff member is already assigned to this project', 'warning')
+                return redirect(url_for('admin.project_details', project_id=project_id))
+            
+            # Get staff member details
+            staff_member = User.query.get(staff_id)
+            if not staff_member:
+                flash('Staff member not found', 'error')
+                return redirect(url_for('admin.project_details', project_id=project_id))
+            
+            # Create new assignment for user
+            assignment = StaffAssignment(
+                project_id=project_id,
+                staff_id=staff_id,
+                role=role,
+                assigned_at=datetime.utcnow()
+            )
+            
+            db.session.add(assignment)
+            
+            # Log activity
+            activity = ProjectActivity(
+                project_id=project_id,
+                user_id=current_user.id,
+                action_type='staff_assigned',
+                description=f'{staff_member.name} was assigned as {role}',
+                user_name=current_user.name
+            )
+            db.session.add(activity)
+            
+            db.session.commit()
+            
+            flash(f'{staff_member.name} has been assigned as {role}', 'success')
+            
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         current_app.logger.error(f"Error assigning staff: {str(e)}", exc_info=True)
         db.session.rollback()
-        return jsonify({'success': False, 'message': 'An error occurred while assigning staff'}), 500
+        flash('An error occurred while assigning staff', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
 @admin_bp.route('/projects/<int:project_id>/remove_staff', methods=['POST'])
@@ -3315,11 +3416,13 @@ def remove_staff_new(project_id):
     try:
         project = Project.query.get_or_404(project_id)
         
-        data = request.get_json()
+        # Try JSON first, then form data
+        data = request.get_json() or request.form
         staff_id = data.get('staff_id')
         
         if not staff_id:
-            return jsonify({'success': False, 'message': 'Staff ID is required'}), 400
+            flash('Staff ID is required', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Find and remove assignment
         assignment = StaffAssignment.query.filter_by(
@@ -3328,7 +3431,8 @@ def remove_staff_new(project_id):
         ).first()
         
         if not assignment:
-            return jsonify({'success': False, 'message': 'Staff assignment not found'}), 404
+            flash('Staff assignment not found', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Get staff member details for logging
         staff_member = User.query.get(staff_id)
@@ -3349,15 +3453,14 @@ def remove_staff_new(project_id):
         
         db.session.commit()
         
-        return jsonify({
-            'success': True,
-            'message': f'{staff_name} has been removed from the project'
-        })
+        flash(f'{staff_name} has been removed from the project', 'success')
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         current_app.logger.error(f"Error removing staff: {str(e)}", exc_info=True)
         db.session.rollback()
-        return jsonify({'success': False, 'message': 'An error occurred while removing staff'}), 500
+        flash('An error occurred while removing staff', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
 @admin_bp.route('/projects/<int:project_id>/add_milestone', methods=['POST'])
@@ -3373,13 +3476,15 @@ def add_milestone_new(project_id):
         due_date_str = request.form.get('due_date')
         
         if not milestone_name or not due_date_str:
-            return jsonify({'success': False, 'message': 'Milestone name and due date are required'}), 400
+            flash('Milestone name and due date are required', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Parse due date
         try:
             due_date = datetime.strptime(due_date_str, '%Y-%m-%d').date()
         except ValueError:
-            return jsonify({'success': False, 'message': 'Invalid date format'}), 400
+            flash('Invalid date format', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Create new milestone
         milestone = Milestone(
@@ -3407,18 +3512,17 @@ def add_milestone_new(project_id):
         
         db.session.commit()
         
-        return jsonify({
-            'success': True,
-            'message': f'Milestone "{milestone_name}" has been created'
-        })
+        flash(f'Milestone "{milestone_name}" has been created', 'success')
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         current_app.logger.error(f"Error adding milestone: {str(e)}", exc_info=True)
         db.session.rollback()
-        return jsonify({'success': False, 'message': 'An error occurred while adding milestone'}), 500
+        flash('An error occurred while adding milestone', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
-@admin_bp.route('/projects/<int:project_id>/milestones/<int:milestone_id>', methods=['DELETE'])
+@admin_bp.route('/projects/<int:project_id>/milestones/<int:milestone_id>', methods=['POST', 'DELETE'])
 @login_required
 @role_required([Roles.SUPER_HQ])
 def delete_milestone_new(project_id, milestone_id):
@@ -3428,7 +3532,8 @@ def delete_milestone_new(project_id, milestone_id):
         milestone = Milestone.query.filter_by(id=milestone_id, project_id=project_id).first()
         
         if not milestone:
-            return jsonify({'success': False, 'message': 'Milestone not found'}), 404
+            flash('Milestone not found', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         milestone_title = milestone.title
         db.session.delete(milestone)
@@ -3445,15 +3550,14 @@ def delete_milestone_new(project_id, milestone_id):
         
         db.session.commit()
         
-        return jsonify({
-            'success': True,
-            'message': f'Milestone "{milestone_title}" has been deleted'
-        })
+        flash(f'Milestone "{milestone_title}" has been deleted', 'success')
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         current_app.logger.error(f"Error deleting milestone: {str(e)}", exc_info=True)
         db.session.rollback()
-        return jsonify({'success': False, 'message': 'An error occurred while deleting milestone'}), 500
+        flash('An error occurred while deleting milestone', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
 @admin_bp.route('/projects/<int:project_id>/add_boq_item', methods=['POST'])
@@ -3561,22 +3665,26 @@ def upload_document(project_id):
         project = Project.query.get_or_404(project_id)
         
         if 'document_file' not in request.files:
-            return jsonify({'success': False, 'message': 'No file selected'}), 400
+            flash('No file selected', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         file = request.files['document_file']
         document_type = request.form.get('document_type')
         description = request.form.get('document_description', '')
         
         if file.filename == '':
-            return jsonify({'success': False, 'message': 'No file selected'}), 400
+            flash('No file selected', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         if not document_type:
-            return jsonify({'success': False, 'message': 'Document type is required'}), 400
+            flash('Document type is required', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Validate file type
         allowed_extensions = {'pdf', 'doc', 'docx', 'xls', 'xlsx', 'png', 'jpg', 'jpeg'}
         if not ('.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
-            return jsonify({'success': False, 'message': 'File type not allowed'}), 400
+            flash('File type not allowed', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Create uploads directory if it doesn't exist
         upload_folder = os.path.join(current_app.root_path, 'uploads', 'projects', str(project_id))
@@ -3619,15 +3727,14 @@ def upload_document(project_id):
         
         db.session.commit()
         
-        return jsonify({
-            'success': True,
-            'message': f'Document "{filename}" has been uploaded successfully'
-        })
+        flash(f'Document "{filename}" has been uploaded successfully', 'success')
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         current_app.logger.error(f"Error uploading document: {str(e)}", exc_info=True)
         db.session.rollback()
-        return jsonify({'success': False, 'message': 'An error occurred while uploading document'}), 500
+        flash('An error occurred while uploading document', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
 @admin_bp.route('/projects/<int:project_id>/documents/<int:document_id>/download')
@@ -3660,7 +3767,7 @@ def download_document(project_id, document_id):
         return redirect(url_for('admin.project_details', project_id=project_id))
 
 
-@admin_bp.route('/projects/<int:project_id>/documents/<int:document_id>', methods=['DELETE'])
+@admin_bp.route('/projects/<int:project_id>/documents/<int:document_id>', methods=['POST', 'DELETE'])
 @login_required
 @role_required([Roles.SUPER_HQ])
 def delete_document(project_id, document_id):
@@ -3670,7 +3777,8 @@ def delete_document(project_id, document_id):
         document = ProjectDocument.query.filter_by(id=document_id, project_id=project_id).first()
         
         if not document:
-            return jsonify({'success': False, 'message': 'Document not found'}), 404
+            flash('Document not found', 'error')
+            return redirect(url_for('admin.project_details', project_id=project_id))
         
         # Delete file from disk
         if os.path.exists(document.file_path):
@@ -3691,15 +3799,14 @@ def delete_document(project_id, document_id):
         
         db.session.commit()
         
-        return jsonify({
-            'success': True,
-            'message': f'Document "{document_name}" has been deleted'
-        })
+        flash(f'Document "{document_name}" has been deleted', 'success')
+        return redirect(url_for('admin.project_details', project_id=project_id))
         
     except Exception as e:
         current_app.logger.error(f"Error deleting document: {str(e)}", exc_info=True)
         db.session.rollback()
-        return jsonify({'success': False, 'message': 'An error occurred while deleting document'}), 500
+        flash('An error occurred while deleting document', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
 
 
 @admin_bp.route('/projects/<int:project_id>/update_progress', methods=['POST'])
@@ -3747,3 +3854,1207 @@ def update_progress_new(project_id):
         current_app.logger.error(f"Error updating progress: {str(e)}", exc_info=True)
         db.session.rollback()
         return jsonify({'success': False, 'message': 'An error occurred while updating progress'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/edit', methods=['GET', 'POST'])
+@login_required
+@role_required([Roles.SUPER_HQ])
+def edit_project(project_id):
+    """Edit project information endpoint"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        if request.method == 'GET':
+            # Return project data for modal/form population
+            project_data = {
+                'id': project.id,
+                'name': project.name,
+                'description': project.description,
+                'start_date': project.start_date.isoformat() if project.start_date else None,
+                'end_date': project.end_date.isoformat() if project.end_date else None,
+                'status': project.status,
+                'project_manager': project.project_manager,
+                'budget': project.budget,
+                'project_type': project.project_type,
+                'priority': project.priority,
+                'client_name': project.client_name,
+                'site_location': project.site_location,
+                'funding_source': project.funding_source,
+                'risk_level': project.risk_level,
+                'safety_requirements': project.safety_requirements,
+                'regulatory_requirements': project.regulatory_requirements
+            }
+            return jsonify({'success': True, 'project': project_data})
+        
+        elif request.method == 'POST':
+            # Handle project update
+            data = request.get_json() or request.form
+            
+            # Store old values for activity log
+            changes = []
+            
+            # Update fields if provided
+            if 'name' in data and data['name'] != project.name:
+                changes.append(f"Name changed from '{project.name}' to '{data['name']}'")
+                project.name = data['name']
+            
+            if 'description' in data and data['description'] != project.description:
+                changes.append(f"Description updated")
+                project.description = data['description']
+            
+            if 'start_date' in data:
+                new_start = datetime.strptime(data['start_date'], '%Y-%m-%d').date() if data['start_date'] else None
+                if new_start != project.start_date:
+                    changes.append(f"Start date changed to {new_start.strftime('%B %d, %Y') if new_start else 'None'}")
+                    project.start_date = new_start
+            
+            if 'end_date' in data:
+                new_end = datetime.strptime(data['end_date'], '%Y-%m-%d').date() if data['end_date'] else None
+                if new_end != project.end_date:
+                    changes.append(f"End date changed to {new_end.strftime('%B %d, %Y') if new_end else 'None'}")
+                    project.end_date = new_end
+            
+            if 'status' in data and data['status'] != project.status:
+                changes.append(f"Status changed from '{project.status}' to '{data['status']}'")
+                project.status = data['status']
+            
+            if 'project_manager' in data and data['project_manager'] != project.project_manager:
+                changes.append(f"Project manager changed to '{data['project_manager']}'")
+                project.project_manager = data['project_manager']
+            
+            if 'budget' in data:
+                try:
+                    new_budget = float(data['budget'])
+                    if new_budget != project.budget:
+                        changes.append(f"Budget changed from ₦{project.budget:,.2f} to ₦{new_budget:,.2f}")
+                        project.budget = new_budget
+                except ValueError:
+                    return jsonify({'success': False, 'message': 'Invalid budget value'}), 400
+            
+            if 'project_type' in data and data['project_type'] != project.project_type:
+                changes.append(f"Project type changed to '{data['project_type']}'")
+                project.project_type = data['project_type']
+            
+            if 'priority' in data and data['priority'] != project.priority:
+                changes.append(f"Priority changed to '{data['priority']}'")
+                project.priority = data['priority']
+            
+            if 'client_name' in data and data['client_name'] != project.client_name:
+                changes.append(f"Client name changed to '{data['client_name']}'")
+                project.client_name = data['client_name']
+            
+            if 'site_location' in data and data['site_location'] != project.site_location:
+                changes.append(f"Site location updated")
+                project.site_location = data['site_location']
+            
+            if 'funding_source' in data and data['funding_source'] != project.funding_source:
+                changes.append(f"Funding source changed to '{data['funding_source']}'")
+                project.funding_source = data['funding_source']
+            
+            if 'risk_level' in data and data['risk_level'] != project.risk_level:
+                changes.append(f"Risk level changed to '{data['risk_level']}'")
+                project.risk_level = data['risk_level']
+            
+            if 'safety_requirements' in data and data['safety_requirements'] != project.safety_requirements:
+                changes.append(f"Safety requirements changed to '{data['safety_requirements']}'")
+                project.safety_requirements = data['safety_requirements']
+            
+            if 'regulatory_requirements' in data and data['regulatory_requirements'] != project.regulatory_requirements:
+                changes.append(f"Regulatory requirements updated")
+                project.regulatory_requirements = data['regulatory_requirements']
+            
+            # Update the updated_at timestamp
+            project.updated_at = datetime.utcnow()
+            
+            # Log activities for changes
+            if changes:
+                activity = ProjectActivity(
+                    project_id=project_id,
+                    user_id=current_user.id,
+                    action_type='project_updated',
+                    description=f'Project updated: {"; ".join(changes)}',
+                    user_name=current_user.name
+                )
+                db.session.add(activity)
+                
+                db.session.commit()
+                
+                return jsonify({
+                    'success': True, 
+                    'message': 'Project updated successfully',
+                    'changes': len(changes)
+                })
+            else:
+                return jsonify({'success': True, 'message': 'No changes made'})
+        
+    except Exception as e:
+        current_app.logger.error(f"Error editing project: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/activity_log')
+@login_required
+def get_activity_log(project_id):
+    """Get detailed activity log for a project"""
+    try:
+        project = Project.query.get_or_404(project_id)
+        
+        # Check user access
+        user_assignment = StaffAssignment.query.filter_by(
+            project_id=project_id, 
+            staff_id=current_user.id
+        ).first()
+        
+        is_manager = project.project_manager == current_user.name
+        is_super_hq = current_user.has_role(Roles.SUPER_HQ)
+        
+        if not (user_assignment or is_manager or is_super_hq):
+            return jsonify({'success': False, 'message': 'Access denied'}), 403
+        
+        # Get activity log with pagination
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        activities_query = ProjectActivity.query.filter_by(project_id=project_id)\
+                                                .order_by(ProjectActivity.created_at.desc())
+        
+        activities_paginated = activities_query.paginate(
+            page=page, 
+            per_page=per_page, 
+            error_out=False
+        )
+        
+        activities_data = []
+        for activity in activities_paginated.items:
+            activity_data = {
+                'id': activity.id,
+                'action_type': activity.action_type,
+                'description': activity.description,
+                'user_name': activity.user_name or 'System',
+                'created_at': activity.created_at.strftime('%B %d, %Y at %I:%M %p'),
+                'created_at_iso': activity.created_at.isoformat(),
+                'user_id': activity.user_id
+            }
+            activities_data.append(activity_data)
+        
+        # Get activity statistics
+        total_activities = activities_query.count()
+        
+        # Activity type breakdown
+        activity_types = db.session.query(
+            ProjectActivity.action_type,
+            func.count(ProjectActivity.id).label('count')
+        ).filter_by(project_id=project_id)\
+         .group_by(ProjectActivity.action_type)\
+         .all()
+        
+        activity_stats = {action_type: count for action_type, count in activity_types}
+        
+        # Recent activity summary (last 7 days)
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_count = ProjectActivity.query.filter(
+            ProjectActivity.project_id == project_id,
+            ProjectActivity.created_at >= week_ago
+        ).count()
+        
+        return jsonify({
+            'success': True,
+            'activities': activities_data,
+            'pagination': {
+                'page': page,
+                'per_page': per_page,
+                'total': total_activities,
+                'pages': activities_paginated.pages,
+                'has_prev': activities_paginated.has_prev,
+                'has_next': activities_paginated.has_next
+            },
+            'statistics': {
+                'total_activities': total_activities,
+                'recent_activities_week': recent_count,
+                'activity_types': activity_stats
+            },
+            'project': {
+                'id': project.id,
+                'name': project.name,
+                'created_at': project.created_at.strftime('%B %d, %Y')
+            }
+        })
+        
+    except Exception as e:
+        current_app.logger.error(f"Error getting activity log: {str(e)}", exc_info=True)
+        return jsonify({'success': False, 'message': f'An error occurred: {str(e)}'}), 500
+
+
+@admin_bp.route('/projects/<int:project_id>/reports')
+@role_required([Roles.SUPER_HQ])
+def project_reports(project_id):
+    """Project analytics and reports page"""
+    try:
+        current_app.logger.info(f"Accessing project reports for project_id: {project_id}")
+        
+        # Get project
+        project = Project.query.get_or_404(project_id)
+        current_app.logger.info(f"Project found: {project.name}")
+        
+        # Calculate analytics data using correct relationships with safe access
+        try:
+            total_employees = len(project.staff_assignments) if hasattr(project, 'staff_assignments') and project.staff_assignments else 0
+        except Exception:
+            total_employees = 0
+            
+        try:
+            total_milestones = len(project.milestones) if hasattr(project, 'milestones') and project.milestones else 0
+        except Exception:
+            total_milestones = 0
+            
+        try:
+            completed_milestones = len([m for m in project.milestones if m.status and m.status.lower() == 'completed']) if hasattr(project, 'milestones') and project.milestones else 0
+        except Exception:
+            completed_milestones = 0
+            
+        try:
+            total_documents = len(project.project_documents) if hasattr(project, 'project_documents') and project.project_documents else 0
+        except Exception:
+            total_documents = 0
+        
+        # Equipment statistics - using general Equipment model since no project relation exists
+        all_equipment = Equipment.query.all()
+        equipment_stats = {}
+        if all_equipment:
+            equipment_stats['total'] = len(all_equipment)
+            equipment_stats['operational'] = len([e for e in all_equipment if e.status and e.status.lower() in ['operational', 'active']])
+            equipment_stats['maintenance'] = len([e for e in all_equipment if e.status and e.status.lower() in ['maintenance', 'under maintenance']])
+        else:
+            equipment_stats['total'] = 0
+            equipment_stats['operational'] = 0
+            equipment_stats['maintenance'] = 0
+        
+        # Financial data - using budget and purchase orders since no direct expenses relation
+        total_expenses = 0
+        try:
+            if hasattr(project, 'purchase_orders') and project.purchase_orders:
+                total_expenses = sum(order.total_amount or 0 for order in project.purchase_orders)
+            elif hasattr(project, 'budgets') and project.budgets:
+                total_expenses = sum(budget.allocated_amount or 0 for budget in project.budgets)
+        except Exception:
+            total_expenses = 0
+        
+        # Progress statistics
+        milestone_completion_rate = (completed_milestones / total_milestones * 100) if total_milestones > 0 else 0
+        
+        # Get recent milestones for the template
+        recent_milestones = []
+        try:
+            if hasattr(project, 'milestones') and project.milestones:
+                recent_milestones = sorted([m for m in project.milestones if hasattr(m, 'created_at')], 
+                                         key=lambda x: x.created_at if x.created_at else datetime.min, 
+                                         reverse=True)[:5]
+        except Exception:
+            recent_milestones = []
+
+        # Get equipment data
+        total_equipment = 0
+        active_equipment = 0
+        try:
+            if hasattr(project, 'equipment') and project.equipment:
+                total_equipment = len(project.equipment)
+                active_equipment = len([e for e in project.equipment if hasattr(e, 'status') and e.status and e.status.lower() in ['active', 'operational']])
+        except Exception:
+            total_equipment = 0
+            active_equipment = 0
+
+        # Calculate budget utilization
+        budget_utilized = total_expenses / 1000 if total_expenses > 0 else 0  # Convert to thousands
+
+        # Get recent tasks and alerts (mock data for now)
+        recent_tasks = []
+        recent_alerts = []
+
+        analytics_data = {
+            'project': project,
+            'total_employees': total_employees or 0,
+            'total_milestones': total_milestones or 0,
+            'completed_milestones': completed_milestones or 0,
+            'milestone_completion_rate': round(milestone_completion_rate, 1) if milestone_completion_rate is not None else 0,
+            'total_documents': total_documents or 0,
+            'equipment_stats': equipment_stats or {'total': 0, 'operational': 0, 'maintenance': 0},
+            'total_expenses': total_expenses or 0,
+            'total_equipment': total_equipment or 0,
+            'active_equipment': active_equipment or 0,
+            'budget_utilized': budget_utilized or 0,
+            'recent_milestones': recent_milestones or [],
+            'recent_tasks': recent_tasks or [],
+            'recent_alerts': recent_alerts or [],
+            'recent_activities': project.milestones[-5:] if hasattr(project, 'milestones') and project.milestones else []
+        }
+        
+        return render_template('admin/project_reports.html', **analytics_data)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading project reports for project {project_id}: {str(e)}", exc_info=True)
+        current_app.logger.error(f"Exception type: {type(e).__name__}")
+        current_app.logger.error(f"Exception args: {e.args}")
+        flash(f'Error loading project reports: {str(e)}. Please try again.', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
+
+
+@admin_bp.route('/projects/<int:project_id>/budget-analysis')
+@role_required([Roles.SUPER_HQ])
+def budget_analysis(project_id):
+    """Comprehensive budget analysis with real business logic"""
+    try:
+        current_app.logger.info(f"Accessing budget analysis for project_id: {project_id}")
+        
+        # Get project with all related data
+        project = Project.query.get_or_404(project_id)
+        
+        # Get all budgets for this project
+        budgets = Budget.query.filter_by(project_id=project_id).all()
+        
+        # Get all expenses related to this project (assuming expenses have project_id or can be linked)
+        # For now, we'll get all expenses and categorize them
+        expenses = Expense.query.all()  # In real scenario, filter by project
+        
+        # Get procurement requests for this project
+        procurement_requests = ProcurementRequest.query.filter_by(project_id=project_id).all()
+        
+        # Get purchase orders for this project
+        purchase_orders = PurchaseOrder.query.filter_by(project_id=project_id).all()
+        
+        # Calculate budget totals
+        total_allocated = sum([b.allocated_amount for b in budgets])
+        total_spent = sum([b.spent_amount for b in budgets])
+        total_remaining = total_allocated - total_spent
+        
+        # Calculate budget utilization percentage
+        utilization_percentage = (total_spent / total_allocated * 100) if total_allocated > 0 else 0
+        
+        # Budget breakdown by category
+        budget_breakdown = {}
+        for budget in budgets:
+            budget_breakdown[budget.category] = {
+                'allocated': budget.allocated_amount,
+                'spent': budget.spent_amount,
+                'remaining': budget.remaining_amount,
+                'usage_percentage': budget.usage_percentage
+            }
+        
+        # Calculate expense trends (last 6 months)
+        from datetime import datetime, timedelta
+        from sqlalchemy import extract, func
+        
+        current_date = datetime.now()
+        six_months_ago = current_date - timedelta(days=180)
+        
+        # Monthly expense trends
+        monthly_expenses = db.session.query(
+            extract('month', Expense.date).label('month'),
+            extract('year', Expense.date).label('year'),
+            func.sum(Expense.amount).label('total_amount'),
+            func.count(Expense.id).label('expense_count')
+        ).filter(
+            Expense.date >= six_months_ago
+        ).group_by(
+            extract('year', Expense.date),
+            extract('month', Expense.date)
+        ).order_by(
+            extract('year', Expense.date),
+            extract('month', Expense.date)
+        ).all()
+        
+        # Category-wise spending analysis
+        category_spending = db.session.query(
+            Expense.category,
+            func.sum(Expense.amount).label('total_amount'),
+            func.count(Expense.id).label('expense_count')
+        ).group_by(Expense.category).all()
+        
+        # Cost variance analysis
+        cost_variances = []
+        for budget in budgets:
+            variance = budget.spent_amount - budget.allocated_amount
+            variance_percentage = (variance / budget.allocated_amount * 100) if budget.allocated_amount > 0 else 0
+            cost_variances.append({
+                'category': budget.category,
+                'planned': budget.allocated_amount,
+                'actual': budget.spent_amount,
+                'variance': variance,
+                'variance_percentage': variance_percentage,
+                'status': 'over_budget' if variance > 0 else 'under_budget' if variance < 0 else 'on_budget'
+            })
+        
+        # Procurement analysis
+        total_procurement_value = sum([pr.price * pr.qty for pr in procurement_requests])
+        pending_procurement = sum([pr.price * pr.qty for pr in procurement_requests if pr.status == 'pending'])
+        approved_procurement = sum([pr.price * pr.qty for pr in procurement_requests if pr.status == 'approved'])
+        
+        # Purchase order analysis
+        total_po_value = sum([po.total_amount for po in purchase_orders])
+        pending_po_value = sum([po.total_amount for po in purchase_orders if po.status == 'Pending'])
+        approved_po_value = sum([po.total_amount for po in purchase_orders if po.status == 'Approved'])
+        
+        # ROI and profitability analysis
+        project_revenue = project.budget  # Assuming project budget represents revenue/contract value
+        project_costs = total_spent
+        gross_profit = project_revenue - project_costs
+        profit_margin = (gross_profit / project_revenue * 100) if project_revenue > 0 else 0
+        
+        # Budget forecasting (simple linear projection)
+        if monthly_expenses:
+            # Calculate average monthly burn rate
+            recent_months = monthly_expenses[-3:] if len(monthly_expenses) >= 3 else monthly_expenses
+            avg_monthly_burn = sum([exp.total_amount for exp in recent_months]) / len(recent_months) if recent_months else 0
+            
+            # Forecast remaining budget duration
+            months_remaining = (total_remaining / avg_monthly_burn) if avg_monthly_burn > 0 and total_remaining > 0 else 0
+            
+            # Forecast project completion cost
+            if project.end_date:
+                remaining_months = max(0, (project.end_date - current_date.date()).days / 30)
+                forecasted_total_cost = total_spent + (avg_monthly_burn * remaining_months)
+                cost_overrun_risk = max(0, forecasted_total_cost - total_allocated)
+            else:
+                forecasted_total_cost = 0
+                cost_overrun_risk = 0
+        else:
+            avg_monthly_burn = 0
+            months_remaining = 0
+            forecasted_total_cost = 0
+            cost_overrun_risk = 0
+        
+        # Risk indicators
+        risk_indicators = {
+            'budget_utilization_risk': 'high' if utilization_percentage > 80 else 'medium' if utilization_percentage > 60 else 'low',
+            'cost_overrun_risk': 'high' if cost_overrun_risk > total_allocated * 0.1 else 'medium' if cost_overrun_risk > 0 else 'low',
+            'cash_flow_risk': 'high' if months_remaining < 2 else 'medium' if months_remaining < 6 else 'low',
+            'procurement_risk': 'high' if pending_procurement > total_allocated * 0.2 else 'medium' if pending_procurement > total_allocated * 0.1 else 'low'
+        }
+        
+        # Key performance indicators
+        kpis = {
+            'budget_efficiency': min(100, max(0, 100 - abs(utilization_percentage - 80))),  # Optimal around 80%
+            'cost_control_score': max(0, 100 - (abs(sum([cv['variance_percentage'] for cv in cost_variances]) / len(cost_variances)) if cost_variances else 0)),
+            'procurement_efficiency': (approved_procurement / total_procurement_value * 100) if total_procurement_value > 0 else 100,
+            'financial_health': max(0, min(100, profit_margin + 50))  # Normalized score
+        }
+        
+        # Recent financial activities (last 30 days)
+        thirty_days_ago = current_date - timedelta(days=30)
+        recent_expenses = Expense.query.filter(Expense.date >= thirty_days_ago).order_by(Expense.date.desc()).limit(10).all()
+        recent_procurement = ProcurementRequest.query.filter(
+            ProcurementRequest.project_id == project_id,
+            ProcurementRequest.created_at >= thirty_days_ago
+        ).order_by(ProcurementRequest.created_at.desc()).limit(5).all()
+        
+        # Budget alerts
+        budget_alerts = []
+        for budget in budgets:
+            if budget.usage_percentage > 90:
+                budget_alerts.append({
+                    'type': 'critical',
+                    'category': budget.category,
+                    'message': f'{budget.category} budget is {budget.usage_percentage:.1f}% utilized',
+                    'severity': 'high'
+                })
+            elif budget.usage_percentage > 75:
+                budget_alerts.append({
+                    'type': 'warning',
+                    'category': budget.category,
+                    'message': f'{budget.category} budget is {budget.usage_percentage:.1f}% utilized',
+                    'severity': 'medium'
+                })
+        
+        if cost_overrun_risk > 0:
+            budget_alerts.append({
+                'type': 'forecast',
+                'category': 'overall',
+                'message': f'Potential cost overrun of ₦{cost_overrun_risk:,.2f} forecasted',
+                'severity': 'high' if cost_overrun_risk > total_allocated * 0.1 else 'medium'
+            })
+        
+        # Prepare chart data for JavaScript
+        chart_categories = list(budget_breakdown.keys())
+        chart_allocated = [budget_breakdown[cat]['allocated'] for cat in chart_categories]
+        chart_spent = [budget_breakdown[cat]['spent'] for cat in chart_categories]
+        
+        # Compile all data for template
+        budget_data = {
+            'project': project,
+            'budgets': budgets,
+            'budget_breakdown': budget_breakdown,
+            'total_allocated': total_allocated,
+            'total_spent': total_spent,
+            'total_remaining': total_remaining,
+            'utilization_percentage': round(utilization_percentage, 1),
+            'monthly_expenses': monthly_expenses,
+            'category_spending': category_spending,
+            'cost_variances': cost_variances,
+            'total_procurement_value': total_procurement_value,
+            'pending_procurement': pending_procurement,
+            'approved_procurement': approved_procurement,
+            'total_po_value': total_po_value,
+            'pending_po_value': pending_po_value,
+            'approved_po_value': approved_po_value,
+            'project_revenue': project_revenue,
+            'project_costs': project_costs,
+            'gross_profit': gross_profit,
+            'profit_margin': round(profit_margin, 1),
+            'avg_monthly_burn': avg_monthly_burn,
+            'months_remaining': round(months_remaining, 1),
+            'forecasted_total_cost': forecasted_total_cost,
+            'cost_overrun_risk': cost_overrun_risk,
+            'risk_indicators': risk_indicators,
+            'kpis': kpis,
+            'recent_expenses': recent_expenses,
+            'recent_procurement': recent_procurement,
+            'budget_alerts': budget_alerts,
+            'chart_categories': chart_categories,
+            'chart_allocated': chart_allocated,
+            'chart_spent': chart_spent
+        }
+        
+        return render_template('admin/budget_analysis.html', **budget_data)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading budget analysis for project {project_id}: {str(e)}", exc_info=True)
+        flash(f'Error loading budget analysis: {str(e)}. Please try again.', 'error')
+        return redirect(url_for('admin.project_details', project_id=project_id))
+
+# =====================================
+# HR MANAGEMENT ROUTES (Admin Access)
+# =====================================
+
+@admin_bp.route("/hr")
+@role_required([Roles.SUPER_HQ])
+def hr_dashboard():
+    """Admin HR Dashboard - Overview of HR operations"""
+    try:
+        from models import Employee, StaffPayroll, PayrollApproval
+        
+        # Get HR statistics
+        total_employees = Employee.query.count()
+        active_employees = Employee.query.filter_by(status='Active').count()
+        
+        # Get pending payroll approvals
+        pending_payrolls = PayrollApproval.query.filter_by(status='pending_admin').all()
+        total_pending_amount = sum(approval.total_amount for approval in pending_payrolls)
+        
+        # Get current month payroll status
+        current_date = datetime.now()
+        current_month_payroll = PayrollApproval.query.filter(
+            PayrollApproval.period_year == current_date.year,
+            PayrollApproval.period_month == current_date.month
+        ).first()
+        
+        # Recent HR activities
+        recent_employees = Employee.query.order_by(Employee.date_of_employment.desc()).limit(5).all()
+        
+        hr_summary = {
+            'total_employees': total_employees,
+            'active_employees': active_employees,
+            'pending_payrolls': len(pending_payrolls),
+            'total_pending_amount': total_pending_amount,
+            'current_month_status': current_month_payroll.status if current_month_payroll else 'Not Submitted',
+            'recent_employees': recent_employees
+        }
+        
+        return render_template('admin/hr/dashboard.html', summary=hr_summary)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading HR dashboard: {str(e)}")
+        flash('Error loading HR dashboard', 'error')
+        return render_template('error.html')
+
+@admin_bp.route("/hr/payroll-approvals")
+@role_required([Roles.SUPER_HQ])
+def payroll_approvals():
+    """View pending payroll submissions for approval"""
+    try:
+        from models import PayrollApproval, StaffPayroll, Employee
+        
+        # Get all pending payroll approvals
+        pending_approvals = PayrollApproval.query.filter_by(status='pending_admin').order_by(
+            PayrollApproval.submitted_at.desc()
+        ).all()
+        
+        # Format approval data with employee details
+        approval_data = []
+        for approval in pending_approvals:
+            # Get payroll details for this approval
+            payroll_items = StaffPayroll.query.filter(
+                StaffPayroll.period_year == approval.period_year,
+                StaffPayroll.period_month == approval.period_month,
+                StaffPayroll.approval_status == 'pending_admin'
+            ).all()
+            
+            # Get employee count and total
+            employee_count = len(payroll_items)
+            total_amount = sum(item.gross or 0 for item in payroll_items)
+            
+            approval_data.append({
+                'id': approval.id,
+                'period': f"{approval.period_month}/{approval.period_year}",
+                'submitted_by': approval.submitted_by,
+                'submitted_at': approval.submitted_at,
+                'employee_count': employee_count,
+                'total_amount': total_amount,
+                'status': approval.status,
+                'comments': approval.comments
+            })
+        
+        return render_template('admin/hr/payroll_approvals.html', approvals=approval_data)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading payroll approvals: {str(e)}")
+        flash('Error loading payroll approvals', 'error')
+        return redirect(url_for('admin.hr_dashboard'))
+
+@admin_bp.route("/hr/payroll-approval/<int:approval_id>")
+@role_required([Roles.SUPER_HQ])
+def view_payroll_details(approval_id):
+    """View detailed payroll submission for approval"""
+    try:
+        from models import PayrollApproval, StaffPayroll, Employee
+        
+        # Get the approval record
+        approval = PayrollApproval.query.get_or_404(approval_id)
+        
+        # Get all payroll items for this period
+        payroll_items = StaffPayroll.query.filter(
+            StaffPayroll.period_year == approval.period_year,
+            StaffPayroll.period_month == approval.period_month,
+            StaffPayroll.approval_status == 'pending_admin'
+        ).order_by(StaffPayroll.id).all()
+        
+        # Format payroll data with employee details
+        payroll_data = []
+        total_gross = 0
+        total_deductions = 0
+        total_net = 0
+        
+        for item in payroll_items:
+            employee = Employee.query.get(item.employee_id)
+            gross = item.gross or 0
+            deductions = (item.tax or 0) + (item.pension or 0) + (item.nhf or 0) + (item.nhis or 0) + (item.other_deductions or 0)
+            net = gross - deductions
+            
+            total_gross += gross
+            total_deductions += deductions
+            total_net += net
+            
+            payroll_data.append({
+                'employee_id': item.employee_id,
+                'employee_name': employee.name if employee else 'Unknown',
+                'designation': item.designation,
+                'site': item.site,
+                'work_days': item.work_days,
+                'gross': gross,
+                'tax': item.tax or 0,
+                'pension': item.pension or 0,
+                'nhf': item.nhf or 0,
+                'nhis': item.nhis or 0,
+                'other_deductions': item.other_deductions or 0,
+                'total_deductions': deductions,
+                'net_pay': net,
+                'bank_name': item.bank_name,
+                'account_number': item.account_number
+            })
+        
+        summary = {
+            'period': f"{approval.period_month}/{approval.period_year}",
+            'submitted_by': approval.submitted_by,
+            'submitted_at': approval.submitted_at,
+            'employee_count': len(payroll_items),
+            'total_gross': total_gross,
+            'total_deductions': total_deductions,
+            'total_net': total_net,
+            'status': approval.status,
+            'comments': approval.comments
+        }
+        
+        return render_template('admin/hr/payroll_details.html', 
+                             approval=approval, 
+                             payroll_data=payroll_data, 
+                             summary=summary)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading payroll details: {str(e)}")
+        flash('Error loading payroll details', 'error')
+        return redirect(url_for('admin.payroll_approvals'))
+
+@admin_bp.route("/hr/approve-payroll/<int:approval_id>", methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def approve_payroll(approval_id):
+    """Approve payroll submission and send to finance"""
+    try:
+        from models import PayrollApproval, StaffPayroll
+        
+        # Get the approval record
+        approval = PayrollApproval.query.get_or_404(approval_id)
+        
+        if approval.status != 'pending_admin':
+            flash('This payroll has already been processed', 'warning')
+            return redirect(url_for('admin.payroll_approvals'))
+        
+        # Get admin comments
+        admin_comments = request.form.get('comments', '').strip()
+        
+        # Update approval status
+        approval.status = 'approved'
+        approval.approved_by = session.get('username', 'Admin')
+        approval.approved_at = datetime.now()
+        approval.admin_comments = admin_comments
+        
+        # Update all related payroll items
+        payroll_items = StaffPayroll.query.filter(
+            StaffPayroll.period_year == approval.period_year,
+            StaffPayroll.period_month == approval.period_month,
+            StaffPayroll.approval_status == 'pending_admin'
+        ).all()
+        
+        for item in payroll_items:
+            item.approval_status = 'approved'
+            item.approved_at = datetime.now()
+            item.approved_by = session.get('username', 'Admin')
+        
+        db.session.commit()
+        
+        flash(f'Payroll for {approval.period_month}/{approval.period_year} approved successfully. '
+              f'Finance team has been notified.', 'success')
+        
+        current_app.logger.info(f"Payroll approved: Period {approval.period_month}/{approval.period_year}, "
+                               f"Approved by: {session.get('username', 'Admin')}")
+        
+    except Exception as e:
+        current_app.logger.error(f"Error approving payroll: {str(e)}")
+        flash('Error approving payroll', 'error')
+        db.session.rollback()
+    
+    return redirect(url_for('admin.payroll_approvals'))
+
+@admin_bp.route("/hr/reject-payroll/<int:approval_id>", methods=['POST'])
+@role_required([Roles.SUPER_HQ])
+def reject_payroll(approval_id):
+    """Reject payroll submission and send back to HR"""
+    try:
+        from models import PayrollApproval, StaffPayroll
+        
+        # Get the approval record
+        approval = PayrollApproval.query.get_or_404(approval_id)
+        
+        if approval.status != 'pending_admin':
+            flash('This payroll has already been processed', 'warning')
+            return redirect(url_for('admin.payroll_approvals'))
+        
+        # Get rejection reason
+        rejection_reason = request.form.get('rejection_reason', '').strip()
+        if not rejection_reason:
+            flash('Please provide a reason for rejection', 'error')
+            return redirect(url_for('admin.view_payroll_details', approval_id=approval_id))
+        
+        # Update approval status
+        approval.status = 'rejected'
+        approval.approved_by = session.get('username', 'Admin')
+        approval.approved_at = datetime.now()
+        approval.admin_comments = rejection_reason
+        
+        # Update all related payroll items back to draft
+        payroll_items = StaffPayroll.query.filter(
+            StaffPayroll.period_year == approval.period_year,
+            StaffPayroll.period_month == approval.period_month,
+            StaffPayroll.approval_status == 'pending_admin'
+        ).all()
+        
+        for item in payroll_items:
+            item.approval_status = 'draft'
+            item.approved_at = None
+            item.approved_by = None
+        
+        db.session.commit()
+        
+        flash(f'Payroll for {approval.period_month}/{approval.period_year} rejected. '
+              f'HR team has been notified to make corrections.', 'success')
+        
+        current_app.logger.info(f"Payroll rejected: Period {approval.period_month}/{approval.period_year}, "
+                               f"Rejected by: {session.get('username', 'Admin')}, Reason: {rejection_reason}")
+        
+    except Exception as e:
+        current_app.logger.error(f"Error rejecting payroll: {str(e)}")
+        flash('Error rejecting payroll', 'error')
+        db.session.rollback()
+    
+    return redirect(url_for('admin.payroll_approvals'))
+
+@admin_bp.route("/hr/employees")
+@role_required([Roles.SUPER_HQ])
+def view_employees():
+    """View all employees (admin access to HR data)"""
+    try:
+        from models import Employee
+        
+        # Get search and filter parameters
+        search = request.args.get('search', '').strip()
+        status_filter = request.args.get('status', '')
+        department_filter = request.args.get('department', '')
+        
+        # Build query
+        query = Employee.query
+        
+        if search:
+            query = query.filter(
+                Employee.name.ilike(f'%{search}%') | 
+                Employee.email.ilike(f'%{search}%') |
+                Employee.staff_code.ilike(f'%{search}%')
+            )
+        
+        if status_filter:
+            query = query.filter(Employee.status == status_filter)
+            
+        if department_filter:
+            query = query.filter(Employee.department == department_filter)
+        
+        employees = query.order_by(Employee.date_of_employment.desc()).all()
+        
+        # Get unique departments for filter
+        departments = db.session.query(Employee.department).filter(
+            Employee.department.isnot(None)
+        ).distinct().all()
+        departments = [dept[0] for dept in departments if dept[0]]
+        
+        return render_template('admin/hr/employees.html', 
+                             employees=employees,
+                             departments=departments,
+                             current_search=search,
+                             current_status=status_filter,
+                             current_department=department_filter)
+        
+    except Exception as e:
+        current_app.logger.error(f"Error loading employees: {str(e)}")
+        flash('Error loading employees', 'error')
+        return redirect(url_for('admin.hr_dashboard'))
+
+@admin_bp.route('/user-management')
+@login_required
+@role_required(['super_hq', 'hq_hr'])
+def user_management():
+    """Comprehensive user management view - shows all users, employees, and their roles"""
+    try:
+        # Get all users with role information
+        users = db.session.query(User).order_by(User.created_at.desc()).all()
+        
+        # Get all employees with their information
+        employees = db.session.query(Employee).order_by(Employee.date_of_employment.desc()).all()
+        
+        # Get all projects for assignment
+        projects = db.session.query(Project).filter(Project.status.in_(['active', 'planning'])).all()
+        
+        # Get staff assignments for project mapping
+        staff_assignments = db.session.query(StaffAssignment).all()
+        
+        # Create a mapping of employee to assigned projects
+        employee_projects = {}
+        for assignment in staff_assignments:
+            if assignment.employee_id not in employee_projects:
+                employee_projects[assignment.employee_id] = []
+            employee_projects[assignment.employee_id].append(assignment.project)
+        
+        # Available roles for assignment
+        available_roles = [
+            {'value': 'super_hq', 'name': 'Super HQ Admin'},
+            {'value': 'hq_finance', 'name': 'HQ Finance Manager'},
+            {'value': 'hr', 'name': 'HQ Manager'},
+            {'value': 'hq_hr', 'name': 'HQ HR Manager'},
+            {'value': 'hq_procurement', 'name': 'HQ Procurement Manager'},
+            {'value': 'hq_quarry', 'name': 'Quarry Manager'},
+            {'value': 'hq_project', 'name': 'Project Manager'},
+            {'value': 'hq_cost_control', 'name': 'HQ Cost Control Manager'},
+            {'value': 'finance_staff', 'name': 'Finance Staff'},
+            {'value': 'hr_staff', 'name': 'HR Staff'},
+            {'value': 'procurement_staff', 'name': 'Procurement Staff'},
+            {'value': 'procurement_officer', 'name': 'Procurement Officer'},
+            {'value': 'quarry_staff', 'name': 'Quarry Staff'},
+            {'value': 'project_staff', 'name': 'Project Staff'},
+        ]
+        
+        # Statistics
+        stats = {
+            'total_users': len(users),
+            'total_employees': len(employees),
+            'active_employees': len([e for e in employees if e.status == 'Active']),
+            'total_projects': len(projects),
+            'users_with_roles': len([u for u in users if u.role]),
+            'employees_assigned': len(set([a.employee_id for a in staff_assignments]))
+        }
+        
+        return render_template('admin/user_management.html',
+                             users=users,
+                             employees=employees,
+                             projects=projects,
+                             employee_projects=employee_projects,
+                             available_roles=available_roles,
+                             stats=stats)
+                             
+    except Exception as e:
+        current_app.logger.error(f"Error in user management: {str(e)}")
+        flash('Error loading user management data', 'error')
+        return redirect(url_for('admin.dashboard'))
+
+@admin_bp.route('/assign-user-role', methods=['POST'])
+@login_required
+@role_required(['super_hq', 'hq_hr'])
+def assign_user_role():
+    """Assign or update user role"""
+    try:
+        user_id = request.form.get('user_id')
+        new_role = request.form.get('role')
+        
+        if not user_id or not new_role:
+            flash('User ID and role are required', 'error')
+            return redirect(url_for('admin.user_management'))
+        
+        user = User.query.get_or_404(user_id)
+        old_role = user.role
+        user.role = new_role
+        
+        db.session.commit()
+        
+        current_app.logger.info(f"User {user.name} (ID: {user.id}) role updated from '{old_role}' to '{new_role}' by {current_user.name}")
+        flash(f'Successfully updated {user.name}\'s role to {new_role}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error assigning user role: {str(e)}")
+        flash('Error updating user role', 'error')
+    
+    return redirect(url_for('admin.user_management'))
+
+@admin_bp.route('/assign-employee-project', methods=['POST'])
+@login_required
+@role_required(['super_hq', 'hq_hr', 'hq_project'])
+def assign_employee_project():
+    """Assign employee to project"""
+    try:
+        employee_id = request.form.get('employee_id')
+        project_id = request.form.get('project_id')
+        role = request.form.get('assignment_role', 'Team Member')
+        
+        if not employee_id or not project_id:
+            flash('Employee and project are required', 'error')
+            return redirect(url_for('admin.user_management'))
+        
+        # Check if assignment already exists
+        existing = StaffAssignment.query.filter_by(
+            employee_id=employee_id,
+            project_id=project_id
+        ).first()
+        
+        if existing:
+            flash('Employee is already assigned to this project', 'warning')
+            return redirect(url_for('admin.user_management'))
+        
+        # Create new assignment
+        assignment = StaffAssignment(
+            employee_id=employee_id,
+            project_id=project_id,
+            role=role,
+            assigned_at=datetime.utcnow(),
+            assigned_by=current_user.id
+        )
+        
+        db.session.add(assignment)
+        db.session.commit()
+        
+        employee = Employee.query.get(employee_id)
+        project = Project.query.get(project_id)
+        
+        current_app.logger.info(f"Employee {employee.name} assigned to project {project.name} by {current_user.name}")
+        flash(f'Successfully assigned {employee.name} to {project.name}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error assigning employee to project: {str(e)}")
+        flash('Error assigning employee to project', 'error')
+    
+    return redirect(url_for('admin.user_management'))
+
+@admin_bp.route('/remove-employee-assignment/<int:assignment_id>', methods=['POST'])
+@login_required
+@role_required(['super_hq', 'hq_hr', 'hq_project'])
+def remove_employee_assignment(assignment_id):
+    """Remove employee from project assignment"""
+    try:
+        assignment = StaffAssignment.query.get_or_404(assignment_id)
+        employee_name = assignment.employee.name
+        project_name = assignment.project.name
+        
+        db.session.delete(assignment)
+        db.session.commit()
+        
+        current_app.logger.info(f"Employee {employee_name} removed from project {project_name} by {current_user.name}")
+        flash(f'Successfully removed {employee_name} from {project_name}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error removing employee assignment: {str(e)}")
+        flash('Error removing employee assignment', 'error')
+    
+    return redirect(url_for('admin.user_management'))
+
+@admin_bp.route('/comprehensive-user-management')
+@login_required
+@role_required(['super_hq', 'hq_hr', 'hq_project'])
+def comprehensive_user_management():
+    """Comprehensive user management page - display all users and employees"""
+    try:
+        # Get all users from User table (staff)
+        users = User.query.all()
+        
+        # Get all employees from Employee table
+        employees = Employee.query.all()
+        
+        # Get all projects for assignment options
+        projects = Project.query.filter_by(status='Active').all()
+        
+        # Get available roles
+        available_roles = ['admin', 'manager', 'supervisor', 'staff', 'viewer', 'project_manager', 
+                          'site_engineer', 'foreman', 'safety_officer', 'quality_control']
+        
+        # Get staff assignments with project details
+        staff_assignments = db.session.query(StaffAssignment, Project.name.label('project_name')).join(Project).all()
+        
+        # Create assignment lookup for easy access
+        user_assignments = {}
+        for assignment, project_name in staff_assignments:
+            if assignment.staff_id not in user_assignments:
+                user_assignments[assignment.staff_id] = []
+            user_assignments[assignment.staff_id].append({
+                'project_id': assignment.project_id,
+                'project_name': project_name,
+                'role': assignment.role,
+                'assigned_at': assignment.assigned_at
+            })
+        
+        # Statistics
+        total_users = len(users)
+        total_employees = len(employees)
+        active_users = len([u for u in users if u.role != 'inactive'])
+        users_with_projects = len(user_assignments)
+        
+        current_app.logger.info(f"Comprehensive user management accessed by {current_user.name}")
+        
+        return render_template('admin/comprehensive_user_management.html',
+                             users=users,
+                             employees=employees,
+                             projects=projects,
+                             available_roles=available_roles,
+                             user_assignments=user_assignments,
+                             total_users=total_users,
+                             total_employees=total_employees,
+                             active_users=active_users,
+                             users_with_projects=users_with_projects)
+                             
+    except Exception as e:
+        current_app.logger.error(f"Error loading comprehensive user management: {str(e)}")
+        flash('Error loading user management page', 'error')
+        return redirect(url_for('admin.index'))
+
+@admin_bp.route('/assign-user-role-new', methods=['POST'])
+@login_required
+@role_required(['super_hq', 'hq_hr'])
+def assign_user_role_new():
+    """Assign or update user role"""
+    try:
+        user_id = request.form.get('user_id')
+        new_role = request.form.get('role')
+        
+        if not user_id or not new_role:
+            flash('User and role are required', 'error')
+            return redirect(url_for('admin.comprehensive_user_management'))
+        
+        user = User.query.get_or_404(user_id)
+        old_role = user.role
+        user.role = new_role
+        user.updated_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        current_app.logger.info(f"User {user.name} role changed from {old_role} to {new_role} by {current_user.name}")
+        flash(f'Successfully updated {user.name}\'s role from {old_role} to {new_role}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error updating user role: {str(e)}")
+        flash('Error updating user role', 'error')
+    
+    return redirect(url_for('admin.comprehensive_user_management'))
+
+@admin_bp.route('/assign-user-project-new', methods=['POST'])
+@login_required
+@role_required(['super_hq', 'hq_project'])
+def assign_user_project_new():
+    """Assign user to project"""
+    try:
+        user_id = request.form.get('user_id')
+        project_id = request.form.get('project_id')
+        role = request.form.get('project_role', 'Staff')
+        
+        if not user_id or not project_id:
+            flash('User and project are required', 'error')
+            return redirect(url_for('admin.comprehensive_user_management'))
+        
+        # Check if assignment already exists
+        existing = StaffAssignment.query.filter_by(staff_id=user_id, project_id=project_id).first()
+        if existing:
+            flash('User is already assigned to this project', 'warning')
+            return redirect(url_for('admin.comprehensive_user_management'))
+        
+        assignment = StaffAssignment(
+            staff_id=user_id,
+            project_id=project_id,
+            role=role,
+            assigned_at=datetime.utcnow()
+        )
+        
+        db.session.add(assignment)
+        db.session.commit()
+        
+        user = User.query.get(user_id)
+        project = Project.query.get(project_id)
+        
+        current_app.logger.info(f"User {user.name} assigned to project {project.name} as {role} by {current_user.name}")
+        flash(f'Successfully assigned {user.name} to {project.name} as {role}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error assigning user to project: {str(e)}")
+        flash('Error assigning user to project', 'error')
+    
+    return redirect(url_for('admin.comprehensive_user_management'))
+
+@admin_bp.route('/remove-user-project/<int:user_id>/<int:project_id>', methods=['POST'])
+@login_required
+@role_required(['super_hq', 'hq_project'])
+def remove_user_project(user_id, project_id):
+    """Remove user from project"""
+    try:
+        assignment = StaffAssignment.query.filter_by(staff_id=user_id, project_id=project_id).first()
+        if not assignment:
+            flash('Assignment not found', 'error')
+            return redirect(url_for('admin.comprehensive_user_management'))
+        
+        user = User.query.get(user_id)
+        project = Project.query.get(project_id)
+        
+        db.session.delete(assignment)
+        db.session.commit()
+        
+        current_app.logger.info(f"User {user.name} removed from project {project.name} by {current_user.name}")
+        flash(f'Successfully removed {user.name} from {project.name}', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error removing user from project: {str(e)}")
+        flash('Error removing user from project', 'error')
+    
+    return redirect(url_for('admin.comprehensive_user_management'))

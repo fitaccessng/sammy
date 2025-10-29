@@ -1,146 +1,302 @@
-{% extends "admin/base.html" %}
-
-{% block title %}Employee Database | SammyA{% endblock %}
-{% block header %}Employee Database{% endblock %}
-
-{% block content %}
-<div class="p-6 space-y-6">
-    <!-- Top Actions -->
-    <div class="flex justify-between items-center">
-        <div class="flex space-x-4">
-            <a href="{{ url_for('admin.add_employee') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2">
-                <i class='bx bx-plus'></i>
-                <span>Add Employee</span>
-            </a>
-            <button class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg flex items-center space-x-2" onclick="document.getElementById('filterModal').classList.remove('hidden')">
-                <i class='bx bx-filter-alt'></i>
-                <span>Filters</span>
-            </button>
+{% extends "admin/base_simple.html" %}
+function viewEmployee(employeeId) {
+    const modal = document.getElementById('employeeModal');
+    const details = document.getElementById('employeeDetails');
+    modal.classList.remove('hidden');
+    details.innerHTML = `
+        <div class="text-center py-6">
+            <i class='bx bx-loader-alt bx-spin text-2xl text-gray-400'></i>
+            <p class="text-gray-600 mt-2">Loading employee details...</p>
         </div>
-        <div class="flex items-center bg-white rounded-lg px-3 py-2 w-64 border">
-            <i class='bx bx-search text-gray-400'></i>
-            <input type="text" placeholder="Search employees..." class="ml-2 flex-1 outline-none">
-        </div>
-    </div>
+    `;
 
-    <!-- Employee Table -->
-    <div class="bg-white rounded-lg shadow overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+    fetch(`/hr/staff/${employeeId}/json`, { headers: { 'Accept': 'application/json' } })
+        .then(response => {
+            if (!response.ok) throw new Error('Unable to load staff details');
+            return response.json();
+        })
+        .then(payload => {
+            const s = payload.staff || {};
+            const payrolls = payload.payrolls || [];
+
+            const payrollRows = payrolls.length ? payrolls.map(p => {
+                const period = p.period_month && p.period_year ? `${p.period_month}/${p.period_year}` : '';
+                return `
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-3 py-2 text-sm text-gray-800">${period}</td>
+                        <td class="px-3 py-2 text-sm text-gray-800">${p.designation || ''}</td>
+                        <td class="px-3 py-2 text-sm text-gray-800">${p.site || ''}</td>
+                        <td class="px-3 py-2 text-sm text-gray-800">${(p.gross||0).toLocaleString()}</td>
+                    </tr>`;
+            }).join('') : `<tr><td colspan="4" class="px-3 py-2 text-sm text-gray-500">No payroll records</td></tr>`;
+
+            details.innerHTML = `
+                <div class="space-y-4">
+                    <div class="flex items-center gap-4">
+                        <img src="${s.avatar_url || ''}" alt="avatar" class="h-20 w-20 rounded-full">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-800">${s.name || 'N/A'}</h3>
+                            <div class="text-sm text-gray-600">${s.position || ''} &middot; ${s.department || ''}</div>
+                            <div class="text-sm text-gray-500">Staff Code: ${s.staff_code || 'N/A'}</div>
+                        </div>
+                        <div class="ml-auto text-right text-sm text-gray-600">
+                            <div>Status: <span class="font-medium">${s.status || ''}</span></div>
+                            <div>Employment: ${s.employment_type || ''}</div>
+                            <div>Joined: ${s.date_of_employment ? (new Date(s.date_of_employment)).toLocaleDateString() : 'N/A'}</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-gray-50 rounded">
+                            <h4 class="font-semibold text-gray-700 mb-2">Contact</h4>
+                            <div class="text-sm text-gray-800">Email: ${s.email || 'N/A'}</div>
+                            <div class="text-sm text-gray-800">Phone: ${s.phone || 'N/A'}</div>
+                            <div class="text-sm text-gray-800">Address: ${s.current_address || 'N/A'}</div>
+                        </div>
+                        <div class="p-4 bg-gray-50 rounded">
+                            <h4 class="font-semibold text-gray-700 mb-2">Next of Kin</h4>
+                            <div class="text-sm text-gray-800">${s.next_of_kin || 'N/A'}</div>
+                            <div class="text-sm text-gray-800">${s.next_of_kin_phone || ''}</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Notes</h4>
+                        <div class="text-sm text-gray-800 bg-white p-3 rounded">${s.notes || 'No notes'}</div>
+                    </div>
+
+                    <div>
+                        <h4 class="font-semibold text-gray-700 mb-2">Recent Payrolls</h4>
+                        <div class="overflow-x-auto bg-white rounded">
+                            <table class="w-full text-left">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-3 py-2 text-xs text-gray-500">Period</th>
+                                        <th class="px-3 py-2 text-xs text-gray-500">Designation</th>
+                                        <th class="px-3 py-2 text-xs text-gray-500">Site</th>
+                                        <th class="px-3 py-2 text-xs text-gray-500">Gross (₦)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${payrollRows}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between mt-4">
+                        <a href="/hr/staff/${employeeId}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                            Open Full Profile
+                        </a>
+                        <button onclick="closeEmployeeModal()" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">Close</button>
+                    </div>
+                </div>
+            `;
+        })
+        .catch(err => {
+            details.innerHTML = `<div class="p-6 text-center text-red-600">Unable to load employee details.</div>`;
+            console.error(err);
+        });
+}
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date of Employment</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Site</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employment Date</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contact</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
                 {% for employee in employees %}
-                <tr>
+                <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="flex items-center">
                             <div class="flex-shrink-0 h-10 w-10">
-                                <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name={{ employee.name|replace(' ', '+') }}" alt="">
+                                <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <span class="text-sm font-medium text-blue-600">
+                                        {{ employee.name[:2].upper() if employee.name else 'N/A' }}
+                                    </span>
+                                </div>
                             </div>
                             <div class="ml-4">
                                 <div class="text-sm font-medium text-gray-900">{{ employee.name }}</div>
+                                <div class="text-sm text-gray-500">ID: {{ employee.id }}</div>
                             </div>
                         </div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ employee.email }}</div>
+                        <div class="text-sm text-gray-900">{{ employee.staff_code or 'N/A' }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ employee.department }}</div>
+                        <div class="text-sm text-gray-900">{{ employee.position or 'N/A' }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ employee.role }}</div>
+                        <div class="text-sm text-gray-900">{{ employee.department or 'N/A' }}</div>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ employee.date_of_employment.strftime('%Y-%m-%d') if employee.date_of_employment else '' }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm text-gray-900">{{ employee.site }}</div>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            {{ employee.status }}
-                        </span>
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <div class="flex space-x-2">
-                            <button class="text-blue-600 hover:text-blue-900">Edit</button>
-                            <button class="text-red-600 hover:text-red-900">Delete</button>
+                        <div class="text-sm text-gray-900">
+                            {% if employee.date_of_employment %}
+                                {{ employee.date_of_employment.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                N/A
+                            {% endif %}
                         </div>
                     </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="8" class="px-6 py-4 text-center text-gray-500">No employees found.</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                   {% if employee.status == 'Active' %}bg-green-100 text-green-800
+                                   {% elif employee.status == 'Inactive' %}bg-yellow-100 text-yellow-800
+                                   {% elif employee.status == 'Terminated' %}bg-red-100 text-red-800
+                                   {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ employee.status or 'Unknown' }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-900">{{ employee.email or 'No email' }}</div>
+                        <div class="text-sm text-gray-500">{{ employee.phone or 'No phone' }}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button onclick="viewEmployee({{ employee.id }})" 
+                                    class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors duration-200">
+                                <i class='bx bx-show mr-1'></i>View
+                            </button>
+                        </div>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
+{% else %}
+<div class="card bg-white p-8 text-center">
+    <i class='bx bxs-user-x text-6xl text-gray-300 mb-4'></i>
+    <h3 class="text-lg font-semibold text-gray-800 mb-2">No Employees Found</h3>
+    <p class="text-gray-600 mb-4">No employees match your current search criteria.</p>
+    <a href="{{ url_for('admin.view_employees') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+        <i class='bx bx-refresh mr-2'></i>Reset Filters
+    </a>
+</div>
+{% endif %}
 
-    <!-- Pagination (optional, can be made dynamic) -->
-    <div class="flex items-center justify-between bg-white px-4 py-3 border-t border-gray-200 sm:px-6 rounded-lg">
-        <div class="flex-1 flex justify-between sm:hidden">
-            <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                Previous
-            </a>
-            <a href="#" class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                Next
-            </a>
-        </div>
-        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-            <div>
-                <p class="text-sm text-gray-700">
-                    Showing <span class="font-medium">1</span> to <span class="font-medium">10</span> of <span class="font-medium">97</span> results
-                </p>
+<!-- Employee Detail Modal -->
+<div id="employeeModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Employee Details</h3>
+                <button onclick="closeEmployeeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
             </div>
-            <div>
-                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        Previous
-                    </a>
-                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        1
-                    </a>
-                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        2
-                    </a>
-                    <a href="#" class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
-                        3
-                    </a>
-                    <a href="#" class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                        Next
-                    </a>
-                </nav>
+            <div id="employeeDetails">
+                <!-- Employee details will be loaded here -->
+                <div class="text-center py-4">
+                    <i class='bx bx-loader-alt bx-spin text-2xl text-gray-400'></i>
+                    <p class="text-gray-600 mt-2">Loading employee details...</p>
+                </div>
             </div>
         </div>
     </div>
 </div>
+{% endblock %}
 
-<!-- Filter Modal -->
-<div id="filterModal" class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 hidden">
-    <div class="bg-white rounded-lg p-8 w-full max-w-md shadow-lg">
-        <h2 class="text-xl font-bold mb-4">Filter Employees</h2>
-        <form method="get" action="">
-            <input type="number" name="year_of_join" placeholder="Year of Join" class="w-full mb-3 px-3 py-2 border rounded">
-            <input type="text" name="role" placeholder="Role" class="w-full mb-3 px-3 py-2 border rounded">
-            <input type="text" name="department" placeholder="Department" class="w-full mb-3 px-3 py-2 border rounded">
-            <input type="text" name="site" placeholder="Site" class="w-full mb-3 px-3 py-2 border rounded">
-            <div class="flex justify-end space-x-2 mt-4">
-                <button type=
-                "button" class="px-4 py-2 bg-gray-200 rounded" onclick="document.getElementById('filterModal').classList.add('hidden')">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded">Apply</button>
+{% block extra_css %}
+<style>
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.border-l-4 {
+    border-left-width: 4px;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(249, 250, 251, 1);
+}
+
+#employeeModal {
+    backdrop-filter: blur(2px);
+}
+
+.modal-content {
+    animation: slideInFromTop 0.3s ease-out;
+}
+
+@keyframes slideInFromTop {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function viewEmployee(employeeId) {
+    document.getElementById('employeeModal').classList.remove('hidden');
+    
+    // You can fetch employee details via AJAX here
+    // For now, show basic loading message
+    document.getElementById('employeeDetails').innerHTML = `
+        <div class="space-y-4">
+            <div class="border-b pb-4">
+                <h4 class="font-semibold text-gray-800">Employee ID: ${employeeId}</h4>
+                <p class="text-gray-600 text-sm">Detailed employee information would be loaded here.</p>
             </div>
-        </form>
-    </div>
-</div>
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                    <label class="font-medium text-gray-600">Full Name:</label>
+                    <p class="text-gray-900">Loading...</p>
+                </div>
+                <div>
+                    <label class="font-medium text-gray-600">Position:</label>
+                    <p class="text-gray-900">Loading...</p>
+                </div>
+                <div>
+                    <label class="font-medium text-gray-600">Department:</label>
+                    <p class="text-gray-900">Loading...</p>
+                </div>
+                <div>
+                    <label class="font-medium text-gray-600">Status:</label>
+                    <p class="text-gray-900">Loading...</p>
+                </div>
+            </div>
+            <div class="flex justify-between mt-6">
+                <a href="/hr/staff/${employeeId}" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    View Full Profile
+                </a>
+                <button onclick="closeEmployeeModal()" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                    Close
+                </button>
+            </div>
+        </div>
+    `;
+}
+
+function closeEmployeeModal() {
+    document.getElementById('employeeModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('employeeModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeEmployeeModal();
+    }
+});
+
+// Auto-submit form on select change
+document.querySelectorAll('select').forEach(select => {
+    select.addEventListener('change', function() {
+        this.form.submit();
+    });
+});
+</script>
 {% endblock %}

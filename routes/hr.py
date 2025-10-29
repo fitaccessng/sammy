@@ -2185,6 +2185,83 @@ def staff_details(staff_id):
         flash("Error loading staff details", "error")
         return render_template('error.html'), 500
 
+
+@hr_bp.route("/staff/<int:staff_id>/json")
+@role_required([Roles.SUPER_HQ, Roles.HQ_HR])
+def staff_details_json(staff_id):
+    """Return staff details as JSON for use in admin modals and AJAX."""
+    try:
+        from models import Employee, Leave, StaffPayroll
+        emp = db.session.get(Employee, staff_id)
+        if not emp:
+            return jsonify({'error': 'Staff not found'}), 404
+
+        # Build staff payload (mirror of staff_details)
+        recent_activities = []
+        leaves = Leave.query.filter_by(employee_id=emp.id).order_by(Leave.start.desc()).limit(5).all() if hasattr(Leave, 'employee_id') else []
+        leave_history = []
+        for l in leaves:
+            leave_history.append({
+                'type': getattr(l, 'type', ''),
+                'start_date': l.start.strftime('%Y-%m-%d') if getattr(l, 'start', None) else None,
+                'end_date': l.end.strftime('%Y-%m-%d') if getattr(l, 'end', None) else None,
+                'status': getattr(l, 'status', '')
+            })
+
+        staff = {
+            'id': emp.id,
+            'name': emp.name,
+            'staff_code': getattr(emp, 'staff_code', ''),
+            'email': emp.email,
+            'phone': getattr(emp, 'phone', ''),
+            'department': getattr(emp, 'department', ''),
+            'position': getattr(emp, 'position', ''),
+            'status': getattr(emp, 'status', ''),
+            'role': getattr(emp, 'role', ''),
+            'avatar_url': f"https://ui-avatars.com/api/?name={emp.name.replace(' ', '+')}",
+            'dob': getattr(emp, 'dob', None).isoformat() if getattr(emp, 'dob', None) else None,
+            'current_address': getattr(emp, 'current_address', ''),
+            'next_of_kin': getattr(emp, 'next_of_kin', ''),
+            'next_of_kin_phone': getattr(emp, 'next_of_kin_phone', ''),
+            'date_of_employment': getattr(emp, 'date_of_employment', None).isoformat() if getattr(emp, 'date_of_employment', None) else None,
+            'employment_type': getattr(emp, 'employment_type', ''),
+            'gender': getattr(emp, 'gender', ''),
+            'academic_qualification_at_employment': getattr(emp, 'academic_qualification_at_employment', ''),
+            'institution': getattr(emp, 'institution', ''),
+            'notes': getattr(emp, 'notes', ''),
+            'recent_activities': recent_activities,
+            'leave_history': leave_history,
+            'attendance_records': [],
+            'tasks': [],
+            'documents': [],
+            'performance_reviews': []
+        }
+
+        payrolls = []
+        try:
+            for p in StaffPayroll.query.filter_by(employee_id=emp.id).order_by(StaffPayroll.created_at.desc()).limit(24).all():
+                payrolls.append({
+                    'id': p.id,
+                    'site': p.site or emp.department,
+                    'employment_date': p.employment_date.isoformat() if getattr(p, 'employment_date', None) else (getattr(emp, 'date_of_employment', None).isoformat() if getattr(emp, 'date_of_employment', None) else None),
+                    'bank_name': p.bank_name or '',
+                    'account_number': p.account_number or '',
+                    'designation': p.designation or emp.position,
+                    'work_days': p.work_days or 0,
+                    'days_worked': p.days_worked or 0,
+                    'overtime_hours': p.overtime_hours or 0,
+                    'gross': p.gross or 0.0,
+                    'arrears': p.arrears or 0.0,
+                    'period_year': p.period_year,
+                    'period_month': p.period_month,
+                })
+        except Exception:
+            current_app.logger.warning(f"Unable to load payroll breakdowns for staff {staff_id}")
+
+        return jsonify({'staff': staff, 'payrolls': payrolls})
+    except Exception as e:
+        current_app.logger.error(f"Staff details JSON error: {e}")
+        return jsonify({'error': 'internal_error'}), 500
 @hr_bp.route("/staff/<int:staff_id>/edit", methods=["POST"])
 @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
 def edit_staff(staff_id):

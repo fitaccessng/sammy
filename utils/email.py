@@ -70,3 +70,22 @@ def send_verification_email(email, verification_code):
     except Exception as e:
         logger.error(f"Email sending failed: {str(e)}", exc_info=True)
         raise
+
+def send_email_notification(email, subject, message):
+    """Send email notification for DPR assignments"""
+    try:
+        msg = Message(subject,
+                     sender=current_app.config['MAIL_DEFAULT_SENDER'],
+                     recipients=[email])
+        
+        msg.body = message
+        
+        # Log debug info
+        logger.debug(f"Sending notification email to {email}")
+        mail.send(msg)
+        logger.info(f"Successfully sent notification email to {email}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Notification email sending failed: {str(e)}", exc_info=True)
+        return False

@@ -1,9 +1,599 @@
 {% extends "finance/base.html" %}
+
 {% block title %}Bank Reconciliation | SammyA Finance{% endblock %}
 {% block header %}Bank Reconciliation{% endblock %}
+
 {% block content %}
-<div class="p-6">
-    <h2 class="text-2xl font-bold mb-4">Bank Reconciliation</h2>
-    <p>This is a placeholder page for bank reconciliation. Add your reconciliation logic and UI here.</p>
+<div class="space-y-6">
+    <!-- Success/Error Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }} p-4 rounded-lg mb-4
+                    {{ 'bg-green-50 border border-green-200 text-green-800' if category == 'success' else 'bg-red-50 border border-red-200 text-red-800' }}">
+                    <div class="flex items-center">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} mr-2"></i>
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Page Header with Actions -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-4">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900">Bank Reconciliation</h2>
+                <p class="text-gray-600">Manage bank accounts and reconcile transactions</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button onclick="openCreateAccountModal()" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    <i class="fas fa-plus mr-2"></i>Create Account
+                </button>
+                <button onclick="openAddTransactionModal()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    <i class="fas fa-exchange-alt mr-2"></i>Add Transaction
+                </button>
+                
+                <!-- Export Dropdown -->
+                <div class="relative inline-block text-left">
+                    <button type="button" onclick="toggleExportDropdown()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none">
+                        <i class="fas fa-download mr-2"></i>Export Data
+                        <i class="fas fa-chevron-down ml-1"></i>
+                    </button>
+                    <div id="exportDropdown" class="hidden origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                        <div class="py-1" role="menu">
+                            <div class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-50">Export Options</div>
+                            <a href="{{ url_for('finance.export_bank_transactions', format='excel') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-file-excel mr-2 text-green-600"></i>Transactions (Excel)
+                            </a>
+                            <a href="{{ url_for('finance.export_bank_transactions', format='csv') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-file-csv mr-2 text-blue-600"></i>Transactions (CSV)
+                            </a>
+                            <a href="{{ url_for('finance.export_bank_reconciliations', format='excel') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-file-excel mr-2 text-green-600"></i>Reconciliations (Excel)
+                            </a>
+                            <a href="{{ url_for('finance.export_bank_reconciliations', format='csv') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-file-csv mr-2 text-blue-600"></i>Reconciliations (CSV)
+                            </a>
+                            <a href="{{ url_for('finance.export_account_summary', format='excel') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-file-excel mr-2 text-green-600"></i>Account Summary (Excel)
+                            </a>
+                            <a href="{{ url_for('finance.export_account_summary', format='csv') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-file-csv mr-2 text-blue-600"></i>Account Summary (CSV)
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Statistics (Real Data) -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <div class="text-sm text-blue-600 font-medium">Total Bank Balance (Real)</div>
+                <div class="text-2xl font-bold text-blue-900">₦{{ "{:,.2f}".format(total_bank_balance|default(0)) }}</div>
+                <div class="text-xs text-blue-600">From {{ bank_accounts|length }} active accounts</div>
+            </div>
+            <div class="bg-green-50 p-4 rounded-lg">
+                <div class="text-sm text-green-600 font-medium">Total Book Balance (Real)</div>
+                <div class="text-2xl font-bold text-green-900">₦{{ "{:,.2f}".format(total_book_balance|default(0)) }}</div>
+                <div class="text-xs text-green-600">Reconciled balance</div>
+            </div>
+            <div class="bg-{{ 'red' if (total_difference|default(0)) < 0 else 'yellow' if (total_difference|default(0)) > 0 else 'gray' }}-50 p-4 rounded-lg">
+                <div class="text-sm text-{{ 'red' if (total_difference|default(0)) < 0 else 'yellow' if (total_difference|default(0)) > 0 else 'gray' }}-600 font-medium">Difference (Real)</div>
+                <div class="text-2xl font-bold text-{{ 'red' if (total_difference|default(0)) < 0 else 'yellow' if (total_difference|default(0)) > 0 else 'gray' }}-900">₦{{ "{:,.2f}".format(total_difference|default(0)) }}</div>
+                <div class="text-xs text-{{ 'red' if (total_difference|default(0)) < 0 else 'yellow' if (total_difference|default(0)) > 0 else 'gray' }}-600">
+                    {% if total_difference|default(0) == 0 %}Balanced{% elif total_difference|default(0) > 0 %}Over{% else %}Under{% endif %}
+                </div>
+            </div>
+            <div class="bg-purple-50 p-4 rounded-lg">
+                <div class="text-sm text-purple-600 font-medium">Pending Items (Real)</div>
+                <div class="text-2xl font-bold text-purple-900">{{ pending_transactions_count|default(0) }}</div>
+                <div class="text-xs text-purple-600">Expenses & transactions</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bank Accounts Overview -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Bank Accounts</h3>
+            {% if account_summaries %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Balance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book Balance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difference</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unreconciled</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for summary in account_summaries %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ summary.account.account_name }}</div>
+                                    <div class="text-sm text-gray-500">{{ summary.account.account_number }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ summary.account.bank_name }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    ₦{{ "{:,.2f}".format(summary.account.current_balance) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    ₦{{ "{:,.2f}".format(summary.account.book_balance) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm font-medium {{ 'text-red-600' if summary.difference < 0 else 'text-green-600' if summary.difference > 0 else 'text-gray-600' }}">
+                                        ₦{{ "{:,.2f}".format(summary.difference) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ 'bg-yellow-100 text-yellow-800' if summary.unreconciled_count > 0 else 'bg-green-100 text-green-800' }}">
+                                        {{ summary.unreconciled_count }} transactions
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                    <a href="{{ url_for('finance.view_account_transactions', account_id=summary.account.id) }}" class="text-blue-600 hover:text-blue-900">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                    <button onclick="startReconciliation({{ summary.account.id }})" class="text-green-600 hover:text-green-900">
+                                        <i class="fas fa-balance-scale"></i> Reconcile
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-university text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No bank accounts found. Create your first account to get started.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Reconciliations -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Reconciliations</h3>
+            {% if recent_reconciliations %}
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statement Balance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Book Balance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Difference</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for reconciliation in recent_reconciliations %}
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ reconciliation.reconciliation_date.strftime('%Y-%m-%d') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ reconciliation.bank_account.account_name }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    ₦{{ "{:,.2f}".format(reconciliation.statement_balance) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    ₦{{ "{:,.2f}".format(reconciliation.book_balance) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm {{ 'text-red-600' if reconciliation.difference < 0 else 'text-green-600' if reconciliation.difference > 0 else 'text-gray-600' }}">
+                                        ₦{{ "{:,.2f}".format(reconciliation.difference) }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                        {{ 'bg-green-100 text-green-800' if reconciliation.status == 'Reconciled' else 
+                                           'bg-yellow-100 text-yellow-800' if reconciliation.status == 'Pending' else 
+                                           'bg-red-100 text-red-800' }}">
+                                        {{ reconciliation.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button onclick="viewReconciliationDetails({{ reconciliation.id }})" class="text-blue-600 hover:text-blue-900">
+                                        <i class="fas fa-eye"></i> Details
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-8">
+                    <i class="fas fa-history text-gray-400 text-4xl mb-4"></i>
+                    <p class="text-gray-500">No reconciliations found.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Recent Financial Activity (Real Data) -->
+    {% if recent_expenses %}
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Financial Activity (Real Data)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Recent Expenses -->
+                <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-3">Recent Expenses</h4>
+                    <div class="space-y-2">
+                        {% for expense in recent_expenses %}
+                        <div class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                            <div>
+                                <div class="font-medium text-gray-900">{{ expense.category }}</div>
+                                <div class="text-sm text-gray-600">{{ expense.description }}</div>
+                                <div class="text-xs text-gray-500">{{ expense.date.strftime('%Y-%m-%d') }}</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold text-red-600">-₦{{ "{:,.2f}".format(expense.amount) }}</div>
+                                <div class="text-xs text-gray-500">{{ expense.status }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Monthly Summary -->
+                <div>
+                    <h4 class="text-md font-medium text-gray-700 mb-3">This Month's Summary</h4>
+                    <div class="space-y-3">
+                        <div class="flex justify-between p-3 bg-blue-50 rounded-lg">
+                            <span class="text-blue-700">Total Bank Balance</span>
+                            <span class="font-bold text-blue-900">₦{{ "{:,.2f}".format(total_bank_balance) }}</span>
+                        </div>
+                        {% if total_expenses_this_month %}
+                        <div class="flex justify-between p-3 bg-red-50 rounded-lg">
+                            <span class="text-red-700">Total Expenses</span>
+                            <span class="font-bold text-red-900">₦{{ "{:,.2f}".format(total_expenses_this_month) }}</span>
+                        </div>
+                        {% endif %}
+                        {% if pending_expenses %}
+                        <div class="flex justify-between p-3 bg-yellow-50 rounded-lg">
+                            <span class="text-yellow-700">Pending Expenses</span>
+                            <span class="font-bold text-yellow-900">{{ pending_expenses }} items</span>
+                        </div>
+                        {% endif %}
+                        <div class="flex justify-between p-3 bg-green-50 rounded-lg">
+                            <span class="text-green-700">Net Position</span>
+                            <span class="font-bold text-green-900">₦{{ "{:,.2f}".format(total_bank_balance - (total_expenses_this_month or 0)) }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
+
+<!-- Create Bank Account Modal -->
+<div id="createAccountModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Create Bank Account</h3>
+            <form id="createAccountForm" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Account Name</label>
+                    <input type="text" name="account_name" required 
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Account Number</label>
+                    <input type="text" name="account_number" required 
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Bank Name</label>
+                    <input type="text" name="bank_name" required 
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Account Type</label>
+                    <select name="account_type" class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="Checking">Checking</option>
+                        <option value="Savings">Savings</option>
+                        <option value="Money Market">Money Market</option>
+                        <option value="Current">Current</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Opening Balance</label>
+                    <input type="number" name="opening_balance" step="0.01" min="0" value="0"
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeCreateAccountModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        Create Account
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Transaction Modal -->
+<div id="addTransactionModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Add Transaction</h3>
+            <form id="addTransactionForm" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Bank Account</label>
+                    <select name="account_id" required class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Select Account</option>
+                        {% for account in bank_accounts %}
+                            <option value="{{ account.id }}">{{ account.account_name }} - {{ account.bank_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Transaction Type</label>
+                    <select name="transaction_type" required class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <option value="">Select Type</option>
+                        <option value="Credit">Credit (Money In)</option>
+                        <option value="Debit">Debit (Money Out)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Amount</label>
+                    <input type="number" name="amount" step="0.01" min="0.01" required 
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <input type="text" name="description" required 
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Reference Number</label>
+                    <input type="text" name="reference_number" 
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Transaction Date</label>
+                    <input type="date" name="transaction_date" required value="{{ datetime.now().strftime('%Y-%m-%d') }}"
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeAddTransactionModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        Add Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Start Reconciliation Modal -->
+<div id="startReconciliationModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Start Bank Reconciliation</h3>
+            <form id="startReconciliationForm" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="account_id" id="reconciliation_account_id">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Reconciliation Date</label>
+                    <input type="date" name="reconciliation_date" required value="{{ datetime.now().strftime('%Y-%m-%d') }}"
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Statement Balance</label>
+                    <input type="number" name="statement_balance" step="0.01" required 
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                           placeholder="Enter bank statement balance">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea name="notes" rows="3" 
+                           class="mt-1 border p-2 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                           placeholder="Optional notes about this reconciliation"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                    <button type="button" onclick="closeStartReconciliationModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Start Reconciliation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Modal functions
+function openCreateAccountModal() {
+    document.getElementById('createAccountModal').classList.remove('hidden');
+}
+
+function closeCreateAccountModal() {
+    document.getElementById('createAccountModal').classList.add('hidden');
+}
+
+function openAddTransactionModal() {
+    document.getElementById('addTransactionModal').classList.remove('hidden');
+}
+
+function closeAddTransactionModal() {
+    document.getElementById('addTransactionModal').classList.add('hidden');
+}
+
+function openStartReconciliationModal() {
+    document.getElementById('startReconciliationModal').classList.remove('hidden');
+}
+
+function closeStartReconciliationModal() {
+    document.getElementById('startReconciliationModal').classList.add('hidden');
+}
+
+function startReconciliation(accountId) {
+    document.getElementById('reconciliation_account_id').value = accountId;
+    openStartReconciliationModal();
+}
+
+function viewAccountTransactions(accountId) {
+    window.location.href = `/finance/bank-reconciliation/transactions/${accountId}`;
+}
+
+function viewReconciliationDetails(reconciliationId) {
+    window.location.href = `/finance/bank-reconciliation/details/${reconciliationId}`;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Create Account Form
+    document.getElementById('createAccountForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch('/finance/bank-reconciliation/create-account', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            if (data.status === 'success') {
+                showNotification('Bank account created successfully!', 'success');
+                closeCreateAccountModal();
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showNotification(data.message || 'Failed to create account', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Failed to create account', 'error');
+        }
+    });
+    
+    // Add Transaction Form
+    document.getElementById('addTransactionForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch('/finance/bank-reconciliation/add-transaction', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            if (data.status === 'success') {
+                showNotification('Transaction added successfully!', 'success');
+                closeAddTransactionModal();
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showNotification(data.message || 'Failed to add transaction', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Failed to add transaction', 'error');
+        }
+    });
+    
+    // Start Reconciliation Form
+    document.getElementById('startReconciliationForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        try {
+            const response = await fetch('/finance/bank-reconciliation/start', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            if (data.status === 'success') {
+                showNotification('Bank reconciliation started successfully!', 'success');
+                closeStartReconciliationModal();
+                setTimeout(() => window.location.reload(), 1500);
+            } else {
+                showNotification(data.message || 'Failed to start reconciliation', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Failed to start reconciliation', 'error');
+        }
+    });
+    
+    // Notification function
+    function showNotification(message, type = 'info') {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 ${
+            type === 'success' ? 'bg-green-500 text-white' :
+            type === 'error' ? 'bg-red-500 text-white' :
+            'bg-blue-500 text-white'
+        }`;
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-triangle' : 'info-circle'} mr-2"></i>
+                ${message}
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+    
+    // Make showNotification globally available
+    window.showNotification = showNotification;
+    
+    // Auto-hide flash messages
+    const alerts = document.querySelectorAll('.alert');
+    alerts.forEach(alert => {
+        setTimeout(() => {
+            alert.style.opacity = '0';
+            setTimeout(() => alert.remove(), 300);
+        }, 5000);
+    });
+});
+
+// Export dropdown toggle function
+function toggleExportDropdown() {
+    const dropdown = document.getElementById('exportDropdown');
+    dropdown.classList.toggle('hidden');
+}
+
+// Close export dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('exportDropdown');
+    const button = event.target.closest('button');
+    
+    if (!button || !button.onclick || button.onclick.toString().indexOf('toggleExportDropdown') === -1) {
+        dropdown.classList.add('hidden');
+    }
+});
+</script>
 {% endblock %}

@@ -35,11 +35,11 @@
                 <!-- Project Management -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Project Management</h2>
-                    <a href="{{ url_for('project.create_project') }}" 
+                    <!-- <a href="{{ url_for('project.create_project') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bx-plus-circle text-xl'></i>
                         <span>Create Project</span>
-                    </a>
+                    </a> -->
                     <a href="{{ url_for('project.tasks') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bx-task text-xl'></i>
@@ -75,10 +75,15 @@
                 <!-- Reports -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports & Analytics</h2>
-                    <a href="{{ url_for('project.reports') }}" 
+                    <a href="{{ url_for('project.reports_index') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-report text-xl'></i>
                         <span>Reports</span>
+                    </a>
+                    <a href="{{ url_for('project.dpr_list') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bx-receipt text-xl'></i>
+                        <span>Daily Production Reports</span>
                     </a>
                     <a href="{{ url_for('project.analytics') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">

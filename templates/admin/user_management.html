@@ -1,0 +1,491 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
+                    <p class="mt-2 text-gray-600">Manage all users, employees, roles, and project assignments</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a href="{{ url_for('admin.dashboard') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-blue-100">
+                        <i class="fas fa-users text-blue-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Users</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.total_users }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-green-100">
+                        <i class="fas fa-id-badge text-green-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Employees</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.total_employees }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-emerald-100">
+                        <i class="fas fa-user-check text-emerald-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Active Employees</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.active_employees }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-purple-100">
+                        <i class="fas fa-project-diagram text-purple-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total Projects</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.total_projects }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-orange-100">
+                        <i class="fas fa-user-cog text-orange-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Users with Roles</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.users_with_roles }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 rounded-full bg-teal-100">
+                        <i class="fas fa-tasks text-teal-600 text-xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Assigned Employees</p>
+                        <p class="text-2xl font-semibold text-gray-900">{{ stats.employees_assigned }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="bg-white rounded-lg shadow mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button onclick="showTab('users')" id="users-tab" class="tab-button border-blue-500 text-blue-600 py-4 px-1 border-b-2 font-medium text-sm">
+                        <i class="fas fa-users mr-2"></i>System Users ({{ stats.total_users }})
+                    </button>
+                    <button onclick="showTab('employees')" id="employees-tab" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 border-b-2 font-medium text-sm">
+                        <i class="fas fa-id-badge mr-2"></i>Employees ({{ stats.total_employees }})
+                    </button>
+                    <button onclick="showTab('assignments')" id="assignments-tab" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 border-b-2 font-medium text-sm">
+                        <i class="fas fa-tasks mr-2"></i>Project Assignments
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Users Tab -->
+        <div id="users-content" class="tab-content">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">System Users & Role Management</h3>
+                    <p class="mt-1 text-sm text-gray-600">Manage user accounts and assign system roles</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Current Role</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for user in users %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                                <i class="fas fa-user text-gray-600"></i>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+                                            <div class="text-sm text-gray-500">ID: {{ user.id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ user.email }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if user.role %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                            {{ user.role.replace('_', ' ').title() }}
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                            No Role
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if user.is_verified %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i>Verified
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                            <i class="fas fa-clock mr-1"></i>Pending
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                    {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                    <button onclick="openRoleModal({{ user.id }}, '{{ user.name }}', '{{ user.role or '' }}')" 
+                                            class="text-blue-600 hover:text-blue-900">
+                                        <i class="fas fa-user-cog"></i> Assign Role
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employees Tab -->
+        <div id="employees-content" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Employee Directory</h3>
+                    <p class="mt-1 text-sm text-gray-600">View all employees and their details</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Employee</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Staff Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Department</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Position</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned Projects</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for employee in employees %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                                                <i class="fas fa-id-badge text-gray-600"></i>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ employee.name }}</div>
+                                            <div class="text-sm text-gray-500">{{ employee.email or 'No email' }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ employee.staff_code or 'N/A' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ employee.department or 'Not assigned' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {{ employee.position or 'Not specified' }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if employee.status == 'Active' %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                            <i class="fas fa-check-circle mr-1"></i>Active
+                                        </span>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                            <i class="fas fa-times-circle mr-1"></i>{{ employee.status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    {% set assigned_projects = employee_projects.get(employee.id, []) %}
+                                    {% if assigned_projects %}
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for project in assigned_projects %}
+                                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800">
+                                                    {{ project.name[:20] }}{% if project.name|length > 20 %}...{% endif %}
+                                                </span>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <span class="text-sm text-gray-500 italic">No assignments</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                                    <button onclick="openProjectModal({{ employee.id }}, '{{ employee.name }}')" 
+                                            class="text-green-600 hover:text-green-900">
+                                        <i class="fas fa-plus"></i> Assign Project
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignments Tab -->
+        <div id="assignments-content" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Project Assignments</h3>
+                    <p class="mt-1 text-sm text-gray-600">View and manage all project assignments</p>
+                </div>
+                <div class="p-6">
+                    {% for project in projects %}
+                        {% set project_employees = [] %}
+                        {% for emp_id, emp_projects in employee_projects.items() %}
+                            {% if project in emp_projects %}
+                                {% set _ = project_employees.append(employees|selectattr('id', 'equalto', emp_id)|first) %}
+                            {% endif %}
+                        {% endfor %}
+                        
+                        <div class="mb-6 border rounded-lg p-4">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h4 class="text-lg font-medium text-gray-900">{{ project.name }}</h4>
+                                    <p class="text-sm text-gray-600">{{ project.description[:100] }}{% if project.description and project.description|length > 100 %}...{% endif %}</p>
+                                </div>
+                                <div class="text-right">
+                                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium {% if project.status == 'active' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                                        {{ project.status.title() }}
+                                    </span>
+                                    <p class="text-sm text-gray-500 mt-1">{{ project_employees|length }} assigned</p>
+                                </div>
+                            </div>
+                            
+                            {% if project_employees %}
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                    {% for employee in project_employees %}
+                                        <div class="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                                            <div class="flex items-center">
+                                                <div class="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center mr-3">
+                                                    <i class="fas fa-user text-gray-600 text-xs"></i>
+                                                </div>
+                                                <div>
+                                                    <p class="text-sm font-medium text-gray-900">{{ employee.name }}</p>
+                                                    <p class="text-xs text-gray-500">{{ employee.department or 'No department' }}</p>
+                                                </div>
+                                            </div>
+                                            <button onclick="removeAssignment({{ employee.id }}, {{ project.id }})" 
+                                                    class="text-red-600 hover:text-red-900 text-sm">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-4 text-gray-500">
+                                    <i class="fas fa-users text-2xl mb-2"></i>
+                                    <p>No employees assigned to this project</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Role Assignment Modal -->
+<div id="roleModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Assign Role</h3>
+            <form method="POST" action="{{ url_for('admin.assign_user_role') }}">
+                <input type="hidden" name="user_id" id="roleUserId">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">User</label>
+                    <p id="roleUserName" class="mt-1 text-sm text-gray-900 font-medium"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Role</label>
+                    <select name="role" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Role</option>
+                        {% for role in available_roles %}
+                            <option value="{{ role.value }}">{{ role.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeRoleModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                        Assign Role
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Project Assignment Modal -->
+<div id="projectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Assign Project</h3>
+            <form method="POST" action="{{ url_for('admin.assign_employee_project') }}">
+                <input type="hidden" name="employee_id" id="projectEmployeeId">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Employee</label>
+                    <p id="projectEmployeeName" class="mt-1 text-sm text-gray-900 font-medium"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Project</label>
+                    <select name="project_id" required class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Project</option>
+                        {% for project in projects %}
+                            <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Assignment Role</label>
+                    <select name="assignment_role" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="Team Member">Team Member</option>
+                        <option value="Lead">Lead</option>
+                        <option value="Supervisor">Supervisor</option>
+                        <option value="Coordinator">Coordinator</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeProjectModal()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                        Assign Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Tab functionality
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active class from all tabs
+    document.querySelectorAll('.tab-button').forEach(button => {
+        button.classList.remove('border-blue-500', 'text-blue-600');
+        button.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-content').classList.remove('hidden');
+    
+    // Add active class to selected tab
+    const activeTab = document.getElementById(tabName + '-tab');
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+    activeTab.classList.add('border-blue-500', 'text-blue-600');
+}
+
+// Modal functions
+function openRoleModal(userId, userName, currentRole) {
+    document.getElementById('roleUserId').value = userId;
+    document.getElementById('roleUserName').textContent = userName;
+    
+    // Set current role in dropdown
+    const roleSelect = document.querySelector('#roleModal select[name="role"]');
+    roleSelect.value = currentRole;
+    
+    document.getElementById('roleModal').classList.remove('hidden');
+}
+
+function closeRoleModal() {
+    document.getElementById('roleModal').classList.add('hidden');
+}
+
+function openProjectModal(employeeId, employeeName) {
+    document.getElementById('projectEmployeeId').value = employeeId;
+    document.getElementById('projectEmployeeName').textContent = employeeName;
+    document.getElementById('projectModal').classList.remove('hidden');
+}
+
+function closeProjectModal() {
+    document.getElementById('projectModal').classList.add('hidden');
+}
+
+function removeAssignment(employeeId, projectId) {
+    if (confirm('Are you sure you want to remove this employee from the project?')) {
+        // Find the assignment ID and submit form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '{{ url_for("admin.remove_employee_assignment", assignment_id=0) }}'.replace('0', ''); // This needs to be fixed
+        
+        // For now, just reload and show message
+        alert('Assignment removal feature needs to be implemented with proper assignment ID');
+    }
+}
+
+// Close modals when clicking outside
+document.addEventListener('click', function(event) {
+    if (event.target.id === 'roleModal') {
+        closeRoleModal();
+    }
+    if (event.target.id === 'projectModal') {
+        closeProjectModal();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,268 @@
+{% extends "projects/base.html" %}
+
+{% block title %}DPR Details | SammyA Projects{% endblock %}
+{% block header %}Daily Production Report - {{ dpr.report_date.strftime('%B %d, %Y') }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Back Navigation -->
+    <div class="flex items-center space-x-3">
+        <a href="{{ url_for('project.dpr_list', selected_project_id=dpr.project_id) }}" 
+           class="flex items-center text-indigo-600 hover:text-indigo-800">
+            <i class="bx bx-arrow-back mr-2"></i>
+            Back to DPR List
+        </a>
+    </div>
+
+    <!-- DPR Header Information -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Project</label>
+                <p class="mt-1 text-sm text-gray-900">{{ dpr.project.name }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Report Date</label>
+                <p class="mt-1 text-sm text-gray-900">{{ dpr.report_date.strftime('%Y-%m-%d') }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Status</label>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                    {% if dpr.status == 'completed' %}bg-green-100 text-green-800
+                    {% elif dpr.status == 'approved' %}bg-blue-100 text-blue-800
+                    {% elif dpr.status == 'rejected' %}bg-red-100 text-red-800
+                    {% elif dpr.status == 'sent_to_staff' %}bg-yellow-100 text-yellow-800
+                    {% elif dpr.status == 'draft' %}bg-gray-100 text-gray-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ dpr.status.replace('_', ' ').title() }}
+                </span>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Created By</label>
+                <p class="mt-1 text-sm text-gray-900">{{ dpr.created_by.name if dpr.created_by else 'Unknown' }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Assigned To</label>
+                <p class="mt-1 text-sm text-gray-900">{{ dpr.assigned_to.name if dpr.assigned_to else 'Unassigned' }}</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Created Date</label>
+                <p class="mt-1 text-sm text-gray-900">{{ dpr.created_at.strftime('%Y-%m-%d %H:%M') if dpr.created_at else 'N/A' }}</p>
+            </div>
+            {% if dpr.completed_at %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Completed Date</label>
+                <p class="mt-1 text-sm text-gray-900">{{ dpr.completed_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+            {% endif %}
+            {% if dpr.completed_by %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Completed By</label>
+                <p class="mt-1 text-sm text-gray-900">{{ dpr.completed_by.name }}</p>
+            </div>
+            {% endif %}
+            {% if dpr.reviewed_at %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Reviewed Date</label>
+                <p class="mt-1 text-sm text-gray-900">{{ dpr.reviewed_at.strftime('%Y-%m-%d %H:%M') }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Action Buttons -->
+        {% if user_role in ['super_hq', 'project_manager'] and dpr.status in ['completed', 'sent_to_staff'] %}
+        <div class="mt-6 flex space-x-3">
+            <button onclick="approveDPR({{ dpr.id }})" 
+                    class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">
+                <i class="bx bx-check mr-2"></i>Approve DPR
+            </button>
+            <button onclick="rejectDPR({{ dpr.id }})" 
+                    class="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                <i class="bx bx-x mr-2"></i>Reject DPR
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Production Items -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Production Items</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item Code</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target Qty</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Previous Done</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Day Production</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Done</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if production_items %}
+                        {% for item in production_items %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ item.item_code }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ item.description }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ item.location or '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ item.unit or '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ "%.2f"|format(item.target_qty) if item.target_qty else '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ "%.2f"|format(item.previous_qty_done) if item.previous_qty_done else '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ "%.2f"|format(item.day_production) if item.day_production else '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ "%.2f"|format(item.total_qty_done) if item.total_qty_done else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">No production items recorded</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Material Usage -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Material Usage</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Item #</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Previous Used</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Day Usage</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Used</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% if material_usage %}
+                        {% for material in material_usage %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ material.item_number }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ material.description }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ material.unit or '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ "%.2f"|format(material.previous_qty_used) if material.previous_qty_used else '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ "%.2f"|format(material.day_usage) if material.day_usage else '-' }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ "%.2f"|format(material.total_qty_used) if material.total_qty_used else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">No material usage recorded</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Issues and Comments -->
+    {% if dpr.issues %}
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Issues and Comments</h3>
+        </div>
+        <div class="px-6 py-4">
+            <div class="bg-gray-50 rounded-lg p-4">
+                <pre class="whitespace-pre-wrap text-sm text-gray-700">{{ dpr.issues }}</pre>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Signatures -->
+    {% if dpr.prepared_by or dpr.checked_by %}
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Signatures</h3>
+        </div>
+        <div class="px-6 py-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {% if dpr.prepared_by %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Prepared By</label>
+                    <p class="mt-1 text-sm text-gray-900">{{ dpr.prepared_by }}</p>
+                </div>
+                {% endif %}
+                {% if dpr.checked_by %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Checked By</label>
+                    <p class="mt-1 text-sm text-gray-900">{{ dpr.checked_by }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // DPR Management Functions
+    window.approveDPR = function(dprId) {
+        if (confirm('Are you sure you want to approve this DPR?')) {
+            fetch(`{{ url_for('project.approve_dpr', dpr_id=0) }}`.replace('0', dprId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({action: 'approve'})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('DPR approved successfully');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error approving DPR');
+            });
+        }
+    };
+
+    window.rejectDPR = function(dprId) {
+        const reason = prompt('Please enter rejection reason:');
+        if (reason && reason.trim()) {
+            fetch(`{{ url_for('project.reject_dpr', dpr_id=0) }}`.replace('0', dprId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({action: 'reject', reason: reason.trim()})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('DPR rejected successfully');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error rejecting DPR');
+            });
+        }
+    };
+});
+</script>
+{% endblock %}

@@ -1,0 +1,373 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Project Command Center - {{ project.name }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+    /* Custom Cyber Colors for Tailwind */
+    body { 
+        font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif !important;
+    }
+    
+    /* Custom neon glow effects */
+    .glow-cyan { box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); }
+    .glow-pink { box-shadow: 0 0 20px rgba(255, 0, 128, 0.4); }
+    .glow-purple { box-shadow: 0 0 20px rgba(128, 0, 255, 0.4); }
+    .glow-green { box-shadow: 0 0 20px rgba(0, 255, 128, 0.4); }
+    
+    /* Animated background grid */
+    .cyber-grid::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+            linear-gradient(90deg, transparent 24%, rgba(0, 255, 255, 0.03) 25%, rgba(0, 255, 255, 0.03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.03) 75%, rgba(0, 255, 255, 0.03) 76%, transparent 77%, transparent),
+            linear-gradient(transparent 24%, rgba(0, 255, 255, 0.03) 25%, rgba(0, 255, 255, 0.03) 26%, transparent 27%, transparent 74%, rgba(0, 255, 255, 0.03) 75%, rgba(0, 255, 255, 0.03) 76%, transparent 77%, transparent);
+        background-size: 50px 50px;
+        opacity: 0.4;
+        animation: gridPulse 8s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 0;
+    }
+    
+    @keyframes gridPulse {
+        0%, 100% { opacity: 0.3; }
+        50% { opacity: 0.6; }
+    }
+    
+    /* Scanning beam effect */
+    .scan-beam::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(0, 255, 255, 0.1), transparent);
+        animation: headerScan 3s ease-in-out infinite;
+    }
+    
+    @keyframes headerScan {
+        0% { left: -100%; }
+        100% { left: 100%; }
+    }
+    
+    /* Custom gradient text */
+    .gradient-text {
+        background: linear-gradient(135deg, #00ffff, #ff0080, #8000ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Main Container with Cyber Theme -->
+<div class="min-h-screen bg-white text-white overflow-x-hidden relative cyber-grid font-mono">
+    <div class="relative z-10 max-w-7xl mx-auto p-8">
+        
+        <!-- Command Header -->
+        <div class="relative bg-gray-900/85 backdrop-blur-xl border border-cyan-400/40 rounded-3xl p-12 mb-10 overflow-hidden scan-beam glow-purple">
+            <div class="flex justify-between items-center relative z-10">
+                <div>
+                    <h1 class="text-5xl font-bold gradient-text mb-2">🚀 PROJECT COMMAND CENTER</h1>
+                    <p class="text-gray-400 text-lg">{{ project.name }} • Advanced Analytics Dashboard</p>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="exportReport()" class="bg-pink-500/10 border border-pink-400/40 text-pink-400 px-6 py-3 rounded-xl font-semibold hover:bg-pink-500/20 hover:text-white transition-all duration-300 flex items-center gap-2 glow-pink">
+                        <i class="fas fa-download"></i>EXPORT DATA
+                    </button>
+                    <a href="{{ url_for('admin.project_details', project_id=project.id) }}" class="bg-cyan-500/10 border border-cyan-400/40 text-cyan-400 px-6 py-3 rounded-xl font-semibold hover:bg-cyan-500/20 hover:text-white transition-all duration-300 flex items-center gap-2 glow-cyan">
+                        <i class="fas fa-arrow-left"></i>RETURN TO BASE
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Matrix -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+            <!-- Team Personnel -->
+            <div class="bg-gray-900/85 backdrop-blur-xl border border-cyan-400/20 rounded-2xl p-8 hover:border-cyan-400/60 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden group glow-cyan">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-400 to-pink-500 opacity-80"></div>
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-cyan-500/20 text-cyan-400 rounded-xl flex items-center justify-center mr-4 text-xl">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="text-gray-400 font-semibold text-sm uppercase tracking-wider">Team Personnel</div>
+                </div>
+                <div class="text-4xl font-bold text-white mb-2">{{ total_employees | default(0) }}</div>
+                <div class="text-gray-500 text-sm">Active team members deployed</div>
+            </div>
+
+            <!-- Mission Objectives -->
+            <div class="bg-gray-900/85 backdrop-blur-xl border border-pink-400/20 rounded-2xl p-8 hover:border-pink-400/60 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden group glow-pink">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-pink-400 to-purple-500 opacity-80"></div>
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-pink-500/20 text-pink-400 rounded-xl flex items-center justify-center mr-4 text-xl">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                    <div class="text-gray-400 font-semibold text-sm uppercase tracking-wider">Mission Objectives</div>
+                </div>
+                <div class="text-4xl font-bold text-white mb-2">{{ completed_milestones | default(0) }}/{{ total_milestones | default(0) }}</div>
+                <div class="text-gray-500 text-sm">{{ "%.1f"|format(((completed_milestones | default(0))/(total_milestones | default(1))*100) if (total_milestones | default(0)) > 0 else 0) }}% mission completion</div>
+            </div>
+
+            <!-- Equipment Status -->
+            <div class="bg-gray-900/85 backdrop-blur-xl border border-purple-400/20 rounded-2xl p-8 hover:border-purple-400/60 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden group glow-purple">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-purple-400 to-cyan-500 opacity-80"></div>
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center mr-4 text-xl">
+                        <i class="fas fa-cogs"></i>
+                    </div>
+                    <div class="text-gray-400 font-semibold text-sm uppercase tracking-wider">Equipment Status</div>
+                </div>
+                <div class="text-4xl font-bold text-white mb-2">{{ active_equipment | default(0) }}/{{ total_equipment | default(0) }}</div>
+                <div class="text-gray-500 text-sm">Systems operational</div>
+            </div>
+
+            <!-- Budget Analysis -->
+            <div class="bg-gray-900/85 backdrop-blur-xl border border-green-400/20 rounded-2xl p-8 hover:border-green-400/60 hover:-translate-y-2 transition-all duration-300 relative overflow-hidden group glow-green">
+                <div class="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-400 to-cyan-500 opacity-80"></div>
+                <div class="flex items-center mb-4">
+                    <div class="w-12 h-12 bg-green-500/20 text-green-400 rounded-xl flex items-center justify-center mr-4 text-xl">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="text-gray-400 font-semibold text-sm uppercase tracking-wider">Budget Analysis</div>
+                </div>
+                <div class="text-4xl font-bold text-white mb-2">₦{{ budget_utilized | default(0) | round(0) | int }}K</div>
+                <div class="text-gray-500 text-sm">{{ "%.1f"|format(budget_utilization_rate | default(0)) }}% of allocated budget</div>
+            </div>
+        </div>
+
+        <!-- Analytics Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Progress Analytics -->
+            <div class="lg:col-span-2 bg-gray-900/85 backdrop-blur-xl border border-cyan-400/20 rounded-2xl p-8">
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-cyan-400/20">
+                    <h2 class="text-2xl font-semibold text-white flex items-center gap-3">
+                        <i class="fas fa-chart-pie text-cyan-400"></i>Progress Analytics
+                    </h2>
+                    <span class="bg-cyan-500/10 text-cyan-400 px-4 py-2 rounded-full text-sm font-semibold border border-cyan-400/30">
+                        REAL-TIME
+                    </span>
+                </div>
+                <div class="h-80 flex items-center justify-center">
+                    <canvas id="progressChart" class="max-w-full max-h-full"></canvas>
+                </div>
+            </div>
+
+            <!-- Activity Feed -->
+            <div class="bg-gray-900/85 backdrop-blur-xl border border-cyan-400/20 rounded-2xl p-8">
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-cyan-400/20">
+                    <h2 class="text-2xl font-semibold text-white flex items-center gap-3">
+                        <i class="fas fa-satellite-dish text-cyan-400"></i>Live Feed
+                    </h2>
+                    <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-xs font-semibold border border-green-400/30">
+                        ACTIVE
+                    </span>
+                </div>
+                <div class="max-h-96 overflow-y-auto space-y-4 scrollbar-thin scrollbar-track-gray-800 scrollbar-thumb-cyan-400/50">
+                    {% for milestone in recent_milestones[:5] %}
+                    <div class="flex items-start p-4 hover:bg-cyan-500/5 rounded-xl transition-all duration-300 border-b border-gray-800/50 last:border-b-0">
+                        <div class="w-10 h-10 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mr-4 flex-shrink-0 text-sm">
+                            <i class="fas fa-flag"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-white mb-1">{{ milestone.name }}</div>
+                            <div class="text-gray-400 text-sm mb-2">{{ milestone.description }}</div>
+                            <div class="text-cyan-400 text-xs font-medium">{{ milestone.created_at.strftime('%Y-%m-%d %H:%M') if milestone.created_at else 'No date' }}</div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center text-gray-500 py-8">
+                        <i class="fas fa-satellite text-3xl mb-4 opacity-50"></i>
+                        <p>No recent activity detected</p>
+                    </div>
+                    {% endfor %}
+                    
+                    {% for task in recent_tasks[:3] %}
+                    <div class="flex items-start p-4 hover:bg-pink-500/5 rounded-xl transition-all duration-300 border-b border-gray-800/50 last:border-b-0">
+                        <div class="w-10 h-10 bg-pink-500/20 text-pink-400 rounded-full flex items-center justify-center mr-4 flex-shrink-0 text-sm">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-white mb-1">{{ task.name }}</div>
+                            <div class="text-gray-400 text-sm mb-2">Task {{ task.status | title }}</div>
+                            <div class="text-pink-400 text-xs font-medium">{{ task.created_at.strftime('%Y-%m-%d %H:%M') if task.created_at else 'No date' }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% for alert in recent_alerts[:2] %}
+                    <div class="flex items-start p-4 hover:bg-orange-500/5 rounded-xl transition-all duration-300 border-b border-gray-800/50 last:border-b-0">
+                        <div class="w-10 h-10 bg-orange-500/20 text-orange-400 rounded-full flex items-center justify-center mr-4 flex-shrink-0 text-sm">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-white mb-1">{{ alert.title }}</div>
+                            <div class="text-gray-400 text-sm mb-2">{{ alert.message }}</div>
+                            <div class="text-orange-400 text-xs font-medium">{{ alert.created_at.strftime('%Y-%m-%d %H:%M') if alert.created_at else 'No date' }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Status Grid -->
+        <div class="mt-8 bg-gray-900/85 backdrop-blur-xl border border-cyan-400/20 rounded-2xl p-8">
+            <div class="flex justify-between items-center mb-6 pb-4 border-b border-cyan-400/20">
+                <h2 class="text-2xl font-semibold text-white flex items-center gap-3">
+                    <i class="fas fa-cogs text-cyan-400"></i>Equipment Status Matrix
+                </h2>
+                <span class="bg-purple-500/10 text-purple-400 px-4 py-2 rounded-full text-sm font-semibold border border-purple-400/30">
+                    MONITORING
+                </span>
+            </div>
+            <div class="h-80 flex items-center justify-center">
+                <canvas id="equipmentChart" class="max-w-full max-h-full"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Progress Chart with Cyber Theme
+    const progressCtx = document.getElementById('progressChart');
+    if (progressCtx) {
+        const progressChart = new Chart(progressCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'Active', 'Pending'],
+                datasets: [{
+                    data: [
+                        {{ milestone_completion_rate | default(0) }},
+                        {{ ((100 - (milestone_completion_rate | default(0))) * 0.3) | round(1) }},
+                        {{ ((100 - (milestone_completion_rate | default(0))) * 0.7) | round(1) }}
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 255, 128, 0.8)',
+                        'rgba(0, 255, 255, 0.8)',
+                        'rgba(255, 0, 128, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 255, 128, 1)',
+                        'rgba(0, 255, 255, 1)',
+                        'rgba(255, 0, 128, 1)'
+                    ],
+                    borderWidth: 2,
+                    hoverBorderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#ffffff',
+                            font: {
+                                family: 'Space Grotesk',
+                                size: 12
+                            },
+                            padding: 20
+                        }
+                    }
+                },
+                elements: {
+                    arc: {
+                        borderWidth: 0
+                    }
+                }
+            }
+        });
+    }
+
+    // Equipment Chart
+    const equipmentCtx = document.getElementById('equipmentChart');
+    if (equipmentCtx) {
+        const equipmentChart = new Chart(equipmentCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Operational', 'Maintenance', 'Offline', 'Critical'],
+                datasets: [{
+                    label: 'Equipment Status',
+                    data: [
+                        {{ active_equipment | default(0) }},
+                        {{ maintenance_equipment | default(0) }},
+                        {{ offline_equipment | default(0) }},
+                        {{ critical_equipment | default(0) }}
+                    ],
+                    backgroundColor: [
+                        'rgba(0, 255, 128, 0.8)',
+                        'rgba(255, 255, 0, 0.8)',
+                        'rgba(128, 128, 128, 0.8)',
+                        'rgba(255, 0, 64, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(0, 255, 128, 1)',
+                        'rgba(255, 255, 0, 1)',
+                        'rgba(128, 128, 128, 1)',
+                        'rgba(255, 0, 64, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)'
+                        },
+                        ticks: {
+                            color: '#ffffff',
+                            font: {
+                                family: 'Space Grotesk'
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#ffffff',
+                            font: {
+                                family: 'Space Grotesk'
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+
+// Export function
+function exportReport() {
+    window.print();
+}
+</script>
+{% endblock %}

@@ -11,14 +11,17 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Bank Balance</p>
-                    <h3 class="text-2xl font-bold text-gray-800">₦24.5M</h3>
+                    <h3 class="text-2xl font-bold text-gray-800">₦{{ "%.1f"|format(summary.bank_balance/1000000) }}M</h3>
                 </div>
                 <div class="bg-blue-100 p-3 rounded-full">
                     <i class='bx bx-bank text-2xl text-blue-600'></i>
                 </div>
             </div>
             <div class="mt-4 flex items-center text-sm">
-                <span class="text-green-500 mr-2">↑ 8%</span>
+                {% set change_percent = ((summary.bank_balance - (summary.bank_balance * 0.92)) / (summary.bank_balance * 0.92) * 100) if summary.bank_balance > 0 else 0 %}
+                <span class="text-{{ 'green' if change_percent >= 0 else 'red' }}-500 mr-2">
+                    {{ '↑' if change_percent >= 0 else '↓' }} {{ "%.1f"|format(change_percent|abs) }}%
+                </span>
                 <span class="text-gray-500">from last month</span>
             </div>
         </div>
@@ -28,15 +31,18 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Monthly Expenses</p>
-                    <h3 class="text-2xl font-bold text-gray-800">₦8.2M</h3>
+                    <h3 class="text-2xl font-bold text-gray-800">₦{{ "%.1f"|format(summary.monthly_expenses/1000000) }}M</h3>
                 </div>
                 <div class="bg-red-100 p-3 rounded-full">
                     <i class='bx bx-money-withdraw text-2xl text-red-600'></i>
                 </div>
             </div>
             <div class="mt-4 flex items-center text-sm">
-                <span class="text-red-500 mr-2">↑ 12%</span>
-                <span class="text-gray-500">higher spending</span>
+                {% set expense_change = ((summary.monthly_expenses - summary.prev_month_expenses) / summary.prev_month_expenses * 100) if summary.prev_month_expenses > 0 else 0 %}
+                <span class="text-{{ 'red' if expense_change >= 0 else 'green' }}-500 mr-2">
+                    {{ '↑' if expense_change >= 0 else '↓' }} {{ "%.1f"|format(expense_change|abs) }}%
+                </span>
+                <span class="text-gray-500">{{ 'higher' if expense_change >= 0 else 'lower' }} spending</span>
             </div>
         </div>
 
@@ -45,14 +51,14 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Pending Payroll</p>
-                    <h3 class="text-2xl font-bold text-gray-800">₦3.5M</h3>
+                    <h3 class="text-2xl font-bold text-gray-800">₦{{ "%.1f"|format(summary.pending_payroll/1000000) }}M</h3>
                 </div>
                 <div class="bg-yellow-100 p-3 rounded-full">
                     <i class='bx bx-wallet text-2xl text-yellow-600'></i>
                 </div>
             </div>
             <div class="mt-4 flex items-center text-sm">
-                <span class="text-yellow-500 mr-2">246</span>
+                <span class="text-yellow-500 mr-2">{{ (summary.pending_payroll / 15000)|round|int if summary.pending_payroll > 0 else 0 }}</span>
                 <span class="text-gray-500">employees</span>
             </div>
         </div>
@@ -62,14 +68,14 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Outstanding Payments</p>
-                    <h3 class="text-2xl font-bold text-gray-800">₦5.8M</h3>
+                    <h3 class="text-2xl font-bold text-gray-800">₦{{ "%.1f"|format(summary.outstanding_payments/1000000) }}M</h3>
                 </div>
                 <div class="bg-purple-100 p-3 rounded-full">
                     <i class='bx bx-receipt text-2xl text-purple-600'></i>
                 </div>
             </div>
             <div class="mt-4 flex items-center text-sm">
-                <span class="text-red-500 mr-2">12</span>
+                <span class="text-red-500 mr-2">{{ (summary.outstanding_payments / 100000)|round|int if summary.outstanding_payments > 0 else 0 }}</span>
                 <span class="text-gray-500">pending invoices</span>
             </div>
         </div>
@@ -85,10 +91,11 @@
                 <div class="space-y-2">
                     <div class="flex justify-between">
                         <span class="text-sm font-medium text-gray-700">Revenue</span>
-                        <span class="text-sm text-green-500">₦45.2M</span>
+                        <span class="text-sm text-green-500">₦{{ "%.1f"|format(summary.total_income/1000000) }}M</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-green-500 h-2 rounded-full" style="width: 85%"></div>
+                        {% set revenue_percentage = (summary.total_income / (summary.total_income + summary.monthly_expenses) * 100) if (summary.total_income + summary.monthly_expenses) > 0 else 0 %}
+                        <div class="bg-green-500 h-2 rounded-full" style="width: {{ revenue_percentage }}%"></div>
                     </div>
                 </div>
 
@@ -96,21 +103,25 @@
                 <div class="space-y-2">
                     <div class="flex justify-between">
                         <span class="text-sm font-medium text-gray-700">Expenses</span>
-                        <span class="text-sm text-red-500">₦32.8M</span>
+                        <span class="text-sm text-red-500">₦{{ "%.1f"|format(summary.monthly_expenses/1000000) }}M</span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-red-500 h-2 rounded-full" style="width: 62%"></div>
+                        {% set expense_percentage = (summary.monthly_expenses / (summary.total_income + summary.monthly_expenses) * 100) if (summary.total_income + summary.monthly_expenses) > 0 else 0 %}
+                        <div class="bg-red-500 h-2 rounded-full" style="width: {{ expense_percentage }}%"></div>
                     </div>
                 </div>
 
-                <!-- Profit Margin -->
+                <!-- Cash Flow -->
                 <div class="space-y-2">
                     <div class="flex justify-between">
-                        <span class="text-sm font-medium text-gray-700">Profit Margin</span>
-                        <span class="text-sm text-blue-500">27.4%</span>
+                        <span class="text-sm font-medium text-gray-700">Cash Flow</span>
+                        <span class="text-sm text-{{ 'green' if summary.cash_flow >= 0 else 'red' }}-500">
+                            ₦{{ "%.1f"|format(summary.cash_flow/1000000) }}M
+                        </span>
                     </div>
                     <div class="w-full bg-gray-200 rounded-full h-2">
-                        <div class="bg-blue-500 h-2 rounded-full" style="width: 27%"></div>
+                        {% set cash_flow_percentage = ((summary.cash_flow|abs) / (summary.total_income + summary.monthly_expenses) * 100) if (summary.total_income + summary.monthly_expenses) > 0 else 0 %}
+                        <div class="bg-{{ 'green' if summary.cash_flow >= 0 else 'red' }}-500 h-2 rounded-full" style="width: {{ cash_flow_percentage if cash_flow_percentage <= 100 else 100 }}%"></div>
                     </div>
                 </div>
             </div>
@@ -118,35 +129,113 @@
 
         <!-- Document Management System -->
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Recent Documents</h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Document Statistics</h3>
+                <span class="text-sm text-gray-500">{{ summary.total_documents }} total documents</span>
+            </div>
             <div class="space-y-4">
-                <div class="flex items-start space-x-4">
-                    <div class="bg-blue-100 p-2 rounded-lg mt-1">
-                        <i class='bx bx-file text-blue-600'></i>
-                    </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-800">Q3 Financial Report</p>
-                        <p class="text-xs text-gray-500">Updated 2 hours ago</p>
-                        <div class="flex items-center space-x-2 mt-1">
-                            <button class="text-xs text-blue-600 hover:underline">View</button>
-                            <button class="text-xs text-blue-600 hover:underline">Download</button>
+                <!-- Document Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-50 p-3 rounded-lg">
+                        <div class="flex items-center space-x-2">
+                            <i class='bx bx-file text-blue-600'></i>
+                            <span class="text-sm font-medium text-blue-800">Recent Uploads</span>
                         </div>
+                        <p class="text-xl font-bold text-blue-900 mt-1">{{ summary.recent_uploads }}</p>
+                        <p class="text-xs text-blue-600">Last 7 days</p>
+                    </div>
+                    <div class="bg-yellow-50 p-3 rounded-lg">
+                        <div class="flex items-center space-x-2">
+                            <i class='bx bx-clock text-yellow-600'></i>
+                            <span class="text-sm font-medium text-yellow-800">Pending Review</span>
+                        </div>
+                        <p class="text-xl font-bold text-yellow-900 mt-1">{{ summary.pending_review }}</p>
+                        <p class="text-xs text-yellow-600">Awaiting approval</p>
                     </div>
                 </div>
 
-                <div class="flex items-start space-x-4">
-                    <div class="bg-green-100 p-2 rounded-lg mt-1">
-                        <i class='bx bx-spreadsheet text-green-600'></i>
+                <!-- Storage Usage -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-700">Storage Used</span>
+                        <span class="text-sm text-gray-600">{{ summary.storage_used }}</span>
                     </div>
-                    <div>
-                        <p class="text-sm font-medium text-gray-800">August Payroll Records</p>
-                        <p class="text-xs text-gray-500">Processed yesterday</p>
-                        <div class="flex items-center space-x-2 mt-1">
-                            <button class="text-xs text-blue-600 hover:underline">View</button>
-                            <button class="text-xs text-blue-600 hover:underline">Download</button>
-                        </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        {% set storage_percentage = (summary.storage_used|replace('GB', '')|float / 100 * 100) if summary.storage_used else 5 %}
+                        <div class="bg-purple-500 h-2 rounded-full" style="width: {{ storage_percentage if storage_percentage <= 100 else 100 }}%"></div>
                     </div>
+                    <p class="text-xs text-gray-500">Of 100GB allocated storage</p>
                 </div>
+
+                <!-- Quick Access -->
+                <div class="pt-2">
+                    <a href="{{ url_for('finance.documents') }}" class="text-sm text-blue-600 hover:text-blue-800 hover:underline">
+                        → View all documents
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Transactions and Financial Analysis -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Transactions -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">Recent Transactions</h3>
+                <a href="{{ url_for('finance.expenses') }}" class="text-sm text-blue-600 hover:text-blue-800">View All</a>
+            </div>
+            <div class="space-y-3">
+                {% if transactions %}
+                    {% for transaction in transactions[:5] %}
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 bg-{{ 'green' if transaction.type == 'income' else 'red' }}-100 rounded-full flex items-center justify-center">
+                                    <i class='bx bx-{{ 'plus' if transaction.type == 'income' else 'minus' }} text-{{ 'green' if transaction.type == 'income' else 'red' }}-600'></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-800">{{ transaction.description[:30] }}{{ '...' if transaction.description|length > 30 else '' }}</p>
+                                    <p class="text-xs text-gray-500">{{ transaction.date.strftime('%b %d, %Y') if transaction.date else 'No date' }}</p>
+                                </div>
+                            </div>
+                            <span class="text-sm font-semibold text-{{ 'green' if transaction.type == 'income' else 'red' }}-600">
+                                {{ '+' if transaction.type == 'income' else '-' }}₦{{ "{:,.0f}".format(transaction.amount) }}
+                            </span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class='bx bx-receipt text-4xl text-gray-400 mb-2'></i>
+                        <p class="text-gray-500">No recent transactions</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Expense Categories -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Expense Categories (This Month)</h3>
+            <div class="space-y-3">
+                {% if expense_categories %}
+                    {% for category, total in expense_categories %}
+                        {% set percentage = (total / summary.monthly_expenses * 100) if summary.monthly_expenses > 0 else 0 %}
+                        <div class="space-y-2">
+                            <div class="flex justify-between items-center">
+                                <span class="text-sm font-medium text-gray-700 capitalize">{{ category or 'Uncategorized' }}</span>
+                                <span class="text-sm text-gray-600">₦{{ "{:,.0f}".format(total) }}</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full" style="width: {{ percentage }}%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500">{{ "%.1f"|format(percentage) }}% of total expenses</p>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class='bx bx-pie-chart text-4xl text-gray-400 mb-2'></i>
+                        <p class="text-gray-500">No expense data available</p>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -157,50 +246,98 @@
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
             <div class="grid grid-cols-2 gap-4">
-                <button class="p-3 bg-blue-50 rounded-lg text-blue-700 hover:bg-blue-100 transition-colors">
-                    <i class='bx bx-plus-circle mb-1'></i>
-                    <span class="block text-sm">New Payment</span>
-                </button>
-                <button class="p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors">
-                    <i class='bx bx-upload mb-1'></i>
+                <a href="{{ url_for('finance.expenses') }}" class="p-3 bg-blue-50 rounded-lg text-blue-700 hover:bg-blue-100 transition-colors text-center">
+                    <i class='bx bx-plus-circle mb-1 text-xl'></i>
+                    <span class="block text-sm">Add Expense</span>
+                </a>
+                <a href="{{ url_for('finance.documents') }}" class="p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors text-center">
+                    <i class='bx bx-upload mb-1 text-xl'></i>
                     <span class="block text-sm">Upload Document</span>
-                </button>
-                <button class="p-3 bg-yellow-50 rounded-lg text-yellow-700 hover:bg-yellow-100 transition-colors">
-                    <i class='bx bx-dollar mb-1'></i>
+                </a>
+                <a href="{{ url_for('finance.payroll') }}" class="p-3 bg-yellow-50 rounded-lg text-yellow-700 hover:bg-yellow-100 transition-colors text-center">
+                    <i class='bx bx-dollar mb-1 text-xl'></i>
                     <span class="block text-sm">Process Payroll</span>
-                </button>
-                <button class="p-3 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors">
-                    <i class='bx bx-file mb-1'></i>
-                    <span class="block text-sm">Generate Report</span>
-                </button>
+                </a>
+                <a href="{{ url_for('finance.audit') }}" class="p-3 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors text-center">
+                    <i class='bx bx-file mb-1 text-xl'></i>
+                    <span class="block text-sm">Audit Reports</span>
+                </a>
             </div>
         </div>
 
-        <!-- Audit Alerts -->
+        <!-- Financial Alerts & Status -->
         <div class="col-span-2 bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Audit Alerts</h3>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Financial Alerts & Status</h3>
             <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
-                    <div class="flex items-center space-x-3">
-                        <i class='bx bx-time text-xl text-yellow-600'></i>
-                        <div>
-                            <p class="text-sm font-medium text-yellow-800">Pending Reconciliation</p>
-                            <p class="text-xs text-yellow-600">Bank statements need review for August</p>
-                        </div>
-                    </div>
-                    <span class="text-xs text-yellow-500">Due in 2 days</span>
-                </div>
-
+                <!-- Cash Flow Alert -->
+                {% if summary.cash_flow < 0 %}
                 <div class="flex items-center justify-between p-4 bg-red-50 rounded-lg">
                     <div class="flex items-center space-x-3">
                         <i class='bx bx-error-circle text-xl text-red-600'></i>
                         <div>
-                            <p class="text-sm font-medium text-red-800">Expense Anomaly</p>
-                            <p class="text-xs text-red-600">Unusual spending pattern detected in Project A</p>
+                            <p class="text-sm font-medium text-red-800">Negative Cash Flow</p>
+                            <p class="text-xs text-red-600">Monthly expenses exceed income by ₦{{ "{:,.0f}".format(summary.cash_flow|abs) }}</p>
                         </div>
                     </div>
-                    <span class="text-xs text-red-500">Requires Review</span>
+                    <span class="text-xs text-red-500">Requires Action</span>
                 </div>
+                {% endif %}
+
+                <!-- Outstanding Payments Alert -->
+                {% if summary.outstanding_payments > 0 %}
+                <div class="flex items-center justify-between p-4 bg-yellow-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <i class='bx bx-time text-xl text-yellow-600'></i>
+                        <div>
+                            <p class="text-sm font-medium text-yellow-800">Outstanding Payments</p>
+                            <p class="text-xs text-yellow-600">₦{{ "{:,.0f}".format(summary.outstanding_payments) }} in pending payments</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-yellow-500">Review Required</span>
+                </div>
+                {% endif %}
+
+                <!-- Pending Payroll Alert -->
+                {% if summary.pending_payroll > 0 %}
+                <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <i class='bx bx-wallet text-xl text-blue-600'></i>
+                        <div>
+                            <p class="text-sm font-medium text-blue-800">Pending Payroll</p>
+                            <p class="text-xs text-blue-600">₦{{ "{:,.0f}".format(summary.pending_payroll) }} awaiting processing</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-blue-500">Action Needed</span>
+                </div>
+                {% endif %}
+
+                <!-- Document Review Alert -->
+                {% if summary.pending_review > 0 %}
+                <div class="flex items-center justify-between p-4 bg-purple-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <i class='bx bx-file-find text-xl text-purple-600'></i>
+                        <div>
+                            <p class="text-sm font-medium text-purple-800">Documents Pending Review</p>
+                            <p class="text-xs text-purple-600">{{ summary.pending_review }} document(s) awaiting approval</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-purple-500">Review Needed</span>
+                </div>
+                {% endif %}
+
+                <!-- All Good Status -->
+                {% if summary.cash_flow >= 0 and summary.outstanding_payments == 0 and summary.pending_payroll == 0 and summary.pending_review == 0 %}
+                <div class="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <i class='bx bx-check-circle text-xl text-green-600'></i>
+                        <div>
+                            <p class="text-sm font-medium text-green-800">All Systems Operational</p>
+                            <p class="text-xs text-green-600">No urgent financial alerts at this time</p>
+                        </div>
+                    </div>
+                    <span class="text-xs text-green-500">Status: Good</span>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

@@ -1,0 +1,293 @@
+{% extends "projects/base.html" %}
+
+{% block title %}Fill DPR | SammyA Projects{% endblock %}
+{% block header %}Complete Daily Production Report{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- DPR Header Info -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-start">
+            <div>
+                <h2 class="text-xl font-semibold text-gray-900">DAILY PRODUCTION REPORT</h2>
+                <h3 class="text-lg text-gray-700">{{ dpr.project.name }}</h3>
+                <p class="text-sm text-gray-500">Date: {{ dpr.report_date.strftime('%B %d, %Y') }}</p>
+            </div>
+            <div class="text-right">
+                <span class="px-3 py-1 text-sm font-medium rounded-full
+                      {% if dpr.status == 'sent_to_staff' %}bg-yellow-100 text-yellow-800
+                      {% elif dpr.status == 'completed' %}bg-green-100 text-green-800
+                      {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ dpr.status.replace('_', ' ').title() }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <form id="fillDPRForm" method="POST">
+        <input type="hidden" name="dpr_id" value="{{ dpr.id }}">
+        
+        <!-- Production Section -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">PRODUCTION</h3>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bill Item</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Production Description</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Target Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Previous Qty Done</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Day Production</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Qty Done</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for item in dpr.production_items %}
+                            {% if item.item_code.endswith('.00') %}
+                            <!-- Header row -->
+                            <tr class="bg-gray-100">
+                                <td class="px-4 py-3 font-bold">{{ item.item_code }}</td>
+                                <td class="px-4 py-3 font-bold">{{ item.description }}</td>
+                                <td class="px-4 py-3"></td>
+                                <td class="px-4 py-3"></td>
+                                <td class="px-4 py-3"></td>
+                                <td class="px-4 py-3"></td>
+                                <td class="px-4 py-3"></td>
+                                <td class="px-4 py-3"></td>
+                            </tr>
+                            {% else %}
+                            <!-- Data row -->
+                            <tr>
+                                <td class="px-4 py-3 text-sm">{{ item.item_code }}</td>
+                                <td class="px-4 py-3 text-sm">{{ item.description }}</td>
+                                <td class="px-4 py-3">
+                                    {% if dpr.status == 'sent_to_staff' %}
+                                    <input type="text" name="location_{{ item.id }}" value="{{ item.location or '' }}"
+                                           class="w-full border rounded px-2 py-1 text-sm">
+                                    {% else %}
+                                    <span class="text-sm">{{ item.location or '-' }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3 text-sm">{{ item.unit }}</td>
+                                <td class="px-4 py-3 text-sm">{{ item.target_qty or 0 }}</td>
+                                <td class="px-4 py-3">
+                                    {% if dpr.status == 'sent_to_staff' %}
+                                    <input type="number" step="0.01" name="previous_qty_{{ item.id }}" 
+                                           value="{{ item.previous_qty_done or 0 }}"
+                                           class="w-full border rounded px-2 py-1 text-sm"
+                                           onchange="updateTotal({{ item.id }})">
+                                    {% else %}
+                                    <span class="text-sm">{{ item.previous_qty_done or 0 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if dpr.status == 'sent_to_staff' %}
+                                    <input type="number" step="0.01" name="day_production_{{ item.id }}" 
+                                           value="{{ item.day_production or 0 }}"
+                                           class="w-full border rounded px-2 py-1 text-sm"
+                                           onchange="updateTotal({{ item.id }})">
+                                    {% else %}
+                                    <span class="text-sm">{{ item.day_production or 0 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span id="total_{{ item.id }}" class="text-sm font-medium">{{ item.total_qty_done or 0 }}</span>
+                                    <input type="hidden" name="total_qty_{{ item.id }}" value="{{ item.total_qty_done or 0 }}">
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Material Usage Section -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">MATERIAL USAGE</h3>
+            </div>
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Material (Usage) Description</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Previous Qty Used</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Day Usage</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Qty Used</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            {% for material in dpr.material_usage %}
+                            <tr>
+                                <td class="px-4 py-3 text-sm">{{ material.item_number }}</td>
+                                <td class="px-4 py-3 text-sm">{{ material.description }}</td>
+                                <td class="px-4 py-3 text-sm">{{ material.unit }}</td>
+                                <td class="px-4 py-3">
+                                    {% if dpr.status == 'sent_to_staff' %}
+                                    <input type="number" step="0.01" name="material_previous_{{ material.id }}" 
+                                           value="{{ material.previous_qty_used or 0 }}"
+                                           class="w-full border rounded px-2 py-1 text-sm"
+                                           onchange="updateMaterialTotal({{ material.id }})">
+                                    {% else %}
+                                    <span class="text-sm">{{ material.previous_qty_used or 0 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {% if dpr.status == 'sent_to_staff' %}
+                                    <input type="number" step="0.01" name="material_day_{{ material.id }}" 
+                                           value="{{ material.day_usage or 0 }}"
+                                           class="w-full border rounded px-2 py-1 text-sm"
+                                           onchange="updateMaterialTotal({{ material.id }})">
+                                    {% else %}
+                                    <span class="text-sm">{{ material.day_usage or 0 }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span id="material_total_{{ material.id }}" class="text-sm font-medium">{{ material.total_qty_used or 0 }}</span>
+                                    <input type="hidden" name="material_total_{{ material.id }}" value="{{ material.total_qty_used or 0 }}">
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issues Section -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">ISSUES</h3>
+            </div>
+            <div class="p-6">
+                {% if dpr.status == 'sent_to_staff' %}
+                <textarea name="issues" rows="4" class="w-full border rounded-md px-3 py-2"
+                          placeholder="Enter any issues, challenges, or observations for today...">{{ dpr.issues or '' }}</textarea>
+                {% else %}
+                <div class="text-sm text-gray-700">
+                    {{ dpr.issues or 'No issues reported.' }}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Signatures Section -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-800">SIGNATURES</h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Prepared By:</label>
+                        {% if dpr.status == 'sent_to_staff' %}
+                        <input type="text" name="prepared_by" value="{{ dpr.prepared_by or current_user.name }}"
+                               class="mt-1 block w-full rounded-md border-gray-300">
+                        {% else %}
+                        <p class="mt-1 text-sm text-gray-900">{{ dpr.prepared_by or '-' }}</p>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Checked By:</label>
+                        {% if dpr.status == 'sent_to_staff' %}
+                        <input type="text" name="checked_by" value="{{ dpr.checked_by or '' }}"
+                               class="mt-1 block w-full rounded-md border-gray-300">
+                        {% else %}
+                        <p class="mt-1 text-sm text-gray-900">{{ dpr.checked_by or '-' }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        {% if dpr.status == 'sent_to_staff' %}
+        <div class="flex justify-end space-x-3">
+            <a href="{{ url_for('project.dpr_list') }}" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md">
+                Cancel
+            </a>
+            <button type="submit" name="action" value="save_progress" class="px-4 py-2 bg-blue-600 text-white rounded-md">
+                Save Progress
+            </button>
+            <button type="submit" name="action" value="submit_completed" class="px-4 py-2 bg-green-600 text-white rounded-md">
+                Submit Completed Report
+            </button>
+        </div>
+        {% endif %}
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateTotal(itemId) {
+    const previousQty = parseFloat(document.querySelector(`input[name="previous_qty_${itemId}"]`).value) || 0;
+    const dayProduction = parseFloat(document.querySelector(`input[name="day_production_${itemId}"]`).value) || 0;
+    const total = previousQty + dayProduction;
+    
+    document.getElementById(`total_${itemId}`).textContent = total.toFixed(2);
+    document.querySelector(`input[name="total_qty_${itemId}"]`).value = total;
+}
+
+function updateMaterialTotal(materialId) {
+    const previousQty = parseFloat(document.querySelector(`input[name="material_previous_${materialId}"]`).value) || 0;
+    const dayUsage = parseFloat(document.querySelector(`input[name="material_day_${materialId}"]`).value) || 0;
+    const total = previousQty + dayUsage;
+    
+    document.getElementById(`material_total_${materialId}`).textContent = total.toFixed(2);
+    document.querySelector(`input[name="material_total_${materialId}"]`).value = total;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('fillDPRForm');
+    
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            const action = e.submitter.value;
+            
+            // Show confirmation for submission
+            if (action === 'submit_completed') {
+                if (!confirm('Are you sure you want to submit this DPR as completed? You will not be able to edit it after submission.')) {
+                    return;
+                }
+            }
+            
+            try {
+                const response = await fetch(`/projects/dpr/${formData.get('dpr_id')}/fill`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert(data.message);
+                    if (action === 'submit_completed') {
+                        window.location.href = '/projects/dpr';
+                    } else {
+                        window.location.reload();
+                    }
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to save DPR');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

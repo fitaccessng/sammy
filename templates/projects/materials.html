@@ -6,25 +6,60 @@
 {% block content %}
 <div class="space-y-6">
     <!-- Actions -->
-    <div class="flex justify-between">
-        <div class="flex space-x-3">
-            <button id="addMaterialBtn" 
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                Add Material
-            </button>
-            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Export Inventory
-            </button>
+    <div class="space-y-4">
+        <!-- Project Selection Required -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center space-x-3">
+                <div class="flex-shrink-0">
+                    <i class="bx bx-info-circle text-blue-500 text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-medium text-blue-800">Project Context Required</h3>
+                    <p class="text-sm text-blue-600">Select a project below to add or manage materials for that specific project.</p>
+                </div>
+            </div>
         </div>
-        <div class="flex space-x-3">
-            <input type="text" placeholder="Search materials..." 
-                   class="px-4 py-2 border rounded-lg">
-            <select id="filterStatus" class="px-4 py-2 border rounded-lg">
-                <option value="">All Status</option>
-                <option value="In Stock">In Stock</option>
-                <option value="Low Stock">Low Stock</option>
-                <option value="Out of Stock">Out of Stock</option>
+        
+        <!-- Project Selection -->
+        {% if accessible_projects %}
+        <div class="flex items-center space-x-3">
+            <label for="projectSelector" class="text-sm font-medium text-gray-700">Select Project:</label>
+            <select id="projectSelector" class="px-4 py-2 border rounded-lg flex-1 max-w-md">
+                <option value="">-- Select a Project to Continue --</option>
+                {% for proj in accessible_projects %}
+                <option value="{{ proj.id }}">{{ proj.name }}</option>
+                {% endfor %}
             </select>
+        </div>
+        {% endif %}
+        
+        <!-- Actions Row -->
+        <div class="flex justify-between">
+            <div class="flex space-x-3">
+                {% if user_role == 'super_hq' or user_role == 'hq_project' or user_role == 'project_manager' %}
+                <button id="addMaterialBtn" disabled
+                        class="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">
+                    Add Material (Select Project)
+                </button>
+                <button id="exportMaterialsBtn" disabled class="px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed">
+                    Export Inventory (Select Project)
+                </button>
+                {% else %}
+                <button class="px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600" disabled>
+                    Add Material (Restricted)
+                </button>
+                {% endif %}
+            </div>
+            <div class="flex space-x-3">
+                <input id="searchMaterials" type="text" placeholder="Search materials..." 
+                       class="px-4 py-2 border rounded-lg">
+                <select id="filterStatus" class="px-4 py-2 border rounded-lg">
+                    <option value="">All Status</option>
+                    <option value="In Stock">In Stock</option>
+                    <option value="Low Stock">Low Stock</option>
+                    <option value="Out of Stock">Out of Stock</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -44,13 +79,13 @@
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for material in materials %}
-                    <tr>
+                        <tr class="material-row" data-status="{{ material.status|default('')|lower }}" {% if material.project_id %}data-project="{{ material.project_id }}"{% endif %}>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900">{{ material.name }}</div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900">{{ material.quantity }}</div>
-                        </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ material.quantity or material.delivered }}</div>
+                            </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-500">{{ material.unit }}</div>
                         </td>
@@ -68,6 +103,9 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button class="text-indigo-600 hover:text-indigo-900 mr-3">Update Stock</button>
                             <button class="text-red-600 hover:text-red-900">Remove</button>
+                            {% if material.project_id %}
+                            <div class="text-xs text-gray-400 mt-2">Project: {{ material.project_name or ('Project #' ~ material.project_id) }}</div>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
@@ -98,6 +136,18 @@
                     <input type="text" name="unit" required 
                            class="mt-1 block w-full rounded-md border-gray-300">
                 </div>
+                {% if accessible_projects %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Project <span class="text-red-500">*</span></label>
+                    <select name="project_id" id="modalProjectSelector" required class="mt-1 block w-full rounded-md border-gray-300">
+                        <option value="">-- Select Project --</option>
+                        {% for proj in accessible_projects %}
+                        <option value="{{ proj.id }}">{{ proj.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-gray-500 mt-1">Material will be assigned to the selected project</p>
+                </div>
+                {% endif %}
                 <div class="flex justify-end space-x-3">
                     <button type="button" class="closeModal px-4 py-2 bg-gray-200 text-gray-800 rounded-md">
                         Cancel
@@ -119,32 +169,159 @@ document.addEventListener('DOMContentLoaded', function() {
     const openModal = document.getElementById('addMaterialBtn');
     const closeModal = document.querySelector('button.closeModal');
     const form = document.getElementById('addMaterialForm');
+    const projectSelector = document.getElementById('projectSelector');
+    const materialRows = document.querySelectorAll('.material-row');
+    const searchInput = document.getElementById('searchMaterials');
+    const exportBtn = document.getElementById('exportMaterialsBtn');
+    const modalProjectSelector = document.getElementById('modalProjectSelector');
 
-    openModal.addEventListener('click', () => modal.classList.remove('hidden'));
-    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        
-        try {
-            const response = await fetch('/projects/materials/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify(Object.fromEntries(formData))
-            });
-
-            const data = await response.json();
-            if (data.status === 'success') {
-                window.location.reload();
+    // Project selection handler - enable/disable buttons based on project selection
+    if (projectSelector) {
+        projectSelector.addEventListener('change', () => {
+            const selectedProject = projectSelector.value;
+            const projectName = projectSelector.options[projectSelector.selectedIndex].text;
+            
+            if (selectedProject) {
+                // Enable buttons when project is selected
+                if (openModal) {
+                    openModal.disabled = false;
+                    openModal.className = "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700";
+                    openModal.textContent = `Add Material to ${projectName}`;
+                }
+                if (exportBtn) {
+                    exportBtn.disabled = false;
+                    exportBtn.className = "px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50";
+                    exportBtn.textContent = `Export ${projectName} Inventory`;
+                }
+                
+                // Set the modal project selector to match
+                if (modalProjectSelector) {
+                    modalProjectSelector.value = selectedProject;
+                }
+                
+                // Filter materials by selected project
+                materialRows.forEach(row => {
+                    const rpid = row.getAttribute('data-project');
+                    if (rpid === selectedProject) {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            } else {
+                // Disable buttons when no project selected
+                if (openModal) {
+                    openModal.disabled = true;
+                    openModal.className = "px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed";
+                    openModal.textContent = "Add Material (Select Project)";
+                }
+                if (exportBtn) {
+                    exportBtn.disabled = true;
+                    exportBtn.className = "px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed";
+                    exportBtn.textContent = "Export Inventory (Select Project)";
+                }
+                
+                // Show all materials when no project filter
+                materialRows.forEach(row => {
+                    row.style.display = '';
+                });
             }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    });
+        });
+    }
+
+    if (openModal) {
+        openModal.addEventListener('click', () => {
+            if (!openModal.disabled) {
+                modal.classList.remove('hidden');
+            }
+        });
+    }
+    if (closeModal) {
+        closeModal.addEventListener('click', () => modal.classList.add('hidden'));
+    }
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(form);
+            
+            // Ensure project is selected
+            if (!formData.get('project_id')) {
+                alert('Please select a project for this material');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/projects/materials/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to add material');
+            }
+        });
+    }
+
+    // Project filter (deprecated in favor of project selector)
+    // Keeping for backward compatibility but not used in new UI
+
+    // Search
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const q = searchInput.value.toLowerCase();
+            materialRows.forEach(row => {
+                const name = row.querySelector('td div.text-sm.font-medium')?.textContent.toLowerCase() || '';
+                row.style.display = name.includes(q) ? '' : 'none';
+            });
+        });
+    }
+
+    if (exportBtn) {
+        exportBtn.addEventListener('click', async () => {
+            if (exportBtn.disabled) return;
+            
+            const selectedProject = projectSelector ? projectSelector.value : '';
+            if (!selectedProject) {
+                alert('Please select a project first');
+                return;
+            }
+            
+            const projectName = projectSelector.options[projectSelector.selectedIndex].text;
+            
+            try {
+                const response = await fetch('/projects/materials/export', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({project_id: selectedProject})
+                });
+                
+                const data = await response.json();
+                if (data.status === 'success') {
+                    alert(`Materials Inventory Exported for: ${projectName}\n\nExport Summary:\n- Total Materials: ${data.export_data.materials_count}\n- In Stock: ${data.export_data.in_stock_count}\n- Low Stock: ${data.export_data.low_stock_count}\n- Out of Stock: ${data.export_data.out_of_stock_count}`);
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to export materials');
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

@@ -15,36 +15,47 @@
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
     .slide-down { animation: slideDown 0.3s ease-out; }
     @keyframes slideDown { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+    /* Flash Modal Animations */
+    #flashMessageModal {
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    #flashMessageModal > div > div {
+        transform: scale(0.9);
+        opacity: 0;
+        transition: all 0.3s ease-out;
+    }
+    
+    .flash-modal-enter {
+        transform: scale(1) !important;
+        opacity: 1 !important;
+    }
+    
+    @keyframes modalBounce {
+        0% { transform: scale(0.8) translateY(-20px); opacity: 0; }
+        50% { transform: scale(1.05) translateY(-10px); opacity: 0.8; }
+        100% { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    
+    .modal-bounce {
+        animation: modalBounce 0.4s ease-out;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Enhanced Flash Messages -->
+    <!-- Flash Messages as Modals -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        <div class="fixed top-4 right-4 z-50 space-y-2">
         {% for category, message in messages %}
-          <div class="flash-message p-4 rounded-lg shadow-lg border-l-4 {% if category == 'error' %}bg-red-50 text-red-800 border-red-500{% elif category == 'success' %}bg-green-50 text-green-800 border-green-500{% else %}bg-blue-50 text-blue-800 border-blue-500{% endif %} max-w-md transform transition-all duration-500 ease-in-out slide-down">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <i class='bx {% if category == 'error' %}bx-error-circle text-red-500{% elif category == 'success' %}bx-check-circle text-green-500{% else %}bx-info-circle text-blue-500{% endif %} text-xl'></i>
-              </div>
-              <div class="ml-3">
-                <p class="text-sm font-medium">
-                  {% if category == 'success' %}Success!{% elif category == 'error' %}Error!{% else %}Info{% endif %}
-                </p>
-                <p class="text-sm">{{ message }}</p>
-              </div>
-              <div class="ml-auto pl-3">
-                <button onclick="this.parentElement.parentElement.remove()" class="inline-flex text-gray-400 hover:text-gray-600">
-                  <i class='bx bx-x text-lg'></i>
-                </button>
-              </div>
-            </div>
-          </div>
+          <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              showFlashModal('{{ category }}', '{{ message|e }}');
+            });
+          </script>
         {% endfor %}
-        </div>
       {% endif %}
     {% endwith %}
 
@@ -381,29 +392,34 @@
                 <div class="space-y-4" id="staff-list">
                     {% if staff_assignments %}
                         {% for assignment_data in staff_assignments %}
-                        {% set assignment = assignment_data.assignment %}
-                        {% set staff_name = assignment_data.staff_name %}
                         <div class="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors" 
-                             data-staff-id="{{ assignment.staff_id }}">
+                             data-staff-id="{{ assignment_data.id }}">
                             <div class="flex items-center space-x-3">
                                 <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                                    <span class="text-purple-600 font-semibold text-sm">{{ staff_name[:2].upper() }}</span>
+                                    <span class="text-purple-600 font-semibold text-sm">{{ assignment_data.staff_name[:2].upper() }}</span>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-medium text-gray-900">{{ staff_name }}</p>
-                                    <p class="text-sm text-purple-600 font-medium">{{ assignment.role }}</p>
+                                    <p class="text-sm font-medium text-gray-900">
+                                        {{ assignment_data.staff_name }}
+                                        {% if assignment_data.type == 'employee' %}
+                                            <span class="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">HR Employee</span>
+                                        {% else %}
+                                            <span class="ml-2 px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">System User</span>
+                                        {% endif %}
+                                    </p>
+                                    <p class="text-sm text-purple-600 font-medium">{{ assignment_data.role }}</p>
                                     <p class="text-xs text-gray-500">
                                         <i class='bx bx-calendar mr-1'></i>
-                                        Assigned {{ assignment.assigned_at.strftime('%b %d, %Y') if assignment.assigned_at else 'Recently' }}
+                                        Assigned {{ assignment_data.assigned_at.strftime('%b %d, %Y') if assignment_data.assigned_at else 'Recently' }}
                                     </p>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-2">
-                                <button onclick="editStaffRole({{ assignment.staff_id }}, '{{ assignment.role }}')" 
+                                <button onclick="editStaffRole('{{ assignment_data.id }}', '{{ assignment_data.role }}')" 
                                         class="text-indigo-600 hover:text-indigo-800 p-1 rounded">
                                     <i class='bx bx-edit text-sm'></i>
                                 </button>
-                                <button onclick="removeStaff({{ assignment.staff_id }}, '{{ staff_name }}')" 
+                                <button onclick="removeStaff('{{ assignment_data.id }}', '{{ assignment_data.staff_name }}')" 
                                         class="text-red-600 hover:text-red-800 p-1 rounded">
                                     <i class='bx bx-trash text-sm'></i>
                                 </button>
@@ -450,7 +466,10 @@
                 <div class="flex items-center justify-between mb-6">
                     <h3 class="text-xl font-semibold text-gray-800 flex items-center">
                         <i class='bx bx-flag text-blue-600 mr-2'></i>
-                        Milestones
+                        All Milestones
+                        {% if milestones %}
+                        <span class="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">{{ milestones|length }}</span>
+                        {% endif %}
                     </h3>
                     <button onclick="openMilestoneModal()" 
                             class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
@@ -459,9 +478,9 @@
                     </button>
                 </div>
 
-                <div class="space-y-4" id="milestone-list">
-                    {% if recent_milestones %}
-                        {% for milestone in recent_milestones %}
+                <div class="space-y-4 max-h-96 overflow-y-auto" id="milestone-list">
+                    {% if milestones %}
+                        {% for milestone in milestones|sort(attribute='due_date') %}
                         <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                              data-milestone-id="{{ milestone.id }}">
                             <div class="flex items-center space-x-3">
@@ -688,7 +707,7 @@
                                         Uploaded {{ doc.uploaded_at.strftime('%b %d, %Y') if doc.uploaded_at else 'Recently' }}
                                         {% if doc.uploaded_by %}• by {{ doc.uploaded_by }}{% endif %}
                                     </p>
-                                    <p class="text-xs text-gray-400">{{ doc.file_size }} • {{ doc.file_type.upper() }}</p>
+                                    <p class="text-xs text-gray-400">{{ doc.formatted_file_size }} • {{ doc.file_type.upper() }}</p>
                                 </div>
                             </div>
                             <div class="flex items-center space-x-2">
@@ -885,13 +904,13 @@
             <div class="flex items-center justify-between mb-6">
                 <h3 class="text-xl font-semibold text-gray-800 flex items-center">
                     <i class='bx bx-history text-purple-600 mr-2'></i>
-                    Recent Milestones
+                    All Milestones
                 </h3>
             </div>
 
-            {% if recent_milestones %}
-                <div class="space-y-3">
-                    {% for milestone in recent_milestones %}
+            {% if milestones %}
+                <div class="space-y-3 max-h-64 overflow-y-auto">
+                    {% for milestone in milestones|sort(attribute='due_date') %}
                     <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                             <p class="text-sm font-medium text-gray-900">{{ milestone.title }}</p>
@@ -967,7 +986,7 @@
             <p class="mt-1 text-sm text-gray-500">View project milestones and timeline</p>
         </a>
 
-        <a href="{{ url_for('project.reports') }}" 
+        <a href="{{ url_for('project.reports_index') }}" 
            class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
             <i class="bx bx-file text-2xl text-indigo-600"></i>
             <h3 class="mt-2 text-lg font-medium text-gray-900">Reports</h3>
@@ -983,49 +1002,10 @@
 </div>
 
     <!-- Assign Staff Form -->
-    {% if available_staff %}
-    <div id="assign-staff-form" class="bg-white rounded-lg shadow">
-        <div class="p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Assign Staff to Project</h3>
-            <form method="POST" action="{{ url_for('admin.assign_staff_new', project_id=project.id) }}" class="space-y-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Role</label>
-                        <select name="role" required class="mt-1 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="">Select a role</option>
-                            <option value="HR">HR</option>
-                            <option value="Finance">Finance</option>
-                            <option value="Quarry">Quarry</option>
-                            <option value="Procurement">Procurement</option>
-                            <option value="Site Engineer">Site Engineer</option>
-                            <option value="Project Coordinator">Project Coordinator</option>
-                            <option value="Safety Officer">Safety Officer</option>
-                            <option value="Quality Control">Quality Control</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Staff Member</label>
-                        <select name="staff_id" required class="mt-1 block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500">
-                            <option value="">Select staff member</option>
-                            {% for user in available_staff %}
-                            <option value="{{ user.id }}">{{ user.name }} - {{ user.role or 'No Role' }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                <div class="flex justify-end">
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
-                        Assign Staff
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-    {% else %}
-    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <p class="text-yellow-800">All available staff members have been assigned to this project.</p>
-    </div>
-    {% endif %}
+    
+    
+
+
 
     <!-- Modals Section -->
     
@@ -1042,14 +1022,44 @@
                 <form method="POST" action="{{ url_for('admin.assign_staff_new', project_id=project.id) }}">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
                     <div class="mb-4">
-                        <label for="staff_id" class="block text-sm font-medium text-gray-700 mb-2">Select Staff</label>
+                        <label for="staff_id" class="block text-sm font-medium text-gray-700 mb-2">
+                            Select Staff/Employee
+                            <span class="text-xs text-gray-500">(All users and employees available)</span>
+                        </label>
                         <select name="staff_id" id="staff_id" required 
                                 class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
-                            <option value="">Choose staff member...</option>
-                            {% for staff in available_staff %}
-                            <option value="{{ staff.id }}">{{ staff.name }} ({{ staff.role }})</option>
-                            {% endfor %}
+                            <option value="">Choose staff member or employee...</option>
+                            
+                            <!-- Users (Staff) Section -->
+                            <optgroup label="👥 SYSTEM USERS (STAFF)">
+                                {% for staff in available_staff %}
+                                {% if staff.type == 'user' %}
+                                <option value="{{ staff.id }}" 
+                                        {% if staff.is_assigned %}style="background-color: #fee2e2; color: #dc2626;"{% endif %}>
+                                    {{ staff.name }} 
+                                    {% if staff.is_assigned %}(Already Assigned){% endif %}
+                                    - {{ staff.role }} | {{ staff.email }}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </optgroup>
+                            
+                            <!-- Employees Section -->
+                            <optgroup label="🏢 HR EMPLOYEES">
+                                {% for staff in available_staff %}
+                                {% if staff.type == 'employee' %}
+                                <option value="{{ staff.id }}">
+                                    {{ staff.name }} - {{ staff.display_info }}
+                                    {% if staff.staff_code %} | Code: {{ staff.staff_code }}{% endif %}
+                                </option>
+                                {% endif %}
+                                {% endfor %}
+                            </optgroup>
                         </select>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <span class="font-medium">Users:</span> System users with login access | 
+                            <span class="font-medium">Employees:</span> HR database records
+                        </p>
                     </div>
                     <div class="mb-4">
                         <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Role in Project</label>
@@ -1183,6 +1193,293 @@
         </div>
     </div>
 
+    <!-- Edit Project Modal -->
+    <div id="editProjectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class='bx bx-edit text-indigo-600 mr-2'></i>
+                        Edit Project Information
+                    </h3>
+                    <button onclick="closeModal('editProjectModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class='bx bx-x text-xl'></i>
+                    </button>
+                </div>
+                <form id="editProjectForm" onsubmit="submitProjectEdit(event)">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Basic Information -->
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-800 border-b pb-2">Basic Information</h4>
+                            <div>
+                                <label for="edit_name" class="block text-sm font-medium text-gray-700 mb-1">Project Name</label>
+                                <input type="text" name="name" id="edit_name" required 
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="edit_description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                                <textarea name="description" id="edit_description" rows="3"
+                                          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label for="edit_start_date" class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                                    <input type="date" name="start_date" id="edit_start_date" 
+                                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                                <div>
+                                    <label for="edit_end_date" class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                                    <input type="date" name="end_date" id="edit_end_date" 
+                                           class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label for="edit_status" class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                    <select name="status" id="edit_status" 
+                                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="Planning">Planning</option>
+                                        <option value="Active">Active</option>
+                                        <option value="On Hold">On Hold</option>
+                                        <option value="Completed">Completed</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="edit_priority" class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                                    <select name="priority" id="edit_priority" 
+                                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                        <option value="Low">Low</option>
+                                        <option value="Medium">Medium</option>
+                                        <option value="High">High</option>
+                                        <option value="Critical">Critical</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Extended Information -->
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-800 border-b pb-2">Project Details</h4>
+                            <div>
+                                <label for="edit_project_manager" class="block text-sm font-medium text-gray-700 mb-1">Project Manager</label>
+                                <input type="text" name="project_manager" id="edit_project_manager" 
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="edit_budget" class="block text-sm font-medium text-gray-700 mb-1">Budget (₦)</label>
+                                <input type="number" name="budget" id="edit_budget" step="0.01" min="0"
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="edit_project_type" class="block text-sm font-medium text-gray-700 mb-1">Project Type</label>
+                                <select name="project_type" id="edit_project_type" 
+                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Select Type...</option>
+                                    <option value="Construction">Construction</option>
+                                    <option value="Infrastructure">Infrastructure</option>
+                                    <option value="Renovation">Renovation</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Consultation">Consultation</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="edit_client_name" class="block text-sm font-medium text-gray-700 mb-1">Client Name</label>
+                                <input type="text" name="client_name" id="edit_client_name" 
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Additional Details -->
+                    <div class="mt-6 space-y-4">
+                        <h4 class="font-semibold text-gray-800 border-b pb-2">Additional Information</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div>
+                                <label for="edit_site_location" class="block text-sm font-medium text-gray-700 mb-1">Site Location</label>
+                                <input type="text" name="site_location" id="edit_site_location" 
+                                       class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                            </div>
+                            <div>
+                                <label for="edit_funding_source" class="block text-sm font-medium text-gray-700 mb-1">Funding Source</label>
+                                <select name="funding_source" id="edit_funding_source" 
+                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="">Select Source...</option>
+                                    <option value="Internal">Internal Funding</option>
+                                    <option value="Client Payment">Client Payment</option>
+                                    <option value="Bank Loan">Bank Loan</option>
+                                    <option value="Government Grant">Government Grant</option>
+                                    <option value="Partnership">Partnership</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="edit_risk_level" class="block text-sm font-medium text-gray-700 mb-1">Risk Level</label>
+                                <select name="risk_level" id="edit_risk_level" 
+                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="Low">Low</option>
+                                    <option value="Medium">Medium</option>
+                                    <option value="High">High</option>
+                                    <option value="Critical">Critical</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="edit_safety_requirements" class="block text-sm font-medium text-gray-700 mb-1">Safety Requirements</label>
+                                <select name="safety_requirements" id="edit_safety_requirements" 
+                                        class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                                    <option value="Standard">Standard</option>
+                                    <option value="Enhanced">Enhanced</option>
+                                    <option value="High Security">High Security</option>
+                                    <option value="Specialized">Specialized</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="edit_regulatory_requirements" class="block text-sm font-medium text-gray-700 mb-1">Regulatory Requirements</label>
+                                <textarea name="regulatory_requirements" id="edit_regulatory_requirements" rows="2"
+                                          class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3 mt-6 pt-4 border-t">
+                        <button type="button" onclick="closeModal('editProjectModal')" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                            <i class='bx bx-save mr-1'></i>
+                            Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Activity Log Modal -->
+    <div id="activityLogModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class='bx bx-history text-purple-600 mr-2'></i>
+                        Project Activity Log
+                    </h3>
+                    <button onclick="closeModal('activityLogModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class='bx bx-x text-xl'></i>
+                    </button>
+                </div>
+                
+                <!-- Activity Statistics -->
+                <div class="bg-purple-50 rounded-lg p-4 mb-6" id="activityStats">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-purple-600" id="totalActivities">-</div>
+                            <div class="text-sm text-purple-700">Total Activities</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-600" id="recentActivities">-</div>
+                            <div class="text-sm text-purple-700">This Week</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-purple-600" id="activityTypes">-</div>
+                            <div class="text-sm text-purple-700">Activity Types</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Activity List -->
+                <div class="max-h-96 overflow-y-auto" id="activityListContainer">
+                    <div id="activityLoadingSpinner" class="flex justify-center items-center py-8">
+                        <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                        <span class="ml-2 text-gray-600">Loading activities...</span>
+                    </div>
+                    <div id="activityList" class="space-y-3 hidden">
+                        <!-- Activities will be loaded here -->
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="flex justify-between items-center mt-4 pt-4 border-t" id="activityPagination">
+                    <div class="text-sm text-gray-500" id="activityPaginationInfo">
+                        <!-- Pagination info -->
+                    </div>
+                    <div class="flex space-x-2" id="activityPaginationButtons">
+                        <!-- Pagination buttons -->
+                    </div>
+                </div>
+                
+                <div class="flex justify-end mt-6">
+                    <button onclick="closeModal('activityLogModal')" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Update Modal -->
+    <div id="progressUpdateModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+        <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+                <div class="flex items-center justify-between mb-4">
+                    <h3 class="text-lg font-medium text-gray-900 flex items-center">
+                        <i class='bx bx-trending-up text-green-600 mr-2'></i>
+                        Update Project Progress
+                    </h3>
+                    <button onclick="closeModal('progressUpdateModal')" class="text-gray-400 hover:text-gray-600">
+                        <i class='bx bx-x text-xl'></i>
+                    </button>
+                </div>
+                <form onsubmit="submitProgressUpdate(event)">
+                    <div class="mb-4">
+                        <label for="progress_value" class="block text-sm font-medium text-gray-700 mb-2">
+                            Progress Percentage
+                        </label>
+                        <div class="relative">
+                            <input type="range" name="progress" id="progress_slider" min="0" max="100" step="1" 
+                                   value="{{ progress or 0 }}" 
+                                   class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                                   oninput="updateProgressDisplay(this.value)">
+                            <div class="flex justify-between text-xs text-gray-500 mt-1">
+                                <span>0%</span>
+                                <span>25%</span>
+                                <span>50%</span>
+                                <span>75%</span>
+                                <span>100%</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <span class="text-2xl font-bold text-green-600" id="progress_display">{{ progress or 0 }}%</span>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label for="progress_notes" class="block text-sm font-medium text-gray-700 mb-2">
+                            Progress Notes (Optional)
+                        </label>
+                        <textarea name="notes" id="progress_notes" rows="3" 
+                                  placeholder="Add any notes about this progress update..."
+                                  class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-green-500 focus:border-green-500"></textarea>
+                    </div>
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeModal('progressUpdateModal')" 
+                                class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                            <i class='bx bx-check mr-1'></i>
+                            Update Progress
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Upload Document Modal -->
     <div id="uploadDocumentModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
         <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -1291,13 +1588,25 @@
         }
 
         function editProject() {
-            // Redirect to edit project page
-            window.location.href = "/admin/projects/{{ project.id }}/edit";
+            // Fetch project data and open edit modal
+            fetch(`/admin/projects/${projectData.id}/edit`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        openEditProjectModal(data.project);
+                    } else {
+                        showFlashModal('error', 'Error loading project data');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching project data:', error);
+                    showFlashModal('error', 'Error loading project data');
+                });
         }
 
         function showActivityLog() {
-            // Scroll to activity log section
-            document.getElementById('activity-log').scrollIntoView({ behavior: 'smooth' });
+            // Open activity log modal
+            openActivityLogModal();
         }
 
         function viewReports() {
@@ -1418,8 +1727,13 @@
 
         // Progress Updates
         function updateProgress() {
-            // Redirect to project edit page for progress updates
-            window.location.href = "/admin/projects/{{ project.id }}/edit#progress";
+            // Open progress update modal
+            openModal('progressUpdateModal');
+            
+            // Set current progress value
+            const currentProgress = projectData.progress || 0;
+            document.getElementById('progress_slider').value = currentProgress;
+            document.getElementById('progress_display').textContent = currentProgress + '%';
         }
 
         // Activity Log
@@ -1434,13 +1748,19 @@
 
         // Close modal when clicking outside
         window.onclick = function(event) {
-            const modals = ['addStaffModal', 'addMilestoneModal', 'addBoqModal', 'uploadDocumentModal'];
+            const modals = ['addStaffModal', 'addMilestoneModal', 'addBoqModal', 'uploadDocumentModal', 'editProjectModal', 'activityLogModal', 'progressUpdateModal'];
             modals.forEach(modalId => {
                 const modal = document.getElementById(modalId);
                 if (event.target === modal) {
                     closeModal(modalId);
                 }
             });
+            
+            // Handle flash modal click outside
+            const flashModal = document.getElementById('flashMessageModal');
+            if (event.target === flashModal) {
+                closeFlashModal();
+            }
         }
 
         // Auto-calculate total in BOQ form
@@ -1473,7 +1793,7 @@
 
         // View Reports Function
         function viewReports() {
-            alert('Analytics & Reports functionality coming soon!');
+            window.location.href = `{{ url_for('admin.project_reports', project_id=project.id) }}`;
         }
 
         // Auto-close modals on successful form submission
@@ -1499,50 +1819,385 @@
             }
         });
 
-        // Success Modal Function (alternative to flash messages)
-        function showSuccessModal(message) {
-            // Create success modal if it doesn't exist
-            let successModal = document.getElementById('successModal');
-            if (!successModal) {
-                successModal = document.createElement('div');
-                successModal.id = 'successModal';
-                successModal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
-                successModal.innerHTML = `
-                    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                        <div class="mt-3 text-center">
-                            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                                <i class='bx bx-check text-green-600 text-2xl'></i>
+        // Flash Message Modal System
+        function showFlashModal(category, message) {
+            const modalId = 'flashMessageModal';
+            let flashModal = document.getElementById(modalId);
+            
+            // Remove existing modal if it exists
+            if (flashModal) {
+                flashModal.remove();
+            }
+            
+            // Determine modal styling based on category
+            let iconClass, bgColor, btnColor, borderColor, iconBg;
+            switch(category) {
+                case 'success':
+                    iconClass = 'bx-check-circle';
+                    bgColor = 'bg-green-50';
+                    btnColor = 'bg-green-500 hover:bg-green-600 focus:ring-green-300';
+                    borderColor = 'border-green-200';
+                    iconBg = 'bg-green-100';
+                    break;
+                case 'error':
+                    iconClass = 'bx-error-circle';
+                    bgColor = 'bg-red-50';
+                    btnColor = 'bg-red-500 hover:bg-red-600 focus:ring-red-300';
+                    borderColor = 'border-red-200';
+                    iconBg = 'bg-red-100';
+                    break;
+                case 'warning':
+                    iconClass = 'bx-error';
+                    bgColor = 'bg-yellow-50';
+                    btnColor = 'bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-300';
+                    borderColor = 'border-yellow-200';
+                    iconBg = 'bg-yellow-100';
+                    break;
+                default:
+                    iconClass = 'bx-info-circle';
+                    bgColor = 'bg-blue-50';
+                    btnColor = 'bg-blue-500 hover:bg-blue-600 focus:ring-blue-300';
+                    borderColor = 'border-blue-200';
+                    iconBg = 'bg-blue-100';
+            }
+            
+            // Create modal
+            flashModal = document.createElement('div');
+            flashModal.id = modalId;
+            flashModal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
+            flashModal.innerHTML = `
+                <div class="relative top-20 mx-auto p-0 border ${borderColor} w-96 shadow-2xl rounded-lg bg-white modal-bounce">
+                    <div class="rounded-lg ${bgColor}">
+                        <div class="p-6 text-center">
+                            <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full ${iconBg} mb-4 shadow-lg">
+                                <i class='bx ${iconClass} text-3xl' style="color: ${category === 'success' ? '#059669' : category === 'error' ? '#DC2626' : category === 'warning' ? '#D97706' : '#2563EB'};"></i>
                             </div>
-                            <h3 class="text-lg leading-6 font-medium text-gray-900 mt-4">Success!</h3>
-                            <div class="mt-2 px-7 py-3">
-                                <p id="successMessage" class="text-sm text-gray-500"></p>
+                            <h3 class="text-xl leading-6 font-bold text-gray-900 mb-3">
+                                ${category.charAt(0).toUpperCase() + category.slice(1)}${category === 'error' ? '!' : category === 'success' ? '!' : ''}
+                            </h3>
+                            <div class="mb-6">
+                                <p class="text-sm text-gray-700 font-medium leading-relaxed">${message}</p>
                             </div>
-                            <div class="items-center px-4 py-3">
-                                <button onclick="closeSuccessModal()" 
-                                        class="px-4 py-2 bg-green-500 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-300">
+                            <div class="flex space-x-3">
+                                <button onclick="closeFlashModal()" 
+                                        class="flex-1 px-6 py-3 ${btnColor} text-white text-sm font-semibold rounded-lg shadow-md focus:outline-none focus:ring-2 transition duration-300 transform hover:scale-105">
                                     OK
                                 </button>
                             </div>
+                            <div class="mt-3">
+                                <p class="text-xs text-gray-400">Press ESC to close</p>
+                            </div>
                         </div>
                     </div>
-                `;
-                document.body.appendChild(successModal);
+                </div>
+            `;
+            
+            document.body.appendChild(flashModal);
+            
+            // Add keyboard event listener for ESC key
+            function handleKeydown(event) {
+                if (event.key === 'Escape') {
+                    closeFlashModal();
+                    document.removeEventListener('keydown', handleKeydown);
+                }
             }
+            document.addEventListener('keydown', handleKeydown);
             
-            document.getElementById('successMessage').textContent = message;
-            successModal.classList.remove('hidden');
+            // Focus the modal for keyboard navigation
+            flashModal.focus();
             
-            // Auto-close after 3 seconds
-            setTimeout(() => {
-                closeSuccessModal();
-            }, 3000);
+            // Auto-close after appropriate time based on category
+            const autoCloseTime = category === 'success' ? 4000 : category === 'error' ? 6000 : 5000;
+            const autoCloseTimer = setTimeout(() => {
+                closeFlashModal();
+            }, autoCloseTime);
+            
+            // Store timer reference to clear it if manually closed
+            flashModal.autoCloseTimer = autoCloseTimer;
+        }
+
+        function closeFlashModal() {
+            const flashModal = document.getElementById('flashMessageModal');
+            if (flashModal) {
+                // Clear auto-close timer if it exists
+                if (flashModal.autoCloseTimer) {
+                    clearTimeout(flashModal.autoCloseTimer);
+                }
+                
+                // Add fade-out animation
+                flashModal.style.opacity = '0';
+                flashModal.style.transform = 'scale(0.95)';
+                
+                setTimeout(() => {
+                    if (flashModal.parentNode) {
+                        flashModal.remove();
+                    }
+                }, 300);
+            }
+        }
+
+        // Success Modal Function (alternative to flash messages)
+        function showSuccessModal(message) {
+            // Use the new flash modal system
+            showFlashModal('success', message);
         }
 
         function closeSuccessModal() {
-            const successModal = document.getElementById('successModal');
-            if (successModal) {
-                successModal.classList.add('hidden');
+            closeFlashModal();
+        }
+
+        // Enhanced Modal and Business Logic Functions
+
+        function openEditProjectModal(projectData) {
+            // Populate form with current project data
+            document.getElementById('edit_name').value = projectData.name || '';
+            document.getElementById('edit_description').value = projectData.description || '';
+            document.getElementById('edit_start_date').value = projectData.start_date || '';
+            document.getElementById('edit_end_date').value = projectData.end_date || '';
+            document.getElementById('edit_status').value = projectData.status || 'Planning';
+            document.getElementById('edit_project_manager').value = projectData.project_manager || '';
+            document.getElementById('edit_budget').value = projectData.budget || '';
+            document.getElementById('edit_project_type').value = projectData.project_type || '';
+            document.getElementById('edit_priority').value = projectData.priority || 'Medium';
+            document.getElementById('edit_client_name').value = projectData.client_name || '';
+            document.getElementById('edit_site_location').value = projectData.site_location || '';
+            document.getElementById('edit_funding_source').value = projectData.funding_source || '';
+            document.getElementById('edit_risk_level').value = projectData.risk_level || 'Low';
+            document.getElementById('edit_safety_requirements').value = projectData.safety_requirements || 'Standard';
+            document.getElementById('edit_regulatory_requirements').value = projectData.regulatory_requirements || '';
+            
+            openModal('editProjectModal');
+        }
+
+        function submitProjectEdit(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="bx bx-loader-alt animate-spin mr-1"></i>Saving...';
+            submitBtn.disabled = true;
+            
+            fetch(`/admin/projects/${projectData.id}/edit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', data.message);
+                    closeModal('editProjectModal');
+                    // Refresh page to show updated data
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showFlashModal('error', data.message || 'Failed to update project');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating project:', error);
+                showFlashModal('error', 'An error occurred while updating the project');
+            })
+            .finally(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
+        }
+
+        function openActivityLogModal() {
+            openModal('activityLogModal');
+            loadActivityLog(1); // Load first page
+        }
+
+        function loadActivityLog(page = 1) {
+            const loadingSpinner = document.getElementById('activityLoadingSpinner');
+            const activityList = document.getElementById('activityList');
+            
+            loadingSpinner.classList.remove('hidden');
+            activityList.classList.add('hidden');
+            
+            fetch(`/admin/projects/${projectData.id}/activity_log?page=${page}&per_page=20`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        displayActivityLog(data);
+                    } else {
+                        showFlashModal('error', data.message || 'Failed to load activity log');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading activity log:', error);
+                    showFlashModal('error', 'An error occurred while loading the activity log');
+                })
+                .finally(() => {
+                    loadingSpinner.classList.add('hidden');
+                    activityList.classList.remove('hidden');
+                });
+        }
+
+        function displayActivityLog(data) {
+            // Update statistics
+            document.getElementById('totalActivities').textContent = data.statistics.total_activities;
+            document.getElementById('recentActivities').textContent = data.statistics.recent_activities_week;
+            document.getElementById('activityTypes').textContent = Object.keys(data.statistics.activity_types).length;
+            
+            // Display activities
+            const activityList = document.getElementById('activityList');
+            activityList.innerHTML = '';
+            
+            data.activities.forEach(activity => {
+                const activityElement = document.createElement('div');
+                activityElement.className = 'flex items-start space-x-3 p-3 bg-purple-50 rounded-lg';
+                
+                // Icon based on activity type
+                let iconClass = 'bx-info-circle text-purple-600';
+                if (activity.action_type === 'milestone_added') iconClass = 'bx-flag text-blue-600';
+                else if (activity.action_type === 'staff_assigned') iconClass = 'bx-user-plus text-green-600';
+                else if (activity.action_type === 'document_uploaded') iconClass = 'bx-upload text-orange-600';
+                else if (activity.action_type === 'progress_updated') iconClass = 'bx-trending-up text-indigo-600';
+                else if (activity.action_type === 'project_updated') iconClass = 'bx-edit text-yellow-600';
+                
+                activityElement.innerHTML = `
+                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mt-1">
+                        <i class="bx ${iconClass} text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm text-gray-900">
+                            <span class="font-medium">${activity.user_name}</span>
+                            ${activity.description}
+                        </p>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <i class="bx bx-time mr-1"></i>
+                            ${activity.created_at}
+                        </p>
+                    </div>
+                `;
+                
+                activityList.appendChild(activityElement);
+            });
+            
+            // Update pagination
+            displayActivityPagination(data.pagination);
+        }
+
+        function displayActivityPagination(pagination) {
+            const paginationInfo = document.getElementById('activityPaginationInfo');
+            const paginationButtons = document.getElementById('activityPaginationButtons');
+            
+            // Info
+            const start = ((pagination.page - 1) * pagination.per_page) + 1;
+            const end = Math.min(pagination.page * pagination.per_page, pagination.total);
+            paginationInfo.textContent = `Showing ${start}-${end} of ${pagination.total} activities`;
+            
+            // Buttons
+            paginationButtons.innerHTML = '';
+            
+            // Previous button
+            if (pagination.has_prev) {
+                const prevBtn = document.createElement('button');
+                prevBtn.className = 'px-3 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors';
+                prevBtn.innerHTML = '<i class="bx bx-chevron-left"></i>';
+                prevBtn.onclick = () => loadActivityLog(pagination.page - 1);
+                paginationButtons.appendChild(prevBtn);
             }
+            
+            // Page numbers (show current and nearby pages)
+            const startPage = Math.max(1, pagination.page - 2);
+            const endPage = Math.min(pagination.pages, pagination.page + 2);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.className = i === pagination.page 
+                    ? 'px-3 py-1 bg-purple-600 text-white rounded' 
+                    : 'px-3 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors';
+                pageBtn.textContent = i;
+                pageBtn.onclick = () => loadActivityLog(i);
+                paginationButtons.appendChild(pageBtn);
+            }
+            
+            // Next button
+            if (pagination.has_next) {
+                const nextBtn = document.createElement('button');
+                nextBtn.className = 'px-3 py-1 bg-purple-100 text-purple-700 rounded hover:bg-purple-200 transition-colors';
+                nextBtn.innerHTML = '<i class="bx bx-chevron-right"></i>';
+                nextBtn.onclick = () => loadActivityLog(pagination.page + 1);
+                paginationButtons.appendChild(nextBtn);
+            }
+        }
+
+        function updateProgressDisplay(value) {
+            document.getElementById('progress_display').textContent = value + '%';
+        }
+
+        function submitProgressUpdate(event) {
+            event.preventDefault();
+            
+            const form = event.target;
+            const formData = new FormData(form);
+            const progress = parseFloat(formData.get('progress'));
+            const notes = formData.get('notes');
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="bx bx-loader-alt animate-spin mr-1"></i>Updating...';
+            submitBtn.disabled = true;
+            
+            fetch(`/admin/projects/${projectData.id}/update_progress`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ progress: progress, notes: notes })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', data.message);
+                    closeModal('progressUpdateModal');
+                    
+                    // Update progress bar and text in the page
+                    const progressBar = document.querySelector('[data-progress-bar]');
+                    const progressText = document.querySelector('[data-progress-text]');
+                    
+                    if (progressBar) {
+                        progressBar.style.width = progress + '%';
+                        // Update color based on progress
+                        progressBar.className = progressBar.className.replace(
+                            /from-\w+-\d+\s+to-\w+-\d+/g,
+                            progress < 25 ? 'from-red-500 to-red-600' :
+                            progress < 50 ? 'from-orange-500 to-yellow-500' :
+                            progress < 75 ? 'from-yellow-500 to-green-500' :
+                            'from-green-500 to-blue-500'
+                        );
+                    }
+                    
+                    if (progressText) {
+                        progressText.textContent = progress + '%';
+                    }
+                    
+                    // Update project data
+                    projectData.progress = progress;
+                } else {
+                    showFlashModal('error', data.message || 'Failed to update progress');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating progress:', error);
+                showFlashModal('error', 'An error occurred while updating progress');
+            })
+            .finally(() => {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
         }
     </script>
 </div>

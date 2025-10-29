@@ -1,3 +1,4 @@
+
 # --- Admin/Manager Models ---
 from datetime import datetime
 from extensions import db
@@ -571,6 +572,22 @@ class StaffAssignment(db.Model):
 
     staff = db.relationship('User', backref='project_assignments')
 
+class EmployeeAssignment(db.Model):
+    """Model for tracking Employee assignments to projects"""
+    __tablename__ = 'employee_assignments'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    employee_id = db.Column(db.Integer, db.ForeignKey('employee.id'), nullable=False)
+    role = db.Column(db.String(64), nullable=False)
+    assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    assigned_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    status = db.Column(db.String(32), default='Active')  # Active, Inactive, Completed
+    
+    # Relationships
+    employee = db.relationship('Employee', backref='project_assignments')
+    project = db.relationship('Project', backref='employee_assignments')
+    assigner = db.relationship('User', foreign_keys=[assigned_by])
+
 class Task(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(128), nullable=False)
@@ -588,12 +605,14 @@ class Equipment(db.Model):
     __tablename__ = 'equipment'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
     maintenance_due = db.Column(db.Date, nullable=True)
     machine_hours = db.Column(db.Float, default=0)
     diesel_consumption = db.Column(db.Float, default=0)
     remarks = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(32), default='Active')  # Added status column
-    # Add any additional fields as needed
+    
+    project = db.relationship('Project', backref=db.backref('equipments', lazy=True))
 
     def __repr__(self):
         return f'<Equipment {self.name}>'
@@ -628,10 +647,16 @@ class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(256), nullable=False)
     category = db.Column(db.String(64), nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)  # Project association
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
     uploader_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     status = db.Column(db.String(32), default='pending')
     size = db.Column(db.Integer, default=0)
+    
+    # Relationships
+    project = db.relationship('Project', backref='documents')
+    uploader = db.relationship('User', backref='uploaded_documents')
+    
     # Add any additional fields as needed
 
     def __repr__(self):
@@ -663,18 +688,91 @@ class Expense(db.Model):
     def __repr__(self):
         return f'<Expense {self.id}>'
 
+class BankAccount(db.Model):
+    __tablename__ = 'bank_accounts'
+    id = db.Column(db.Integer, primary_key=True)
+    account_name = db.Column(db.String(128), nullable=False, unique=True)
+    account_number = db.Column(db.String(50), nullable=False)
+    bank_name = db.Column(db.String(128), nullable=False)
+    account_type = db.Column(db.String(50), default='Checking')  # Checking, Savings, etc.
+    current_balance = db.Column(db.Float, default=0.0)
+    book_balance = db.Column(db.Float, default=0.0)  # Internal balance tracking
+    currency = db.Column(db.String(10), default='NGN')
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    transactions = db.relationship('BankTransaction', backref='bank_account', lazy=True)
+    reconciliations = db.relationship('BankReconciliation', backref='bank_account', lazy=True)
+    
+    def update_balance(self, amount, operation='add'):
+        """Update the book balance based on transaction"""
+        if operation == 'add':
+            self.book_balance += amount
+        elif operation == 'subtract':
+            self.book_balance -= amount
+        self.updated_at = datetime.utcnow()
+    
+    def calculate_difference(self):
+        """Calculate difference between current balance and book balance"""
+        return self.current_balance - self.book_balance
+    
+    def __repr__(self):
+        return f'<BankAccount {self.account_name}>'
+
+class BankTransaction(db.Model):
+    __tablename__ = 'bank_transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    account_id = db.Column(db.Integer, db.ForeignKey('bank_accounts.id'), nullable=False)
+    transaction_type = db.Column(db.String(20), nullable=False)  # Credit, Debit
+    amount = db.Column(db.Float, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    reference_number = db.Column(db.String(100), nullable=True)
+    transaction_date = db.Column(db.Date, nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    is_reconciled = db.Column(db.Boolean, default=False)
+    reconciliation_id = db.Column(db.Integer, db.ForeignKey('bank_reconciliations.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<BankTransaction {self.id}: {self.transaction_type} {self.amount}>'
+
 class BankReconciliation(db.Model):
     __tablename__ = 'bank_reconciliations'
     id = db.Column(db.Integer, primary_key=True)
-    account_name = db.Column(db.String(128), nullable=False)
-    statement_date = db.Column(db.Date, nullable=False)
-    balance = db.Column(db.Float, nullable=False)
-    status = db.Column(db.String(32), default='Pending')
+    account_id = db.Column(db.Integer, db.ForeignKey('bank_accounts.id'), nullable=False)
+    reconciliation_date = db.Column(db.Date, nullable=False)
+    statement_balance = db.Column(db.Float, nullable=False)
+    book_balance = db.Column(db.Float, nullable=False)
+    difference = db.Column(db.Float, default=0.0)
+    status = db.Column(db.String(32), default='Pending')  # Pending, Reconciled, Discrepancy
+    notes = db.Column(db.Text, nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    # Add any additional fields as needed
-
+    completed_at = db.Column(db.DateTime, nullable=True)
+    
+    # Relationships
+    reconciled_transactions = db.relationship('BankTransaction', backref='reconciliation', lazy=True)
+    
+    def calculate_difference(self):
+        """Calculate and update the difference"""
+        self.difference = self.statement_balance - self.book_balance
+        return self.difference
+    
+    def mark_as_reconciled(self):
+        """Mark reconciliation as completed"""
+        self.status = 'Reconciled'
+        self.completed_at = datetime.utcnow()
+        
+        # Update account current balance
+        account = BankAccount.query.get(self.account_id)
+        if account:
+            account.current_balance = self.statement_balance
+            account.updated_at = datetime.utcnow()
+    
     def __repr__(self):
-        return f'<BankReconciliation {self.account_name}>'
+        return f'<BankReconciliation {self.id}: {self.status}>'
 
 class Checkbook(db.Model):
     __tablename__ = 'checkbooks'
@@ -847,7 +945,114 @@ class ProjectDocument(db.Model):
     
     # Relationships
     project = db.relationship('Project', backref='project_documents')
-    uploader = db.relationship('User', backref='uploaded_documents')
+    uploader = db.relationship('User', backref='uploaded_project_documents')
+    
+    @property
+    def file_type(self):
+        """Extract file extension from filename"""
+        if self.original_filename:
+            return self.original_filename.split('.')[-1].lower()
+        return 'unknown'
+    
+    @property
+    def formatted_file_size(self):
+        """Format file size in human readable format"""
+        if not self.file_size:
+            return 'Unknown size'
+        
+        size = self.file_size
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024.0:
+                return f"{size:.1f} {unit}"
+            size /= 1024.0
+        return f"{size:.1f} TB"
     
     def __repr__(self):
         return f'<ProjectDocument {self.original_filename}>'
+
+
+# --- Daily Production Report (DPR) Models ---
+
+class DailyProductionReport(db.Model):
+    """Main DPR model for managing daily production reports"""
+    __tablename__ = 'daily_production_reports'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    report_date = db.Column(db.Date, nullable=False)
+    
+    # Workflow status
+    status = db.Column(db.String(32), default='draft')  # draft, sent_to_staff, completed, reviewed
+    created_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)  # Project Manager
+    assigned_to_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Project Staff
+    completed_by_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Who filled it
+    
+    # Metadata
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    sent_at = db.Column(db.DateTime, nullable=True)  # When sent to staff
+    completed_at = db.Column(db.DateTime, nullable=True)  # When staff completed it
+    reviewed_at = db.Column(db.DateTime, nullable=True)  # When manager reviewed
+    
+    # Issues and signatures
+    issues = db.Column(db.Text, nullable=True)
+    prepared_by = db.Column(db.String(128), nullable=True)
+    checked_by = db.Column(db.String(128), nullable=True)
+    
+    # Relationships
+    project = db.relationship('Project', backref='daily_reports')
+    created_by = db.relationship('User', foreign_keys=[created_by_id], backref='created_dprs')
+    assigned_to = db.relationship('User', foreign_keys=[assigned_to_id], backref='assigned_dprs') 
+    completed_by = db.relationship('User', foreign_keys=[completed_by_id], backref='completed_dprs')
+    
+    def __repr__(self):
+        return f'<DPR {self.report_date} - Project {self.project_id}>'
+
+
+class DPRProductionItem(db.Model):
+    """Production items in the DPR (Earthworks, Concrete, etc.)"""
+    __tablename__ = 'dpr_production_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    dpr_id = db.Column(db.Integer, db.ForeignKey('daily_production_reports.id'), nullable=False)
+    
+    # Item details
+    item_code = db.Column(db.String(16), nullable=False)  # e.g., "1.01", "2.03"
+    description = db.Column(db.String(255), nullable=False)
+    location = db.Column(db.String(128), nullable=True)
+    unit = db.Column(db.String(16), nullable=False)  # M3, M2, M, TONS, etc.
+    
+    # Quantities
+    target_qty = db.Column(db.Float, default=0.0)
+    previous_qty_done = db.Column(db.Float, default=0.0)
+    day_production = db.Column(db.Float, default=0.0)
+    total_qty_done = db.Column(db.Float, default=0.0)
+    
+    # Relationship
+    dpr = db.relationship('DailyProductionReport', backref='production_items')
+    
+    def __repr__(self):
+        return f'<DPRProductionItem {self.item_code}: {self.description}>'
+
+
+class DPRMaterialUsage(db.Model):
+    """Material usage items in the DPR"""
+    __tablename__ = 'dpr_material_usage'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    dpr_id = db.Column(db.Integer, db.ForeignKey('daily_production_reports.id'), nullable=False)
+    
+    # Material details
+    item_number = db.Column(db.Integer, nullable=False)  # 1, 2, 3, etc.
+    description = db.Column(db.String(255), nullable=False)
+    unit = db.Column(db.String(16), nullable=False)  # bag, trucks, ltr, m3, tons
+    
+    # Usage quantities
+    previous_qty_used = db.Column(db.Float, default=0.0)
+    day_usage = db.Column(db.Float, default=0.0)
+    total_qty_used = db.Column(db.Float, default=0.0)
+    
+    # Relationship
+    dpr = db.relationship('DailyProductionReport', backref='material_usage')
+    
+    def __repr__(self):
+        return f'<DPRMaterialUsage {self.item_number}: {self.description}>'

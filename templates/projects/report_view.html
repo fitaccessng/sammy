@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Report Details{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Report Details</h1>
+            <div class="flex space-x-2">
+                {% if user_role in ['SUPER_HQ', 'PROJECT_MANAGER'] %}
+                <a href="{{ url_for('project.edit_report', report_id=report.id) }}" 
+                   class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                    Edit Report
+                </a>
+                {% endif %}
+                <a href="{{ url_for('project.export_report', report_id=report.id) }}" 
+                   class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Export
+                </a>
+                <a href="{{ url_for('project.reports_index') }}" 
+                   class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Back to Reports
+                </a>
+            </div>
+        </div>
+
+        <!-- Report Information -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-3">Report Information</h3>
+                <div class="space-y-2">
+                    <div><strong>Filename:</strong> {{ report.filename }}</div>
+                    <div><strong>Type:</strong> {{ report.type }}</div>
+                    <div><strong>Date:</strong> {{ report.date.strftime('%Y-%m-%d') if report.date else 'Unknown' }}</div>
+                    {% if hasattr(report, 'title') and report.title %}
+                    <div><strong>Title:</strong> {{ report.title }}</div>
+                    {% endif %}
+                    {% if hasattr(report, 'status') and report.status %}
+                    <div><strong>Status:</strong> 
+                        <span class="inline-block px-2 py-1 text-sm rounded-full
+                            {% if report.status == 'approved' %}bg-green-100 text-green-800
+                            {% elif report.status == 'rejected' %}bg-red-100 text-red-800
+                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ report.status.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-3">Upload Information</h3>
+                <div class="space-y-2">
+                    <div><strong>Uploaded By:</strong> {{ uploader.name if uploader else 'Unknown' }}</div>
+                    <div><strong>Upload Date:</strong> {{ report.date.strftime('%Y-%m-%d %H:%M') if report.date else 'Unknown' }}</div>
+                    {% if hasattr(report, 'approved_at') and report.approved_at %}
+                    <div><strong>Approved At:</strong> {{ report.approved_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    {% endif %}
+                    {% if hasattr(report, 'rejected_at') and report.rejected_at %}
+                    <div><strong>Rejected At:</strong> {{ report.rejected_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Description -->
+        {% if hasattr(report, 'description') and report.description %}
+        <div class="bg-gray-50 p-4 rounded-lg mb-6">
+            <h3 class="text-lg font-semibold mb-3">Description</h3>
+            <div class="whitespace-pre-wrap">{{ report.description }}</div>
+        </div>
+        {% endif %}
+
+        <!-- Approval Actions -->
+        {% if user_role in ['SUPER_HQ', 'PROJECT_MANAGER'] and (not hasattr(report, 'status') or report.status not in ['approved', 'rejected']) %}
+        <div class="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+            <h3 class="text-lg font-semibold mb-3">Approval Actions</h3>
+            <div class="flex space-x-3">
+                <button onclick="approveReport({{ report.id }})" 
+                        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Approve Report
+                </button>
+                <button onclick="rejectReport({{ report.id }})" 
+                        class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    Reject Report
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Rejection Modal -->
+<div id="rejectReportModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+    <div class="flex items-center justify-center min-h-screen">
+        <div class="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h3 class="text-lg font-semibold mb-4">Reject Report</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-medium mb-2">Reason for rejection:</label>
+                <textarea id="rejectionReason" class="w-full border rounded-lg p-2 h-24" 
+                          placeholder="Please provide a reason for rejecting this report..."></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeRejectModal()" 
+                        class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                    Cancel
+                </button>
+                <button onclick="confirmRejectReport()" 
+                        class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+                    Reject Report
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentReportId = null;
+
+function approveReport(reportId) {
+    if (confirm('Are you sure you want to approve this report?')) {
+        fetch(`/project/reports/${reportId}/approve`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Report approved successfully!');
+                location.reload();
+            } else {
+                alert('Failed to approve report: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while approving the report.');
+        });
+    }
+}
+
+function rejectReport(reportId) {
+    currentReportId = reportId;
+    document.getElementById('rejectReportModal').classList.remove('hidden');
+    document.getElementById('rejectionReason').focus();
+}
+
+function closeRejectModal() {
+    document.getElementById('rejectReportModal').classList.add('hidden');
+    document.getElementById('rejectionReason').value = '';
+    currentReportId = null;
+}
+
+function confirmRejectReport() {
+    const reason = document.getElementById('rejectionReason').value.trim();
+    
+    if (!reason) {
+        alert('Please provide a reason for rejection.');
+        return;
+    }
+    
+    fetch(`/project/reports/${currentReportId}/reject`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({ reason: reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Report rejected successfully!');
+            closeRejectModal();
+            location.reload();
+        } else {
+            alert('Failed to reject report: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while rejecting the report.');
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('rejectReportModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeRejectModal();
+    }
+});
+
+// Handle escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeRejectModal();
+    }
+});
+</script>
+{% endblock %}

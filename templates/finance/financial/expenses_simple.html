@@ -1,0 +1,70 @@
+{% extends "finance/base.html" %}
+
+{% block title %}Expenses Management | SammyA Finance{% endblock %}
+{% block header %}Expenses Management{% endblock %}
+
+{% block content %}
+<div class="p-6 space-y-6">
+    <!-- Test Section -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-2xl font-bold text-gray-900 mb-4">Expense Management System</h2>
+        <p class="text-gray-600 mb-4">System Status: <span class="text-green-600 font-semibold">Active</span></p>
+        
+        <!-- Debug Information -->
+        <div class="bg-gray-50 p-4 rounded-lg">
+            <h3 class="font-medium text-gray-800 mb-2">System Information:</h3>
+            <ul class="text-sm text-gray-600 space-y-1">
+                <li>Total Expenses: ₦{{ expense_summary.total_expenses|default('Loading...') }}</li>
+                <li>Total Count: {{ expense_summary.total_count|default('Loading...') }}</li>
+                <li>Categories Available: {{ categories|length if categories else 'Loading...' }}</li>
+                <li>Expenses Found: {{ expenses.total if expenses else 'Loading...' }}</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Basic Expense List -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">
+                Expense Records 
+                {% if expenses %}({{ expenses.total }} total){% endif %}
+            </h3>
+        </div>
+        
+        {% if expenses and expenses.items %}
+            <div class="p-4">
+                <p class="text-green-600 mb-4">✅ Found {{ expenses.items|length }} expenses on this page</p>
+                
+                {% for expense in expenses.items %}
+                <div class="border-b border-gray-200 pb-3 mb-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-medium text-gray-900">{{ expense.description or 'No description' }}</h4>
+                            <p class="text-sm text-gray-600">{{ expense.category or 'Uncategorized' }} • {{ expense.date.strftime('%Y-%m-%d') }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="font-bold text-red-600">₦{{ "{:,.2f}".format(expense.amount) }}</p>
+                            <span class="text-xs px-2 py-1 rounded-full {{ 'bg-green-100 text-green-800' if expense.status == 'approved' else 'bg-yellow-100 text-yellow-800' if expense.status == 'pending' else 'bg-red-100 text-red-800' }}">
+                                {{ expense.status.title() }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8">
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No expenses loaded</h3>
+                <p class="text-gray-500">Debug info:</p>
+                <ul class="text-sm text-gray-400 mt-2">
+                    <li>expenses object: {{ 'exists' if expenses else 'None' }}</li>
+                    {% if expenses %}
+                        <li>expenses.items: {{ 'exists' if expenses.items else 'None' }}</li>
+                        <li>expenses.total: {{ expenses.total }}</li>
+                    {% endif %}
+                </ul>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

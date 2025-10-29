@@ -1,0 +1,546 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}User Management - Admin Panel{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+<style>
+    .user-card {
+        transition: all 0.3s ease;
+        border-left: 4px solid transparent;
+    }
+    .user-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    .user-card.staff {
+        border-left-color: #3B82F6;
+    }
+    .user-card.employee {
+        border-left-color: #10B981;
+    }
+    .badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.375rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    .modal-backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+    }
+    .fade-in {
+        animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(-10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Section -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+                    <i class='bx bx-group text-blue-600 mr-3'></i>
+                    User Management
+                </h1>
+                <p class="text-gray-600 mt-2">Manage all users, employees, roles and project assignments</p>
+            </div>
+            <div class="flex space-x-3">
+                <button onclick="showAllUsers()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <i class='bx bx-group mr-1'></i>
+                    View All Users
+                </button>
+                <button onclick="showStatistics()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    <i class='bx bx-bar-chart-alt-2 mr-1'></i>
+                    Statistics
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Users (Staff)</p>
+                    <h3 class="text-3xl font-bold text-blue-600">{{ total_users }}</h3>
+                    <p class="text-xs text-gray-500 mt-1">{{ active_users }} active</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-user text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Total Employees</p>
+                    <h3 class="text-3xl font-bold text-green-600">{{ total_employees }}</h3>
+                    <p class="text-xs text-gray-500 mt-1">HR database</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-id-card text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Users with Projects</p>
+                    <h3 class="text-3xl font-bold text-purple-600">{{ users_with_projects }}</h3>
+                    <p class="text-xs text-gray-500 mt-1">Assigned to projects</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-briefcase text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium">Active Projects</p>
+                    <h3 class="text-3xl font-bold text-orange-600">{{ projects|length }}</h3>
+                    <p class="text-xs text-gray-500 mt-1">Available for assignment</p>
+                </div>
+                <div class="bg-orange-100 p-3 rounded-full">
+                    <i class='bx bx-building text-2xl text-orange-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter and Search -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex space-x-4">
+                <select id="filterType" onchange="filterUsers()" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="all">All Users & Employees</option>
+                    <option value="users">Users (Staff) Only</option>
+                    <option value="employees">Employees Only</option>
+                    <option value="with_projects">With Project Assignments</option>
+                    <option value="without_projects">Without Project Assignments</option>
+                </select>
+                
+                <select id="filterRole" onchange="filterUsers()" class="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Roles</option>
+                    {% for role in available_roles %}
+                    <option value="{{ role }}">{{ role.replace('_', ' ').title() }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="flex space-x-2">
+                <input type="text" id="searchInput" placeholder="Search by name or email..." 
+                       onkeyup="searchUsers()" 
+                       class="border border-gray-300 rounded-lg px-4 py-2 w-64 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                <button onclick="clearFilters()" class="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors">
+                    <i class='bx bx-refresh'></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Section -->
+    <div class="bg-white rounded-lg shadow-lg">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-semibold text-gray-800 flex items-center">
+                <i class='bx bx-user text-blue-600 mr-2'></i>
+                Users (Staff) - {{ users|length }}
+            </h2>
+            <p class="text-gray-600 mt-1">System users with login access and role assignments</p>
+        </div>
+        
+        <div class="p-6">
+            <div id="usersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for user in users %}
+                <div class="user-card staff bg-gray-50 rounded-lg p-4 border border-gray-200" data-type="user" data-role="{{ user.role|lower }}" data-name="{{ user.name|lower }}" data-email="{{ user.email|lower }}">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span class="text-blue-600 font-semibold text-lg">{{ user.name[:2].upper() }}</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">{{ user.name }}</h3>
+                                <p class="text-gray-600 text-sm">{{ user.email }}</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-1">
+                            <button onclick="editUserRole({{ user.id }}, '{{ user.role }}', '{{ user.name }}')" 
+                                    class="text-indigo-600 hover:text-indigo-800 p-1 rounded" title="Edit Role">
+                                <i class='bx bx-edit text-sm'></i>
+                            </button>
+                            <button onclick="assignProject({{ user.id }}, '{{ user.name }}')" 
+                                    class="text-green-600 hover:text-green-800 p-1 rounded" title="Assign Project">
+                                <i class='bx bx-plus text-sm'></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <span class="badge {% if user.role == 'admin' %}bg-red-100 text-red-800{% elif user.role == 'manager' %}bg-purple-100 text-purple-800{% elif user.role == 'supervisor' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ user.role.replace('_', ' ').title() }}
+                        </span>
+                    </div>
+                    
+                    <!-- Project Assignments -->
+                    <div class="space-y-2">
+                        <h4 class="text-sm font-medium text-gray-700">Project Assignments:</h4>
+                        {% if user.id in user_assignments %}
+                            {% for assignment in user_assignments[user.id] %}
+                            <div class="flex items-center justify-between bg-white p-2 rounded border">
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ assignment.project_name }}</p>
+                                    <p class="text-xs text-gray-500">{{ assignment.role }}</p>
+                                </div>
+                                <button onclick="removeUserProject({{ user.id }}, {{ assignment.project_id }}, '{{ user.name }}', '{{ assignment.project_name }}')"
+                                        class="text-red-600 hover:text-red-800 p-1 rounded" title="Remove from project">
+                                    <i class='bx bx-trash text-xs'></i>
+                                </button>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-xs text-gray-500 italic">No project assignments</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mt-3 pt-3 border-t border-gray-200 text-xs text-gray-500">
+                        <p>Created: {{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'Unknown' }}</p>
+                        <p>Last Updated: {{ user.updated_at.strftime('%Y-%m-%d') if user.updated_at else 'Unknown' }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Employees Section -->
+    <div class="bg-white rounded-lg shadow-lg">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-2xl font-semibold text-gray-800 flex items-center">
+                <i class='bx bx-id-card text-green-600 mr-2'></i>
+                Employees - {{ employees|length }}
+            </h2>
+            <p class="text-gray-600 mt-1">HR database employees with comprehensive details</p>
+        </div>
+        
+        <div class="p-6">
+            <div id="employeesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for employee in employees %}
+                <div class="user-card employee bg-gray-50 rounded-lg p-4 border border-gray-200" data-type="employee" data-role="{{ employee.role|lower if employee.role else '' }}" data-name="{{ employee.name|lower }}" data-email="{{ employee.email|lower if employee.email else '' }}">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                <span class="text-green-600 font-semibold text-lg">{{ employee.name[:2].upper() }}</span>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900">{{ employee.name }}</h3>
+                                {% if employee.email %}
+                                <p class="text-gray-600 text-sm">{{ employee.email }}</p>
+                                {% endif %}
+                                {% if employee.staff_code %}
+                                <p class="text-gray-500 text-xs">Staff Code: {{ employee.staff_code }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-3">
+                        {% if employee.role %}
+                        <span class="badge bg-green-100 text-green-800">{{ employee.role }}</span>
+                        {% endif %}
+                        {% if employee.department %}
+                        <span class="badge bg-blue-100 text-blue-800">{{ employee.department }}</span>
+                        {% endif %}
+                        {% if employee.status %}
+                        <span class="badge {% if employee.status == 'Active' %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ employee.status }}
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="space-y-1 text-sm text-gray-600">
+                        {% if employee.position %}
+                        <p><i class='bx bx-briefcase text-xs mr-1'></i>{{ employee.position }}</p>
+                        {% endif %}
+                        {% if employee.site %}
+                        <p><i class='bx bx-map text-xs mr-1'></i>{{ employee.site }}</p>
+                        {% endif %}
+                        {% if employee.phone %}
+                        <p><i class='bx bx-phone text-xs mr-1'></i>{{ employee.phone }}</p>
+                        {% endif %}
+                        {% if employee.date_of_employment %}
+                        <p><i class='bx bx-calendar text-xs mr-1'></i>Employed: {{ employee.date_of_employment.strftime('%Y-%m-%d') }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if employee.basic_salary %}
+                    <div class="mt-3 pt-3 border-t border-gray-200">
+                        <p class="text-sm font-medium text-gray-700">Salary Information:</p>
+                        <p class="text-sm text-gray-600">Basic: ₦{{ "{:,.0f}".format(employee.basic_salary) }}</p>
+                        {% if employee.housing_allowance %}
+                        <p class="text-xs text-gray-500">Housing: ₦{{ "{:,.0f}".format(employee.housing_allowance) }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div id="editRoleModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white fade-in">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Edit User Role</h3>
+                <button onclick="closeModal('editRoleModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-xl'></i>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.assign_user_role_new') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                <input type="hidden" id="editRoleUserId" name="user_id" value="">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">User</label>
+                    <p id="editRoleUserName" class="text-gray-900 font-medium"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="editRoleSelect" class="block text-sm font-medium text-gray-700 mb-2">New Role</label>
+                    <select name="role" id="editRoleSelect" required 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        {% for role in available_roles %}
+                        <option value="{{ role }}">{{ role.replace('_', ' ').title() }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('editRoleModal')" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors">
+                        Update Role
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Assign Project Modal -->
+<div id="assignProjectModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white fade-in">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Assign User to Project</h3>
+                <button onclick="closeModal('assignProjectModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-xl'></i>
+                </button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.assign_user_project_new') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                <input type="hidden" id="assignProjectUserId" name="user_id" value="">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">User</label>
+                    <p id="assignProjectUserName" class="text-gray-900 font-medium"></p>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="assignProjectSelect" class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                    <select name="project_id" id="assignProjectSelect" required 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">Select Project...</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="mb-4">
+                    <label for="assignProjectRole" class="block text-sm font-medium text-gray-700 mb-2">Role in Project</label>
+                    <select name="project_role" id="assignProjectRole" required 
+                            class="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="Staff">Staff</option>
+                        <option value="Site Engineer">Site Engineer</option>
+                        <option value="Project Manager">Project Manager</option>
+                        <option value="Supervisor">Supervisor</option>
+                        <option value="Foreman">Foreman</option>
+                        <option value="Safety Officer">Safety Officer</option>
+                        <option value="Quality Control">Quality Control</option>
+                        <option value="Technical Support">Technical Support</option>
+                    </select>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="closeModal('assignProjectModal')" 
+                            class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 transition-colors">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
+                        Assign to Project
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Modal Management
+function openModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+}
+
+// Edit User Role
+function editUserRole(userId, currentRole, userName) {
+    document.getElementById('editRoleUserId').value = userId;
+    document.getElementById('editRoleUserName').textContent = userName;
+    document.getElementById('editRoleSelect').value = currentRole;
+    openModal('editRoleModal');
+}
+
+// Assign Project
+function assignProject(userId, userName) {
+    document.getElementById('assignProjectUserId').value = userId;
+    document.getElementById('assignProjectUserName').textContent = userName;
+    document.getElementById('assignProjectSelect').value = '';
+    document.getElementById('assignProjectRole').value = 'Staff';
+    openModal('assignProjectModal');
+}
+
+// Remove User from Project
+function removeUserProject(userId, projectId, userName, projectName) {
+    if (confirm(`Are you sure you want to remove ${userName} from ${projectName}?`)) {
+        // Create and submit form
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/remove-user-project/${userId}/${projectId}`;
+        
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = '{{ csrf_token }}';
+        form.appendChild(csrfInput);
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Filtering and Search
+function filterUsers() {
+    const filterType = document.getElementById('filterType').value;
+    const filterRole = document.getElementById('filterRole').value;
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    
+    const userCards = document.querySelectorAll('.user-card');
+    
+    userCards.forEach(card => {
+        let showCard = true;
+        
+        // Filter by type
+        if (filterType !== 'all') {
+            const cardType = card.getAttribute('data-type');
+            if (filterType === 'users' && cardType !== 'user') showCard = false;
+            if (filterType === 'employees' && cardType !== 'employee') showCard = false;
+            if (filterType === 'with_projects') {
+                const hasProjects = card.querySelector('.bg-white.p-2.rounded.border');
+                if (!hasProjects) showCard = false;
+            }
+            if (filterType === 'without_projects') {
+                const hasProjects = card.querySelector('.bg-white.p-2.rounded.border');
+                if (hasProjects) showCard = false;
+            }
+        }
+        
+        // Filter by role
+        if (filterRole && showCard) {
+            const cardRole = card.getAttribute('data-role');
+            if (cardRole !== filterRole.toLowerCase()) showCard = false;
+        }
+        
+        // Filter by search term
+        if (searchTerm && showCard) {
+            const cardName = card.getAttribute('data-name');
+            const cardEmail = card.getAttribute('data-email');
+            if (!cardName.includes(searchTerm) && !cardEmail.includes(searchTerm)) {
+                showCard = false;
+            }
+        }
+        
+        // Show/hide card
+        if (showCard) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function searchUsers() {
+    filterUsers();
+}
+
+function clearFilters() {
+    document.getElementById('filterType').value = 'all';
+    document.getElementById('filterRole').value = '';
+    document.getElementById('searchInput').value = '';
+    filterUsers();
+}
+
+function showAllUsers() {
+    clearFilters();
+    document.querySelector('#usersGrid').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showStatistics() {
+    document.querySelector('.grid.grid-cols-1.md\\:grid-cols-2.lg\\:grid-cols-4').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const modals = ['editRoleModal', 'assignProjectModal'];
+    modals.forEach(modalId => {
+        const modal = document.getElementById(modalId);
+        if (event.target === modal) {
+            closeModal(modalId);
+        }
+    });
+}
+
+// Auto-close success/error messages
+document.addEventListener('DOMContentLoaded', function() {
+    const messages = document.querySelectorAll('.bg-green-50, .bg-red-50, .bg-yellow-50');
+    messages.forEach(msg => {
+        setTimeout(() => {
+            msg.style.transition = 'opacity 0.5s ease-out';
+            msg.style.opacity = '0';
+            setTimeout(() => msg.remove(), 500);
+        }, 5000);
+    });
+});
+</script>
+{% endblock %}

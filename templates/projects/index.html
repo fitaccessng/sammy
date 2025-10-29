@@ -12,465 +12,400 @@
                 <h2 class="text-xl font-semibold text-gray-900">Welcome, {{ current_user.name }}</h2>
                 <p class="text-sm text-gray-600">
                     Role: {{ current_user.role }} • 
-                    Showing projects you're assigned to or managing
+                    {% if current_user.role == 'super_hq' %}
+                        Showing all projects (Administrator access)
+                    {% elif current_user.role in ['hq_project', 'project_manager'] %}
+                        Showing projects you manage
+                    {% else %}
+                        Showing projects you're assigned to
+                    {% endif %}
                 </p>
             </div>
             <div class="text-right">
                 <p class="text-2xl font-bold text-indigo-600">{{ project_stats.total_projects }}</p>
-                <p class="text-sm text-gray-500">Your Projects</p>
+                <p class="text-sm text-gray-500">
+                    {% if current_user.role == 'super_hq' %}
+                        Total Projects
+                    {% elif current_user.role in ['hq_project', 'project_manager'] %}
+                        Your Managed Projects
+                    {% else %}
+                        Your Assigned Projects
+                    {% endif %}
+                </p>
             </div>
         </div>
     </div>
 
     <!-- Quick Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Active Projects</p>
-                    <h3 class="text-2xl font-bold text-green-600">{{ project_stats.active_projects }}</h3>
-                </div>
-                <div class="bg-green-100 p-3 rounded-full">
-                    <i class='bx bx-play-circle text-2xl text-green-600'></i>
-                </div>
+   <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <!-- Total Projects Card -->
+    <div class="modern-card p-6 border-l-4 border-blue-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Projects</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.total_projects }}</h3>
+                <p class="text-blue-500 text-sm mt-2">
+                    <i class='bx bx-buildings'></i>
+                    All projects
+                </p>
             </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Completed</p>
-                    <h3 class="text-2xl font-bold text-blue-600">{{ project_stats.completed_projects }}</h3>
-                </div>
-                <div class="bg-blue-100 p-3 rounded-full">
-                    <i class='bx bx-check-circle text-2xl text-blue-600'></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Planning</p>
-                    <h3 class="text-2xl font-bold text-yellow-600">{{ project_stats.planning_projects }}</h3>
-                </div>
-                <div class="bg-yellow-100 p-3 rounded-full">
-                    <i class='bx bx-clock text-2xl text-yellow-600'></i>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-gray-500 text-sm">Completion Rate</p>
-                    <h3 class="text-2xl font-bold text-purple-600">{{ "%.0f"|format(project_stats.completion_rate) }}%</h3>
-                </div>
-                <div class="bg-purple-100 p-3 rounded-full">
-                    <i class='bx bx-trending-up text-2xl text-purple-600'></i>
-                </div>
+            <div class="bg-blue-100 p-3 rounded-full">
+                <i class='bx bxs-buildings text-2xl text-blue-600'></i>
             </div>
         </div>
     </div>
 
-    <!-- Actions -->
-    <div class="flex justify-between">
-        <div class="flex space-x-3">
-            {% if current_user.has_role('SUPER_HQ') or current_user.has_role('PROJECT_MANAGER') %}
-            <a href="{{ url_for('project.create_project') }}" 
-               class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                Create New Project
-            </a>
-            {% endif %}
-            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Export My Projects
-            </button>
-        </div>
-        <div class="flex space-x-3">
-            <input type="text" placeholder="Search my projects..." 
-                   class="px-4 py-2 border rounded-lg">
+    <!-- Active Projects Card -->
+    <div class="modern-card p-6 border-l-4 border-green-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Active Projects</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.active_projects }}</h3>
+                <p class="text-green-500 text-sm mt-2">
+                    <i class='bx bx-play-circle'></i>
+                    In progress
+                </p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-full">
+                <i class='bx bxs-play-circle text-2xl text-green-600'></i>
+            </div>
         </div>
     </div>
 
-    <!-- Projects Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% if projects %}
-        {% for project in projects %}
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6">
-                <div class="flex justify-between items-start">
-                    <h3 class="text-lg font-semibold text-gray-900">{{ project.name }}</h3>
-                    <div class="flex flex-col space-y-1">
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full 
-                              {% if project.status == 'Active' %}bg-green-100 text-green-800
-                              {% elif project.status == 'Planning' %}bg-yellow-100 text-yellow-800
-                              {% elif project.status == 'Completed' %}bg-blue-100 text-blue-800
-                              {% else %}bg-gray-100 text-gray-800{% endif %}">
-                            {{ project.status }}
-                        </span>
-                        <span class="px-2 py-1 text-xs font-semibold rounded-full bg-indigo-100 text-indigo-800">
-                            {% if project.is_manager %}Manager{% else %}{{ project.user_role }}{% endif %}
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="mt-4 space-y-2">
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Your Role:</span>
-                        <span class="text-gray-900 font-medium">
-                            {% if project.is_manager %}
-                                <i class='bx bx-crown text-yellow-500 mr-1'></i>Project Manager
-                            {% else %}
-                                <i class='bx bx-user text-blue-500 mr-1'></i>{{ project.user_role }}
-                            {% endif %}
-                        </span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Manager:</span>
-                        <span class="text-gray-900">{{ project.manager }}</span>
-                    </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Created:</span>
-                        <span class="text-gray-900">{{ project.created_at }}</span>
-                    </div>
-                    {% if project.budget %}
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Budget:</span>
-                        <span class="text-gray-900">₦{{ "{:,.0f}".format(project.budget) }}</span>
-                    </div>
-                    {% endif %}
-                    {% if project.progress %}
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Progress:</span>
-                        <span class="text-gray-900">{{ "%.1f"|format(project.progress) }}%</span>
-                    </div>
-                    <!-- Progress Bar -->
-                    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
-                        <div class="bg-indigo-600 h-2 rounded-full transition-all duration-300" 
-                             style="width: {{ project.progress }}%"></div>
-                    </div>
-                    {% endif %}
-                    
-                    {% if project.days_remaining is not none %}
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Timeline:</span>
-                        <span class="{% if project.is_overdue %}text-red-600{% elif project.days_remaining < 7 %}text-orange-600{% else %}text-gray-900{% endif %}">
-                            {% if project.is_overdue %}
-                                Overdue by {{ project.days_remaining|abs }} days
-                            {% else %}
-                                {{ project.days_remaining }} days remaining
-                            {% endif %}
-                        </span>
-                    </div>
-                    {% endif %}
-                </div>
-
-                {% if project.description %}
-                <div class="mt-4">
-                    <h4 class="text-sm font-medium text-gray-700 mb-2">Description:</h4>
-                    <p class="text-sm text-gray-600">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
-                </div>
-                {% endif %}
-
-                <!-- Team Info -->
-                <div class="mt-4 pt-4 border-t">
-                    <div class="flex justify-between text-xs text-gray-500">
-                        <span>Team: {{ project.staff_count }} members</span>
-                        <span>Priority: {{ project.priority }}</span>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button onclick="viewProjectDetails({{ project.id }})" 
-                            class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                        <i class='bx bx-show mr-1'></i>View Details
-                    </button>
-                    <a href="{{ url_for('project.project_details', project_id=project.id) }}" 
-                       class="text-blue-600 hover:text-blue-900 text-sm font-medium">
-                        <i class='bx bx-link-external mr-1'></i>Full View
-                    </a>
-                    {% if project.is_manager or current_user.has_role('SUPER_HQ') %}
-                    <a href="{{ url_for('project.edit_project', project_id=project.id) }}" 
-                       class="text-gray-600 hover:text-gray-900 text-sm font-medium">
-                        <i class='bx bx-edit mr-1'></i>Edit
-                    </a>
-                    {% endif %}
-                </div>
+    <!-- Completed Projects Card -->
+    <div class="modern-card p-6 border-l-4 border-purple-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Completed Projects</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.completed_projects }}</h3>
+                <p class="text-purple-500 text-sm mt-2">
+                    <i class='bx bx-check-circle'></i>
+                    Finished
+                </p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-full">
+                <i class='bx bxs-check-circle text-2xl text-purple-600'></i>
             </div>
         </div>
-        {% endfor %}
-        {% else %}
-        <!-- No Projects State -->
-        <div class="col-span-full">
-            <div class="text-center py-12">
-                <i class='bx bx-folder-open text-6xl text-gray-400'></i>
-                <h3 class="text-xl font-medium text-gray-900 mt-4">No Projects Assigned</h3>
-                <p class="text-gray-500 mt-2">You haven't been assigned to any projects yet.</p>
-                {% if current_user.has_role('SUPER_HQ') or current_user.has_role('PROJECT_MANAGER') %}
-                <p class="text-gray-500 text-sm mt-1">As a {{ current_user.role }}, you can create new projects.</p>
-                <a href="{{ url_for('project.create_project') }}" 
-                   class="mt-4 inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                    <i class='bx bx-plus mr-2'></i>Create Your First Project
-                </a>
-                {% else %}
-                <p class="text-gray-500 text-sm mt-1">Contact your project manager to get assigned to projects.</p>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
     </div>
 
-    <!-- Project Details Modal -->
-    <div id="projectDetailsModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
-        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-800">Project Details</h3>
-                <button onclick="closeProjectDetailsModal()" class="text-gray-400 hover:text-gray-600">
-                    <i class='bx bx-x text-xl'></i>
-                </button>
+    <!-- Total Budget Card -->
+    <div class="modern-card p-6 border-l-4 border-orange-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Budget</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2 budget-amount">₦{{ "{:,.0f}".format(project_stats.total_budget) }}</h3>
+                <p class="text-orange-500 text-sm mt-2">
+                    <i class='bx bx-money'></i>
+                    Project budgets
+                </p>
             </div>
-            <div id="projectDetailsContent" class="space-y-4">
-                <!-- Project details content will be populated by JavaScript -->
-                <div class="text-center py-8">
-                    <i class='bx bx-loader bx-spin text-3xl text-gray-400'></i>
-                    <p class="text-gray-500 mt-2">Loading project details...</p>
-                </div>
+            <div class="bg-orange-100 p-3 rounded-full">
+                <i class='bx bxs-wallet text-2xl text-orange-600'></i>
             </div>
         </div>
     </div>
 </div>
 
-{% block extra_js %}
+<!-- Main Content -->
+<div class="modern-card">
+    <!-- Header -->
+    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+        <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
+                <i class='bx bxs-folder-open mr-2 text-blue-600'></i>
+                All Projects
+            </h3>
+            <div class="flex space-x-2">
+                <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Status</option>
+                    <option value="planning">Planning</option>
+                    <option value="active">Active</option>
+                    <option value="in progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="on hold">On Hold</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+                <input type="text" id="searchProjects" placeholder="Search projects..." 
+                       class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+        </div>
+    </div>
+
+    <!-- Projects Table -->
+    <div class="p-6">
+        {% if projects %}
+        <div class="overflow-x-auto">
+            <table class="table-modern" id="projectsTable">
+                <thead>
+                    <tr>
+                        <th>Project Details</th>
+                        <th>Project Manager</th>
+                        <th>Timeline</th>
+                        <th>Budget</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for project in projects %}
+                    <tr class="project-row hover:bg-gray-50 transition-colors" 
+                        data-name="{{ project.name|lower }}" 
+                        data-status="{{ (project.status or 'planning')|lower }}"
+                        data-manager="{{ (project.project_manager or '')|lower }}">
+                        <td>
+                            <div class="flex items-start">
+                                <!-- Priority Indicator -->
+                                {% set budget_amount = project.budget or 0 %}
+                                {% if budget_amount > 10000000 %}
+                                    <span class="priority-indicator priority-high" title="High Priority"></span>
+                                {% elif budget_amount > 5000000 %}
+                                    <span class="priority-indicator priority-medium" title="Medium Priority"></span>
+                                {% else %}
+                                    <span class="priority-indicator priority-low" title="Low Priority"></span>
+                                {% endif %}
+
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ project.name }}</div>
+                                    {% if project.description %}
+                                    <div class="text-xs text-gray-500 mt-1 max-w-xs truncate">{{ project.description }}</div>
+                                    {% endif %}
+                                    <div class="text-xs text-gray-400 mt-1">
+                                        <i class='bx bx-calendar'></i>
+                                        Created: {{ project.created_at.strftime('%Y-%m-%d') if project.created_at else 'N/A' }}
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs mr-3">
+                                    {% if project.project_manager %}
+                                        {{ project.project_manager[:2].upper() }}
+                                    {% else %}
+                                        <i class='bx bx-user'></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">
+                                        {{ project.project_manager or 'Unassigned' }}
+                                    </div>
+                                    <div class="text-xs text-gray-500">Project Manager</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                {% if project.start_date and project.end_date %}
+                                    <div class="text-gray-900 font-medium">
+                                        {{ project.start_date.strftime('%Y-%m-%d') }} to {{ project.end_date.strftime('%Y-%m-%d') }}
+                                    </div>
+                                    <!-- Progress Calculation -->
+                                    {% set total_days = (project.end_date - project.start_date).days %}
+                                    {% set current_date = current_date_obj %}
+                                    {% if total_days > 0 %}
+                                        {% set days_elapsed = (current_date - project.start_date).days %}
+                                        {% set progress = ((days_elapsed / total_days * 100) | round(1)) %}
+                                        {% if progress < 0 %}{% set progress = 0 %}{% endif %}
+                                        {% if progress > 100 %}{% set progress = 100 %}{% endif %}
+                                    {% else %}
+                                        {% set progress = 50 %}
+                                    {% endif %}
+                                    <div class="mt-2">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" style="width: {{ progress }}%"></div>
+                                        </div>
+                                        <div class="text-xs text-gray-500 mt-1">{{ progress }}% timeline elapsed</div>
+                                    </div>
+                                {% else %}
+                                    <div class="text-gray-500">Timeline not set</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="text-sm">
+                                {% if project.budget %}
+                                    <div class="text-gray-900 font-medium budget-amount">₦{{ "{:,.0f}".format(project.budget) }}</div>
+                                    <div class="text-xs text-gray-500">Total budget</div>
+                                {% else %}
+                                    <div class="text-gray-500">Not specified</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            {% set status = (project.status or 'planning')|lower %}
+                            <span class="status-badge badge-{{ status.replace(' ', '-') }}">
+                                {{ project.status or 'Planning' }}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <div class="relative dropdown-container">
+                                <!-- Primary Actions (Role-based visibility) -->
+                                <div class="btn-group justify-center">
+                                    <a href="{{ url_for('admin.project_details', project_id=project.id) }}" 
+                                       class="btn-primary-modern btn-sm-modern" 
+                                       title="View Project Details">
+                                        <i class='bx bx-show'></i>
+                                        View
+                                    </a>
+                                    
+                                    {% if current_user.role == 'super_hq' or (current_user.role in ['hq_project', 'project_manager'] and project.is_manager) %}
+                                    <a href="{{ url_for('project.edit_project', project_id=project.id) }}" 
+                                       class="btn-warning-modern btn-sm-modern" 
+                                       title="Edit Project">
+                                        <i class='bx bx-edit'></i>
+                                        Edit
+                                    </a>
+                                    {% endif %}
+                                    
+                                    <!-- Dropdown for Additional Actions (Role-based) -->
+                                    {% if current_user.role == 'super_hq' or (current_user.role in ['hq_project', 'project_manager'] and project.is_manager) %}
+                                    <div class="dropdown">
+                                        <button class="btn-secondary-modern btn-sm-modern dropdown-toggle" 
+                                                type="button" 
+                                                onclick="toggleDropdown(this)"
+                                                title="More Actions">
+                                            <i class='bx bx-dots-vertical-rounded'></i>
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <a href="{{ url_for('admin.milestones', project_id=project.id) }}" 
+                                               class="dropdown-item">
+                                                <i class='bx bx-target-lock'></i>
+                                                View Milestones
+                                            </a>
+                                            <a href="{{ url_for('admin.add_milestone', project_id=project.id) }}" 
+                                               class="dropdown-item">
+                                                <i class='bx bx-plus'></i>
+                                                Add Milestone
+                                            </a>
+                                            <a href="{{ url_for('project.assign_staff', project_id=project.id) }}" 
+                                               class="dropdown-item">
+                                                <i class='bx bx-user-plus'></i>
+                                                Assign Staff
+                                            </a>
+                                            <a href="#" class="dropdown-item">
+                                                <i class='bx bx-file-blank'></i>
+                                                Manage Documents
+                                            </a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <i class='bx bx-buildings text-6xl text-gray-300 mb-4'></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
+            <p class="text-gray-500 mb-6">
+                {% if current_user.role == 'super_hq' %}
+                    Get started by creating your first construction project.
+                {% else %}
+                    You don't have any assigned projects yet. Contact your administrator to get assigned to projects.
+                {% endif %}
+            </p>
+            {% if current_user.role == 'super_hq' %}
+            <a href="{{ url_for('admin.add_project') }}" class="btn-primary-modern btn-lg-modern">
+                <i class='bx bx-plus'></i>
+                Create First Project
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <script>
-// Project Details Modal Functions
-async function viewProjectDetails(projectId) {
-    try {
-        // Show modal first
-        document.getElementById('projectDetailsModal').classList.remove('hidden');
-        document.getElementById('projectDetailsModal').classList.add('flex');
-        
-        // Show loading state
-        document.getElementById('projectDetailsContent').innerHTML = `
-            <div class="text-center py-8">
-                <i class='bx bx-loader bx-spin text-3xl text-gray-400'></i>
-                <p class="text-gray-500 mt-2">Loading project details...</p>
-            </div>
-        `;
-        
-        // Make API call
-        const response = await fetch(`/project/api/projects/${projectId}/details`, {
-            method: 'GET',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json'
-            }
-        });
+// Search and filter functionality
+document.getElementById('searchProjects').addEventListener('input', filterProjects);
+document.getElementById('statusFilter').addEventListener('change', filterProjects);
 
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const result = await response.json();
+function filterProjects() {
+    const searchTerm = document.getElementById('searchProjects').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value.toLowerCase();
+    const rows = document.querySelectorAll('.project-row');
+    
+    rows.forEach(row => {
+        const name = row.dataset.name;
+        const status = row.dataset.status;
+        const manager = row.dataset.manager;
         
-        if (result.status === 'success') {
-            displayProjectDetails(result.project);
+        const matchesSearch = name.includes(searchTerm) || manager.includes(searchTerm);
+        const matchesStatus = !statusFilter || status === statusFilter;
+        
+        if (matchesSearch && matchesStatus) {
+            row.style.display = '';
         } else {
-            showError('Failed to load project details: ' + (result.error || 'Unknown error'));
+            row.style.display = 'none';
         }
-    } catch (error) {
-        console.error('Error loading project details:', error);
-        showError('Error loading project details: ' + error.message);
+    });
+}
+
+// Dropdown functionality
+function toggleDropdown(button) {
+    const dropdown = button.parentElement;
+    const menu = dropdown.querySelector('.dropdown-menu');
+    const isOpen = menu.classList.contains('show');
+    
+    // Close all other dropdowns
+    document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
+        if (openMenu !== menu) {
+            openMenu.classList.remove('show');
+        }
+    });
+    
+    // Toggle current dropdown
+    if (isOpen) {
+        menu.classList.remove('show');
+    } else {
+        menu.classList.add('show');
+    }
+    
+    // Position dropdown to avoid overflow
+    const rect = dropdown.getBoundingClientRect();
+    const viewportWidth = window.innerWidth;
+    const menuWidth = 160; // Approximate menu width
+    
+    if (rect.right + menuWidth > viewportWidth) {
+        menu.style.right = '0';
+        menu.style.left = 'auto';
+    } else {
+        menu.style.left = '0';
+        menu.style.right = 'auto';
     }
 }
 
-function displayProjectDetails(project) {
-    const content = document.getElementById('projectDetailsContent');
-    
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-NG', {
-            style: 'currency',
-            currency: 'NGN'
-        }).format(amount || 0);
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.dropdown')) {
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+});
+
+// Close dropdowns on escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+            menu.classList.remove('show');
+        });
+    }
+});
+
+// Add moment.js functionality for dates (simple implementation)
+function moment() {
+    return {
+        date: function() {
+            return new Date();
+        }
     };
-    
-    content.innerHTML = `
-        <div class="space-y-6">
-            <!-- Project Header -->
-            <div class="border-b pb-4">
-                <h4 class="text-xl font-semibold text-gray-900 mb-2">${project.name}</h4>
-                <p class="text-gray-600">${project.description || 'No description provided'}</p>
-                
-                <div class="flex items-center space-x-3 mt-3">
-                    <span class="px-3 py-1 text-sm font-semibold rounded-full 
-                        ${getStatusColor(project.status)}">
-                        ${project.status}
-                    </span>
-                    ${project.health_status ? `
-                        <span class="px-3 py-1 text-sm font-semibold rounded-full 
-                            ${getHealthColor(project.health_status)}">
-                            ${project.health_status}
-                        </span>
-                    ` : ''}
-                </div>
-            </div>
-            
-            <!-- Project Overview -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="space-y-4">
-                    <h5 class="font-semibold text-gray-900">Project Information</h5>
-                    
-                    <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Manager:</span>
-                            <span class="font-medium">${project.manager}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Progress:</span>
-                            <span class="font-medium">${project.progress}%</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Created:</span>
-                            <span class="font-medium">${formatDate(project.created_at)}</span>
-                        </div>
-                        ${project.start_date ? `
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Start Date:</span>
-                                <span class="font-medium">${project.start_date}</span>
-                            </div>
-                        ` : ''}
-                        ${project.end_date ? `
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">End Date:</span>
-                                <span class="font-medium ${project.is_overdue ? 'text-red-600' : ''}">${project.end_date}</span>
-                            </div>
-                        ` : ''}
-                    </div>
-                </div>
-                
-                <div class="space-y-4">
-                    <h5 class="font-semibold text-gray-900">Budget & Resources</h5>
-                    
-                    <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Budget:</span>
-                            <span class="font-medium">${formatCurrency(project.budget)}</span>
-                        </div>
-                        ${project.spent ? `
-                            <div class="flex justify-between">
-                                <span class="text-gray-500">Spent:</span>
-                                <span class="font-medium">${formatCurrency(project.spent)}</span>
-                            </div>
-                        ` : ''}
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Milestones:</span>
-                            <span class="font-medium">${project.completed_milestones || 0}/${project.milestone_count || 0}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Team Size:</span>
-                            <span class="font-medium">${project.team_size || 0} members</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Progress Bar -->
-            <div class="bg-gray-50 rounded-lg p-4">
-                <div class="flex justify-between text-sm mb-2">
-                    <span class="text-gray-600">Overall Progress</span>
-                    <span class="font-medium">${project.progress}%</span>
-                </div>
-                <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div class="bg-indigo-600 h-3 rounded-full transition-all duration-300" 
-                         style="width: ${project.progress}%"></div>
-                </div>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="flex space-x-3 pt-4 border-t">
-                <a href="/project/project/${project.id}" 
-                   class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors">
-                    <i class='bx bx-show mr-2'></i>Full Project View
-                </a>
-                <button onclick="closeProjectDetailsModal()" 
-                        class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors">
-                    Close
-                </button>
-            </div>
-        </div>
-    `;
 }
-
-function showError(message) {
-    const content = document.getElementById('projectDetailsContent');
-    content.innerHTML = `
-        <div class="text-center py-8">
-            <i class='bx bx-error-circle text-3xl text-red-500'></i>
-            <p class="text-red-600 mt-2 font-medium">Error</p>
-            <p class="text-gray-500 text-sm mt-1">${message}</p>
-            <button onclick="closeProjectDetailsModal()" 
-                    class="mt-4 bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors">
-                Close
-            </button>
-        </div>
-    `;
-}
-
-function closeProjectDetailsModal() {
-    document.getElementById('projectDetailsModal').classList.add('hidden');
-    document.getElementById('projectDetailsModal').classList.remove('flex');
-}
-
-// Helper functions
-function getStatusColor(status) {
-    switch(status) {
-        case 'Active':
-        case 'In Progress':
-            return 'bg-green-100 text-green-800';
-        case 'Completed':
-            return 'bg-blue-100 text-blue-800';
-        case 'Planning':
-            return 'bg-yellow-100 text-yellow-800';
-        default:
-            return 'bg-gray-100 text-gray-800';
-    }
-}
-
-function getHealthColor(health) {
-    switch(health) {
-        case 'Good':
-            return 'bg-green-100 text-green-800';
-        case 'Warning':
-            return 'bg-orange-100 text-orange-800';
-        case 'Critical':
-            return 'bg-red-100 text-red-800';
-        default:
-            return 'bg-gray-100 text-gray-800';
-    }
-}
-
-function formatDate(dateString) {
-    if (!dateString) return 'Not set';
-    try {
-        return new Date(dateString).toLocaleDateString('en-GB');
-    } catch (e) {
-        return dateString;
-    }
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(e) {
-    const modal = document.getElementById('projectDetailsModal');
-    if (e.target === modal) {
-        closeProjectDetailsModal();
-    }
-});
-
-// Close modal on Escape key
-document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-        closeProjectDetailsModal();
-    }
-});
 </script>
-{% endblock %}
 {% endblock %}

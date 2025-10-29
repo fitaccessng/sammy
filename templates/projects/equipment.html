@@ -1,143 +1,117 @@
-{% extends "projects/base.html" %}
+﻿{% extends "projects/base.html" %}
 
-{% block title %}Equipment | SammyA Projects{% endblock %}
+{% block title %}Equipment Management | SammyA Projects{% endblock %}
 {% block header %}Equipment Management{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Actions -->
-    <div class="flex justify-between">
-        <div class="flex space-x-3">
-            <button id="addEquipmentBtn" 
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                Add Equipment
-            </button>
-            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Generate Report
-            </button>
-        </div>
-        <div class="flex space-x-3">
-            <select id="filterStatus" class="px-4 py-2 border rounded-lg">
-                <option value="">All Status</option>
-                <option value="Available">Available</option>
-                <option value="In Use">In Use</option>
-                <option value="Maintenance">Maintenance</option>
-            </select>
-        </div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="px-4 py-3 rounded">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <p class="text-sm text-blue-600">Select a project to view and manage equipment.</p>
     </div>
 
-    <!-- Equipment Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for item in equipment %}
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6">
-                <div class="flex justify-between items-start">
-                    <div>
-                        <h3 class="text-lg font-medium text-gray-900">{{ item.name }}</h3>
-                        <p class="mt-1 text-sm text-gray-500">ID: {{ item.id }}</p>
-                    </div>
-                    <span class="px-2 py-1 text-xs font-medium rounded-full
-                          {% if item.status == 'Available' %}bg-green-100 text-green-800
-                          {% elif item.status == 'In Use' %}bg-blue-100 text-blue-800
-                          {% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                        {{ item.status }}
-                    </span>
-                </div>
-                
-                <div class="mt-4 space-y-2">
-                    {% if item.assigned_to %}
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Assigned to:</span>
-                        <span class="text-gray-900">{{ item.assigned_to }}</span>
-                    </div>
+    {% if accessible_projects %}
+    <form method="GET" action="{{ url_for('project.equipment') }}">
+        <select name="project_id" class="px-4 py-2 border rounded-lg" onchange="this.form.submit()">
+            <option value="">-- Select Project --</option>
+            {% for proj in accessible_projects %}
+            <option value="{{ proj.id }}" {% if selected_project and selected_project.id == proj.id %}selected{% endif %}>{{ proj.name }}</option>
+            {% endfor %}
+        </select>
+    </form>
+    {% endif %}
+
+    {% if selected_project %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Equipment for {{ selected_project.name }}</h2>
+        {% if equipment_list %}
+        <table class="min-w-full">
+            <thead>
+                <tr class="bg-gray-50">
+                    <th class="px-4 py-2 text-left">Name</th>
+                    <th class="px-4 py-2 text-left">Status</th>
+                    <th class="px-4 py-2 text-left">Maintenance Due</th>
+                    <th class="px-4 py-2 text-left">Machine Hours</th>
+                    {% if can_manage %}<th class="px-4 py-2 text-left">Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for equip in equipment_list %}
+                <tr>
+                    <td class="px-4 py-3">{{ equip.name }}</td>
+                    <td class="px-4 py-3">{{ equip.status }}</td>
+                    <td class="px-4 py-3">{{ equip.maintenance_due.strftime('%Y-%m-%d') if equip.maintenance_due else '-' }}</td>
+                    <td class="px-4 py-3">{{ equip.machine_hours }}</td>
+                    {% if can_manage %}
+                    <td class="px-4 py-3 space-x-2">
+                        <a href="{{ url_for('project.edit_equipment', equipment_id=equip.id) }}" class="text-blue-600">Edit</a>
+                        <form method="POST" action="{{ url_for('project.delete_equipment', equipment_id=equip.id) }}" style="display:inline" onsubmit="return confirm('Delete this equipment?')">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="text-red-600">Delete</button>
+                        </form>
+                    </td>
                     {% endif %}
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">Maintenance Due:</span>
-                        <span class="text-gray-900">{{ item.maintenance_due }}</span>
-                    </div>
-                </div>
-
-                <div class="mt-6 flex justify-end space-x-3">
-                    <button class="text-indigo-600 hover:text-indigo-900">Update Status</button>
-                    <button class="text-gray-600 hover:text-gray-900">Schedule Maintenance</button>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p class="text-gray-500 text-center py-4">No equipment found.</p>
+        {% endif %}
     </div>
-</div>
 
-<!-- Add Equipment Modal -->
-<div id="addEquipmentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Add Equipment</h3>
-            <form id="addEquipmentForm" class="space-y-4">
+    {% if can_manage %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold mb-4">Add New Equipment</h3>
+        <form method="POST" action="{{ url_for('project.equipment') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+            <input type="hidden" name="add_equipment" value="1">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Equipment Name</label>
-                    <input type="text" name="name" required 
-                           class="mt-1 block w-full rounded-md border-gray-300">
+                    <label class="block mb-2">Name *</label>
+                    <input type="text" name="name" required class="w-full border px-3 py-2 rounded">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Status</label>
-                    <select name="status" required class="mt-1 block w-full rounded-md border-gray-300">
-                        <option value="Available">Available</option>
-                        <option value="In Use">In Use</option>
+                    <label class="block mb-2">Status</label>
+                    <select name="status" class="w-full border px-3 py-2 rounded">
+                        <option value="Active">Active</option>
                         <option value="Maintenance">Maintenance</option>
+                        <option value="Inactive">Inactive</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Next Maintenance Date</label>
-                    <input type="date" name="maintenance_due" required 
-                           class="mt-1 block w-full rounded-md border-gray-300">
+                    <label class="block mb-2">Maintenance Due</label>
+                    <input type="date" name="maintenance_due" class="w-full border px-3 py-2 rounded">
                 </div>
-                <div class="flex justify-end space-x-3">
-                    <button type="button" class="closeModal px-4 py-2 bg-gray-200 text-gray-800 rounded-md">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">
-                        Add Equipment
-                    </button>
+                <div>
+                    <label class="block mb-2">Machine Hours</label>
+                    <input type="number" name="machine_hours" step="0.1" value="0" class="w-full border px-3 py-2 rounded">
                 </div>
-            </form>
-        </div>
+                <div>
+                    <label class="block mb-2">Diesel (L)</label>
+                    <input type="number" name="diesel_consumption" step="0.1" value="0" class="w-full border px-3 py-2 rounded">
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="block mb-2">Remarks</label>
+                <textarea name="remarks" rows="3" class="w-full border px-3 py-2 rounded"></textarea>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Add Equipment</button>
+            </div>
+        </form>
     </div>
+    {% endif %}
+    {% endif %}
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('addEquipmentModal');
-    const openModal = document.getElementById('addEquipmentBtn');
-    const closeModal = document.querySelector('button.closeModal');
-    const form = document.getElementById('addEquipmentForm');
-
-    openModal.addEventListener('click', () => modal.classList.remove('hidden'));
-    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
-        
-        try {
-            const response = await fetch('/projects/equipment/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify(Object.fromEntries(formData))
-            });
-
-            const data = await response.json();
-            if (data.status === 'success') {
-                window.location.reload();
-            }
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    });
-});
-</script>
 {% endblock %}

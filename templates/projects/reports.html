@@ -5,74 +5,303 @@
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Actions -->
-    <div class="flex justify-between">
-        <div class="flex space-x-3">
-            <button id="createReportBtn" 
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                Create Report
-            </button>
-            <button class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
-                Export Reports
-            </button>
+    <!-- Project Selection Required -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-center space-x-3">
+            <div class="flex-shrink-0">
+                <i class="bx bx-info-circle text-blue-500 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-blue-800">Project Context Required</h3>
+                <p class="text-sm text-blue-600">Select a project below to view reports and DPRs for that specific project.</p>
+            </div>
         </div>
-        <div class="flex space-x-3">
-            <select id="filterReports" class="px-4 py-2 border rounded-lg">
-                <option value="">All Types</option>
-                {% for type in data.report_types %}
-                <option value="{{ type }}">{{ type }}</option>
-                {% endfor %}
-            </select>
+    </div>
+    
+    <!-- Project Selection -->
+    {% if accessible_projects %}
+    <div class="flex items-center space-x-3">
+        <label for="projectSelector" class="text-sm font-medium text-gray-700">Select Project:</label>
+        <select id="projectSelector" class="px-4 py-2 border rounded-lg flex-1 max-w-md">
+            <option value="">-- Select a Project to Continue --</option>
+            {% for proj in accessible_projects %}
+            <option value="{{ proj.id }}">{{ proj.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% endif %}
+
+    <!-- Reports Tabs -->
+    <div class="border-b border-gray-200">
+        <nav class="-mb-px flex space-x-8">
+            <button id="generalReportsTab" class="border-transparent text-indigo-600 border-b-2 border-indigo-500 py-2 px-1 text-sm font-medium tab-button active">
+                General Reports
+            </button>
+            <button id="dprTab" class="border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 border-b-2 py-2 px-1 text-sm font-medium tab-button">
+                Daily Production Reports
+            </button>
+        </nav>
+    </div>
+
+    <!-- General Reports Section -->
+    <div id="generalReportsSection" class="tab-content">
+        <!-- Actions -->
+        <div class="flex justify-between mb-6">
+            <div class="flex space-x-3">
+                <button id="createReportBtn" disabled
+                        class="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">
+                    Create Report (Select Project)
+                </button>
+                <button id="exportReportsBtn" disabled class="px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed">
+                    Export Reports (Select Project)
+                </button>
+                <button id="bulkApproveBtn" disabled class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-not-allowed">
+                    Bulk Approve
+                </button>
+            </div>
+            <div class="flex space-x-3">
+                <select id="filterReports" class="px-4 py-2 border rounded-lg">
+                    <option value="">All Types</option>
+                    <option value="progress">Progress Report</option>
+                    <option value="financial">Financial Report</option>
+                    <option value="material">Material Report</option>
+                    <option value="equipment">Equipment Report</option>
+                    <option value="quality">Quality Report</option>
+                    <option value="safety">Safety Report</option>
+                </select>
+                <select id="statusFilter" class="px-4 py-2 border rounded-lg">
+                    <option value="">All Status</option>
+                    <option value="draft">Draft</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Reports List -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Project Reports</h3>
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="selectAllReports" class="rounded border-gray-300">
+                    <label for="selectAllReports" class="text-sm text-gray-600">Select All</label>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <input type="checkbox" class="rounded border-gray-300">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Author</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="reportsTableBody">
+                        {% if project_reports %}
+                            {% for report in project_reports %}
+                            <tr data-report-id="{{ report.id }}">
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" class="report-checkbox rounded border-gray-300" value="{{ report.id }}">
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ report.title }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                        {{ report.type.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ report.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ report.author }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                        {% if report.status == 'approved' %}bg-green-100 text-green-800
+                                        {% elif report.status == 'rejected' %}bg-red-100 text-red-800
+                                        {% elif report.status == 'submitted' %}bg-blue-100 text-blue-800
+                                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                        {{ report.status.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium space-x-2">
+                                    <a href="{{ url_for('project.view_report', report_id=report.id) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                                    <a href="{{ url_for('project.edit_report', report_id=report.id) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
+                                    <button onclick="exportReport({{ report.id }})" class="text-green-600 hover:text-green-900">Export</button>
+                                    {% if user_role in ['super_hq', 'project_manager'] and report.status == 'submitted' %}
+                                    <button onclick="approveReport({{ report.id }})" class="text-green-600 hover:text-green-900">Approve</button>
+                                    <button onclick="rejectReport({{ report.id }})" class="text-red-600 hover:text-red-900">Reject</button>
+                                    {% endif %}
+                                    <button onclick="deleteReport({{ report.id }})" class="text-red-600 hover:text-red-900">Delete</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                {% if selected_project %}No reports found for this project{% else %}Select a project to view reports{% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
-    <!-- Reports List -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">Recent Reports</h3>
+    <!-- DPR Section -->
+    <div id="dprSection" class="tab-content hidden">
+        <!-- DPR Actions -->
+        <div class="flex justify-between mb-6">
+            <div class="flex space-x-3">
+                {% if user_role in ['super_hq', 'project_manager'] %}
+                <button id="createDPRBtn" disabled class="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed">
+                    Create DPR (Select Project)
+                </button>
+                {% endif %}
+                <button id="exportDPRBtn" disabled class="px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed">
+                    Export DPRs (Select Project)
+                </button>
+                <button id="bulkApproveDPRBtn" disabled class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 cursor-not-allowed">
+                    Bulk Approve DPRs
+                </button>
+            </div>
+            <div class="flex space-x-3">
+                <select id="dprStatusFilter" class="px-4 py-2 border rounded-lg">
+                    <option value="">All Status</option>
+                    <option value="draft">Draft</option>
+                    <option value="sent_to_staff">Sent to Staff</option>
+                    <option value="completed">Completed</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+                <input type="date" id="dprDateFilter" class="px-4 py-2 border rounded-lg">
+            </div>
         </div>
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Title</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Author</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-gray-200">
-                    {% for report in data.recent_reports %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ report.title }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ report.type }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ report.date }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {{ report.author }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 py-1 text-xs font-medium rounded-full
-                                  {% if report.status == 'Completed' %}bg-green-100 text-green-800
-                                  {% else %}bg-yellow-100 text-yellow-800{% endif %}">
-                                {{ report.status }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            <button class="text-indigo-600 hover:text-indigo-900">View</button>
-                            <button class="ml-3 text-red-600 hover:text-red-900">Delete</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+
+        <!-- DPR Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6" id="dprSummaryCards">
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="bx bx-file text-indigo-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Total DPRs</p>
+                        <p class="text-lg font-semibold text-gray-900" id="totalDPRs">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="bx bx-time text-yellow-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Pending</p>
+                        <p class="text-lg font-semibold text-gray-900" id="pendingDPRs">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="bx bx-check-circle text-green-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">Completed</p>
+                        <p class="text-lg font-semibold text-gray-900" id="completedDPRs">-</p>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg shadow p-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <i class="bx bx-calendar text-blue-600 text-2xl"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-500">This Month</p>
+                        <p class="text-lg font-semibold text-gray-900" id="monthlyDPRs">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DPR List -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Daily Production Reports</h3>
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="selectAllDPRs" class="rounded border-gray-300">
+                    <label for="selectAllDPRs" class="text-sm text-gray-600">Select All</label>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                <input type="checkbox" class="rounded border-gray-300">
+                            </th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created By</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Completed</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="dprTableBody">
+                        {% if project_dprs %}
+                            {% for dpr in project_dprs %}
+                            <tr data-dpr-id="{{ dpr.id }}">
+                                <td class="px-6 py-4">
+                                    <input type="checkbox" class="dpr-checkbox rounded border-gray-300" value="{{ dpr.id }}">
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ dpr.report_date.strftime('%Y-%m-%d') }}</td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                        {% if dpr.status == 'approved' %}bg-green-100 text-green-800
+                                        {% elif dpr.status == 'rejected' %}bg-red-100 text-red-800
+                                        {% elif dpr.status == 'completed' %}bg-blue-100 text-blue-800
+                                        {% elif dpr.status == 'sent_to_staff' %}bg-yellow-100 text-yellow-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ dpr.status.replace('_', ' ').title() }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ dpr.created_by }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">{{ dpr.assigned_to }}</td>
+                                <td class="px-6 py-4 text-sm text-gray-900">
+                                    {% if dpr.completed_at %}{{ dpr.completed_at.strftime('%Y-%m-%d') }}{% else %}-{% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-sm font-medium space-x-2">
+                                    <a href="{{ url_for('project.view_dpr', dpr_id=dpr.id) }}" class="text-indigo-600 hover:text-indigo-900">View</a>
+                                    <a href="{{ url_for('project.edit_dpr', dpr_id=dpr.id) }}" class="text-blue-600 hover:text-blue-900">Edit</a>
+                                    <button onclick="exportDPR({{ dpr.id }})" class="text-green-600 hover:text-green-900">Export</button>
+                                    {% if user_role in ['super_hq', 'project_manager'] and dpr.status in ['completed', 'sent_to_staff'] %}
+                                    <button onclick="approveDPR({{ dpr.id }})" class="text-green-600 hover:text-green-900">Approve</button>
+                                    <button onclick="rejectDPR({{ dpr.id }})" class="text-red-600 hover:text-red-900">Reject</button>
+                                    {% endif %}
+                                    <button onclick="deleteDPR({{ dpr.id }})" class="text-red-600 hover:text-red-900">Delete</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                {% if selected_project %}No DPRs found for this project{% else %}Select a project to view DPRs{% endif %}
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+            </div>
         </div>
     </div>
 </div>
@@ -85,11 +314,11 @@
             <form id="createReportForm" class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Report Title</label>
-                    <input type="text" name="title" required class="mt-1 block w-full rounded-md border-gray-300">
+                    <input type="text" name="title" required class="mt-1 border p-2 block w-full rounded-md border-gray-300">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Report Type</label>
-                    <select name="type" required class="mt-1 block w-full rounded-md border-gray-300">
+                    <select name="type" required class="mt-1 block border p-2 w-full rounded-md border-gray-300">
                         {% for type in data.report_types %}
                         <option value="{{ type }}">{{ type }}</option>
                         {% endfor %}
@@ -97,7 +326,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Description</label>
-                    <textarea name="description" rows="3" class="mt-1 block w-full rounded-md border-gray-300"></textarea>
+                    <textarea name="description" rows="3" class="mt-1 border p-2 block w-full rounded-md border-gray-300"></textarea>
                 </div>
                 <div class="flex justify-end space-x-3">
                     <button type="button" class="closeModal px-4 py-2 bg-gray-200 text-gray-800 rounded-md">
@@ -116,36 +345,527 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('createReportModal');
-    const openModal = document.getElementById('createReportBtn');
-    const closeModal = document.querySelector('button.closeModal');
-    const form = document.getElementById('createReportForm');
+    const projectSelector = document.getElementById('projectSelector');
+    const generalReportsTab = document.getElementById('generalReportsTab');
+    const dprTab = document.getElementById('dprTab');
+    const generalReportsSection = document.getElementById('generalReportsSection');
+    const dprSection = document.getElementById('dprSection');
+    const createReportBtn = document.getElementById('createReportBtn');
+    const createDPRBtn = document.getElementById('createDPRBtn');
+    const exportReportsBtn = document.getElementById('exportReportsBtn');
+    const exportDPRBtn = document.getElementById('exportDPRBtn');
+    const bulkApproveBtn = document.getElementById('bulkApproveBtn');
+    const bulkApproveDPRBtn = document.getElementById('bulkApproveDPRBtn');
 
-    openModal.addEventListener('click', () => modal.classList.remove('hidden'));
-    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
-
-    form.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const formData = new FormData(form);
+    // Tab switching
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.classList.remove('active', 'text-indigo-600', 'border-indigo-500');
+            btn.classList.add('text-gray-500', 'border-transparent');
+        });
         
-        try {
-            const response = await fetch('/projects/reports/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
-                },
-                body: JSON.stringify(Object.fromEntries(formData))
-            });
-
-            const data = await response.json();
-            if (data.status === 'success') {
-                window.location.reload();
-            }
-        } catch (error) {
-            console.error('Error:', error);
+        document.querySelectorAll('.tab-content').forEach(section => {
+            section.classList.add('hidden');
+        });
+        
+        if (tab === 'dpr') {
+            dprTab.classList.add('active', 'text-indigo-600', 'border-indigo-500');
+            dprTab.classList.remove('text-gray-500', 'border-transparent');
+            dprSection.classList.remove('hidden');
+        } else {
+            generalReportsTab.classList.add('active', 'text-indigo-600', 'border-indigo-500');
+            generalReportsTab.classList.remove('text-gray-500', 'border-transparent');
+            generalReportsSection.classList.remove('hidden');
         }
+    }
+
+    generalReportsTab.addEventListener('click', () => switchTab('general'));
+    dprTab.addEventListener('click', () => switchTab('dpr'));
+
+    // Project selection handler
+    if (projectSelector) {
+        projectSelector.addEventListener('change', () => {
+            const selectedProject = projectSelector.value;
+            
+            if (selectedProject) {
+                enableButtons(selectedProject);
+                loadProjectData(selectedProject);
+            } else {
+                disableButtons();
+                clearTables();
+            }
+        });
+    }
+
+    function enableButtons(projectId) {
+        const projectName = projectSelector.options[projectSelector.selectedIndex].text;
+        
+        // Enable report buttons
+        if (createReportBtn) {
+            createReportBtn.disabled = false;
+            createReportBtn.className = "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700";
+            createReportBtn.textContent = `Create Report`;
+        }
+        
+        if (createDPRBtn) {
+            createDPRBtn.disabled = false;
+            createDPRBtn.className = "px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700";
+            createDPRBtn.textContent = `Create DPR`;
+        }
+        
+        if (exportReportsBtn) {
+            exportReportsBtn.disabled = false;
+            exportReportsBtn.className = "px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50";
+            exportReportsBtn.textContent = `Export Reports`;
+        }
+        
+        if (exportDPRBtn) {
+            exportDPRBtn.disabled = false;
+            exportDPRBtn.className = "px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50";
+            exportDPRBtn.textContent = `Export DPRs`;
+        }
+        
+        if (bulkApproveBtn) {
+            bulkApproveBtn.disabled = false;
+            bulkApproveBtn.className = "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700";
+        }
+        
+        if (bulkApproveDPRBtn) {
+            bulkApproveDPRBtn.disabled = false;
+            bulkApproveDPRBtn.className = "px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700";
+        }
+    }
+
+    function disableButtons() {
+        const buttons = [
+            {btn: createReportBtn, text: "Create Report (Select Project)"},
+            {btn: createDPRBtn, text: "Create DPR (Select Project)"},
+            {btn: exportReportsBtn, text: "Export Reports (Select Project)"},
+            {btn: exportDPRBtn, text: "Export DPRs (Select Project)"},
+            {btn: bulkApproveBtn, text: "Bulk Approve"},
+            {btn: bulkApproveDPRBtn, text: "Bulk Approve DPRs"}
+        ];
+        
+        buttons.forEach(({btn, text}) => {
+            if (btn) {
+                btn.disabled = true;
+                btn.className = "px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed";
+                btn.textContent = text;
+            }
+        });
+    }
+
+    function loadProjectData(projectId) {
+        loadProjectReports(projectId);
+        loadProjectDPRs(projectId);
+    }
+
+    function loadProjectReports(projectId) {
+        const tbody = document.getElementById('reportsTableBody');
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading reports...</td></tr>';
+        
+        // Make AJAX call to get reports data
+        fetch(`{{ url_for('project.reports_list') }}?project_id=${projectId}&format=json`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.reports) {
+                    if (data.reports.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No reports found for this project.</td></tr>';
+                    } else {
+                        tbody.innerHTML = data.reports.map(report => `
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <input type="checkbox" class="report-checkbox" value="${report.id}">
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">${report.title}</div>
+                                    <div class="text-sm text-gray-500">${report.type}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">${report.date}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">${report.author}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                                        ${report.status === 'approved' ? 'bg-green-100 text-green-800' : 
+                                          report.status === 'rejected' ? 'bg-red-100 text-red-800' : 
+                                          'bg-yellow-100 text-yellow-800'}">
+                                        ${report.status}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 text-sm text-gray-500">
+                                    ${report.description}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button onclick="viewReport(${report.id})" class="text-indigo-600 hover:text-indigo-900 mr-2">View</button>
+                                    <button onclick="editReport(${report.id})" class="text-blue-600 hover:text-blue-900 mr-2">Edit</button>
+                                    <button onclick="approveReport(${report.id})" class="text-green-600 hover:text-green-900 mr-2">Approve</button>
+                                    <button onclick="deleteReport(${report.id})" class="text-red-600 hover:text-red-900">Delete</button>
+                                </td>
+                            </tr>
+                        `).join('');
+                    }
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Failed to load reports.</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading reports:', error);
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Error loading reports.</td></tr>';
+            });
+    }
+
+    function loadProjectDPRs(projectId) {
+        const tbody = document.getElementById('dprTableBody');
+        tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Loading DPRs...</td></tr>';
+        
+        fetch(`{{ url_for('project.dpr_list') }}/${projectId}`)
+            .then(response => response.text())
+            .then(html => {
+                // Parse the response to extract DPR data
+                // This is a simplified approach - in production you'd want a proper API
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const dprRows = doc.querySelectorAll('#dprTableBody tr');
+                
+                if (dprRows.length > 0) {
+                    tbody.innerHTML = '';
+                    dprRows.forEach(row => {
+                        tbody.appendChild(row.cloneNode(true));
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">No DPRs found for this project</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading DPRs:', error);
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-red-500">Error loading DPRs</td></tr>';
+            });
+    }
+
+    function clearTables() {
+        document.getElementById('reportsTableBody').innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Select a project to view reports</td></tr>';
+        document.getElementById('dprTableBody').innerHTML = '<tr><td colspan="7" class="px-6 py-4 text-center text-gray-500">Select a project to view DPRs</td></tr>';
+        
+        // Clear DPR summary
+        ['totalDPRs', 'pendingDPRs', 'completedDPRs', 'monthlyDPRs'].forEach(id => {
+            const elem = document.getElementById(id);
+            if (elem) elem.textContent = '-';
+        });
+    }
+
+    // Button click handlers
+    if (createReportBtn) {
+        createReportBtn.addEventListener('click', () => {
+            if (!createReportBtn.disabled) {
+                const projectId = projectSelector.value;
+                window.location.href = `{{ url_for('project.create_report') }}?project_id=${projectId}`;
+            }
+        });
+    }
+
+    if (createDPRBtn) {
+        createDPRBtn.addEventListener('click', () => {
+            if (!createDPRBtn.disabled) {
+                const projectId = projectSelector.value;
+                window.location.href = `{{ url_for('project.dpr_list') }}/${projectId}`;
+            }
+        });
+    }
+
+    // Checkbox handling
+    document.getElementById('selectAllReports')?.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.report-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+        updateBulkButtons();
     });
+
+    document.getElementById('selectAllDPRs')?.addEventListener('change', function() {
+        const checkboxes = document.querySelectorAll('.dpr-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+        updateBulkButtons();
+    });
+
+    function updateBulkButtons() {
+        const selectedReports = document.querySelectorAll('.report-checkbox:checked').length;
+        const selectedDPRs = document.querySelectorAll('.dpr-checkbox:checked').length;
+        
+        if (bulkApproveBtn) {
+            bulkApproveBtn.style.display = selectedReports > 0 ? 'block' : 'none';
+        }
+        
+        if (bulkApproveDPRBtn) {
+            bulkApproveDPRBtn.style.display = selectedDPRs > 0 ? 'block' : 'none';
+        }
+    }
+
+    // Export functionality
+    if (exportReportsBtn) {
+        exportReportsBtn.addEventListener('click', () => {
+            if (!exportReportsBtn.disabled) {
+                const projectId = projectSelector.value;
+                const selectedReports = Array.from(document.querySelectorAll('.report-checkbox:checked')).map(cb => cb.value);
+                
+                if (selectedReports.length > 0) {
+                    exportSelectedReports(selectedReports);
+                } else {
+                    exportAllReports(projectId);
+                }
+            }
+        });
+    }
+
+    if (exportDPRBtn) {
+        exportDPRBtn.addEventListener('click', () => {
+            if (!exportDPRBtn.disabled) {
+                const projectId = projectSelector.value;
+                const selectedDPRs = Array.from(document.querySelectorAll('.dpr-checkbox:checked')).map(cb => cb.value);
+                
+                if (selectedDPRs.length > 0) {
+                    exportSelectedDPRs(selectedDPRs);
+                } else {
+                    exportAllDPRs(projectId);
+                }
+            }
+        });
+    }
 });
+
+// Report Management Functions
+window.viewReport = function(reportId) {
+    window.location.href = `{{ url_for('project.view_report', report_id=0) }}`.replace('0', reportId);
+};
+
+window.editReport = function(reportId) {
+    window.location.href = `{{ url_for('project.edit_report', report_id=0) }}`.replace('0', reportId);
+};
+
+window.deleteReport = function(reportId) {
+    if (confirm('Are you sure you want to delete this report? This action cannot be undone.')) {
+        fetch(`{{ url_for('project.delete_report', report_id=0) }}`.replace('0', reportId), {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Report deleted successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting report');
+        });
+    }
+};
+
+window.approveReport = function(reportId) {
+    if (confirm('Are you sure you want to approve this report?')) {
+        fetch(`{{ url_for('project.approve_report', report_id=0) }}`.replace('0', reportId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Report approved successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error approving report');
+        });
+    }
+};
+
+window.rejectReport = function(reportId) {
+    const reason = prompt('Please enter rejection reason:');
+    if (reason && reason.trim()) {
+        fetch(`{{ url_for('project.reject_report', report_id=0) }}`.replace('0', reportId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({reason: reason.trim()})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Report rejected successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error rejecting report');
+        });
+    }
+};
+
+window.exportReport = function(reportId) {
+    window.open(`{{ url_for('project.export_report', report_id=0) }}`.replace('0', reportId), '_blank');
+};
+
+// DPR Management Functions
+window.viewDPR = function(dprId) {
+    window.location.href = `{{ url_for('project.view_dpr', dpr_id=0) }}`.replace('0', dprId);
+};
+
+window.editDPR = function(dprId) {
+    window.location.href = `{{ url_for('project.edit_dpr', dpr_id=0) }}`.replace('0', dprId);
+};
+
+window.deleteDPR = function(dprId) {
+    if (confirm('Are you sure you want to delete this DPR? This action cannot be undone.')) {
+        fetch(`{{ url_for('project.delete_dpr', dpr_id=0) }}`.replace('0', dprId), {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('DPR deleted successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting DPR');
+        });
+    }
+};
+
+window.approveDPR = function(dprId) {
+    if (confirm('Are you sure you want to approve this DPR?')) {
+        fetch(`{{ url_for('project.approve_dpr', dpr_id=0) }}`.replace('0', dprId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('DPR approved successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error approving DPR');
+        });
+    }
+};
+
+window.rejectDPR = function(dprId) {
+    const reason = prompt('Please enter rejection reason:');
+    if (reason && reason.trim()) {
+        fetch(`{{ url_for('project.reject_dpr', dpr_id=0) }}`.replace('0', dprId), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({reason: reason.trim()})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('DPR rejected successfully');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error rejecting DPR');
+        });
+    }
+};
+
+window.exportDPR = function(dprId) {
+    window.open(`{{ url_for('project.export_dpr', dpr_id=0) }}`.replace('0', dprId), '_blank');
+};
+
+// Export Functions
+function exportAllReports(projectId) {
+    window.open(`{{ url_for('project.export_project_reports', project_id=0) }}`.replace('0', projectId), '_blank');
+}
+
+function exportSelectedReports(reportIds) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("project.export_selected_reports") }}';
+    form.target = '_blank';
+    
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'report_ids';
+    input.value = JSON.stringify(reportIds);
+    form.appendChild(input);
+    
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrf_token';
+    csrfInput.value = '{{ csrf_token }}';
+    form.appendChild(csrfInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+}
+
+function exportAllDPRs(projectId) {
+    window.open(`{{ url_for('project.export_project_dprs', project_id=0) }}`.replace('0', projectId), '_blank');
+}
+
+function exportSelectedDPRs(dprIds) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '{{ url_for("project.export_selected_dprs") }}';
+    form.target = '_blank';
+    
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'dpr_ids';
+    input.value = JSON.stringify(dprIds);
+    form.appendChild(input);
+    
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrf_token';
+    csrfInput.value = '{{ csrf_token }}';
+    form.appendChild(csrfInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+}
 </script>
 {% endblock %}

@@ -1,0 +1,1179 @@
+{% extends "projects/base.html" %}
+
+{% block title %}Daily Production Reports | SammyA Projects{% endblock %}
+{% block header %}Daily Production Reports (DPR){% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Project Selection Required -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-center space-x-3">
+            <div class="flex-shrink-0">
+                <i class="bx bx-info-circle text-blue-500 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-blue-800">Project Context Required</h3>
+                <p class="text-sm text-blue-600">Select a project below to manage Daily Production Reports for that specific project.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Project Selection -->
+    {% if accessible_projects %}
+    <div class="flex items-center space-x-3">
+        <label for="projectSelector" class="text-sm font-medium text-gray-700">Select Project:</label>
+        <select id="projectSelector" class="px-4 py-2 border rounded-lg flex-1 max-w-md">
+            <option value="">-- Select a Project to Continue --</option>
+            {% for proj in accessible_projects %}
+            <option value="{{ proj.id }}" {% if selected_project and proj.id == selected_project.id %}selected{% endif %}>{{ proj.name }}</option>
+            {% endfor %}
+        </select>
+        {% if accessible_projects|length == 1 %}
+        <span class="text-xs text-blue-600">
+            <i class="bx bx-info-circle"></i> Auto-selecting your only available project...
+        </span>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Actions Row -->
+    <div class="flex justify-between">
+        <div class="flex space-x-3">
+            {% if user_role == 'super_hq' or user_role == 'hq_project' or user_role == 'project_manager' %}
+            <button id="createDPRBtn" {% if not selected_project %}disabled{% endif %}
+                    class="px-4 py-2 {% if selected_project %}bg-indigo-600 text-white hover:bg-indigo-700{% else %}bg-gray-300 text-gray-500 cursor-not-allowed{% endif %} rounded-lg">
+                {% if selected_project %}Create DPR for {{ selected_project.name }}{% else %}Create New DPR (Select Project){% endif %}
+            </button>
+            {% else %}
+            <button class="px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-600" disabled>
+                Create DPR (Restricted)
+            </button>
+            {% endif %}
+        </div>
+        <div class="flex space-x-3">
+            <select id="statusFilter" class="px-4 py-2 border p-2 rounded-lg">
+                <option value="">All Status</option>
+                <option value="draft">Draft</option>
+                <option value="sent_to_staff">Sent to Staff</option>
+                <option value="completed">Completed</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- DPR List -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">Daily Production Reports</h3>
+                {% if selected_project %}
+                <span class="text-sm text-gray-600">
+                    <i class="bx bx-building"></i> {{ selected_project.name }} 
+                    {% if project_dprs %}
+                    <span class="ml-2 bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs">{{ project_dprs|length }} DPRs</span>
+                    {% endif %}
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="dprTableBody">
+                    {% if project_dprs %}
+                        {% for dpr in project_dprs %}
+                        <tr>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ dpr.report_date.strftime('%Y-%m-%d') }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ dpr.project_name }}</td>
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium 
+                                    {% if dpr.status == 'completed' %}bg-green-100 text-green-800
+                                    {% elif dpr.status == 'approved' %}bg-blue-100 text-blue-800
+                                    {% elif dpr.status == 'rejected' %}bg-red-100 text-red-800
+                                    {% elif dpr.status == 'sent_to_staff' %}bg-yellow-100 text-yellow-800
+                                    {% elif dpr.status == 'draft' %}bg-gray-100 text-gray-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ dpr.status.replace('_', ' ').title() }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ dpr.created_by }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ dpr.assigned_to }}</td>
+                            <td class="px-6 py-4 text-sm font-medium">
+                                <a href="{{ url_for('project.view_dpr', dpr_id=dpr.id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">View</a>
+                                {% if user_role in ['super_hq', 'hq_project', 'project_manager'] and dpr.status in ['completed', 'sent_to_staff'] %}
+                                <button onclick="approveDPR({{ dpr.id }})" class="text-green-600 hover:text-green-900 mr-2">Approve</button>
+                                <button onclick="rejectDPR({{ dpr.id }})" class="text-red-600 hover:text-red-900">Reject</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
+                            {% if selected_project %}No DPRs found for this project{% else %}Select a project to view DPRs{% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create DPR Modal -->
+<div id="createDPRModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-5 border w-full max-w-6xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Create Daily Production Report</h3>
+                <button class="closeDPRModal text-gray-400 hover:text-gray-600">
+                    <i class="bx bx-x text-2xl"></i>
+                </button>
+            </div>
+            
+            <form id="createDPRForm" method="POST" action="{{ url_for('project.create_dpr') }}" class="space-y-6">
+                <!-- CSRF Token for Security -->
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <!-- Hidden field for project ID -->
+                {% if selected_project %}
+                <input type="hidden" name="project_id" value="{{ selected_project.id }}">
+                {% endif %}
+                
+                <!-- Header Information -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Report Date <span class="text-red-500">*</span></label>
+                        <input type="date" name="report_date" required class="mt-1 border p-2 block w-full rounded-md border-gray-300">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Assign to Staff Member</label>
+                        <select name="assigned_to_id" id="staffAssignSelect" class="mt-1 border p-2 block w-full rounded-md border-gray-300">
+                            <option value="">-- Select Staff --</option>
+                            {% if project_staff %}
+                                {% for staff in project_staff %}
+                                <option value="{{ staff.id }}" data-email="{{ staff.email }}" data-type="{{ staff.type }}">
+                                    {{ staff.name }} ({{ staff.role }}) - {{ staff.email }}
+                                </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        {% if project_staff %}
+                            <p class="mt-1 text-xs text-gray-500">
+                                <i class="bx bx-info-circle"></i> 
+                                Selected staff will receive email notification and dashboard alert.
+                            </p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Project Info Display -->
+                <div class="bg-gray-50 p-4 rounded-lg">
+                    <h4 class="font-medium text-gray-900">Project: <span id="selectedProjectName">{% if selected_project %}{{ selected_project.name }}{% else %}Not Selected{% endif %}</span></h4>
+                    <p class="text-sm text-gray-600">Daily Production Report for selected project</p>
+                </div>
+
+                <!-- Production Items Section -->
+                <div class="border rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h4 class="text-lg font-semibold text-gray-900">PRODUCTION</h4>
+                        <div class="flex space-x-2">
+                            <button type="button" id="addProductionRow" class="px-3 py-1 bg-green-600 text-white text-sm rounded hover:bg-green-700">
+                                <i class="bx bx-plus"></i> Add Row
+                            </button>
+                            <button type="button" id="resetProductionTable" class="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700">
+                                <i class="bx bx-refresh"></i> Reset to Standard
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Bill Item</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Target Qty</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Daily Qty</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="productionTableBody" class="bg-white divide-y divide-gray-200">
+                                <!-- EARTHWORKS -->
+                                <tr class="bg-gray-100 font-semibold" data-is-header="true">
+                                    <td class="px-4 py-2">1.00</td>
+                                    <td class="px-4 py-2 font-bold">EARTHWORKS</td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                </tr>
+                                <tr data-item-code="1.01">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="1.01" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Soft Cut Works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M3" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="1.02">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="1.02" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Fill works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M3" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="1.03">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="1.03" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Scarification" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M2" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="1.04">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="1.04" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Hard Core Filling" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                
+                                <!-- CONCRETE WORKS -->
+                                <tr class="bg-gray-100 font-semibold" data-is-header="true">
+                                    <td class="px-4 py-2">2.00</td>
+                                    <td class="px-4 py-2 font-bold">CONCRETE WORKS</td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                </tr>
+                                <tr data-item-code="2.01">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="2.01" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Blinding" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M3" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="2.02">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="2.02" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Base/Top Slab concrete" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M3" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="2.03">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="2.03" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Wall concrete" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M3" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="2.04">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="2.04" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Reinforcement in total length" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- PAVEMENT & PROTECTION -->
+                                <tr class="bg-gray-100 font-semibold" data-is-header="true">
+                                    <td class="px-4 py-2">3.00</td>
+                                    <td class="px-4 py-2 font-bold">PAVEMENT & PROTECTION</td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                </tr>
+                                <tr data-item-code="3.01">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="3.01" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Base fill works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M3" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="3.02">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="3.02" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Priming works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M2" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="3.03">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="3.03" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Tack Coat" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M2" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="3.04">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="3.04" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Wearing Course works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M2" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="3.05">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="3.05" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Surface Dressing works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M2" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="3.06">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="3.06" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Stone pitching protection works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M2" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="3.07">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="3.07" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Kerb lining works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="M" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- RAW MATERIAL SUPPLY -->
+                                <tr class="bg-gray-100 font-semibold" data-is-header="true">
+                                    <td class="px-4 py-2">4.00</td>
+                                    <td class="px-4 py-2 font-bold">RAW MATERIAL SUPPLY</td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                    <td class="px-4 py-2"></td>
+                                </tr>
+                                <tr data-item-code="4.01">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="4.01" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Aggregate supply works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="TONS" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="4.02">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="4.02" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Sand supply works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="TONS" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="4.03">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="4.03" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Cement supply works" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="Bags" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="4.04">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="4.04" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Reinforcement" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="TONS" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="4.05">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="4.05" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Labour" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="Naira" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="4.06">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="4.06" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Other expenses" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="Naira" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="4.07">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="4.07" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Bitumen" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="TONS" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="4.08">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="4.08" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Kerosene" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="Litres" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr data-item-code="4.09">
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="item_code[]" value="4.09" class="w-full border rounded px-2 py-1 text-sm" readonly>
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="description[]" value="Diesel" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="location[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="text" name="unit[]" value="Litres" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="target_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="daily_qty[]" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                    <td class="px-4 py-2">
+                                        <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                                            <i class="bx bx-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Material Usage Section -->
+                <div class="border rounded-lg p-4">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-4">MATERIAL USAGE</h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Material Description</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Unit</th>
+                                    <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Quantity Used</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr>
+                                    <td class="px-4 py-2">1</td>
+                                    <td class="px-4 py-2">Cement</td>
+                                    <td class="px-4 py-2">bag</td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="material_qty_1" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">2</td>
+                                    <td class="px-4 py-2">Earthfill works</td>
+                                    <td class="px-4 py-2">trucks</td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="material_qty_2" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">3</td>
+                                    <td class="px-4 py-2">Cut work</td>
+                                    <td class="px-4 py-2">trucks</td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="material_qty_3" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">4</td>
+                                    <td class="px-4 py-2">Diesel</td>
+                                    <td class="px-4 py-2">ltr</td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="material_qty_4" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="px-4 py-2">5</td>
+                                    <td class="px-4 py-2">Concrete Mixer small truck</td>
+                                    <td class="px-4 py-2">trucks</td>
+                                    <td class="px-4 py-2">
+                                        <input type="number" step="0.01" name="material_qty_5" class="w-full border rounded px-2 py-1 text-sm">
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Submit Buttons -->
+                <div class="flex justify-end space-x-3 pt-4 border-t">
+                    <button type="button" class="closeDPRModal px-4 py-2 bg-gray-200 text-gray-800 rounded-md">
+                        Cancel
+                    </button>
+                    <button type="submit" name="action" value="save_draft" class="px-4 py-2 bg-blue-600 text-white rounded-md">
+                        Save as Draft
+                    </button>
+                    <button type="submit" name="action" value="send_to_staff" class="px-4 py-2 bg-indigo-600 text-white rounded-md">
+                        Send to Staff
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('createDPRModal');
+    const openModal = document.getElementById('createDPRBtn');
+    const closeModal = document.querySelectorAll('.closeDPRModal');
+    const projectSelector = document.getElementById('projectSelector');
+
+    // Project selection handler
+    if (projectSelector) {
+        // Auto-select first project if only one available and none selected
+        const options = projectSelector.options;
+        if (options.length === 2 && projectSelector.value === "") { // 2 = default option + 1 project
+            const firstProjectValue = options[1].value;
+            projectSelector.value = firstProjectValue;
+            // Trigger change event to load DPRs
+            window.location.href = `{{ url_for('project.dpr_list') }}/${firstProjectValue}`;
+        }
+        
+        projectSelector.addEventListener('change', () => {
+            const selectedProject = projectSelector.value;
+            
+            if (selectedProject) {
+                // Reload page with selected project to load staff server-side
+                window.location.href = `{{ url_for('project.dpr_list') }}/${selectedProject}`;
+            } else {
+                // Clear selection - reload without project parameter
+                window.location.href = `{{ url_for('project.dpr_list') }}`;
+            }
+        });
+    }
+
+    // Modal controls
+    if (openModal) {
+        openModal.addEventListener('click', () => {
+            if (!openModal.disabled) {
+                modal.classList.remove('hidden');
+            }
+        });
+    }
+    
+    closeModal.forEach(btn => {
+        btn.addEventListener('click', () => modal.classList.add('hidden'));
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+
+    // Production Table Management
+    const productionTableBody = document.getElementById('productionTableBody');
+    const addProductionRowBtn = document.getElementById('addProductionRow');
+    const resetProductionTableBtn = document.getElementById('resetProductionTable');
+
+    // Standard production items with all complete data
+    const standardProductionItems = [
+        // EARTHWORKS
+        { code: '1.00', description: 'EARTHWORKS', location: '', unit: '', target_qty: '', daily_qty: '', isHeader: true },
+        { code: '1.01', description: 'Soft Cut Works', location: '', unit: 'M3', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '1.02', description: 'Fill works', location: '', unit: 'M3', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '1.03', description: 'Scarification', location: '', unit: 'M2', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '1.04', description: 'Hard Core Filling', location: '', unit: '', target_qty: '', daily_qty: '', isHeader: false },
+        
+        // CONCRETE WORKS
+        { code: '2.00', description: 'CONCRETE WORKS', location: '', unit: '', target_qty: '', daily_qty: '', isHeader: true },
+        { code: '2.01', description: 'Blinding', location: '', unit: 'M3', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '2.02', description: 'Base/Top Slab concrete', location: '', unit: 'M3', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '2.03', description: 'Wall concrete', location: '', unit: 'M3', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '2.04', description: 'Reinforcement in total length', location: '', unit: 'M', target_qty: '', daily_qty: '', isHeader: false },
+        
+        // PAVEMENT & PROTECTION
+        { code: '3.00', description: 'PAVEMENT & PROTECTION', location: '', unit: '', target_qty: '', daily_qty: '', isHeader: true },
+        { code: '3.01', description: 'Base fill works', location: '', unit: 'M3', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '3.02', description: 'Priming works', location: '', unit: 'M2', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '3.03', description: 'Tack Coat', location: '', unit: 'M2', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '3.04', description: 'Wearing Course works', location: '', unit: 'M2', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '3.05', description: 'Surface Dressing works', location: '', unit: 'M2', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '3.06', description: 'Stone pitching protection works', location: '', unit: 'M2', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '3.07', description: 'Kerb lining works', location: '', unit: 'M', target_qty: '', daily_qty: '', isHeader: false },
+        
+        // RAW MATERIAL SUPPLY
+        { code: '4.00', description: 'RAW MATERIAL SUPPLY', location: '', unit: '', target_qty: '', daily_qty: '', isHeader: true },
+        { code: '4.01', description: 'Aggregate supply works', location: '', unit: 'TONS', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '4.02', description: 'Sand supply works', location: '', unit: 'TONS', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '4.03', description: 'Cement supply works', location: '', unit: 'Bags', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '4.04', description: 'Reinforcement', location: '', unit: 'TONS', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '4.05', description: 'Labour', location: '', unit: 'Naira', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '4.06', description: 'Other expenses', location: '', unit: 'Naira', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '4.07', description: 'Bitumen', location: '', unit: 'TONS', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '4.08', description: 'Kerosene', location: '', unit: 'Litres', target_qty: '', daily_qty: '', isHeader: false },
+        { code: '4.09', description: 'Diesel', location: '', unit: 'Litres', target_qty: '', daily_qty: '', isHeader: false }
+    ];
+
+    // Function to create a new row
+    function createProductionRow(item = null) {
+        const row = document.createElement('tr');
+        
+        if (item && item.isHeader) {
+            row.className = 'bg-gray-100 font-semibold';
+            row.setAttribute('data-is-header', 'true');
+            row.innerHTML = `
+                <td class="px-4 py-2">${item.code}</td>
+                <td class="px-4 py-2 font-bold">${item.description}</td>
+                <td class="px-4 py-2"></td>
+                <td class="px-4 py-2"></td>
+                <td class="px-4 py-2"></td>
+                <td class="px-4 py-2"></td>
+                <td class="px-4 py-2"></td>
+            `;
+        } else {
+            row.setAttribute('data-item-code', item ? item.code : '');
+            row.innerHTML = `
+                <td class="px-4 py-2">
+                    <input type="text" name="item_code[]" value="${item ? item.code : ''}" class="w-full border rounded px-2 py-1 text-sm" ${item && item.code ? 'readonly' : ''}>
+                </td>
+                <td class="px-4 py-2">
+                    <input type="text" name="description[]" value="${item ? item.description : ''}" class="w-full border rounded px-2 py-1 text-sm">
+                </td>
+                <td class="px-4 py-2">
+                    <input type="text" name="location[]" value="${item ? item.location : ''}" class="w-full border rounded px-2 py-1 text-sm">
+                </td>
+                <td class="px-4 py-2">
+                    <input type="text" name="unit[]" value="${item ? item.unit : ''}" class="w-full border rounded px-2 py-1 text-sm">
+                </td>
+                <td class="px-4 py-2">
+                    <input type="number" step="0.01" name="target_qty[]" value="${item ? item.target_qty : ''}" class="w-full border rounded px-2 py-1 text-sm">
+                </td>
+                <td class="px-4 py-2">
+                    <input type="number" step="0.01" name="daily_qty[]" value="${item ? item.daily_qty : ''}" class="w-full border rounded px-2 py-1 text-sm">
+                </td>
+                <td class="px-4 py-2">
+                    <button type="button" class="deleteRow text-red-600 hover:text-red-800">
+                        <i class="bx bx-trash"></i>
+                    </button>
+                </td>
+            `;
+        }
+        
+        return row;
+    }
+
+    // Add new empty row
+    if (addProductionRowBtn) {
+        addProductionRowBtn.addEventListener('click', function() {
+            const newRow = createProductionRow();
+            productionTableBody.appendChild(newRow);
+            attachDeleteHandlers();
+        });
+    }
+
+    // Reset table to standard items
+    if (resetProductionTableBtn) {
+        resetProductionTableBtn.addEventListener('click', function() {
+            if (confirm('This will reset the table to standard items and remove any custom entries. Continue?')) {
+                productionTableBody.innerHTML = '';
+                standardProductionItems.forEach(item => {
+                    const row = createProductionRow(item);
+                    productionTableBody.appendChild(row);
+                });
+                attachDeleteHandlers();
+            }
+        });
+    }
+
+    // Function to attach delete handlers to all delete buttons
+    function attachDeleteHandlers() {
+        const deleteButtons = document.querySelectorAll('.deleteRow');
+        deleteButtons.forEach(button => {
+            button.removeEventListener('click', deleteRowHandler); // Remove existing handler to prevent duplicates
+            button.addEventListener('click', deleteRowHandler);
+        });
+    }
+
+    // Delete row handler
+    function deleteRowHandler() {
+        if (confirm('Are you sure you want to delete this row?')) {
+            this.closest('tr').remove();
+        }
+    }
+
+    // Initialize delete handlers for existing rows
+    attachDeleteHandlers();
+
+    // DPR Management Functions
+    window.approveDPR = function(dprId) {
+        if (confirm('Are you sure you want to approve this DPR?')) {
+            fetch(`{{ url_for('project.approve_dpr', dpr_id=0) }}`.replace('0', dprId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({action: 'approve'})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('DPR approved successfully');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error approving DPR');
+            });
+        }
+    };
+
+    window.rejectDPR = function(dprId) {
+        const reason = prompt('Please enter rejection reason:');
+        if (reason && reason.trim()) {
+            fetch(`{{ url_for('project.reject_dpr', dpr_id=0) }}`.replace('0', dprId), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({action: 'reject', reason: reason.trim()})
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('DPR rejected successfully');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error rejecting DPR');
+            });
+        }
+    };
+});
+</script>
+{% endblock %}

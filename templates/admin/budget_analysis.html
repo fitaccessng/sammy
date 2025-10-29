@@ -1,0 +1,542 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}Budget Analysis - {{ project.name }}{% endblock %}
+
+{% block head %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<style>
+    /* Custom Financial Colors */
+    body { 
+        font-family: 'Space Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif !important;
+        background: #0f172a !important;
+        color: #e2e8f0 !important;
+    }
+    
+    .budget-success { color: #10b981; }
+    .budget-warning { color: #f59e0b; }
+    .budget-danger { color: #ef4444; }
+    .budget-info { color: #3b82f6; }
+    
+    /* Custom glow effects */
+    .glow-green { box-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+    .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+    .glow-yellow { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+    .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+    
+    /* Animation for financial data */
+    .financial-card {
+        transition: all 0.3s ease;
+    }
+    
+    .financial-card:hover {
+        transform: translateY(-2px);
+    }
+    
+    /* Progress bars */
+    .progress-bar {
+        background: linear-gradient(90deg, #10b981, #3b82f6);
+        height: 8px;
+        border-radius: 4px;
+        transition: width 0.8s ease;
+    }
+    
+    /* Risk indicator colors */
+    .risk-low { background-color: #10b981; }
+    .risk-medium { background-color: #f59e0b; }
+    .risk-high { background-color: #ef4444; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Budget Analysis Dashboard -->
+<div class="min-h-screen bg-slate-900 text-slate-100 overflow-x-hidden relative font-mono">
+    <div class="relative z-10 max-w-8xl mx-auto p-6">
+        
+        <!-- Header Section -->
+        <div class="bg-slate-800/90 backdrop-blur-xl border border-blue-500/30 rounded-2xl p-8 mb-8 glow-blue">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 via-green-400 to-yellow-400 bg-clip-text text-transparent mb-2">
+                        💰 BUDGET ANALYSIS CENTER
+                    </h1>
+                    <p class="text-slate-300 text-lg">{{ project.name }} • Financial Performance Dashboard</p>
+                    <p class="text-slate-400 text-sm mt-1">Real-time budget tracking and variance analysis</p>
+                </div>
+                <div class="flex gap-4">
+                    <button onclick="exportBudgetReport()" class="bg-green-500/10 border border-green-400/40 text-green-400 px-6 py-3 rounded-xl font-semibold hover:bg-green-500/20 hover:text-white transition-all duration-300 flex items-center gap-2 glow-green">
+                        <i class="fas fa-file-export"></i>EXPORT REPORT
+                    </button>
+                    <a href="{{ url_for('admin.project_reports', project_id=project.id) }}" class="bg-blue-500/10 border border-blue-400/40 text-blue-400 px-6 py-3 rounded-xl font-semibold hover:bg-blue-500/20 hover:text-white transition-all duration-300 flex items-center gap-2 glow-blue">
+                        <i class="fas fa-chart-line"></i>REPORTS
+                    </a>
+                    <a href="{{ url_for('admin.project_details', project_id=project.id) }}" class="bg-slate-600/50 border border-slate-500/40 text-slate-300 px-6 py-3 rounded-xl font-semibold hover:bg-slate-500/50 hover:text-white transition-all duration-300 flex items-center gap-2">
+                        <i class="fas fa-arrow-left"></i>BACK
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Key Financial Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <!-- Total Allocated Budget -->
+            <div class="financial-card bg-slate-800/90 backdrop-blur-xl border border-blue-400/20 rounded-xl p-6 glow-blue">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-blue-500/20 text-blue-400 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-wallet text-xl"></i>
+                    </div>
+                    <span class="text-xs bg-blue-500/10 text-blue-400 px-2 py-1 rounded-full border border-blue-400/30">ALLOCATED</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-2">₦{{ "{:,.0f}".format(total_allocated) }}</div>
+                <div class="text-slate-400 text-sm">Total Budget Allocated</div>
+                <div class="mt-3 bg-slate-700 rounded-full h-2">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width: 100%"></div>
+                </div>
+            </div>
+
+            <!-- Total Spent -->
+            <div class="financial-card bg-slate-800/90 backdrop-blur-xl border border-green-400/20 rounded-xl p-6 glow-green">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-green-500/20 text-green-400 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-money-bill-wave text-xl"></i>
+                    </div>
+                    <span class="text-xs bg-green-500/10 text-green-400 px-2 py-1 rounded-full border border-green-400/30">SPENT</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-2">₦{{ "{:,.0f}".format(total_spent) }}</div>
+                <div class="text-slate-400 text-sm">Total Amount Spent</div>
+                <div class="mt-3 bg-slate-700 rounded-full h-2">
+                    <div class="bg-green-500 h-2 rounded-full" style="width: {{ utilization_percentage if utilization_percentage <= 100 else 100 }}%"></div>
+                </div>
+            </div>
+
+            <!-- Remaining Budget -->
+            <div class="financial-card bg-slate-800/90 backdrop-blur-xl border border-yellow-400/20 rounded-xl p-6 glow-yellow">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-yellow-500/20 text-yellow-400 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-piggy-bank text-xl"></i>
+                    </div>
+                    <span class="text-xs bg-yellow-500/10 text-yellow-400 px-2 py-1 rounded-full border border-yellow-400/30">REMAINING</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-2">₦{{ "{:,.0f}".format(total_remaining) }}</div>
+                <div class="text-slate-400 text-sm">Budget Remaining</div>
+                <div class="mt-3 bg-slate-700 rounded-full h-2">
+                    <div class="bg-yellow-500 h-2 rounded-full" style="width: {{ 100 - utilization_percentage if utilization_percentage <= 100 else 0 }}%"></div>
+                </div>
+            </div>
+
+            <!-- Budget Utilization -->
+            <div class="financial-card bg-slate-800/90 backdrop-blur-xl border border-purple-400/20 rounded-xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="w-12 h-12 bg-purple-500/20 text-purple-400 rounded-xl flex items-center justify-center">
+                        <i class="fas fa-percentage text-xl"></i>
+                    </div>
+                    <span class="text-xs bg-purple-500/10 text-purple-400 px-2 py-1 rounded-full border border-purple-400/30">UTILIZATION</span>
+                </div>
+                <div class="text-3xl font-bold text-white mb-2">{{ utilization_percentage }}%</div>
+                <div class="text-slate-400 text-sm">Budget Utilized</div>
+                <div class="mt-3 bg-slate-700 rounded-full h-2">
+                    <div class="progress-bar" style="width: {{ utilization_percentage if utilization_percentage <= 100 else 100 }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Budget vs Actual Chart -->
+            <div class="bg-slate-800/90 backdrop-blur-xl border border-blue-400/20 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-white flex items-center gap-3">
+                        <i class="fas fa-chart-bar text-blue-400"></i>Budget vs Actual
+                    </h2>
+                    <span class="bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full text-sm border border-blue-400/30">COMPARISON</span>
+                </div>
+                <div class="h-80">
+                    <canvas id="budgetComparisonChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Monthly Expense Trend -->
+            <div class="bg-slate-800/90 backdrop-blur-xl border border-green-400/20 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-semibold text-white flex items-center gap-3">
+                        <i class="fas fa-line-chart text-green-400"></i>Expense Trends
+                    </h2>
+                    <span class="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-sm border border-green-400/30">6 MONTHS</span>
+                </div>
+                <div class="h-80">
+                    <canvas id="expenseTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Budget Breakdown and Variance Analysis -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+            <!-- Budget Categories -->
+            <div class="bg-slate-800/90 backdrop-blur-xl border border-purple-400/20 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-pie-chart text-purple-400"></i>Budget Categories
+                    </h2>
+                </div>
+                <div class="space-y-4">
+                    {% for category, data in budget_breakdown.items() %}
+                    <div class="border border-slate-600 rounded-lg p-4 hover:border-purple-400/40 transition-all">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-semibold text-white capitalize">{{ category }}</span>
+                            <span class="text-sm {% if data.usage_percentage > 90 %}text-red-400{% elif data.usage_percentage > 75 %}text-yellow-400{% else %}text-green-400{% endif %}">
+                                {{ "%.1f"|format(data.usage_percentage) }}%
+                            </span>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Allocated:</span>
+                                <span class="text-white">₦{{ "{:,.0f}".format(data.allocated) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Spent:</span>
+                                <span class="text-white">₦{{ "{:,.0f}".format(data.spent) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Remaining:</span>
+                                <span class="{% if data.remaining < 0 %}text-red-400{% else %}text-green-400{% endif %}">
+                                    ₦{{ "{:,.0f}".format(data.remaining) }}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-3 bg-slate-600 rounded-full h-2">
+                            <div class="h-2 rounded-full {% if data.usage_percentage > 90 %}bg-red-500{% elif data.usage_percentage > 75 %}bg-yellow-500{% else %}bg-green-500{% endif %}" 
+                                 style="width: {{ data.usage_percentage if data.usage_percentage <= 100 else 100 }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Cost Variance Analysis -->
+            <div class="bg-slate-800/90 backdrop-blur-xl border border-yellow-400/20 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-exclamation-triangle text-yellow-400"></i>Cost Variances
+                    </h2>
+                </div>
+                <div class="space-y-4 max-h-96 overflow-y-auto">
+                    {% for variance in cost_variances %}
+                    <div class="border {% if variance.status == 'over_budget' %}border-red-400/40{% elif variance.status == 'under_budget' %}border-green-400/40{% else %}border-blue-400/40{% endif %} rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-white capitalize">{{ variance.category }}</span>
+                            <span class="px-2 py-1 rounded text-xs {% if variance.status == 'over_budget' %}bg-red-500/20 text-red-400{% elif variance.status == 'under_budget' %}bg-green-500/20 text-green-400{% else %}bg-blue-500/20 text-blue-400{% endif %}">
+                                {{ variance.status.replace('_', ' ').title() }}
+                            </span>
+                        </div>
+                        <div class="space-y-1 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Planned:</span>
+                                <span class="text-white">₦{{ "{:,.0f}".format(variance.planned) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Actual:</span>
+                                <span class="text-white">₦{{ "{:,.0f}".format(variance.actual) }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-slate-400">Variance:</span>
+                                <span class="{% if variance.variance > 0 %}text-red-400{% elif variance.variance < 0 %}text-green-400{% else %}text-blue-400{% endif %}">
+                                    ₦{{ "{:,.0f}".format(variance.variance) }} ({{ "%.1f"|format(variance.variance_percentage) }}%)
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Financial KPIs -->
+            <div class="bg-slate-800/90 backdrop-blur-xl border border-green-400/20 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-tachometer-alt text-green-400"></i>Financial KPIs
+                    </h2>
+                </div>
+                <div class="space-y-4">
+                    {% for kpi_name, kpi_value in kpis.items() %}
+                    <div class="border border-slate-600 rounded-lg p-4">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="font-semibold text-white capitalize">{{ kpi_name.replace('_', ' ') }}</span>
+                            <span class="text-lg font-bold {% if kpi_value >= 80 %}text-green-400{% elif kpi_value >= 60 %}text-yellow-400{% else %}text-red-400{% endif %}">
+                                {{ "%.0f"|format(kpi_value) }}
+                            </span>
+                        </div>
+                        <div class="bg-slate-600 rounded-full h-2">
+                            <div class="h-2 rounded-full {% if kpi_value >= 80 %}bg-green-500{% elif kpi_value >= 60 %}bg-yellow-500{% else %}bg-red-500{% endif %}" 
+                                 style="width: {{ kpi_value }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Risk Analysis and Forecasting -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <!-- Risk Indicators -->
+            <div class="bg-slate-800/90 backdrop-blur-xl border border-red-400/20 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-shield-alt text-red-400"></i>Risk Assessment
+                    </h2>
+                </div>
+                <div class="space-y-4">
+                    {% for risk_name, risk_level in risk_indicators.items() %}
+                    <div class="flex justify-between items-center p-4 border border-slate-600 rounded-lg">
+                        <span class="font-medium text-white capitalize">{{ risk_name.replace('_', ' ') }}</span>
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold {% if risk_level == 'high' %}bg-red-500/20 text-red-400{% elif risk_level == 'medium' %}bg-yellow-500/20 text-yellow-400{% else %}bg-green-500/20 text-green-400{% endif %}">
+                            {{ risk_level.upper() }}
+                        </span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Budget Forecasting -->
+            <div class="bg-slate-800/90 backdrop-blur-xl border border-blue-400/20 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-crystal-ball text-blue-400"></i>Budget Forecast
+                    </h2>
+                </div>
+                <div class="space-y-4">
+                    <div class="border border-slate-600 rounded-lg p-4">
+                        <div class="text-sm text-slate-400 mb-2">Monthly Burn Rate</div>
+                        <div class="text-2xl font-bold text-white">₦{{ "{:,.0f}".format(avg_monthly_burn) }}</div>
+                    </div>
+                    <div class="border border-slate-600 rounded-lg p-4">
+                        <div class="text-sm text-slate-400 mb-2">Budget Duration Remaining</div>
+                        <div class="text-2xl font-bold {% if months_remaining < 2 %}text-red-400{% elif months_remaining < 6 %}text-yellow-400{% else %}text-green-400{% endif %}">
+                            {{ "%.1f"|format(months_remaining) }} months
+                        </div>
+                    </div>
+                    <div class="border border-slate-600 rounded-lg p-4">
+                        <div class="text-sm text-slate-400 mb-2">Forecasted Total Cost</div>
+                        <div class="text-2xl font-bold text-white">₦{{ "{:,.0f}".format(forecasted_total_cost) }}</div>
+                    </div>
+                    <div class="border border-slate-600 rounded-lg p-4">
+                        <div class="text-sm text-slate-400 mb-2">Cost Overrun Risk</div>
+                        <div class="text-2xl font-bold {% if cost_overrun_risk > total_allocated * 0.1 %}text-red-400{% elif cost_overrun_risk > 0 %}text-yellow-400{% else %}text-green-400{% endif %}">
+                            ₦{{ "{:,.0f}".format(cost_overrun_risk) }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activities and Alerts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Recent Financial Activities -->
+            <div class="bg-slate-800/90 backdrop-blur-xl border border-green-400/20 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-history text-green-400"></i>Recent Activities
+                    </h2>
+                </div>
+                <div class="space-y-3 max-h-96 overflow-y-auto">
+                    {% for expense in recent_expenses %}
+                    <div class="flex items-center p-3 border border-slate-600 rounded-lg hover:border-green-400/40 transition-all">
+                        <div class="w-10 h-10 bg-green-500/20 text-green-400 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-dollar-sign text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium text-white">{{ expense.description or 'Expense' }}</div>
+                            <div class="text-sm text-slate-400">₦{{ "{:,.2f}".format(expense.amount) }} • {{ expense.category }}</div>
+                            <div class="text-xs text-green-400">{{ expense.date.strftime('%Y-%m-%d') if expense.date else 'No date' }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+
+                    {% for procurement in recent_procurement %}
+                    <div class="flex items-center p-3 border border-slate-600 rounded-lg hover:border-blue-400/40 transition-all">
+                        <div class="w-10 h-10 bg-blue-500/20 text-blue-400 rounded-full flex items-center justify-center mr-3">
+                            <i class="fas fa-shopping-cart text-sm"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-medium text-white">{{ procurement.item_name }}</div>
+                            <div class="text-sm text-slate-400">₦{{ "{:,.2f}".format(procurement.price * procurement.qty) }} • {{ procurement.status }}</div>
+                            <div class="text-xs text-blue-400">{{ procurement.created_at.strftime('%Y-%m-%d') if procurement.created_at else 'No date' }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Budget Alerts -->
+            <div class="bg-slate-800/90 backdrop-blur-xl border border-yellow-400/20 rounded-xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-white flex items-center gap-2">
+                        <i class="fas fa-bell text-yellow-400"></i>Budget Alerts
+                    </h2>
+                </div>
+                <div class="space-y-3 max-h-96 overflow-y-auto">
+                    {% for alert in budget_alerts %}
+                    <div class="p-4 border {% if alert.severity == 'high' %}border-red-400/40 bg-red-500/10{% elif alert.severity == 'medium' %}border-yellow-400/40 bg-yellow-500/10{% else %}border-blue-400/40 bg-blue-500/10{% endif %} rounded-lg">
+                        <div class="flex items-start">
+                            <div class="w-8 h-8 {% if alert.severity == 'high' %}bg-red-500/20 text-red-400{% elif alert.severity == 'medium' %}bg-yellow-500/20 text-yellow-400{% else %}bg-blue-500/20 text-blue-400{% endif %} rounded-full flex items-center justify-center mr-3 mt-1">
+                                <i class="fas fa-exclamation text-sm"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="font-medium {% if alert.severity == 'high' %}text-red-400{% elif alert.severity == 'medium' %}text-yellow-400{% else %}text-blue-400{% endif %} mb-1">
+                                    {{ alert.category.title() }} Alert
+                                </div>
+                                <div class="text-sm text-slate-300">{{ alert.message }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if not budget_alerts %}
+                    <div class="text-center py-8 text-slate-500">
+                        <i class="fas fa-check-circle text-3xl mb-4 text-green-400"></i>
+                        <p>All budget indicators are healthy</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Budget Comparison Chart
+    const budgetCtx = document.getElementById('budgetComparisonChart');
+    if (budgetCtx) {
+        const categories = {{ chart_categories | tojson }};
+        const allocatedData = {{ chart_allocated | tojson }};
+        const spentData = {{ chart_spent | tojson }};
+        
+        new Chart(budgetCtx.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: categories.map(cat => cat.charAt(0).toUpperCase() + cat.slice(1)),
+                datasets: [
+                    {
+                        label: 'Allocated',
+                        data: allocatedData,
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Spent',
+                        data: spentData,
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e2e8f0',
+                            font: { family: 'Space Grotesk' }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: {
+                            color: '#e2e8f0',
+                            font: { family: 'Space Grotesk' },
+                            callback: function(value) {
+                                return '₦' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: {
+                            color: '#e2e8f0',
+                            font: { family: 'Space Grotesk' }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Monthly Expense Trend Chart
+    const trendCtx = document.getElementById('expenseTrendChart');
+    if (trendCtx) {
+        const monthlyData = {{ monthly_expenses | tojson }};
+        const labels = monthlyData.map(item => {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            return months[item.month - 1] + ' ' + item.year;
+        });
+        const amounts = monthlyData.map(item => item.total_amount);
+        
+        new Chart(trendCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Monthly Expenses',
+                    data: amounts,
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    pointRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#e2e8f0',
+                            font: { family: 'Space Grotesk' }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: {
+                            color: '#e2e8f0',
+                            font: { family: 'Space Grotesk' },
+                            callback: function(value) {
+                                return '₦' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: { color: 'rgba(148, 163, 184, 0.1)' },
+                        ticks: {
+                            color: '#e2e8f0',
+                            font: { family: 'Space Grotesk' }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+
+// Export function
+function exportBudgetReport() {
+    window.print();
+}
+</script>
+{% endblock %}

@@ -1,0 +1,49 @@
+﻿{% extends "projects/base.html" %}
+
+{% block title %}Edit Equipment | SammyA Projects{% endblock %}
+{% block header %}Edit Equipment{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-xl font-semibold mb-4">Edit Equipment: {{ equipment.name }}</h2>
+        <form method="POST" action="{{ url_for('project.edit_equipment', equipment_id=equipment.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block mb-2">Name *</label>
+                    <input type="text" name="name" value="{{ equipment.name }}" required class="w-full border px-3 py-2 rounded">
+                </div>
+                <div>
+                    <label class="block mb-2">Status</label>
+                    <select name="status" class="w-full border px-3 py-2 rounded">
+                        <option value="Active" {% if equipment.status == 'Active' %}selected{% endif %}>Active</option>
+                        <option value="Maintenance" {% if equipment.status == 'Maintenance' %}selected{% endif %}>Maintenance</option>
+                        <option value="Inactive" {% if equipment.status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block mb-2">Maintenance Due</label>
+                    <input type="date" name="maintenance_due" value="{{ equipment.maintenance_due.strftime('%Y-%m-%d') if equipment.maintenance_due else '' }}" class="w-full border px-3 py-2 rounded">
+                </div>
+                <div>
+                    <label class="block mb-2">Machine Hours</label>
+                    <input type="number" name="machine_hours" step="0.1" value="{{ equipment.machine_hours }}" class="w-full border px-3 py-2 rounded">
+                </div>
+                <div>
+                    <label class="block mb-2">Diesel (L)</label>
+                    <input type="number" name="diesel_consumption" step="0.1" value="{{ equipment.diesel_consumption }}" class="w-full border px-3 py-2 rounded">
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="block mb-2">Remarks</label>
+                <textarea name="remarks" rows="3" class="w-full border px-3 py-2 rounded">{{ equipment.remarks or '' }}</textarea>
+            </div>
+            <div class="mt-6 space-x-2">
+                <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded">Save Changes</button>
+                <a href="{{ url_for('project.equipment', project_id=equipment.project_id) }}" class="px-4 py-2 bg-gray-300 text-gray-700 rounded inline-block">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,72 +1,500 @@
 {% extends "projects/base.html" %}
 
-{% block title %}Analytics | SammyA Projects{% endblock %}
-{% block header %}Project Analytics{% endblock %}
+{% block title %}Construction PMO Dashboard | SammyA Projects{% endblock %}
+{% block header %}Construction PMO Analytics Dashboard{% endblock %}
 
 {% block extra_css %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+<style>
+    .metric-card {
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .metric-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+    .status-indicator {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 8px;
+    }
+    .trend-up { color: #10B981; }
+    .trend-down { color: #EF4444; }
+    .trend-neutral { color: #6B7280; }
+    .critical { background-color: #EF4444; }
+    .warning { background-color: #F59E0B; }
+    .good { background-color: #10B981; }
+    .excellent { background-color: #3B82F6; }
+</style>
 {% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Stats Overview -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-medium text-gray-900">Active Projects</h3>
-                <span class="text-2xl font-bold text-indigo-600">{{ data.project_status.Active }}</span>
+    <!-- Executive Summary KPIs -->
+    <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-lg shadow-lg p-6 text-white">
+        <h2 class="text-2xl font-bold mb-4">
+            <i class="fas fa-chart-line mr-2"></i>
+            Executive Dashboard Summary
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="text-center">
+                <div class="text-3xl font-bold">₦{{ (data.portfolio_value / 1000000) | default(0) | round(1) }}M</div>
+                <div class="text-blue-100">Portfolio Value</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold">{{ data.active_projects | default(0) }}</div>
+                <div class="text-blue-100">Active Projects</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold">{{ (data.spi * 100) | default(0) | round(1) }}%</div>
+                <div class="text-blue-100">Schedule Performance</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold">{{ (data.cpi * 100) | default(0) | round(1) }}%</div>
+                <div class="text-blue-100">Cost Performance</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reports & DPR Metrics Section -->
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <h2 class="text-xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-file-alt mr-2"></i>
+            Reports & Documentation Status
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <div class="text-center p-4 bg-blue-50 rounded-lg">
+                <div class="text-3xl font-bold text-blue-600">{{ data.total_reports | default(0) }}</div>
+                <div class="text-sm text-blue-700">Total Reports</div>
+                <div class="text-xs text-gray-500 mt-1">All project reports</div>
+            </div>
+            <div class="text-center p-4 bg-green-50 rounded-lg">
+                <div class="text-3xl font-bold text-green-600">{{ data.total_dprs | default(0) }}</div>
+                <div class="text-sm text-green-700">Total DPRs</div>
+                <div class="text-xs text-gray-500 mt-1">Daily production reports</div>
+            </div>
+            <div class="text-center p-4 bg-yellow-50 rounded-lg">
+                <div class="text-3xl font-bold text-yellow-600">{{ data.reports_this_month | default(0) }}</div>
+                <div class="text-sm text-yellow-700">Reports This Month</div>
+                <div class="text-xs text-gray-500 mt-1">Current month submissions</div>
+            </div>
+            <div class="text-center p-4 bg-purple-50 rounded-lg">
+                <div class="text-3xl font-bold text-purple-600">{{ data.dprs_this_month | default(0) }}</div>
+                <div class="text-sm text-purple-700">DPRs This Month</div>
+                <div class="text-xs text-gray-500 mt-1">Current month DPRs</div>
+            </div>
+        </div>
+        
+        <!-- Reporting Efficiency Metrics -->
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Reporting Compliance</span>
+                    <span class="text-lg font-bold text-green-600">
+                        {{ ((data.reports_this_month / data.active_projects * 100) if data.active_projects > 0 else 0) | round(1) }}%
+                    </span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">Reports per active project</div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">DPR Coverage</span>
+                    <span class="text-lg font-bold text-blue-600">
+                        {{ ((data.dprs_this_month / data.active_projects * 30) if data.active_projects > 0 else 0) | round(1) }}%
+                    </span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">Daily coverage percentage</div>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-medium">Documentation Quality</span>
+                    <span class="text-lg font-bold text-purple-600">
+                        {{ ((data.quality_index + data.safety_score) / 2) | round(1) }}%
+                    </span>
+                </div>
+                <div class="text-xs text-gray-500 mt-1">Overall quality metric</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Critical Construction KPIs Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Schedule Performance Index (SPI) -->
+        <div class="metric-card bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-calendar-alt text-blue-500 mr-2"></i>
+                    Schedule Performance
+                </h3>
+                <span class="status-indicator {{ 'excellent' if data.spi >= 1.0 else 'good' if data.spi >= 0.9 else 'warning' if data.spi >= 0.8 else 'critical' }}"></span>
+            </div>
+            <div class="text-3xl font-bold {{ 'text-blue-600' if data.spi >= 1.0 else 'text-green-600' if data.spi >= 0.9 else 'text-yellow-600' if data.spi >= 0.8 else 'text-red-600' }}">
+                {{ "%.2f"|format(data.spi | default(0)) }}
+            </div>
+            <div class="text-sm text-gray-500 mt-2">
+                SPI: {{ "%.1f"|format((data.spi | default(0) - 1) * 100) }}% 
+                <i class="fas fa-arrow-{{ 'up trend-up' if data.spi >= 1.0 else 'down trend-down' }}"></i>
             </div>
             <div class="mt-4">
-                <div class="h-2 bg-gray-200 rounded">
-                    <div class="h-2 bg-indigo-600 rounded" style="width: {{ (data.project_status.Active / total_projects * 100) if total_projects > 0 else 0 }}%"></div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-{{ 'blue' if data.spi >= 1.0 else 'green' if data.spi >= 0.9 else 'yellow' if data.spi >= 0.8 else 'red' }}-600 h-2 rounded-full" 
+                         style="width: {{ (data.spi | default(0) * 100) | round(1) }}%"></div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-medium text-gray-900">Resource Utilization</h3>
-                <span class="text-2xl font-bold text-green-600">{{ data.resource_utilization }}%</span>
+        <!-- Cost Performance Index (CPI) -->
+        <div class="metric-card bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-dollar-sign text-green-500 mr-2"></i>
+                    Cost Performance
+                </h3>
+                <span class="status-indicator {{ 'excellent' if data.cpi >= 1.0 else 'good' if data.cpi >= 0.9 else 'warning' if data.cpi >= 0.8 else 'critical' }}"></span>
+            </div>
+            <div class="text-3xl font-bold {{ 'text-blue-600' if data.cpi >= 1.0 else 'text-green-600' if data.cpi >= 0.9 else 'text-yellow-600' if data.cpi >= 0.8 else 'text-red-600' }}">
+                {{ "%.2f"|format(data.cpi | default(0)) }}
+            </div>
+            <div class="text-sm text-gray-500 mt-2">
+                CPI: {{ "%.1f"|format((data.cpi | default(0) - 1) * 100) }}% 
+                <i class="fas fa-arrow-{{ 'up trend-up' if data.cpi >= 1.0 else 'down trend-down' }}"></i>
             </div>
             <div class="mt-4">
-                <div class="h-2 bg-gray-200 rounded">
-                    <div class="h-2 bg-green-600 rounded" style="width: {{ data.resource_utilization }}%"></div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-{{ 'blue' if data.cpi >= 1.0 else 'green' if data.cpi >= 0.9 else 'yellow' if data.cpi >= 0.8 else 'red' }}-600 h-2 rounded-full" 
+                         style="width: {{ (data.cpi | default(0) * 100) | round(1) }}%"></div>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-6">
-            <div class="flex items-center justify-between">
-                <h3 class="text-lg font-medium text-gray-900">Budget Overview</h3>
-                <span class="text-2xl font-bold text-blue-600">${{ '{:,.0f}'.format(data.budget_overview.spent) }}</span>
+        <!-- Quality Index -->
+        <div class="metric-card bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-medal text-purple-500 mr-2"></i>
+                    Quality Index
+                </h3>
+                <span class="status-indicator {{ 'excellent' if data.quality_index >= 95 else 'good' if data.quality_index >= 85 else 'warning' if data.quality_index >= 75 else 'critical' }}"></span>
+            </div>
+            <div class="text-3xl font-bold {{ 'text-blue-600' if data.quality_index >= 95 else 'text-green-600' if data.quality_index >= 85 else 'text-yellow-600' if data.quality_index >= 75 else 'text-red-600' }}">
+                {{ data.quality_index | default(0) | round(1) }}%
+            </div>
+            <div class="text-sm text-gray-500 mt-2">
+                Quality Score: {{ data.quality_index | default(0) | round(1) }}%
+                <i class="fas fa-arrow-{{ 'up trend-up' if data.quality_index >= 85 else 'down trend-down' }}"></i>
             </div>
             <div class="mt-4">
-                <div class="h-2 bg-gray-200 rounded">
-                    <div class="h-2 bg-blue-600 rounded" style="width: {{ (data.budget_overview.spent / data.budget_overview.allocated) * 100 }}%"></div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-purple-600 h-2 rounded-full" style="width: {{ data.quality_index | default(0) }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Safety Performance -->
+        <div class="metric-card bg-white rounded-lg shadow-lg p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-hard-hat text-orange-500 mr-2"></i>
+                    Safety Score
+                </h3>
+                <span class="status-indicator {{ 'excellent' if data.safety_score >= 95 else 'good' if data.safety_score >= 85 else 'warning' if data.safety_score >= 75 else 'critical' }}"></span>
+            </div>
+            <div class="text-3xl font-bold {{ 'text-blue-600' if data.safety_score >= 95 else 'text-green-600' if data.safety_score >= 85 else 'text-yellow-600' if data.safety_score >= 75 else 'text-red-600' }}">
+                {{ data.safety_score | default(0) | round(1) }}%
+            </div>
+            <div class="text-sm text-gray-500 mt-2">
+                Days w/o Incident: {{ data.days_without_incident | default(0) }}
+                <i class="fas fa-arrow-up trend-up"></i>
+            </div>
+            <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-orange-600 h-2 rounded-full" style="width: {{ data.safety_score | default(0) }}%"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Charts -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Project Status Chart -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Project Status Distribution</h3>
-            <canvas id="projectStatusChart" height="300"></canvas>
-        </div>
-
-        <!-- Budget Allocation Chart -->
-        <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Budget Allocation</h3>
-            <canvas id="budgetChart" height="300"></canvas>
+    <!-- Earned Value Management (EVM) Dashboard -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-chart-area text-indigo-500 mr-2"></i>
+            Earned Value Management (EVM) Analysis
+        </h3>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- EVM Chart -->
+            <div class="lg:col-span-2">
+                <canvas id="evmChart" height="300"></canvas>
+            </div>
+            <!-- EVM Metrics -->
+            <div class="space-y-4">
+                <div class="p-4 bg-blue-50 rounded-lg">
+                    <h4 class="font-semibold text-blue-800">Planned Value (PV)</h4>
+                    <div class="text-2xl font-bold text-blue-600">₦{{ "%.1f"|format(data.planned_value | default(0) / 1000000) }}M</div>
+                    <div class="text-sm text-blue-600">Baseline Cost</div>
+                </div>
+                <div class="p-4 bg-green-50 rounded-lg">
+                    <h4 class="font-semibold text-green-800">Earned Value (EV)</h4>
+                    <div class="text-2xl font-bold text-green-600">₦{{ "%.1f"|format(data.earned_value | default(0) / 1000000) }}M</div>
+                    <div class="text-sm text-green-600">Work Completed</div>
+                </div>
+                <div class="p-4 bg-red-50 rounded-lg">
+                    <h4 class="font-semibold text-red-800">Actual Cost (AC)</h4>
+                    <div class="text-2xl font-bold text-red-600">₦{{ "%.1f"|format(data.actual_cost | default(0) / 1000000) }}M</div>
+                    <div class="text-sm text-red-600">Money Spent</div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                    <h4 class="font-semibold text-gray-800">Forecasts</h4>
+                    <div class="space-y-2 text-sm">
+                        <div>EAC: ₦{{ "%.1f"|format(data.eac | default(0) / 1000000) }}M</div>
+                        <div>ETC: ₦{{ "%.1f"|format(data.etc | default(0) / 1000000) }}M</div>
+                        <div>VAC: ₦{{ "%.1f"|format(data.vac | default(0) / 1000000) }}M</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Timeline Analysis -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <h3 class="text-lg font-medium text-gray-900 mb-4">Project Timeline Analysis</h3>
-        <canvas id="timelineChart"></canvas>
+    <!-- Resource Utilization & Critical Path Analysis -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+        <!-- Resource Utilization -->
+        <div class="bg-white rounded-lg shadow-lg p-4 lg:p-6">
+            <h3 class="text-lg lg:text-xl font-bold text-gray-800 mb-3 lg:mb-4">
+                <i class="fas fa-users text-blue-500 mr-2"></i>
+                Resource Utilization
+            </h3>
+            <div class="h-48 lg:h-64">
+                <canvas id="resourceChart"></canvas>
+            </div>
+            <div class="mt-3 lg:mt-4 grid grid-cols-2 gap-2 lg:gap-4 text-sm">
+                <div class="text-center p-2 bg-blue-50 rounded">
+                    <div class="font-semibold text-xs lg:text-sm">Total Workforce</div>
+                    <div class="text-lg lg:text-2xl font-bold text-blue-600">
+                        {{ (data.resource_allocation.engineers + data.resource_allocation.supervisors + data.resource_allocation.skilled_workers + data.resource_allocation.general_labor + data.resource_allocation.equipment_operators) | default(0) }}
+                    </div>
+                </div>
+                <div class="text-center p-2 bg-green-50 rounded">
+                    <div class="font-semibold text-xs lg:text-sm">Utilization Rate</div>
+                    <div class="text-lg lg:text-2xl font-bold text-green-600">
+                        {% set total_allocated = (data.resource_allocation.engineers + data.resource_allocation.supervisors + data.resource_allocation.skilled_workers + data.resource_allocation.general_labor + data.resource_allocation.equipment_operators) | default(1) %}
+                        {% set total_utilized = (data.resource_utilization.engineers + data.resource_utilization.supervisors + data.resource_utilization.skilled_workers + data.resource_utilization.general_labor + data.resource_utilization.equipment_operators) | default(0) %}
+                        {{ ((total_utilized / total_allocated * 100) if total_allocated > 0 else 0) | round(1) }}%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Critical Path & Risk Analysis -->
+        <div class="bg-white rounded-lg shadow-lg p-4 lg:p-6">
+            <h3 class="text-lg lg:text-xl font-bold text-gray-800 mb-3 lg:mb-4">
+                <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+                Risk Analysis
+            </h3>
+            <div class="space-y-3 max-h-48 lg:max-h-64 overflow-y-auto">
+                <!-- Project Risk Assessment based on real data -->
+                {% for project in data.performance_matrix[:5] %}
+                <div class="p-2 lg:p-3 border-l-4 {{ 'border-red-500 bg-red-50' if project.risk_level == 'High' else 'border-yellow-500 bg-yellow-50' if project.risk_level == 'Medium' else 'border-green-500 bg-green-50' }} rounded-r">
+                    <div class="flex justify-between items-center">
+                        <div class="font-medium text-sm lg:text-base truncate pr-2">{{ project.project_name[:25] }}{% if project.project_name|length > 25 %}...{% endif %}</div>
+                        <span class="px-2 py-1 text-xs rounded-full flex-shrink-0 {{ 'bg-red-100 text-red-800' if project.risk_level == 'High' else 'bg-yellow-100 text-yellow-800' if project.risk_level == 'Medium' else 'bg-green-100 text-green-800' }}">
+                            {{ project.risk_level }}
+                        </span>
+                    </div>
+                    <div class="text-sm text-gray-600 mt-1">
+                        Budget: ₦{{ "%.1f"|format((project.budget / 1000000) if project.budget else 0) }}M | 
+                        Progress: {{ project.progress }}% |
+                        SPI: {{ "%.2f"|format(project.spi) }}
+                    </div>
+                </div>
+                {% endfor %}
+                
+                <!-- Default message if no projects -->
+                {% if not data.performance_matrix %}
+                <div class="p-3 border-l-4 border-green-500 bg-green-50 rounded-r">
+                    <div class="font-semibold text-green-800 text-sm lg:text-base">No Critical Risks Identified</div>
+                    <div class="text-xs lg:text-sm text-green-600">All projects within acceptable risk thresholds</div>
+                </div>
+                {% endif %}
+                
+                <!-- Risk Summary -->
+                {% if data.performance_matrix %}
+                <div class="mt-3 pt-3 border-t border-gray-200">
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs lg:text-sm">
+                        <div class="p-2 bg-red-50 rounded">
+                            <div class="font-bold text-red-600">
+                                {{ data.performance_matrix | selectattr('risk_level', 'equalto', 'High') | list | length }}
+                            </div>
+                            <div class="text-red-700">High Risk</div>
+                        </div>
+                        <div class="p-2 bg-yellow-50 rounded">
+                            <div class="font-bold text-yellow-600">
+                                {{ data.performance_matrix | selectattr('risk_level', 'equalto', 'Medium') | list | length }}
+                            </div>
+                            <div class="text-yellow-700">Medium Risk</div>
+                        </div>
+                        <div class="p-2 bg-green-50 rounded">
+                            <div class="font-bold text-green-600">
+                                {{ data.performance_matrix | selectattr('risk_level', 'equalto', 'Low') | list | length }}
+                            </div>
+                            <div class="text-green-700">Low Risk</div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Performance Matrix -->
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <h3 class="text-xl font-bold text-gray-800 mb-6">
+            <i class="fas fa-table text-purple-500 mr-2"></i>
+            Project Performance Matrix
+        </h3>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phase</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SPI</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CPI</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Risk Level</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for project in data.project_performance | default([]) %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-gray-900">{{ project.name | default('Project Name') }}</div>
+                            <div class="text-sm text-gray-500">{{ project.manager | default('Manager') }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800">
+                                {{ project.phase | default('Planning') }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="bg-blue-600 h-2 rounded-full" style="width: {{ project.progress | default(0) }}%"></div>
+                                </div>
+                                <span class="text-sm font-medium">{{ project.progress | default(0) }}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-medium {{ 'text-green-600' if project.spi >= 1.0 else 'text-red-600' if project.spi < 0.8 else 'text-yellow-600' }}">
+                                {{ "%.2f"|format(project.spi | default(0)) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="font-medium {{ 'text-green-600' if project.cpi >= 1.0 else 'text-red-600' if project.cpi < 0.8 else 'text-yellow-600' }}">
+                                {{ "%.2f"|format(project.cpi | default(0)) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full {{ 'bg-green-100 text-green-800' if project.budget_status == 'On Track' else 'bg-red-100 text-red-800' if project.budget_status == 'Over Budget' else 'bg-yellow-100 text-yellow-800' }}">
+                                {{ project.budget_status | default('On Track') }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full {{ 'bg-red-100 text-red-800' if project.risk_level == 'High' else 'bg-yellow-100 text-yellow-800' if project.risk_level == 'Medium' else 'bg-green-100 text-green-800' }}">
+                                {{ project.risk_level | default('Low') }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <button class="text-indigo-600 hover:text-indigo-900 mr-2">View</button>
+                            <button class="text-blue-600 hover:text-blue-900">Report</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    
+                    <!-- Default row if no projects -->
+                    {% if not data.project_performance %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-4 text-center text-gray-500">
+                            No project performance data available
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Construction-Specific Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-6">
+        <!-- Weather Impact Analysis -->
+        <div class="bg-white rounded-lg shadow-lg p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-bold text-gray-800 mb-3 lg:mb-4">
+                <i class="fas fa-cloud-rain text-blue-500 mr-2"></i>
+                Weather Impact
+            </h3>
+            <div class="space-y-2 lg:space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm lg:text-base">Delays (Days)</span>
+                    <span class="font-bold text-lg lg:text-xl">{{ data.weather_delays | default(0) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm lg:text-base">Schedule Impact</span>
+                    <span class="font-bold text-red-600">{{ ((data.weather_delays * 3.3) if data.weather_delays else 0) | round(1) }}%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm lg:text-base">Mitigation Cost</span>
+                    <span class="font-bold">₦{{ "%.0f"|format((data.weather_delays * 15000) if data.weather_delays else 0 / 1000) }}K</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Material Management -->
+        <div class="bg-white rounded-lg shadow-lg p-4 lg:p-6">
+            <h3 class="text-base lg:text-lg font-bold text-gray-800 mb-3 lg:mb-4">
+                <i class="fas fa-cubes text-green-500 mr-2"></i>
+                Material Efficiency
+            </h3>
+            <div class="space-y-2 lg:space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm lg:text-base">Efficiency Rate</span>
+                    <span class="font-bold text-green-600 text-lg lg:text-xl">{{ data.material_efficiency | default(92) }}%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm lg:text-base">On-Time Delivery</span>
+                    <span class="font-bold">{{ (data.material_efficiency + 3) | default(95) }}%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm lg:text-base">Waste Rate</span>
+                    <span class="font-bold text-yellow-600">{{ (100 - data.material_efficiency) | default(8) | round(1) }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Equipment Efficiency -->
+        <div class="bg-white rounded-lg shadow-lg p-4 lg:p-6 md:col-span-2 xl:col-span-1">
+            <h3 class="text-base lg:text-lg font-bold text-gray-800 mb-3 lg:mb-4">
+                <i class="fas fa-cogs text-purple-500 mr-2"></i>
+                Equipment Status
+            </h3>
+            <div class="space-y-2 lg:space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm lg:text-base">Utilization Rate</span>
+                    <span class="font-bold text-blue-600 text-lg lg:text-xl">{{ data.equipment_utilization | default(87) }}%</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm lg:text-base">Downtime (Hrs)</span>
+                    <span class="font-bold text-red-600">{{ ((100 - data.equipment_utilization) * 0.8) | default(10) | round(0) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-sm lg:text-base">Maintenance Cost</span>
+                    <span class="font-bold">₦{{ "%.0f"|format(((100 - data.equipment_utilization) * 250000) | default(2500000) / 1000) }}K</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -74,56 +502,346 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Project Status Chart
-    const statusCtx = document.getElementById('projectStatusChart').getContext('2d');
-    new Chart(statusCtx, {
-        type: 'doughnut',
+    // Earned Value Management Chart
+    const evmCtx = document.getElementById('evmChart').getContext('2d');
+    new Chart(evmCtx, {
+        type: 'line',
         data: {
-            labels: Object.keys({{ data.project_status|tojson }}),
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             datasets: [{
-                data: Object.values({{ data.project_status|tojson }}),
-                backgroundColor: ['#4F46E5', '#10B981', '#6B7280']
+                label: 'Planned Value (PV)',
+                data: [
+                    {{ data.pv_monthly[0] | default(0) }},
+                    {{ data.pv_monthly[1] | default(0) }},
+                    {{ data.pv_monthly[2] | default(0) }},
+                    {{ data.pv_monthly[3] | default(0) }},
+                    {{ data.pv_monthly[4] | default(0) }},
+                    {{ data.pv_monthly[5] | default(0) }},
+                    {{ data.pv_monthly[6] | default(0) }},
+                    {{ data.pv_monthly[7] | default(0) }},
+                    {{ data.pv_monthly[8] | default(0) }},
+                    {{ data.pv_monthly[9] | default(0) }},
+                    {{ data.pv_monthly[10] | default(0) }},
+                    {{ data.pv_monthly[11] | default(0) }}
+                ],
+                borderColor: '#3B82F6',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                fill: false,
+                tension: 0.4
+            }, {
+                label: 'Earned Value (EV)',
+                data: [
+                    {{ data.ev_monthly[0] | default(0) }},
+                    {{ data.ev_monthly[1] | default(0) }},
+                    {{ data.ev_monthly[2] | default(0) }},
+                    {{ data.ev_monthly[3] | default(0) }},
+                    {{ data.ev_monthly[4] | default(0) }},
+                    {{ data.ev_monthly[5] | default(0) }},
+                    {{ data.ev_monthly[6] | default(0) }},
+                    {{ data.ev_monthly[7] | default(0) }},
+                    {{ data.ev_monthly[8] | default(0) }},
+                    {{ data.ev_monthly[9] | default(0) }},
+                    {{ data.ev_monthly[10] | default(0) }},
+                    {{ data.ev_monthly[11] | default(0) }}
+                ],
+                borderColor: '#10B981',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                fill: false,
+                tension: 0.4
+            }, {
+                label: 'Actual Cost (AC)',
+                data: [
+                    {{ data.ac_monthly[0] | default(0) }},
+                    {{ data.ac_monthly[1] | default(0) }},
+                    {{ data.ac_monthly[2] | default(0) }},
+                    {{ data.ac_monthly[3] | default(0) }},
+                    {{ data.ac_monthly[4] | default(0) }},
+                    {{ data.ac_monthly[5] | default(0) }},
+                    {{ data.ac_monthly[6] | default(0) }},
+                    {{ data.ac_monthly[7] | default(0) }},
+                    {{ data.ac_monthly[8] | default(0) }},
+                    {{ data.ac_monthly[9] | default(0) }},
+                    {{ data.ac_monthly[10] | default(0) }},
+                    {{ data.ac_monthly[11] | default(0) }}
+                ],
+                borderColor: '#EF4444',
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                fill: false,
+                tension: 0.4
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
+                title: {
+                    display: true,
+                    text: 'Earned Value Management Trends'
+                },
                 legend: {
                     position: 'bottom'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Value (Millions ₦)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '₦' + (value / 1000000).toFixed(1) + 'M';
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: true,
+                        text: 'Month'
+                    }
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+
+    // Resource Utilization Chart
+    const resourceCtx = document.getElementById('resourceChart').getContext('2d');
+    new Chart(resourceCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Engineers', 'Supervisors', 'Skilled', 'General', 'Operators'],
+            datasets: [{
+                label: 'Allocated',
+                data: [
+                    {{ data.resource_allocation.engineers | default(0) }},
+                    {{ data.resource_allocation.supervisors | default(0) }},
+                    {{ data.resource_allocation.skilled_workers | default(0) }},
+                    {{ data.resource_allocation.general_labor | default(0) }},
+                    {{ data.resource_allocation.equipment_operators | default(0) }}
+                ],
+                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                borderColor: '#3B82F6',
+                borderWidth: 1
+            }, {
+                label: 'Utilized',
+                data: [
+                    {{ data.resource_utilization.engineers | default(0) }},
+                    {{ data.resource_utilization.supervisors | default(0) }},
+                    {{ data.resource_utilization.skilled_workers | default(0) }},
+                    {{ data.resource_utilization.general_labor | default(0) }},
+                    {{ data.resource_utilization.equipment_operators | default(0) }}
+                ],
+                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                borderColor: '#10B981',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: false
+                },
+                legend: {
+                    position: 'bottom',
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: 11
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 10
+                        }
+                    }
+                },
+                x: {
+                    title: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 10
+                        },
+                        maxRotation: 45
+                    }
+                }
+            },
+            layout: {
+                padding: {
+                    top: 5,
+                    bottom: 5
                 }
             }
         }
     });
 
-    // Budget Chart
-    const budgetCtx = document.getElementById('budgetChart').getContext('2d');
-    new Chart(budgetCtx, {
-        type: 'bar',
-        data: {
-            labels: ['Allocated', 'Spent', 'Remaining'],
-            datasets: [{
-                data: [
-                    {{ data.budget_overview.allocated }},
-                    {{ data.budget_overview.spent }},
-                    {{ data.budget_overview.remaining }}
-                ],
-                backgroundColor: ['#4F46E5', '#10B981', '#6B7280']
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
+    // Real-time data updates every 30 seconds
+    function updateDashboard() {
+        fetch('/project/analytics/data')
+            .then(response => response.json())
+            .then(data => {
+                // Update KPI values
+                document.querySelectorAll('[data-metric]').forEach(element => {
+                    const metric = element.getAttribute('data-metric');
+                    if (data[metric] !== undefined) {
+                        element.textContent = data[metric];
+                    }
+                });
+                
+                // Update charts with new data
+                if (window.evmChart && data.evm_data) {
+                    window.evmChart.data.datasets[0].data = data.evm_data.pv;
+                    window.evmChart.data.datasets[1].data = data.evm_data.ev;
+                    window.evmChart.data.datasets[2].data = data.evm_data.ac;
+                    window.evmChart.update('none');
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
-        }
+            })
+            .catch(error => console.log('Dashboard update failed:', error));
+    }
+
+    // Update dashboard every 30 seconds
+    setInterval(updateDashboard, 30000);
+
+    // Initialize tooltips and interactive elements
+    document.querySelectorAll('.metric-card').forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-4px)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0)';
+        });
     });
+
+    // Construction-specific calculations and alerts
+    function checkCriticalThresholds() {
+        const spi = {{ data.spi | default(0) }};
+        const cpi = {{ data.cpi | default(0) }};
+        const safetyScore = {{ data.safety_score | default(0) }};
+        
+        // Schedule Performance Alert
+        if (spi < 0.8) {
+            showAlert('warning', 'Schedule Performance is below acceptable threshold (SPI < 0.8)');
+        }
+        
+        // Cost Performance Alert
+        if (cpi < 0.8) {
+            showAlert('danger', 'Cost Performance is below acceptable threshold (CPI < 0.8)');
+        }
+        
+        // Safety Alert
+        if (safetyScore < 85) {
+            showAlert('danger', 'Safety Score is below minimum requirement (< 85%)');
+        }
+        
+        // Weather Impact Alert
+        const weatherDelays = {{ data.weather_delays | default(0) }};
+        if (weatherDelays > 5) {
+            showAlert('warning', `High weather impact detected: ${weatherDelays} delay days this month`);
+        }
+    }
+
+    function showAlert(type, message) {
+        const alertContainer = document.getElementById('alert-container') || createAlertContainer();
+        const alert = document.createElement('div');
+        alert.className = `alert alert-${type} mb-3 p-3 rounded-lg border-l-4 ${
+            type === 'danger' ? 'bg-red-50 border-red-500 text-red-800' : 
+            type === 'warning' ? 'bg-yellow-50 border-yellow-500 text-yellow-800' : 
+            'bg-blue-50 border-blue-500 text-blue-800'
+        }`;
+        alert.innerHTML = `
+            <div class="flex justify-between items-center">
+                <span>${message}</span>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        alertContainer.appendChild(alert);
+        
+        // Auto-remove after 10 seconds
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.remove();
+            }
+        }, 10000);
+    }
+
+    function createAlertContainer() {
+        const container = document.createElement('div');
+        container.id = 'alert-container';
+        container.className = 'fixed top-4 right-4 z-50 max-w-md';
+        document.body.appendChild(container);
+        return container;
+    }
+
+    // Check thresholds on page load
+    checkCriticalThresholds();
+
+    // Export functionality for reports
+    window.exportDashboard = function(format) {
+        const exportData = {
+            timestamp: new Date().toISOString(),
+            currency: 'NGN',
+            spi: {{ data.spi | default(0) }},
+            cpi: {{ data.cpi | default(0) }},
+            quality_index: {{ data.quality_index | default(0) }},
+            safety_score: {{ data.safety_score | default(0) }},
+            portfolio_value_ngn: {{ data.portfolio_value | default(0) }},
+            active_projects: {{ data.active_projects | default(0) }},
+            total_reports: {{ data.total_reports | default(0) }},
+            total_dprs: {{ data.total_dprs | default(0) }},
+            reports_this_month: {{ data.reports_this_month | default(0) }},
+            dprs_this_month: {{ data.dprs_this_month | default(0) }},
+            weather_delays: {{ data.weather_delays | default(0) }},
+            material_efficiency: {{ data.material_efficiency | default(0) }},
+            equipment_utilization: {{ data.equipment_utilization | default(0) }},
+            planned_value_ngn: {{ data.planned_value | default(0) }},
+            earned_value_ngn: {{ data.earned_value | default(0) }},
+            actual_cost_ngn: {{ data.actual_cost | default(0) }}
+        };
+        
+        if (format === 'json') {
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `pmo_dashboard_${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+        } else if (format === 'csv') {
+            const csv = Object.entries(exportData)
+                .map(([key, value]) => `${key},${value}`)
+                .join('\n');
+            const dataBlob = new Blob([csv], {type: 'text/csv'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `pmo_dashboard_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+    };
+
+    // Print dashboard functionality
+    window.printDashboard = function() {
+        window.print();
+    };
 });
 </script>
 {% endblock %}

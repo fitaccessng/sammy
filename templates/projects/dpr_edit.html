@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+
+{% block title %}Edit DPR{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-6 py-8">
+    <div class="bg-white rounded-lg shadow-lg p-6">
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Edit Daily Production Report</h1>
+            <a href="{{ url_for('project.view_dpr', dpr_id=dpr.id) }}" 
+               class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
+                Cancel
+            </a>
+        </div>
+
+        <!-- Edit Form -->
+        <form method="POST" class="space-y-6">
+            {{ csrf_token }}
+            
+            <!-- Basic Information -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Project
+                    </label>
+                    <input type="text" 
+                           value="{{ dpr.project.name if dpr.project else 'Unknown' }}" 
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" 
+                           readonly>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Report Date
+                    </label>
+                    <input type="text" 
+                           value="{{ dpr.report_date.strftime('%Y-%m-%d') }}" 
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 bg-gray-100" 
+                           readonly>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Status
+                    </label>
+                    <span class="inline-block px-3 py-1 text-sm rounded-full
+                        {% if dpr.status == 'completed' %}bg-green-100 text-green-800
+                        {% elif dpr.status == 'approved' %}bg-blue-100 text-blue-800
+                        {% elif dpr.status == 'rejected' %}bg-red-100 text-red-800
+                        {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                        {{ dpr.status.replace('_', ' ').title() }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Production Items Section -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-4">Production Items</h3>
+                {% if production_items %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-3 py-2 text-left">Item Code</th>
+                                <th class="px-3 py-2 text-left">Description</th>
+                                <th class="px-3 py-2 text-left">Location</th>
+                                <th class="px-3 py-2 text-left">Unit</th>
+                                <th class="px-3 py-2 text-left">Target Qty</th>
+                                <th class="px-3 py-2 text-left">Daily Qty</th>
+                                <th class="px-3 py-2 text-left">Total Done</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in production_items %}
+                            <tr class="border-b">
+                                <td class="px-3 py-2">{{ item.item_code or '-' }}</td>
+                                <td class="px-3 py-2">{{ item.description or '-' }}</td>
+                                <td class="px-3 py-2">{{ item.location or '-' }}</td>
+                                <td class="px-3 py-2">{{ item.unit or '-' }}</td>
+                                <td class="px-3 py-2">{{ "%.2f"|format(item.target_qty) if item.target_qty else '-' }}</td>
+                                <td class="px-3 py-2">{{ "%.2f"|format(item.day_production) if item.day_production else '-' }}</td>
+                                <td class="px-3 py-2">{{ "%.2f"|format(item.total_qty_done) if item.total_qty_done else '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-gray-500">No production items recorded.</p>
+                {% endif %}
+                <p class="text-sm text-gray-500 mt-2">
+                    <em>Note: Production items cannot be edited here. Use the main DPR creation form to modify production data.</em>
+                </p>
+            </div>
+
+            <!-- Material Usage Section -->
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-4">Material Usage</h3>
+                {% if material_usage %}
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-gray-100">
+                                <th class="px-3 py-2 text-left">Item #</th>
+                                <th class="px-3 py-2 text-left">Description</th>
+                                <th class="px-3 py-2 text-left">Unit</th>
+                                <th class="px-3 py-2 text-left">Previous Used</th>
+                                <th class="px-3 py-2 text-left">Daily Usage</th>
+                                <th class="px-3 py-2 text-left">Total Used</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for material in material_usage %}
+                            <tr class="border-b">
+                                <td class="px-3 py-2">{{ material.item_number or '-' }}</td>
+                                <td class="px-3 py-2">{{ material.description or '-' }}</td>
+                                <td class="px-3 py-2">{{ material.unit or '-' }}</td>
+                                <td class="px-3 py-2">{{ "%.2f"|format(material.previous_qty_used) if material.previous_qty_used else '-' }}</td>
+                                <td class="px-3 py-2">{{ "%.2f"|format(material.day_usage) if material.day_usage else '-' }}</td>
+                                <td class="px-3 py-2">{{ "%.2f"|format(material.total_qty_used) if material.total_qty_used else '-' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-gray-500">No material usage recorded.</p>
+                {% endif %}
+                <p class="text-sm text-gray-500 mt-2">
+                    <em>Note: Material usage cannot be edited here. Use the main DPR creation form to modify material data.</em>
+                </p>
+            </div>
+
+            <!-- Editable Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="prepared_by" class="block text-sm font-medium text-gray-700 mb-2">
+                        Prepared By
+                    </label>
+                    <input type="text" 
+                           id="prepared_by" 
+                           name="prepared_by" 
+                           value="{{ dpr.prepared_by or '' }}" 
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Enter name of person who prepared this DPR">
+                </div>
+
+                <div>
+                    <label for="checked_by" class="block text-sm font-medium text-gray-700 mb-2">
+                        Checked By
+                    </label>
+                    <input type="text" 
+                           id="checked_by" 
+                           name="checked_by" 
+                           value="{{ dpr.checked_by or '' }}" 
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                           placeholder="Enter name of person who checked this DPR">
+                </div>
+            </div>
+
+            <!-- Issues and Comments -->
+            <div>
+                <label for="issues" class="block text-sm font-medium text-gray-700 mb-2">
+                    Issues and Comments
+                </label>
+                <textarea id="issues" 
+                          name="issues" 
+                          rows="6" 
+                          class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-blue-500 focus:border-blue-500"
+                          placeholder="Enter any issues, comments, or additional notes...">{{ dpr.issues or '' }}</textarea>
+            </div>
+
+            <!-- Assignment Information -->
+            <div class="bg-blue-50 p-4 rounded-lg">
+                <h3 class="text-lg font-semibold mb-2">Assignment Information</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <strong>Created By:</strong> {{ dpr.created_by.name if dpr.created_by else 'Unknown' }}
+                    </div>
+                    <div>
+                        <strong>Assigned To:</strong> {{ dpr.assigned_to.name if dpr.assigned_to else 'Unassigned' }}
+                    </div>
+                    {% if dpr.completed_at %}
+                    <div>
+                        <strong>Completed At:</strong> {{ dpr.completed_at.strftime('%Y-%m-%d %H:%M') }}
+                    </div>
+                    {% endif %}
+                    <div>
+                        <strong>Created At:</strong> {{ dpr.created_at.strftime('%Y-%m-%d %H:%M') if dpr.created_at else 'Unknown' }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-end space-x-3 pt-6 border-t">
+                <a href="{{ url_for('project.view_dpr', dpr_id=dpr.id) }}" 
+                   class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Form validation and auto-save functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    
+    // Form validation
+    form.addEventListener('submit', function(e) {
+        const preparedBy = document.getElementById('prepared_by').value.trim();
+        const checkedBy = document.getElementById('checked_by').value.trim();
+        
+        if (!preparedBy && !checkedBy) {
+            if (!confirm('Both "Prepared By" and "Checked By" fields are empty. Do you want to continue?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+    
+    // Auto-save draft functionality (optional)
+    let autoSaveTimeout;
+    const autoSaveFields = ['prepared_by', 'checked_by', 'issues'];
+    
+    autoSaveFields.forEach(fieldId => {
+        const field = document.getElementById(fieldId);
+        if (field) {
+            field.addEventListener('input', function() {
+                clearTimeout(autoSaveTimeout);
+                autoSaveTimeout = setTimeout(() => {
+                    // You could implement auto-save to localStorage here
+                    console.log('Auto-saving draft...');
+                }, 2000);
+            });
+        }
+    });
+});
+</script>
+{% endblock %}

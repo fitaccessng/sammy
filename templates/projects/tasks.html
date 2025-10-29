@@ -1,136 +1,181 @@
 {% extends "projects/base.html" %}
 
-{% block title %}Tasks | SammyA Projects{% endblock %}
-{% block header %}Project Tasks{% endblock %}
+{% block title %}Tasks & Milestones | SammyA Projects{% endblock %}
+{% block header %}Project Tasks & Milestones{% endblock %}
 
 {% block content %}
 <div class="space-y-6">
-    <!-- Actions -->
+    <!-- Project Selection Required -->
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-center space-x-3">
+            <div class="flex-shrink-0">
+                <i class="bx bx-info-circle text-blue-500 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-blue-800">Project Context Required</h3>
+                <p class="text-sm text-blue-600">Select a project below to view and manage milestones for that specific project.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Project Selection -->
+    {% if accessible_projects %}
+    <div class="flex items-center space-x-3">
+        <label for="projectSelector" class="text-sm font-medium text-gray-700">Select Project:</label>
+        <select id="projectSelector" class="px-4 py-2 border rounded-lg flex-1 max-w-md">
+            <option value="">-- Select a Project to Continue --</option>
+            {% for proj in accessible_projects %}
+            <option value="{{ proj.id }}">{{ proj.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    {% else %}
+    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div class="flex items-center space-x-3">
+            <div class="flex-shrink-0">
+                <i class="bx bx-exclamation-triangle text-yellow-500 text-xl"></i>
+            </div>
+            <div>
+                <h3 class="text-sm font-medium text-yellow-800">No Projects Assigned</h3>
+                <p class="text-sm text-yellow-600">You are not assigned to any projects. Contact your manager to get project access.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions (disabled until project selected) -->
     <div class="flex justify-between">
         <div class="flex space-x-3">
             <button id="addTaskBtn" 
-                    class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
-                Add Task
+                    class="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed"
+                    disabled>
+                <i class="bx bx-plus mr-2"></i>Add Milestone
             </button>
+            <div id="projectRequiredHint" class="flex items-center text-sm text-gray-500">
+                <i class="bx bx-info-circle mr-1"></i>
+                Select a project to manage milestones
+            </div>
         </div>
         <div class="flex space-x-3">
             <select id="filterTasks" class="px-4 py-2 border rounded-lg">
-                <option value="">All Tasks</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In Progress</option>
-                <option value="completed">Completed</option>
+                <option value="">All Milestones</option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
             </select>
         </div>
     </div>
 
-    <!-- Kanban Board -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <!-- Pending Tasks -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Pending</h3>
-            </div>
-            <div class="p-6 space-y-4">
-                {% for task in tasks.pending %}
-                <div class="bg-white border rounded-lg p-4 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <h4 class="text-md font-medium text-gray-900">{{ task.title }}</h4>
-                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800">
-                            Pending
-                        </span>
-                    </div>
-                    <div class="mt-2 text-sm text-gray-500">
-                        <p>Due: {{ task.due_date }}</p>
-                        <p>Assigned to: {{ task.assigned_to }}</p>
-                    </div>
+    <!-- Milestones Kanban Board -->
+    <div id="milestonesContainer" class="hidden">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">
+            Project Milestones <span id="selectedProjectName" class="text-indigo-600"></span>
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="milestonesBoard">
+            <!-- Pending Milestones -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="bx bx-time-five mr-2 text-yellow-500"></i>Pending
+                    </h3>
                 </div>
-                {% endfor %}
+                <div class="p-6 space-y-4" id="pendingMilestones">
+                    <!-- Milestones will be loaded here -->
+                </div>
             </div>
-        </div>
 
-        <!-- In Progress Tasks -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">In Progress</h3>
-            </div>
-            <div class="p-6 space-y-4">
-                {% for task in tasks.in_progress %}
-                <div class="bg-white border rounded-lg p-4 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <h4 class="text-md font-medium text-gray-900">{{ task.title }}</h4>
-                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800">
-                            In Progress
-                        </span>
-                    </div>
-                    <div class="mt-2 text-sm text-gray-500">
-                        <p>Due: {{ task.due_date }}</p>
-                        <p>Assigned to: {{ task.assigned_to }}</p>
-                    </div>
+            <!-- In Progress Milestones -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="bx bx-play-circle mr-2 text-blue-500"></i>In Progress
+                    </h3>
                 </div>
-                {% endfor %}
+                <div class="p-6 space-y-4" id="inProgressMilestones">
+                    <!-- Milestones will be loaded here -->
+                </div>
             </div>
-        </div>
 
-        <!-- Completed Tasks -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="px-6 py-4 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Completed</h3>
-            </div>
-            <div class="p-6 space-y-4">
-                {% for task in tasks.completed %}
-                <div class="bg-white border rounded-lg p-4 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <h4 class="text-md font-medium text-gray-900">{{ task.title }}</h4>
-                        <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
-                            Completed
-                        </span>
-                    </div>
-                    <div class="mt-2 text-sm text-gray-500">
-                        <p>Due: {{ task.due_date }}</p>
-                        <p>Assigned to: {{ task.assigned_to }}</p>
-                    </div>
+            <!-- Completed Milestones -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-800">
+                        <i class="bx bx-check-circle mr-2 text-green-500"></i>Completed
+                    </h3>
                 </div>
-                {% endfor %}
+                <div class="p-6 space-y-4" id="completedMilestones">
+                    <!-- Milestones will be loaded here -->
+                </div>
             </div>
         </div>
+        
+        <div id="noMilestones" class="text-center py-8 text-gray-500 hidden">
+            <i class="bx bx-target-lock text-4xl mb-2"></i>
+            <p>No milestones found for this project.</p>
+        </div>
+    </div>
+    
+    <!-- Default message when no project selected -->
+    <div id="selectProjectMessage" class="text-center py-12 text-gray-500">
+        <i class="bx bx-target-lock text-6xl mb-4"></i>
+        <h3 class="text-lg font-medium mb-2">Select a Project</h3>
+        <p>Choose a project from the dropdown above to view and manage its milestones.</p>
     </div>
 </div>
 
-<!-- Add Task Modal -->
+<!-- Add Milestone Modal -->
 <div id="addTaskModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Add Task</h3>
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Add Milestone</h3>
+                <div class="text-sm text-gray-500">
+                    Project: <span id="modalProjectName" class="font-medium text-indigo-600"></span>
+                </div>
+            </div>
             <form id="addTaskForm" class="space-y-4">
+                <input type="hidden" name="project_id" id="modalProjectId" required>
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Task Title</label>
+                    <label class="block text-sm font-medium text-gray-700">Milestone Title</label>
                     <input type="text" name="title" required 
-                           class="mt-1 block p-2 border w-full rounded-md border-gray-300">
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300 px-3 py-2"
+                           placeholder="Enter milestone title">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Due Date</label>
                     <input type="date" name="due_date" required 
-                           class="mt-1 block p-2 border w-full rounded-md border-gray-300">
+                           class="mt-1 block p-2 border w-full rounded-md border-gray-300 px-3 py-2">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Assigned To</label>
-                    <input type="text" name="assigned_to" required 
-                           class="mt-1 block p-2 border w-full rounded-md border-gray-300">
+                    <label class="block text-sm font-medium text-gray-700">Description</label>
+                    <textarea name="description" rows="3"
+                              class="mt-1 block p-2 border w-full rounded-md border-gray-300 px-3 py-2"
+                              placeholder="Enter milestone description (optional)"></textarea>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Status</label>
-                    <select name="status" required class="mt-1 p-2 border block w-full rounded-md border-gray-300">
-                        <option value="pending">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
+                    <select name="status" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 px-3 py-2">
+                        <option value="Pending">Pending</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Completed">Completed</option>
                     </select>
                 </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div class="flex items-center space-x-2">
+                        <i class="bx bx-info-circle text-blue-500"></i>
+                        <div class="text-sm text-blue-700">
+                            <strong>Project Required:</strong> This milestone will be associated with the selected project.
+                        </div>
+                    </div>
+                </div>
                 <div class="flex justify-end space-x-3">
-                    <button type="button" class="closeModal px-4 py-2 bg-gray-200 text-gray-800 rounded-md">
+                    <button type="button" class="closeModal px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">
                         Cancel
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md">
-                        Add Task
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                        <i class="bx bx-plus mr-1"></i>Add Milestone
                     </button>
                 </div>
             </form>
@@ -146,6 +191,266 @@ document.addEventListener('DOMContentLoaded', function() {
     const openModal = document.getElementById('addTaskBtn');
     const closeModal = document.querySelector('button.closeModal');
     const form = document.getElementById('addTaskForm');
+    const projectSelector = document.getElementById('projectSelector');
+    const milestonesContainer = document.getElementById('milestonesContainer');
+    const selectProjectMessage = document.getElementById('selectProjectMessage');
+    const filterTasks = document.getElementById('filterTasks');
+    
+    let selectedProjectId = null;
+    let selectedProjectName = null;
+    let currentMilestones = [];
+
+    // Project selection handler
+    projectSelector.addEventListener('change', function() {
+        selectedProjectId = this.value;
+        selectedProjectName = this.options[this.selectedIndex].text;
+        
+        if (selectedProjectId) {
+            // Enable add milestone button
+            openModal.disabled = false;
+            openModal.classList.remove('bg-gray-400', 'cursor-not-allowed');
+            openModal.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+            document.getElementById('projectRequiredHint').style.display = 'none';
+            
+            // Show milestones container
+            milestonesContainer.classList.remove('hidden');
+            selectProjectMessage.classList.add('hidden');
+            document.getElementById('selectedProjectName').textContent = `(${selectedProjectName})`;
+            
+            // Load milestones for selected project
+            loadProjectMilestones(selectedProjectId);
+        } else {
+            // Disable add milestone button
+            openModal.disabled = true;
+            openModal.classList.add('bg-gray-400', 'cursor-not-allowed');
+            openModal.classList.remove('bg-indigo-600', 'hover:bg-indigo-700');
+            document.getElementById('projectRequiredHint').style.display = 'flex';
+            
+            // Hide milestones container
+            milestonesContainer.classList.add('hidden');
+            selectProjectMessage.classList.remove('hidden');
+            
+            selectedProjectId = null;
+            selectedProjectName = null;
+        }
+    });
+
+    // Filter handler
+    filterTasks.addEventListener('change', function() {
+        if (currentMilestones.length > 0) {
+            displayMilestones(currentMilestones, this.value);
+        }
+    });
+
+    // Modal handlers
+    openModal.addEventListener('click', function() {
+        if (!selectedProjectId) {
+            alert('Please select a project first');
+            return;
+        }
+        
+        // Set project info in modal
+        document.getElementById('modalProjectId').value = selectedProjectId;
+        document.getElementById('modalProjectName').textContent = selectedProjectName;
+        
+        modal.classList.remove('hidden');
+    });
+    
+    closeModal.addEventListener('click', () => modal.classList.add('hidden'));
+
+    // Form submission
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        if (!selectedProjectId) {
+            alert('Please select a project first');
+            return;
+        }
+        
+        const formData = new FormData(form);
+        
+        try {
+            const response = await fetch('/projects/milestones', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                modal.classList.add('hidden');
+                form.reset();
+                // Reload milestones for the selected project
+                loadProjectMilestones(selectedProjectId);
+                
+                // Show success message
+                showNotification('Milestone added successfully!', 'success');
+            } else {
+                const data = await response.json();
+                showNotification(data.message || 'Failed to add milestone', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showNotification('Failed to add milestone', 'error');
+        }
+    });
+
+    // Load milestones for a specific project
+    async function loadProjectMilestones(projectId) {
+        try {
+            const response = await fetch(`/projects/milestones/project/${projectId}`);
+            if (response.ok) {
+                const data = await response.json();
+                currentMilestones = data.milestones;
+                displayMilestones(currentMilestones);
+            } else {
+                console.error('Failed to load milestones');
+                clearMilestonesBoard();
+                document.getElementById('noMilestones').classList.remove('hidden');
+            }
+        } catch (error) {
+            console.error('Error loading milestones:', error);
+            clearMilestonesBoard();
+            document.getElementById('noMilestones').classList.remove('hidden');
+        }
+    }
+
+    // Display milestones in the kanban board
+    function displayMilestones(milestones, statusFilter = '') {
+        clearMilestonesBoard();
+        document.getElementById('noMilestones').classList.add('hidden');
+        
+        // Filter milestones if filter is applied
+        let filteredMilestones = milestones;
+        if (statusFilter) {
+            filteredMilestones = milestones.filter(m => m.status === statusFilter);
+        }
+        
+        if (filteredMilestones.length === 0) {
+            document.getElementById('noMilestones').classList.remove('hidden');
+            return;
+        }
+
+        // Group milestones by status
+        const grouped = {
+            'Pending': filteredMilestones.filter(m => m.status === 'Pending'),
+            'In Progress': filteredMilestones.filter(m => m.status === 'In Progress'),
+            'Completed': filteredMilestones.filter(m => m.status === 'Completed')
+        };
+
+        // Display in respective columns
+        Object.keys(grouped).forEach(status => {
+            const containerId = status.toLowerCase().replace(' ', '') + 'Milestones';
+            const container = document.getElementById(containerId);
+            
+            grouped[status].forEach(milestone => {
+                const milestoneElement = createMilestoneElement(milestone);
+                container.appendChild(milestoneElement);
+            });
+        });
+    }
+
+    // Create milestone element
+    function createMilestoneElement(milestone) {
+        const div = document.createElement('div');
+        div.className = 'bg-white border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow';
+        
+        const statusColors = {
+            'Pending': 'bg-yellow-100 text-yellow-800',
+            'In Progress': 'bg-blue-100 text-blue-800',
+            'Completed': 'bg-green-100 text-green-800'
+        };
+        
+        const statusIcons = {
+            'Pending': 'bx-time-five',
+            'In Progress': 'bx-play-circle',
+            'Completed': 'bx-check-circle'
+        };
+        
+        const formattedDate = new Date(milestone.due_date).toLocaleDateString();
+        const isOverdue = new Date(milestone.due_date) < new Date() && milestone.status !== 'Completed';
+        
+        div.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <h4 class="text-md font-medium text-gray-900 flex-1 pr-2">${milestone.title}</h4>
+                <span class="px-2 py-1 text-xs font-medium rounded-full ${statusColors[milestone.status]}">
+                    <i class="bx ${statusIcons[milestone.status]} mr-1"></i>${milestone.status}
+                </span>
+            </div>
+            ${milestone.description ? `<p class="text-sm text-gray-600 mb-2">${milestone.description}</p>` : ''}
+            <div class="text-sm text-gray-500 space-y-1">
+                <p class="flex items-center">
+                    <i class="bx bx-calendar mr-1"></i>
+                    Due: <span class="${isOverdue ? 'text-red-600 font-medium' : ''}">${formattedDate}</span>
+                    ${isOverdue ? '<i class="bx bx-time text-red-500 ml-1" title="Overdue"></i>' : ''}
+                </p>
+            </div>
+            <div class="mt-3 flex justify-end space-x-2">
+                <button onclick="editMilestone(${milestone.id})" class="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                    <i class="bx bx-edit mr-1"></i>Edit
+                </button>
+                ${canDeleteMilestone() ? `
+                    <button onclick="deleteMilestone(${milestone.id})" class="text-red-600 hover:text-red-900 text-sm font-medium">
+                        <i class="bx bx-trash mr-1"></i>Delete
+                    </button>
+                ` : ''}
+            </div>
+        `;
+        
+        return div;
+    }
+
+    // Clear milestones board
+    function clearMilestonesBoard() {
+        document.getElementById('pendingMilestones').innerHTML = '';
+        document.getElementById('inprogressMilestones').innerHTML = '';
+        document.getElementById('completedMilestones').innerHTML = '';
+    }
+
+    // Utility functions
+    function canDeleteMilestone() {
+        // Add logic based on user permissions
+        return {{ 'true' if user_role in ['SUPER_HQ', 'PROJECT_MANAGER'] else 'false' }};
+    }
+
+    function showNotification(message, type) {
+        const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+        const notification = document.createElement('div');
+        notification.className = `fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-50`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
+    }
+
+    // Global functions for milestone actions
+    window.editMilestone = function(milestoneId) {
+        // You can implement edit functionality here
+        console.log('Edit milestone:', milestoneId);
+    };
+
+    window.deleteMilestone = function(milestoneId) {
+        if (confirm('Are you sure you want to delete this milestone?')) {
+            fetch(`/projects/milestones/${milestoneId}/delete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    loadProjectMilestones(selectedProjectId);
+                    showNotification('Milestone deleted successfully!', 'success');
+                } else {
+                    showNotification('Failed to delete milestone', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Failed to delete milestone', 'error');
+            });
+        }
+    };
 
     openModal.addEventListener('click', () => modal.classList.remove('hidden'));
     closeModal.addEventListener('click', () => modal.classList.add('hidden'));
@@ -155,7 +460,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formData = new FormData(form);
         
         try {
-            const response = await fetch('/projects/tasks/add', {
+            const response = await fetch('/project/milestones/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -166,10 +471,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = await response.json();
             if (data.status === 'success') {
-                window.location.reload();
+                modal.classList.add('hidden');
+                form.reset();
+                loadProjectMilestones(selectedProjectId);
+                showNotification('Milestone created successfully!', 'success');
+            } else {
+                showNotification(data.message || 'Failed to create milestone', 'error');
             }
         } catch (error) {
             console.error('Error:', error);
+            showNotification('Failed to create milestone', 'error');
         }
     });
 });

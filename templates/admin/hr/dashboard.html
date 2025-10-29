@@ -1,0 +1,271 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}HR Management - Admin Dashboard{% endblock %}
+
+{% block header %}HR Management Dashboard{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">HR Management Dashboard</h2>
+    <p class="text-gray-600">Overview of HR operations and payroll management</p>
+</div>
+
+<!-- Key HR Metrics Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+    <!-- Total Employees Card -->
+    <div class="card bg-white p-6 metric-card border-l-blue-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Employees</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ summary.total_employees or 0 }}</h3>
+                <p class="text-blue-500 text-sm mt-2">
+                    <i class='bx bxs-group'></i>
+                    {{ summary.active_employees or 0 }} Active
+                </p>
+            </div>
+            <div class="bg-blue-100 p-3 rounded-full">
+                <i class='bx bxs-user-detail text-2xl text-blue-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Payrolls Card -->
+    <div class="card bg-white p-6 metric-card border-l-yellow-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Pending Approvals</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ summary.pending_payrolls or 0 }}</h3>
+                <p class="text-yellow-500 text-sm mt-2">
+                    <i class='bx bx-time'></i>
+                    Awaiting review
+                </p>
+            </div>
+            <div class="bg-yellow-100 p-3 rounded-full">
+                <i class='bx bxs-wallet text-2xl text-yellow-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Amount Card -->
+    <div class="card bg-white p-6 metric-card border-l-green-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Pending Amount</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">₦{{ "{:,.2f}".format(summary.total_pending_amount or 0) }}</h3>
+                <p class="text-green-500 text-sm mt-2">
+                    <i class='bx bx-money'></i>
+                    Total to approve
+                </p>
+            </div>
+            <div class="bg-green-100 p-3 rounded-full">
+                <i class='bx bxs-dollar-circle text-2xl text-green-600'></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Month Status Card -->
+    <div class="card bg-white p-6 metric-card border-l-purple-500">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Current Month</p>
+                <h3 class="text-2xl font-bold text-gray-800 mt-2">{{ summary.current_month_status }}</h3>
+                <p class="text-purple-500 text-sm mt-2">
+                    <i class='bx bx-calendar'></i>
+                    Payroll status
+                </p>
+            </div>
+            <div class="bg-purple-100 p-3 rounded-full">
+                <i class='bx bxs-calendar text-2xl text-purple-600'></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- HR Actions and Overview -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- HR Quick Actions -->
+    <div class="lg:col-span-2">
+        <div class="card bg-white p-6">
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">HR Management Actions</h3>
+                <p class="text-gray-600 text-sm">Quick access to HR functions and payroll management</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <a href="{{ url_for('admin.payroll_approvals') }}" class="block p-4 border border-gray-200 rounded-lg hover:border-yellow-300 hover:shadow-md transition-all duration-200">
+                    <div class="flex items-center">
+                        <div class="bg-yellow-100 p-3 rounded-lg mr-4">
+                            <i class='bx bxs-wallet text-yellow-600 text-xl'></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Payroll Approvals</h4>
+                            <p class="text-gray-600 text-sm">{{ summary.pending_payrolls or 0 }} pending</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('admin.view_employees') }}" class="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200">
+                    <div class="flex items-center">
+                        <div class="bg-blue-100 p-3 rounded-lg mr-4">
+                            <i class='bx bxs-group text-blue-600 text-xl'></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Employee Management</h4>
+                            <p class="text-gray-600 text-sm">{{ summary.total_employees or 0 }} employees</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('hr.hr_home') }}" class="block p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:shadow-md transition-all duration-200">
+                    <div class="flex items-center">
+                        <div class="bg-green-100 p-3 rounded-lg mr-4">
+                            <i class='bx bxs-dashboard text-green-600 text-xl'></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">HR Operations</h4>
+                            <p class="text-gray-600 text-sm">Full HR system</p>
+                        </div>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('hr.payroll') }}" class="block p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:shadow-md transition-all duration-200">
+                    <div class="flex items-center">
+                        <div class="bg-purple-100 p-3 rounded-lg mr-4">
+                            <i class='bx bxs-calculator text-purple-600 text-xl'></i>
+                        </div>
+                        <div>
+                            <h4 class="font-semibold text-gray-800">Payroll System</h4>
+                            <p class="text-gray-600 text-sm">Manage payroll</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity and Status -->
+    <div class="space-y-6">
+        <!-- Recent Employees -->
+        <div class="card bg-white p-6">
+            <div class="mb-4">
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Recent Employees</h3>
+                <p class="text-gray-600 text-sm">Latest employee additions</p>
+            </div>
+            
+            {% if summary.recent_employees %}
+                <div class="space-y-3">
+                    {% for employee in summary.recent_employees %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <div class="font-medium text-gray-800">{{ employee.name }}</div>
+                            <div class="text-sm text-gray-600">{{ employee.position or 'N/A' }}</div>
+                        </div>
+                        <div class="text-xs text-gray-500">
+                            {% if employee.date_of_employment %}
+                                {{ employee.date_of_employment.strftime('%d/%m/%Y') }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-500 text-sm">No recent employee additions</p>
+            {% endif %}
+        </div>
+
+        <!-- HR System Status -->
+        <div class="card bg-white p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">System Status</h3>
+            <div class="space-y-3">
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">HR System</span>
+                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Active</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Payroll Processing</span>
+                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Available</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Admin Approval</span>
+                    <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">{{ summary.pending_payrolls or 0 }} Pending</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-gray-600">Employee Records</span>
+                    <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">{{ summary.total_employees or 0 }} Records</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card bg-white p-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
+            <div class="space-y-3">
+                {% if summary.pending_payrolls > 0 %}
+                <a href="{{ url_for('admin.payroll_approvals') }}" 
+                   class="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors duration-200 flex items-center justify-center">
+                    <i class='bx bxs-wallet mr-2'></i>
+                    Review Pending Payrolls
+                </a>
+                {% endif %}
+                
+                <a href="{{ url_for('admin.view_employees') }}" 
+                   class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center">
+                    <i class='bx bxs-group mr-2'></i>
+                    View All Employees
+                </a>
+                
+                <a href="{{ url_for('hr.hr_home') }}" 
+                   class="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors duration-200 flex items-center justify-center">
+                    <i class='bx bxs-dashboard mr-2'></i>
+                    Open HR System
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Optional: Add any charts or additional analytics here -->
+<div class="mt-6">
+    <div class="card bg-white p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">HR Analytics</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="text-center">
+                <div class="text-3xl font-bold text-blue-600">{{ summary.active_employees or 0 }}</div>
+                <div class="text-sm text-gray-600 mt-1">Active Employees</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-yellow-600">{{ summary.pending_payrolls or 0 }}</div>
+                <div class="text-sm text-gray-600 mt-1">Pending Approvals</div>
+            </div>
+            <div class="text-center">
+                <div class="text-3xl font-bold text-green-600">₦{{ "{:,.0f}".format(summary.total_pending_amount or 0) }}</div>
+                <div class="text-sm text-gray-600 mt-1">Pending Amount</div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.metric-card {
+    border-left-width: 4px;
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.card {
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+</style>
+{% endblock %}
