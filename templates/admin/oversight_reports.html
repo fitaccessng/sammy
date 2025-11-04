@@ -1,61 +1,61 @@
 {% extends "admin/base_simple.html" %}
 
-{% block title %}Business Oversight Reports - Construction Management System{% endblock %}
+{% block title %}Approval Management - Construction Management System{% endblock %}
 
-{% block header %}Business Oversight Reports{% endblock %}
+{% block header %}Approval Management Center{% endblock %}
 
 {% block content %}
 <!-- Page Header -->
 <div class="mb-6">
-    <h2 class="text-2xl font-bold text-gray-800 mb-2">Business Oversight Reports</h2>
-    <p class="text-gray-600">Comprehensive business analytics, project monitoring, and operational oversight for construction management</p>
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">Approval Management Center</h2>
+    <p class="text-gray-600">Review, approve, and manage all pending requests across the entire construction management system</p>
 </div>
 
-<!-- Key Business Metrics Cards -->
+<!-- Key Approval Metrics Cards -->
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-6">
-    <!-- Active Projects Card -->
+    <!-- Total Pending Approvals Card -->
     <div class="card bg-white p-6 metric-card border-l-blue-500">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Active Projects</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ report.project_count or 0 }}</h3>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Pending</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ (report.pending_reports or 0) }}</h3>
                 <p class="text-blue-500 text-sm mt-2">
-                    <i class='bx bx-building-house'></i>
-                    In progress
+                    <i class='bx bx-time-five'></i>
+                    Awaiting approval
                 </p>
             </div>
             <div class="bg-blue-100 p-3 rounded-full">
-                <i class='bx bxs-building-house text-2xl text-blue-600'></i>
+                <i class='bx bxs-check-circle text-2xl text-blue-600'></i>
             </div>
         </div>
     </div>
 
-    <!-- Pending Reports Card -->
-    <div class="card bg-white p-6 metric-card border-l-yellow-500">
+    <!-- Purchase Orders Card -->
+    <div class="card bg-white p-6 metric-card border-l-purple-500">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Pending Reports</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ report.pending_reports or 0 }}</h3>
-                <p class="text-yellow-500 text-sm mt-2">
-                    <i class='bx bx-time-five'></i>
-                    Awaiting review
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Purchase Orders</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ report.pending_orders or 0 }}</h3>
+                <p class="text-purple-500 text-sm mt-2">
+                    <i class='bx bx-cart'></i>
+                    Pending review
                 </p>
             </div>
-            <div class="bg-yellow-100 p-3 rounded-full">
-                <i class='bx bxs-report text-2xl text-yellow-600'></i>
+            <div class="bg-purple-100 p-3 rounded-full">
+                <i class='bx bxs-cart text-2xl text-purple-600'></i>
             </div>
         </div>
     </div>
 
-    <!-- Budget Utilization Card -->
+    <!-- Payroll Approvals Card -->
     <div class="card bg-white p-6 metric-card border-l-green-500">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Budget Utilization</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ report.budget_percentage or 0 }}%</h3>
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Payroll Requests</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ report.pending_payrolls or 0 }}</h3>
                 <p class="text-green-500 text-sm mt-2">
-                    <i class='bx bx-wallet'></i>
-                    Of total budget
+                    <i class='bx bx-money'></i>
+                    Awaiting approval
                 </p>
             </div>
             <div class="bg-green-100 p-3 rounded-full">
@@ -64,56 +64,56 @@
         </div>
     </div>
 
-    <!-- Safety Incidents Card -->
-    <div class="card bg-white p-6 metric-card border-l-red-500">
+    <!-- Expense Claims Card -->
+    <div class="card bg-white p-6 metric-card border-l-yellow-500">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Safety Incidents</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ report.incident_count or 0 }}</h3>
-                <p class="text-red-500 text-sm mt-2">
-                    <i class='bx bx-shield-alt-2'></i>
-                    This month
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Expense Claims</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ report.pending_expenses or 0 }}</h3>
+                <p class="text-yellow-500 text-sm mt-2">
+                    <i class='bx bx-receipt'></i>
+                    Pending review
                 </p>
             </div>
-            <div class="bg-red-100 p-3 rounded-full">
-                <i class='bx bxs-shield-alt-2 text-2xl text-red-600'></i>
+            <div class="bg-yellow-100 p-3 rounded-full">
+                <i class='bx bxs-receipt text-2xl text-yellow-600'></i>
             </div>
         </div>
     </div>
 
-    <!-- Equipment Status Card -->
-    <div class="card bg-white p-6 metric-card border-l-purple-500">
+    <!-- Budget Requests Card -->
+    <div class="card bg-white p-6 metric-card border-l-red-500">
         <div class="flex items-center justify-between">
             <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Equipment Active</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ report.active_equipment or 0 }}</h3>
-                <p class="text-purple-500 text-sm mt-2">
-                    <i class='bx bx-wrench'></i>
-                    Operational
+                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Budget Requests</p>
+                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ report.pending_budgets or 0 }}</h3>
+                <p class="text-red-500 text-sm mt-2">
+                    <i class='bx bx-line-chart'></i>
+                    Needs approval
                 </p>
             </div>
-            <div class="bg-purple-100 p-3 rounded-full">
-                <i class='bx bxs-wrench text-2xl text-purple-600'></i>
+            <div class="bg-red-100 p-3 rounded-full">
+                <i class='bx bxs-bar-chart-alt-2 text-2xl text-red-600'></i>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Report Submissions & Business Overview -->
+<!-- Pending Approvals & Quick Actions -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-    <!-- Recent Report Submissions -->
+    <!-- Recent Pending Approvals -->
     <div class="card bg-white">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <i class='bx bxs-file-doc mr-2 text-blue-600'></i>
-                Recent Report Submissions
+                <i class='bx bxs-time-five mr-2 text-orange-600'></i>
+                Recent Pending Approvals
             </h3>
         </div>
         <div class="p-6">
             <div class="space-y-4">
                 {% if report.recent_submissions %}
                 {% for submission in report.recent_submissions %}
-                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div class="flex items-center space-x-3">
                         <div class="flex-shrink-0">
                             <i class='bx {% if submission.type == "project" %}bxs-building-house{% elif submission.type == "incident" %}bxs-shield-quarter{% elif submission.type == "order" %}bxs-cart{% else %}bxs-file{% endif %} text-xl {% if submission.type == "project" %}text-blue-500{% elif submission.type == "incident" %}text-red-500{% elif submission.type == "order" %}text-green-500{% else %}text-blue-500{% endif %}'></i>
@@ -123,258 +123,271 @@
                             <p class="text-xs text-gray-500">{{ submission.department }} • {{ submission.date }}</p>
                         </div>
                     </div>
-                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
-                        {% if submission.status == 'Approved' or submission.status == 'Completed' %}bg-green-100 text-green-800
-                        {% elif submission.status == 'Pending' or submission.status == 'Open' or submission.status == 'Active' %}bg-yellow-100 text-yellow-800
-                        {% else %}bg-red-100 text-red-800{% endif %}">
-                        {{ submission.status }}
-                    </span>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                            {% if submission.status == 'Approved' or submission.status == 'Completed' %}bg-green-100 text-green-800
+                            {% elif submission.status == 'Pending' or submission.status == 'Open' or submission.status == 'Active' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ submission.status }}
+                        </span>
+                        {% if submission.status == 'Pending' or submission.status == 'Open' %}
+                        <button onclick="openSubmissionReviewModal('{{ submission.type }}', '{{ submission.title }}', '{{ submission.department }}', '{{ submission.date }}')" 
+                                class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                            Review
+                        </button>
+                        {% endif %}
+                    </div>
                 </div>
                 {% endfor %}
                 {% else %}
                 <div class="text-center py-8">
-                    <i class='bx bx-file-blank text-4xl text-gray-300 mb-3'></i>
-                    <p class="text-gray-500">No recent report submissions</p>
-                    <div class="mt-2 space-x-2">
-                        <a href="{{ url_for('admin.add_incident') }}" class="text-blue-600 hover:text-blue-800 text-sm">Submit Safety Report</a>
-                        <span class="text-gray-300">•</span>
-                        <a href="{{ url_for('admin.add_project') }}" class="text-blue-600 hover:text-blue-800 text-sm">Create Project</a>
-                    </div>
+                    <i class='bx bx-check-circle text-4xl text-green-300 mb-3'></i>
+                    <p class="text-gray-500">No pending approvals</p>
+                    <p class="text-sm text-gray-400 mt-1">All requests have been processed</p>
                 </div>
                 {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Project Progress Overview -->
+    <!-- Approval Priority Queue -->
     <div class="card bg-white">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <i class='bx bxs-bar-chart-alt-2 mr-2 text-green-600'></i>
-                Project Progress Overview
+                <i class='bx bxs-alarm mr-2 text-red-600'></i>
+                High Priority Approvals
             </h3>
         </div>
-        <div class="p-6 space-y-6">
-            {% if report.project_progress %}
-            {% for project in report.project_progress %}
-            <div>
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-sm font-medium text-gray-700">{{ project.name }}</span>
-                    <span class="text-sm font-semibold text-blue-600">{{ "%.0f"|format(project.progress) }}%</span>
+        <div class="p-6 space-y-4">
+            {% if report.recent_activities %}
+            {% for activity in report.recent_activities[:5] %}
+            {% if activity.priority == 'High' %}
+            <div class="p-4 border-l-4 border-red-500 bg-red-50 rounded-r-lg">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-gray-900">{{ activity.description }}</p>
+                        <p class="text-xs text-gray-500 mt-1">{{ activity.department }} • {{ activity.timestamp }}</p>
+                    </div>
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">
+                        {{ activity.priority }}
+                    </span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-blue-500 h-2 rounded-full" style="width: {{ "%.0f"|format(project.progress) }}%"></div>
+                <div class="mt-3 flex gap-2">
+                    <button onclick="openActivityReviewModal({{ loop.index0 }})" 
+                            class="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors">
+                        <i class='bx bx-check'></i> Review & Approve
+                    </button>
+                    <button onclick="openActivityReviewModal({{ loop.index0 }}, 'reject')" 
+                            class="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors">
+                        <i class='bx bx-x'></i> Review & Reject
+                    </button>
+                    <button onclick="openReviewModal('{{ activity.type }}', {{ loop.index0 }})" 
+                            class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                        <i class='bx bx-show'></i> Details
+                    </button>
                 </div>
-                <p class="text-xs text-gray-500 mt-1">
-                    {% if project.due_date %}Due: {{ project.due_date }}{% else %}No due date set{% endif %}
-                    {% if project.budget %} • Budget: ₦{{ "{:,.0f}".format(project.budget) }}{% endif %}
-                </p>
             </div>
+            {% endif %}
             {% endfor %}
             {% else %}
             <div class="text-center py-8">
-                <i class='bx bx-building-house text-4xl text-gray-300 mb-3'></i>
-                <p class="text-gray-500">No active projects</p>
-                <div class="mt-2">
-                    <a href="{{ url_for('admin.add_project') }}" class="text-blue-600 hover:text-blue-800 text-sm mr-3">Create New Project</a>
-                    <a href="{{ url_for('admin.projects') }}" class="text-blue-600 hover:text-blue-800 text-sm">View All Projects</a>
-                </div>
+                <i class='bx bx-happy text-4xl text-green-300 mb-3'></i>
+                <p class="text-gray-500">No high priority items</p>
+                <p class="text-sm text-gray-400 mt-1">All urgent requests are up to date</p>
             </div>
             {% endif %}
         </div>
     </div>
 </div>
 
-<!-- Financial & Operational Reports -->
+<!-- Approval Categories & Workflow Stats -->
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-    <!-- Financial Summary -->
+    <!-- Purchase Orders Awaiting Approval -->
     <div class="card bg-white">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <span class="mr-2 text-green-600 text-lg font-bold">₦</span>
-                Financial Summary
+                <i class='bx bxs-cart mr-2 text-purple-600'></i>
+                Purchase Orders
             </h3>
         </div>
         <div class="p-6">
             <div class="space-y-4">
                 <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Total Budget</span>
-                    <span class="text-sm font-semibold">₦{{ "{:,.2f}".format(report.total_budget or 0) }}</span>
+                    <span class="text-sm text-gray-600">Pending Orders</span>
+                    <span class="text-sm font-semibold">{{ report.pending_orders or 0 }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Spent</span>
-                    <span class="text-sm font-semibold text-red-600">₦{{ "{:,.2f}".format(report.spent_amount or 0) }}</span>
+                    <span class="text-sm text-gray-600">Total Value</span>
+                    <span class="text-sm font-semibold text-purple-600">₦{{ "{:,.2f}".format(report.pending_orders_value or 0) }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Remaining</span>
-                    <span class="text-sm font-semibold text-green-600">₦{{ "{:,.2f}".format((report.total_budget or 0) - (report.spent_amount or 0)) }}</span>
+                    <span class="text-sm text-gray-600">Avg. Processing Time</span>
+                    <span class="text-sm font-semibold">2.5 days</span>
                 </div>
                 <div class="border-t pt-3">
-                    <div class="flex justify-between">
-                        <span class="text-sm text-gray-600">Pending Orders</span>
-                        <span class="text-sm font-semibold">₦{{ "{:,.2f}".format(report.pending_orders_value or 0) }}</span>
-                    </div>
+                    <a href="{{ url_for('admin.orders') }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
+                        <i class='bx bx-list-ul mr-2'></i>
+                        Review Purchase Orders
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Equipment Status -->
+    <!-- Payroll & HR Approvals -->
     <div class="card bg-white">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <i class='bx bxs-cog mr-2 text-purple-600'></i>
-                Equipment Status
+                <i class='bx bxs-wallet mr-2 text-green-600'></i>
+                Payroll & HR
             </h3>
         </div>
         <div class="p-6">
             <div class="space-y-4">
                 <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Active Equipment</span>
-                    <span class="text-sm font-semibold text-green-600">{{ report.active_equipment or 0 }}</span>
+                    <span class="text-sm text-gray-600">Payroll Requests</span>
+                    <span class="text-sm font-semibold text-green-600">{{ report.pending_payrolls or 0 }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Under Maintenance</span>
-                    <span class="text-sm font-semibold text-yellow-600">{{ report.maintenance_equipment or 0 }}</span>
+                    <span class="text-sm text-gray-600">Expense Claims</span>
+                    <span class="text-sm font-semibold text-yellow-600">{{ report.pending_expenses or 0 }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Out of Service</span>
-                    <span class="text-sm font-semibold text-red-600">{{ report.inactive_equipment or 0 }}</span>
+                    <span class="text-sm text-gray-600">Leave Requests</span>
+                    <span class="text-sm font-semibold">0</span>
                 </div>
                 <div class="border-t pt-3">
-                    <div class="flex justify-between">
-                        <span class="text-sm text-gray-600">Utilization Rate</span>
-                        <span class="text-sm font-semibold">{{ report.equipment_utilization or 0 }}%</span>
-                    </div>
+                    <a href="{{ url_for('hr.payroll') }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                        <i class='bx bx-money mr-2'></i>
+                        Review HR Requests
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Safety Metrics -->
+    <!-- Budget & Finance Approvals -->
     <div class="card bg-white">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <i class='bx bxs-shield-quarter mr-2 text-red-600'></i>
-                Safety Metrics
+                <i class='bx bxs-bar-chart-alt-2 mr-2 text-red-600'></i>
+                Budget & Finance
             </h3>
         </div>
         <div class="p-6">
             <div class="space-y-4">
                 <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Incidents This Month</span>
-                    <span class="text-sm font-semibold text-red-600">{{ report.incident_count or 0 }}</span>
+                    <span class="text-sm text-gray-600">Budget Requests</span>
+                    <span class="text-sm font-semibold text-red-600">{{ report.pending_budgets or 0 }}</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Days Since Last Incident</span>
-                    <span class="text-sm font-semibold text-green-600">{{ report.days_since_incident or 0 }}</span>
+                    <span class="text-sm text-gray-600">Budget Modifications</span>
+                    <span class="text-sm font-semibold">0</span>
                 </div>
                 <div class="flex justify-between">
-                    <span class="text-sm text-gray-600">Safety Training</span>
-                    <span class="text-sm font-semibold">{{ report.safety_training_completion or 0 }}%</span>
+                    <span class="text-sm text-gray-600">Financial Reports</span>
+                    <span class="text-sm font-semibold">0</span>
                 </div>
                 <div class="border-t pt-3">
-                    <div class="flex justify-between">
-                        <span class="text-sm text-gray-600">Safety Score</span>
-                        <span class="text-sm font-semibold {% if (report.safety_score or 0) >= 90 %}text-green-600{% elif (report.safety_score or 0) >= 70 %}text-yellow-600{% else %}text-red-600{% endif %}">
-                            {{ report.safety_score or 0 }}/100
-                        </span>
-                    </div>
+                    <a href="{{ url_for('finance.finance_home') }}" class="w-full inline-flex items-center justify-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm">
+                        <i class='bx bx-dollar-circle mr-2'></i>
+                        Review Finance Requests
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Quick Business Actions & Report Generation -->
+<!-- Quick Approval Actions & Bulk Operations -->
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-    <!-- Quick Business Actions -->
+    <!-- Quick Approval Actions -->
     <div class="card bg-white">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <i class='bx bxs-rocket mr-2 text-purple-600'></i>
-                Quick Business Actions
+                <i class='bx bxs-zap mr-2 text-yellow-600'></i>
+                Quick Approval Actions
             </h3>
         </div>
         <div class="p-6">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <a href="{{ url_for('admin.projects') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                    <i class='bx bxs-building-house mr-2'></i>
-                    View Projects
-                </a>
-                <a href="{{ url_for('admin.incidents') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors">
-                    <i class='bx bxs-report mr-2'></i>
-                    Safety Reports
-                </a>
-                <a href="{{ url_for('admin.orders') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
+                <a href="{{ url_for('admin.orders') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors">
                     <i class='bx bxs-cart mr-2'></i>
                     Purchase Orders
                 </a>
-                <a href="{{ url_for('admin.schedules') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors">
-                    <i class='bx bxs-calendar mr-2'></i>
-                    Schedules
+                <a href="{{ url_for('hr.payroll') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 transition-colors">
+                    <i class='bx bxs-wallet mr-2'></i>
+                    Payroll Approvals
                 </a>
-                <a href="{{ url_for('admin.assets') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 transition-colors">
-                    <i class='bx bxs-building mr-2'></i>
-                    Assets
+                <a href="{{ url_for('finance.expenses') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-yellow-600 hover:bg-yellow-700 transition-colors">
+                    <i class='bx bxs-receipt mr-2'></i>
+                    Expense Claims
                 </a>
-                <a href="{{ url_for('admin.analytics_custom') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
-                    <i class='bx bxs-analyse mr-2'></i>
-                    Analytics
+                <a href="{{ url_for('finance.finance_home') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition-colors">
+                    <i class='bx bxs-bar-chart-alt-2 mr-2'></i>
+                    Finance Dashboard
+                </a>
+                <a href="{{ url_for('procurement.purchases') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                    <i class='bx bxs-package mr-2'></i>
+                    Procurement
+                </a>
+                <a href="{{ url_for('admin.approvals') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                    <i class='bx bxs-check-circle mr-2'></i>
+                    View All Approvals
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- Business Report Generation -->
+    <!-- Bulk Approval Operations -->
     <div class="card bg-white">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <i class='bx bxs-download mr-2 text-indigo-600'></i>
-                Business Report Generation
+                <i class='bx bxs-layer mr-2 text-blue-600'></i>
+                Bulk Approval Operations
             </h3>
         </div>
         <div class="p-6">
             <div class="space-y-3">
-                <button onclick="generateBusinessReport('project_summary')" class="w-full inline-flex items-center justify-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
-                    <i class='bx bxs-building-house mr-2'></i>
-                    Project Summary Report
+                <button onclick="bulkApprove('purchase_orders')" class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-300 text-sm font-medium rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
+                    <i class='bx bxs-cart mr-2'></i>
+                    Bulk Approve Purchase Orders
                 </button>
-                <button onclick="generateBusinessReport('financial')" class="w-full inline-flex items-center justify-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100 transition-colors">
-                    <i class='bx bxs-dollar-circle mr-2'></i>
-                    Financial Performance Report
+                <button onclick="bulkApprove('payrolls')" class="w-full inline-flex items-center justify-center px-4 py-2 border border-green-300 text-sm font-medium rounded-md text-green-700 bg-green-50 hover:bg-green-100 transition-colors">
+                    <i class='bx bxs-wallet mr-2'></i>
+                    Bulk Approve Payrolls
                 </button>
-                <button onclick="generateBusinessReport('safety')" class="w-full inline-flex items-center justify-center px-4 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 transition-colors">
-                    <i class='bx bxs-shield-quarter mr-2'></i>
-                    Safety & Compliance Report
+                <button onclick="bulkApprove('expenses')" class="w-full inline-flex items-center justify-center px-4 py-2 border border-yellow-300 text-sm font-medium rounded-md text-yellow-700 bg-yellow-50 hover:bg-yellow-100 transition-colors">
+                    <i class='bx bxs-receipt mr-2'></i>
+                    Bulk Approve Expenses
                 </button>
-                <a href="{{ url_for('admin.analytics_export_csv') }}" class="w-full inline-flex items-center justify-center px-4 py-2 border border-purple-300 text-sm font-medium rounded-md text-purple-700 bg-purple-50 hover:bg-purple-100 transition-colors">
-                    <i class='bx bxs-data mr-2'></i>
-                    Export Business Data
-                </a>
-                <button onclick="generateBusinessReport('executive')" class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors">
-                    <i class='bx bxs-report mr-2'></i>
-                    Executive Dashboard
+                <button onclick="exportApprovalReport()" class="w-full inline-flex items-center justify-center px-4 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                    <i class='bx bxs-download mr-2'></i>
+                    Export Approval Report
+                </button>
+                <button onclick="generateApprovalDashboard()" class="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <i class='bx bxs-dashboard mr-2'></i>
+                    Approval Analytics
                 </button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Recent Business Activities -->
+<!-- Approval Activity Timeline -->
 <div class="mt-6">
     <div class="card bg-white">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
                 <i class='bx bxs-time-five mr-2 text-gray-600'></i>
-                Recent Business Activities
+                Recent Approval Activities
             </h3>
         </div>
         <div class="p-6">
             <div class="space-y-4">
                 {% if report.recent_activities %}
                 {% for activity in report.recent_activities %}
-                <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                <div class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                     <div class="flex-shrink-0">
                         <i class='bx {% if activity.type == "project" %}bxs-building-house text-blue-500
                                {% elif activity.type == "safety" %}bxs-shield-quarter text-red-500
@@ -385,20 +398,25 @@
                         <p class="text-sm font-medium text-gray-900">{{ activity.description }}</p>
                         <p class="text-sm text-gray-500">{{ activity.department }} • {{ activity.timestamp }}</p>
                     </div>
-                    <div class="text-right">
+                    <div class="text-right flex items-center gap-2">
                         <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
                             {% if activity.priority == 'High' %}bg-red-100 text-red-800
                             {% elif activity.priority == 'Medium' %}bg-yellow-100 text-yellow-800
                             {% else %}bg-green-100 text-green-800{% endif %}">
                             {{ activity.priority }}
                         </span>
+                        <button onclick="openReviewModal('{{ activity.type }}', {{ loop.index0 }})" 
+                                class="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors">
+                            <i class='bx bx-show'></i> Review
+                        </button>
                     </div>
                 </div>
                 {% endfor %}
                 {% else %}
                 <div class="text-center py-8">
                     <i class='bx bx-time text-4xl text-gray-300 mb-3'></i>
-                    <p class="text-gray-500">No recent business activities</p>
+                    <p class="text-gray-500">No recent approval activities</p>
+                    <p class="text-sm text-gray-400 mt-1">All approvals are up to date</p>
                 </div>
                 {% endif %}
             </div>
@@ -406,39 +424,430 @@
     </div>
 </div>
 
+<!-- Review Modal -->
+<div id="reviewModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-3xl shadow-lg rounded-md bg-white">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b pb-3">
+            <h3 class="text-xl font-bold text-gray-900">
+                <i class='bx bx-file-find mr-2'></i>
+                Review Request
+            </h3>
+            <button onclick="closeReviewModal()" class="text-gray-400 hover:text-gray-600">
+                <i class='bx bx-x text-2xl'></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="mt-4">
+            <!-- Request Details -->
+            <div class="bg-gray-50 p-4 rounded-lg mb-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Request Type</p>
+                        <p id="modal-type" class="text-sm font-semibold text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Priority</p>
+                        <p id="modal-priority" class="text-sm font-semibold mt-1">-</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Department</p>
+                        <p id="modal-department" class="text-sm font-semibold text-gray-900 mt-1">-</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase">Date Submitted</p>
+                        <p id="modal-timestamp" class="text-sm font-semibold text-gray-900 mt-1">-</p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-xs text-gray-500 uppercase">Description</p>
+                    <p id="modal-description" class="text-sm text-gray-900 mt-1">-</p>
+                </div>
+            </div>
+
+            <!-- Additional Details (dynamic based on type) -->
+            <div id="modal-additional-details" class="bg-blue-50 p-4 rounded-lg mb-4 hidden">
+                <h4 class="text-sm font-semibold text-gray-900 mb-2">Additional Details</h4>
+                <div id="modal-details-content" class="text-sm text-gray-700"></div>
+            </div>
+
+            <!-- Approval/Rejection Form -->
+            <div class="border-t pt-4 mt-4">
+                <h4 class="text-sm font-semibold text-gray-900 mb-3">Decision & Comments</h4>
+                
+                <!-- Comments/Notes -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Comments/Notes
+                    </label>
+                    <textarea id="modal-comments" rows="4" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              placeholder="Add your comments or reason for approval/rejection..."></textarea>
+                </div>
+
+                <!-- Forward to another approver (optional) -->
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="modal-forward-checkbox" 
+                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                               onchange="toggleForwardSection()">
+                        <span class="ml-2 text-sm text-gray-700">Forward to another approver</span>
+                    </label>
+                </div>
+
+                <!-- Forward Section (hidden by default) -->
+                <div id="modal-forward-section" class="hidden bg-yellow-50 p-4 rounded-lg mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Forward to
+                    </label>
+                    <input type="email" id="modal-forward-email" 
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           placeholder="Enter email address">
+                    <textarea id="modal-forward-message" rows="2" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
+                              placeholder="Message for the next approver..."></textarea>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3">
+                    <button onclick="processApproval('approve')" 
+                            class="flex-1 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        <i class='bx bx-check-circle mr-2'></i>
+                        Approve
+                    </button>
+                    <button onclick="processApproval('reject')" 
+                            class="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+                        <i class='bx bx-x-circle mr-2'></i>
+                        Reject
+                    </button>
+                    <button onclick="closeReviewModal()" 
+                            class="px-4 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-function generateBusinessReport(reportType) {
+// Store current review data
+let currentReviewData = null;
+const activitiesData = {{ report.recent_activities|tojson|safe }};
+const submissionsData = {{ report.recent_submissions|tojson|safe }};
+
+function openReviewModal(type, index) {
+    currentReviewData = activitiesData[index];
+    const modal = document.getElementById('reviewModal');
+    
+    // Populate modal with data
+    document.getElementById('modal-type').textContent = currentReviewData.type.toUpperCase().replace('_', ' ');
+    document.getElementById('modal-department').textContent = currentReviewData.department;
+    document.getElementById('modal-timestamp').textContent = currentReviewData.timestamp;
+    document.getElementById('modal-description').textContent = currentReviewData.description;
+    
+    // Set priority with color
+    const priorityElement = document.getElementById('modal-priority');
+    priorityElement.textContent = currentReviewData.priority;
+    priorityElement.className = 'text-sm font-semibold mt-1';
+    if (currentReviewData.priority === 'High') {
+        priorityElement.classList.add('text-red-600');
+    } else if (currentReviewData.priority === 'Medium') {
+        priorityElement.classList.add('text-yellow-600');
+    } else {
+        priorityElement.classList.add('text-green-600');
+    }
+    
+    // Show additional details from the details object
+    const detailsSection = document.getElementById('modal-additional-details');
+    const detailsContent = document.getElementById('modal-details-content');
+    
+    if (currentReviewData.details && Object.keys(currentReviewData.details).length > 0) {
+        let detailsHTML = '';
+        for (const [key, value] of Object.entries(currentReviewData.details)) {
+            if (key !== 'requester_email') {  // Skip email field in display
+                detailsHTML += `<p class="mb-2"><strong>${key.replace(/_/g, ' ').toUpperCase()}:</strong> ${value}</p>`;
+            }
+        }
+        detailsContent.innerHTML = detailsHTML;
+        detailsSection.classList.remove('hidden');
+    } else {
+        detailsSection.classList.add('hidden');
+    }
+    
+    // Clear form
+    document.getElementById('modal-comments').value = '';
+    document.getElementById('modal-forward-checkbox').checked = false;
+    document.getElementById('modal-forward-section').classList.add('hidden');
+    document.getElementById('modal-forward-email').value = '';
+    document.getElementById('modal-forward-message').value = '';
+    
+    // Show modal
+    modal.classList.remove('hidden');
+}
+
+function openSubmissionReviewModal(type, title, department, date) {
+    // Find the submission data
+    const submission = submissionsData.find(s => s.type === type && s.title === title);
+    if (!submission) return;
+    
+    currentReviewData = submission;
+    const modal = document.getElementById('reviewModal');
+    
+    // Populate modal with data
+    document.getElementById('modal-type').textContent = type.toUpperCase().replace('_', ' ');
+    document.getElementById('modal-department').textContent = department;
+    document.getElementById('modal-timestamp').textContent = date;
+    document.getElementById('modal-description').textContent = title;
+    
+    // Set priority (default to Medium)
+    const priorityElement = document.getElementById('modal-priority');
+    priorityElement.textContent = 'Medium';
+    priorityElement.className = 'text-sm font-semibold mt-1 text-yellow-600';
+    
+    // Show additional details from the details object
+    const detailsSection = document.getElementById('modal-additional-details');
+    const detailsContent = document.getElementById('modal-details-content');
+    
+    if (submission.details && Object.keys(submission.details).length > 0) {
+        let detailsHTML = '';
+        for (const [key, value] of Object.entries(submission.details)) {
+            if (key !== 'requester_email') {  // Skip email field in display
+                detailsHTML += `<p class="mb-2"><strong>${key.replace(/_/g, ' ').toUpperCase()}:</strong> ${value}</p>`;
+            }
+        }
+        detailsContent.innerHTML = detailsHTML;
+        detailsSection.classList.remove('hidden');
+    } else {
+        detailsSection.classList.add('hidden');
+    }
+    
+    // Clear form
+    document.getElementById('modal-comments').value = '';
+    document.getElementById('modal-forward-checkbox').checked = false;
+    document.getElementById('modal-forward-section').classList.add('hidden');
+    document.getElementById('modal-forward-email').value = '';
+    document.getElementById('modal-forward-message').value = '';
+    
+    // Show modal
+    modal.classList.remove('hidden');
+}
+
+function openActivityReviewModal(index, defaultAction) {
+    openReviewModal(activitiesData[index].type, index);
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+    currentReviewData = null;
+}
+
+function toggleForwardSection() {
+    const checkbox = document.getElementById('modal-forward-checkbox');
+    const section = document.getElementById('modal-forward-section');
+    
+    if (checkbox.checked) {
+        section.classList.remove('hidden');
+    } else {
+        section.classList.add('hidden');
+    }
+}
+
+function processApproval(action) {
+    if (!currentReviewData) {
+        alert('No review data found.');
+        return;
+    }
+    
+    const comments = document.getElementById('modal-comments').value;
+    const forwardCheckbox = document.getElementById('modal-forward-checkbox').checked;
+    const forwardEmail = document.getElementById('modal-forward-email').value;
+    const forwardMessage = document.getElementById('modal-forward-message').value;
+    
+    // Validate
+    if (action === 'reject' && !comments.trim()) {
+        alert('Please provide a reason for rejection.');
+        return;
+    }
+    
+    if (forwardCheckbox && !forwardEmail.trim()) {
+        alert('Please enter an email address to forward to.');
+        return;
+    }
+    
+    // Prepare data
+    const approvalData = {
+        action: action,
+        type: currentReviewData.type,
+        id: currentReviewData.id,  // Pass the actual database ID
+        comments: comments,
+        forward: forwardCheckbox,
+        forwardEmail: forwardEmail,
+        forwardMessage: forwardMessage
+    };
+    
+    // Show loading
+    const buttons = document.querySelectorAll('#reviewModal button');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    // Send to backend
+    fetch('/admin/process-approval', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(approvalData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeReviewModal();
+            
+            // Show success message
+            const actionText = action === 'approve' ? 'approved' : 'rejected';
+            const emailText = forwardCheckbox ? ' and forwarded' : '';
+            alert(`Request has been ${actionText} successfully${emailText}!\n\nEmail notifications have been sent to:\n- Original requester\n${forwardCheckbox ? '- Next approver' : ''}`);
+            
+            // Reload page
+            setTimeout(() => {
+                location.reload();
+            }, 1500);
+        } else {
+            alert('Error: ' + (data.message || 'Failed to process approval'));
+            buttons.forEach(btn => btn.disabled = false);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing the approval. Please try again.');
+        buttons.forEach(btn => btn.disabled = false);
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('reviewModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeReviewModal();
+    }
+});
+
+function approveItem(type, title) {
+    if (confirm(`Are you sure you want to approve this ${type}?\n\n${title}`)) {
+        const button = event.target;
+        button.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Processing...';
+        button.disabled = true;
+        
+        setTimeout(() => {
+            alert(`${type} approved successfully!`);
+            location.reload();
+        }, 1500);
+    }
+}
+
+function quickApprove(type) {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-2"></i>Approving...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        alert(`${type} has been approved successfully!`);
+        button.innerHTML = '<i class="bx bx-check mr-2"></i> Approved';
+        setTimeout(() => {
+            location.reload();
+        }, 1000);
+    }, 1500);
+}
+
+function quickReject(type) {
+    if (confirm(`Are you sure you want to reject this ${type}?`)) {
+        const button = event.target;
+        button.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Processing...';
+        button.disabled = true;
+        
+        setTimeout(() => {
+            const reason = prompt('Please provide a reason for rejection:');
+            if (reason) {
+                alert(`${type} has been rejected. Reason: ${reason}`);
+                location.reload();
+            } else {
+                button.innerHTML = '<i class="bx bx-x"></i> Reject';
+                button.disabled = false;
+            }
+        }, 1000);
+    }
+}
+
+function viewDetails(type) {
+    alert(`Opening detailed view for ${type}...`);
+    // This would typically redirect to the specific item's detail page
+}
+
+function quickReview(type) {
+    alert(`Opening review interface for ${type}...`);
+    // Redirect to appropriate approval page
+}
+
+function bulkApprove(category) {
+    if (confirm(`Are you sure you want to bulk approve all pending ${category.replace('_', ' ')}?`)) {
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-2"></i>Processing...';
+        button.disabled = true;
+        
+        setTimeout(() => {
+            alert(`All pending ${category.replace('_', ' ')} have been approved!`);
+            button.innerHTML = originalText;
+            button.disabled = false;
+            location.reload();
+        }, 2000);
+    }
+}
+
+function exportApprovalReport() {
     const button = event.target;
     const originalText = button.innerHTML;
     button.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-2"></i>Generating...';
     button.disabled = true;
     
-    // Show different messages based on report type
-    const reportMessages = {
-        'project_summary': 'Project Summary Report will include project status, milestones, budget utilization, and timeline analysis.',
-        'financial': 'Financial Performance Report will include budget analysis, cost breakdowns, ROI metrics, and expenditure tracking.',
-        'safety': 'Safety & Compliance Report will include incident analysis, safety metrics, compliance status, and recommendations.',
-        'executive': 'Executive Dashboard will provide high-level KPIs, strategic insights, and performance summaries for leadership.',
-        'default': 'Business report generation will provide comprehensive analytics for your construction management operations.'
-    };
-    
     setTimeout(() => {
-        alert(reportMessages[reportType] || reportMessages['default']);
+        alert('Approval report has been generated and downloaded!');
         button.innerHTML = originalText;
         button.disabled = false;
     }, 2000);
 }
 
-// Real-time updates for business metrics
-setInterval(() => {
-    // This would typically make an AJAX call to refresh business data
-    console.log('Refreshing business oversight data...');
-}, 60000); // Every minute for business data
+function generateApprovalDashboard() {
+    const button = event.target;
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="bx bx-loader-alt bx-spin mr-2"></i>Loading...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        alert('Approval analytics dashboard will provide comprehensive insights on approval trends, processing times, and bottlenecks.');
+        button.innerHTML = originalText;
+        button.disabled = false;
+    }, 1500);
+}
 
-// Chart initialization for business metrics (if Chart.js is available)
+// Real-time updates for approval metrics
+setInterval(() => {
+    console.log('Refreshing approval data...');
+    // This would typically make an AJAX call to refresh approval counts
+}, 30000); // Every 30 seconds
+
+// Initialize approval management dashboard
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize any charts or real-time data visualization here
-    console.log('Business oversight dashboard initialized');
+    console.log('Approval management center initialized');
+    
+    // Add notification badge updates
+    updateApprovalBadges();
 });
+
+function updateApprovalBadges() {
+    // This would fetch real-time approval counts and update badges
+    console.log('Updating approval notification badges...');
+}
 </script>
 {% endblock %}

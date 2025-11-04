@@ -197,7 +197,7 @@
                                 <i class='bx bxs-folder-plus mr-3'></i>
                                 <span>Add Project</span>
                             </a>
-                            <a href="{{ url_for('admin.milestones', project_id=project.id if project else 1) }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('milestones', project_id=project.id if project else 1) }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-flag mr-3'></i>
                                 <span>Milestones</span>
                             </a>
@@ -214,11 +214,11 @@
                             <i :class="open.inventory ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
                         </button>
                         <div x-show="open.inventory" class="space-y-1">
-                            <a href="{{ url_for('quarry.equipment') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('admin.equipment') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-wrench mr-3'></i>
                                 <span>Equipment</span>
                             </a>
-                            <a href="{{ url_for('quarry.add_equipment') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('admin.add_equipment') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-wrench-plus mr-3'></i>
                                 <span>Add Equipment</span>
                             </a>
@@ -334,11 +334,11 @@
                             <i :class="open.user ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
                         </button>
                         <div x-show="open.user" class="space-y-1">
-                            <a href="{{ url_for('admin.profile') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('procurement.profile') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-user mr-3'></i>
                                 <span>Profile</span>
                             </a>
-                            <a href="{{ url_for('admin.logout') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('logout') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bx-log-out mr-3'></i>
                                 <span>Logout</span>
                             </a>

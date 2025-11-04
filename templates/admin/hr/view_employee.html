@@ -19,7 +19,7 @@
 {% endif %}
 
 <h2>Add Payroll</h2>
-<form method="post" action="{{ url_for('admin.add_payroll', employee_id=employee.id) }}" class="mb-4">
+<form method="post" action="{{ url_for('add_payroll', employee_id=employee.id) }}" class="mb-4">
     <div class="form-group">
         <label for="amount">Amount</label>
         <input type="number" name="amount" id="amount" class="form-control" required>
@@ -35,10 +35,10 @@
 </form>
 
 <h2>Attendance</h2>
-<form method="post" action="{{ url_for('admin.clock_in', employee_id=employee.id) }}">
+<form method="post" action="{{ url_for('clock_in', employee_id=employee.id) }}">
     <button type="submit" class="btn btn-success">Clock In</button>
 </form>
-<form method="post" action="{{ url_for('admin.clock_out', employee_id=employee.id) }}">
+<form method="post" action="{{ url_for('clock_out', employee_id=employee.id) }}">
     <button type="submit" class="btn btn-danger">Clock Out</button>
 </form>
 

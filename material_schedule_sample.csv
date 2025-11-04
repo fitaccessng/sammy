@@ -1,0 +1,11 @@
+material_name,required_qty,unit,unit_cost,specification,status,supplier_name,supplier_contact
+Concrete Grade 25,50,m³,15000,Ready mix concrete for foundations,Planned,ABC Concrete,08012345678
+Steel Reinforcement Bar 12mm,100,kg,150,High tensile strength steel bars,Planned,Steel Masters,08098765432
+Cement (Portland),20,bags,3500,Premium grade cement,Planned,Dangote Cement,08011223344
+Sand (Sharp),15,m³,8000,Washed sharp sand for construction,Planned,River Sand Ltd,08055667788
+Aggregate (Granite),25,m³,12000,20mm granite chippings,Planned,Granite Quarry,08033445566
+Blocks (6 inch),500,pieces,250,Standard concrete blocks,Planned,Block Factory,08077889900
+Roofing Sheets,40,pieces,8500,Long span aluminum roofing sheets,Planned,Roofing Solutions,08044556677
+Paint (Emulsion),20,liters,2500,Weather resistant exterior paint,Planned,Paint Express,08066778899
+PVC Pipes 4inch,50,meters,850,High pressure PVC pipes,Planned,Pipe World,08088990011
+Electrical Cable 2.5mm,100,meters,450,Copper core electrical cable,Planned,Electric Supply,08099001122

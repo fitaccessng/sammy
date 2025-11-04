@@ -40,7 +40,7 @@
                         <i class='bx bx-plus-circle text-xl'></i>
                         <span>Create Project</span>
                     </a> -->
-                    <a href="{{ url_for('project.tasks') }}" 
+                    <a href="{{ url_for('hr.tasks') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bx-task text-xl'></i>
                         <span>Tasks</span>
@@ -55,17 +55,17 @@
                 <!-- Resources -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Resources</h2>
-                    <a href="{{ url_for('project.equipment') }}" 
+                    <a href="{{ url_for('admin.equipment') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bx-wrench text-xl'></i>
                         <span>Equipment</span>
                     </a>
-                    <a href="{{ url_for('project.materials') }}" 
+                    <a href="{{ url_for('quarry.materials') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bx-package text-xl'></i>
                         <span>Materials</span>
                     </a>
-                    <a href="{{ url_for('project.staff') }}" 
+                    <a href="{{ url_for('hr.staff_list') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bx-group text-xl'></i>
                         <span>Staff</span>
@@ -85,7 +85,7 @@
                         <i class='bx bx-receipt text-xl'></i>
                         <span>Daily Production Reports</span>
                     </a>
-                    <a href="{{ url_for('project.analytics') }}" 
+                    <a href="{{ url_for('procurement.analytics') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bx-line-chart text-xl'></i>
                         <span>Analytics</span>
@@ -127,7 +127,7 @@
                                     Settings
                                 </a>
                                 <hr class="my-1 border-gray-200">
-                                <a href="{{ url_for('project.logout') }}"  class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                <a href="{{ url_for('logout') }}"  class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                                     Logout
                                 </a>
                             </div>

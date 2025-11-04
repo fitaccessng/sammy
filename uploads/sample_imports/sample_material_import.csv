@@ -1,0 +1,6 @@
+item_description,quantity,unit,unit_cost,item_type,status
+Portland Cement,100,bags,3500.0,Building,Pending
+Steel Bars (12mm),500,pieces,2500.0,Building,Pending
+Concrete Blocks,200,pieces,1200.0,Building,Ordered
+Aluminum Roofing Sheets,50,sheets,8000.0,Building,Pending
+Electrical Cables,1000,meters,450.0,Building,Delivered

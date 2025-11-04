@@ -148,7 +148,7 @@
                                     data-days-worked="{{ payroll.days_worked }}">
                                 <i class="bx bx-edit text-lg"></i>
                             </button>
-                            <a href="{{ url_for('hr.generate_payslip', employee_id=payroll.employee_id) }}" 
+                            <a href="{{ url_for('generate_payslip', employee_id=payroll.employee_id) }}" 
                                class="text-green-600 hover:text-green-900 ml-3">
                                 <i class="bx bx-printer text-lg"></i>
                             </a>
@@ -278,7 +278,7 @@ function submitForApproval() {
         // Create a form and submit to the submit approval endpoint
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = '{{ url_for("hr.submit_payroll_for_approval") }}';
+        form.action = '{{ url_for("submit_payroll_for_approval") }}';
         
         const csrfToken = document.createElement('input');
         csrfToken.type = 'hidden';

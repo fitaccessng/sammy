@@ -331,7 +331,7 @@
 
     <!-- Edit Equipment Form -->
     <div class="modern-card p-8">
-        <form method="POST" action="{{ url_for('admin.edit_equipment', equipment_id=equipment.id) }}" id="editEquipmentForm">
+        <form method="POST" action="{{ url_for('project.edit_equipment', equipment_id=equipment.id) }}" id="editEquipmentForm">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
             
             <!-- Basic Information Section -->

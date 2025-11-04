@@ -371,7 +371,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     csrf_token: formData.get('csrf_token')
                 };
                 
-                const response = await fetch('{{ url_for("hr.generate_report") }}', {
+                const response = await fetch('{{ url_for("generate_report") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',

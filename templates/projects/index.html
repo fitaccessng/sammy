@@ -5,27 +5,26 @@
 
 {% block content %}
 <div class="space-y-6">
-    <!-- User Info Header -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="px-4 py-3 rounded-lg {% if category == 'success' %}bg-green-50 border border-green-200 text-green-800{% elif category == 'error' %}bg-red-50 border border-red-200 text-red-800{% else %}bg-blue-50 border border-blue-200 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- User Info Banner -->
+    <div class="bg-gradient-to-r from-indigo-600 to-blue-600 rounded-lg shadow-lg p-6 text-white">
         <div class="flex items-center justify-between">
             <div>
-                <h2 class="text-xl font-semibold text-gray-900">Welcome, {{ current_user.name }}</h2>
-                <p class="text-sm text-gray-600">
-                    Role: {{ current_user.role }} • 
+                <h2 class="text-2xl font-bold mb-2">Welcome, {{ current_user.name }}</h2>
+                <p class="text-indigo-100">
+                    <span class="font-medium">{{ current_user.role }}</span> • 
                     {% if current_user.role == 'super_hq' %}
-                        Showing all projects (Administrator access)
-                    {% elif current_user.role in ['hq_project', 'project_manager'] %}
-                        Showing projects you manage
-                    {% else %}
-                        Showing projects you're assigned to
-                    {% endif %}
-                </p>
-            </div>
-            <div class="text-right">
-                <p class="text-2xl font-bold text-indigo-600">{{ project_stats.total_projects }}</p>
-                <p class="text-sm text-gray-500">
-                    {% if current_user.role == 'super_hq' %}
-                        Total Projects
+                        Administrator Access - All Projects
                     {% elif current_user.role in ['hq_project', 'project_manager'] %}
                         Your Managed Projects
                     {% else %}
@@ -33,292 +32,197 @@
                     {% endif %}
                 </p>
             </div>
+            <div class="text-right">
+                <p class="text-4xl font-bold">{{ project_stats.total_projects }}</p>
+                <p class="text-indigo-100">Total Projects</p>
+            </div>
         </div>
     </div>
 
     <!-- Quick Stats -->
-   <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-    <!-- Total Projects Card -->
-    <div class="modern-card p-6 border-l-4 border-blue-500">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Projects</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.total_projects }}</h3>
-                <p class="text-blue-500 text-sm mt-2">
-                    <i class='bx bx-buildings'></i>
-                    All projects
-                </p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium uppercase">Active</p>
+                    <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.active_projects }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bxs-play-circle text-3xl text-green-600'></i>
+                </div>
             </div>
-            <div class="bg-blue-100 p-3 rounded-full">
-                <i class='bx bxs-buildings text-2xl text-blue-600'></i>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium uppercase">Completed</p>
+                    <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.completed_projects }}</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bxs-check-circle text-3xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm font-medium uppercase">All Projects</p>
+                    <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.total_projects }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bxs-buildings text-3xl text-blue-600'></i>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Active Projects Card -->
-    <div class="modern-card p-6 border-l-4 border-green-500">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Active Projects</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.active_projects }}</h3>
-                <p class="text-green-500 text-sm mt-2">
-                    <i class='bx bx-play-circle'></i>
-                    In progress
-                </p>
-            </div>
-            <div class="bg-green-100 p-3 rounded-full">
-                <i class='bx bxs-play-circle text-2xl text-green-600'></i>
-            </div>
+    <!-- Search and Filter -->
+    <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex flex-col md:flex-row gap-4">
+            <select id="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">All Status</option>
+                <option value="planning">Planning</option>
+                <option value="active">Active</option>
+                <option value="in progress">In Progress</option>
+                <option value="completed">Completed</option>
+                <option value="on hold">On Hold</option>
+                <option value="cancelled">Cancelled</option>
+            </select>
+            <input type="text" id="searchProjects" placeholder="Search projects by name or manager..." 
+                   class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
         </div>
     </div>
 
-    <!-- Completed Projects Card -->
-    <div class="modern-card p-6 border-l-4 border-purple-500">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Completed Projects</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2">{{ project_stats.completed_projects }}</h3>
-                <p class="text-purple-500 text-sm mt-2">
-                    <i class='bx bx-check-circle'></i>
-                    Finished
-                </p>
-            </div>
-            <div class="bg-purple-100 p-3 rounded-full">
-                <i class='bx bxs-check-circle text-2xl text-purple-600'></i>
-            </div>
+    <!-- Projects List -->
+    {% if projects %}
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-800">All Projects</h2>
         </div>
-    </div>
-
-    <!-- Total Budget Card -->
-    <div class="modern-card p-6 border-l-4 border-orange-500">
-        <div class="flex items-center justify-between">
-            <div>
-                <p class="text-gray-500 text-sm font-medium uppercase tracking-wide">Total Budget</p>
-                <h3 class="text-3xl font-bold text-gray-800 mt-2 budget-amount">₦{{ "{:,.0f}".format(project_stats.total_budget) }}</h3>
-                <p class="text-orange-500 text-sm mt-2">
-                    <i class='bx bx-money'></i>
-                    Project budgets
-                </p>
-            </div>
-            <div class="bg-orange-100 p-3 rounded-full">
-                <i class='bx bxs-wallet text-2xl text-orange-600'></i>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Main Content -->
-<div class="modern-card">
-    <!-- Header -->
-    <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
-        <div class="flex justify-between items-center">
-            <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <i class='bx bxs-folder-open mr-2 text-blue-600'></i>
-                All Projects
-            </h3>
-            <div class="flex space-x-2">
-                <select id="statusFilter" class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">All Status</option>
-                    <option value="planning">Planning</option>
-                    <option value="active">Active</option>
-                    <option value="in progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                    <option value="on hold">On Hold</option>
-                    <option value="cancelled">Cancelled</option>
-                </select>
-                <input type="text" id="searchProjects" placeholder="Search projects..." 
-                       class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-            </div>
-        </div>
-    </div>
-
-    <!-- Projects Table -->
-    <div class="p-6">
-        {% if projects %}
         <div class="overflow-x-auto">
-            <table class="table-modern" id="projectsTable">
+            <table class="min-w-full">
                 <thead>
-                    <tr>
-                        <th>Project Details</th>
-                        <th>Project Manager</th>
-                        <th>Timeline</th>
-                        <th>Budget</th>
-                        <th>Status</th>
-                        <th class="text-center">Actions</th>
+                    <tr class="bg-gray-50 border-b">
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project Name</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Manager</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Timeline</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100">
+                <tbody class="bg-white divide-y divide-gray-200">
                     {% for project in projects %}
-                    <tr class="project-row hover:bg-gray-50 transition-colors" 
+                    <tr class="project-row hover:bg-gray-50" 
                         data-name="{{ project.name|lower }}" 
                         data-status="{{ (project.status or 'planning')|lower }}"
                         data-manager="{{ (project.project_manager or '')|lower }}">
-                        <td>
-                            <div class="flex items-start">
-                                <!-- Priority Indicator -->
-                                {% set budget_amount = project.budget or 0 %}
-                                {% if budget_amount > 10000000 %}
-                                    <span class="priority-indicator priority-high" title="High Priority"></span>
-                                {% elif budget_amount > 5000000 %}
-                                    <span class="priority-indicator priority-medium" title="Medium Priority"></span>
-                                {% else %}
-                                    <span class="priority-indicator priority-low" title="Low Priority"></span>
-                                {% endif %}
-
-                                <div>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center">
+                                <div class="flex-shrink-0 h-10 w-10">
+                                    <div class="h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                                        <i class='bx bx-briefcase text-indigo-600 text-xl'></i>
+                                    </div>
+                                </div>
+                                <div class="ml-4">
                                     <div class="text-sm font-medium text-gray-900">{{ project.name }}</div>
                                     {% if project.description %}
-                                    <div class="text-xs text-gray-500 mt-1 max-w-xs truncate">{{ project.description }}</div>
+                                    <div class="text-sm text-gray-500">{{ project.description[:50] }}{% if project.description|length > 50 %}...{% endif %}</div>
                                     {% endif %}
-                                    <div class="text-xs text-gray-400 mt-1">
-                                        <i class='bx bx-calendar'></i>
-                                        Created: {{ project.created_at.strftime('%Y-%m-%d') if project.created_at else 'N/A' }}
-                                    </div>
                                 </div>
                             </div>
                         </td>
-                        <td>
+                        <td class="px-6 py-4">
                             <div class="flex items-center">
-                                <div class="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs mr-3">
+                                <div class="flex-shrink-0 h-8 w-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold text-xs">
                                     {% if project.project_manager %}
                                         {{ project.project_manager[:2].upper() }}
                                     {% else %}
                                         <i class='bx bx-user'></i>
                                     {% endif %}
                                 </div>
-                                <div>
-                                    <div class="text-sm font-medium text-gray-900">
-                                        {{ project.project_manager or 'Unassigned' }}
-                                    </div>
-                                    <div class="text-xs text-gray-500">Project Manager</div>
+                                <div class="ml-3">
+                                    <div class="text-sm font-medium text-gray-900">{{ project.project_manager or 'Unassigned' }}</div>
                                 </div>
                             </div>
                         </td>
-                        <td>
-                            <div class="text-sm">
-                                {% if project.start_date and project.end_date %}
-                                    <div class="text-gray-900 font-medium">
-                                        {{ project.start_date.strftime('%Y-%m-%d') }} to {{ project.end_date.strftime('%Y-%m-%d') }}
-                                    </div>
-                                    <!-- Progress Calculation -->
-                                    {% set total_days = (project.end_date - project.start_date).days %}
-                                    {% set current_date = current_date_obj %}
-                                    {% if total_days > 0 %}
-                                        {% set days_elapsed = (current_date - project.start_date).days %}
-                                        {% set progress = ((days_elapsed / total_days * 100) | round(1)) %}
-                                        {% if progress < 0 %}{% set progress = 0 %}{% endif %}
-                                        {% if progress > 100 %}{% set progress = 100 %}{% endif %}
-                                    {% else %}
-                                        {% set progress = 50 %}
-                                    {% endif %}
-                                    <div class="mt-2">
-                                        <div class="progress-bar">
-                                            <div class="progress-fill" style="width: {{ progress }}%"></div>
-                                        </div>
-                                        <div class="text-xs text-gray-500 mt-1">{{ progress }}% timeline elapsed</div>
-                                    </div>
-                                {% else %}
-                                    <div class="text-gray-500">Timeline not set</div>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="text-sm">
-                                {% if project.budget %}
-                                    <div class="text-gray-900 font-medium budget-amount">₦{{ "{:,.0f}".format(project.budget) }}</div>
-                                    <div class="text-xs text-gray-500">Total budget</div>
-                                {% else %}
-                                    <div class="text-gray-500">Not specified</div>
-                                {% endif %}
-                            </div>
-                        </td>
-                        <td>
+                        <td class="px-6 py-4">
                             {% set status = (project.status or 'planning')|lower %}
-                            <span class="status-badge badge-{{ status.replace(' ', '-') }}">
-                                {{ project.status or 'Planning' }}
-                            </span>
+                            {% if status == 'active' or status == 'in progress' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    {{ project.status or 'Active' }}
+                                </span>
+                            {% elif status == 'completed' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
+                                    Completed
+                                </span>
+                            {% elif status == 'planning' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    Planning
+                                </span>
+                            {% elif status == 'on hold' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    On Hold
+                                </span>
+                            {% elif status == 'cancelled' %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Cancelled
+                                </span>
+                            {% else %}
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    {{ project.status or 'Unknown' }}
+                                </span>
+                            {% endif %}
                         </td>
-                        <td class="text-center">
-                            <div class="relative dropdown-container">
-                                <!-- Primary Actions (Role-based visibility) -->
-                                <div class="btn-group justify-center">
-                                    <a href="{{ url_for('admin.project_details', project_id=project.id) }}" 
-                                       class="btn-primary-modern btn-sm-modern" 
-                                       title="View Project Details">
-                                        <i class='bx bx-show'></i>
-                                        View
-                                    </a>
-                                    
-                                    {% if current_user.role == 'super_hq' or (current_user.role in ['hq_project', 'project_manager'] and project.is_manager) %}
-                                    <a href="{{ url_for('project.edit_project', project_id=project.id) }}" 
-                                       class="btn-warning-modern btn-sm-modern" 
-                                       title="Edit Project">
-                                        <i class='bx bx-edit'></i>
-                                        Edit
-                                    </a>
-                                    {% endif %}
-                                    
-                                    <!-- Dropdown for Additional Actions (Role-based) -->
-                                    {% if current_user.role == 'super_hq' or (current_user.role in ['hq_project', 'project_manager'] and project.is_manager) %}
-                                    <div class="dropdown">
-                                        <button class="btn-secondary-modern btn-sm-modern dropdown-toggle" 
-                                                type="button" 
-                                                onclick="toggleDropdown(this)"
-                                                title="More Actions">
-                                            <i class='bx bx-dots-vertical-rounded'></i>
-                                        </button>
-                                        <div class="dropdown-menu">
-                                            <a href="{{ url_for('admin.milestones', project_id=project.id) }}" 
-                                               class="dropdown-item">
-                                                <i class='bx bx-target-lock'></i>
-                                                View Milestones
-                                            </a>
-                                            <a href="{{ url_for('admin.add_milestone', project_id=project.id) }}" 
-                                               class="dropdown-item">
-                                                <i class='bx bx-plus'></i>
-                                                Add Milestone
-                                            </a>
-                                            <a href="{{ url_for('project.assign_staff', project_id=project.id) }}" 
-                                               class="dropdown-item">
-                                                <i class='bx bx-user-plus'></i>
-                                                Assign Staff
-                                            </a>
-                                            <a href="#" class="dropdown-item">
-                                                <i class='bx bx-file-blank'></i>
-                                                Manage Documents
-                                            </a>
-                                        </div>
-                                    </div>
-                                    {% endif %}
-                                </div>
-                            </div>
+                        <td class="px-6 py-4 text-sm text-gray-500">
+                            {% if project.start_date and project.end_date %}
+                                {{ project.start_date.strftime('%Y-%m-%d') }} to {{ project.end_date.strftime('%Y-%m-%d') }}
+                            {% else %}
+                                Not set
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">
+                            {% if project.budget %}
+                                ₦{{ "{:,.0f}".format(project.budget) }}
+                            {% else %}
+                                Not specified
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-sm font-medium space-x-2">
+                            <a href="{{ url_for('project.project_details', project_id=project.id) }}" 
+                               class="text-indigo-600 hover:text-indigo-900">View</a>
+                            {% if current_user.role == 'super_hq' or (current_user.role in ['hq_project', 'project_manager'] and project.is_manager) %}
+                            <a href="{{ url_for('admin.edit_project', project_id=project.id) }}" 
+                               class="text-blue-600 hover:text-blue-900">Edit</a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
-        {% else %}
-        <!-- Empty State -->
-        <div class="text-center py-12">
-            <i class='bx bx-buildings text-6xl text-gray-300 mb-4'></i>
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
-            <p class="text-gray-500 mb-6">
-                {% if current_user.role == 'super_hq' %}
-                    Get started by creating your first construction project.
-                {% else %}
-                    You don't have any assigned projects yet. Contact your administrator to get assigned to projects.
-                {% endif %}
-            </p>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-lg shadow p-12 text-center">
+        <i class='bx bx-buildings text-6xl text-gray-300 mb-4'></i>
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No projects found</h3>
+        <p class="text-gray-500 mb-6">
             {% if current_user.role == 'super_hq' %}
-            <a href="{{ url_for('admin.add_project') }}" class="btn-primary-modern btn-lg-modern">
-                <i class='bx bx-plus'></i>
-                Create First Project
-            </a>
+                Get started by creating your first construction project.
+            {% else %}
+                You don't have any assigned projects yet. Contact your administrator.
             {% endif %}
-        </div>
+        </p>
+        {% if current_user.role == 'super_hq' %}
+        <a href="{{ url_for('admin.add_project') }}" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700">
+            <i class='bx bx-plus mr-2'></i>
+            Create First Project
+        </a>
         {% endif %}
     </div>
+    {% endif %}
 </div>
 
 <script>
@@ -345,67 +249,6 @@ function filterProjects() {
             row.style.display = 'none';
         }
     });
-}
-
-// Dropdown functionality
-function toggleDropdown(button) {
-    const dropdown = button.parentElement;
-    const menu = dropdown.querySelector('.dropdown-menu');
-    const isOpen = menu.classList.contains('show');
-    
-    // Close all other dropdowns
-    document.querySelectorAll('.dropdown-menu.show').forEach(openMenu => {
-        if (openMenu !== menu) {
-            openMenu.classList.remove('show');
-        }
-    });
-    
-    // Toggle current dropdown
-    if (isOpen) {
-        menu.classList.remove('show');
-    } else {
-        menu.classList.add('show');
-    }
-    
-    // Position dropdown to avoid overflow
-    const rect = dropdown.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const menuWidth = 160; // Approximate menu width
-    
-    if (rect.right + menuWidth > viewportWidth) {
-        menu.style.right = '0';
-        menu.style.left = 'auto';
-    } else {
-        menu.style.left = '0';
-        menu.style.right = 'auto';
-    }
-}
-
-// Close dropdowns when clicking outside
-document.addEventListener('click', function(event) {
-    if (!event.target.closest('.dropdown')) {
-        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-            menu.classList.remove('show');
-        });
-    }
-});
-
-// Close dropdowns on escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
-            menu.classList.remove('show');
-        });
-    }
-});
-
-// Add moment.js functionality for dates (simple implementation)
-function moment() {
-    return {
-        date: function() {
-            return new Date();
-        }
-    };
 }
 </script>
 {% endblock %}

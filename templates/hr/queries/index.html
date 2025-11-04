@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const formData = new FormData(queryForm);
                 
-                const response = await fetch('{{ url_for("hr.staff_queries") }}', {
+                const response = await fetch('{{ url_for("staff_queries") }}', {
                     method: 'POST',
                     body: formData,
                     headers: {

@@ -47,7 +47,7 @@
                 <!-- HR & Payroll -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">HR & Payroll</h2>
-                    <a href="{{ url_for('finance.payroll') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                    <a href="{{ url_for('hr.payroll') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-wallet text-xl'></i>
                         <span>Payroll Management</span>
                     </a>
@@ -56,7 +56,7 @@
                 <!-- Documents -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Documents</h2>
-                    <a href="{{ url_for('finance.documents') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                    <a href="{{ url_for('project.documents') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-file text-xl'></i>
                         <span>Document Manager</span>
                     </a>
@@ -69,7 +69,7 @@
                 <!-- Reports -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports</h2>
-                    <a href="{{ url_for('finance.reports') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                    <a href="{{ url_for('hr.reports') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-report text-xl'></i>
                         <span>Financial Reports</span>
                     </a>
@@ -97,12 +97,12 @@
                             
                             <!-- Dropdown Menu -->
                             <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                <a href="{{ url_for('finance.settings') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="{{ url_for('project.settings') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class='bx bx-cog mr-2'></i>
                                     Settings
                                 </a>
                                 <hr class="my-1 border-gray-200">
-                                 <a href="{{ url_for('finance.logout') }}" 
+                                 <a href="{{ url_for('logout') }}" 
                                        class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                                         Logout
                                     </a>

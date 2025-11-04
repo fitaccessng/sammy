@@ -62,6 +62,13 @@
             <select name="project_type" id="project_type"
                     class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
               <option value="">Select Project Type</option>
+              <option value="Bridge" {{ 'selected' if form_data.project_type == 'Bridge' else '' }}>Bridge</option>
+              <option value="Building" {{ 'selected' if form_data.project_type == 'Building' else '' }}>Building</option>
+              <option value="Road" {{ 'selected' if form_data.project_type == 'Road' else '' }}>Road</option>
+              <option value="Culvert" {{ 'selected' if form_data.project_type == 'Culvert' else '' }}>Culvert</option>
+              <option value="Road and Bridge" {{ 'selected' if form_data.project_type == 'Road and Bridge' else '' }}>Road and Bridge</option>
+              <option value="Road and Culvert" {{ 'selected' if form_data.project_type == 'Road and Culvert' else '' }}>Road and Culvert</option>
+              <option value="Bridge Road and Culvert" {{ 'selected' if form_data.project_type == 'Bridge Road and Culvert' else '' }}>Bridge Road and Culvert</option>
               <option value="Construction" {{ 'selected' if form_data.project_type == 'Construction' else '' }}>Construction</option>
               <option value="Infrastructure" {{ 'selected' if form_data.project_type == 'Infrastructure' else '' }}>Infrastructure</option>
               <option value="Renovation" {{ 'selected' if form_data.project_type == 'Renovation' else '' }}>Renovation</option>

@@ -87,7 +87,7 @@
                     <button onclick="exportReport()" class="bg-pink-500/10 border border-pink-400/40 text-pink-400 px-6 py-3 rounded-xl font-semibold hover:bg-pink-500/20 hover:text-white transition-all duration-300 flex items-center gap-2 glow-pink">
                         <i class="fas fa-download"></i>EXPORT DATA
                     </button>
-                    <a href="{{ url_for('admin.project_details', project_id=project.id) }}" class="bg-cyan-500/10 border border-cyan-400/40 text-cyan-400 px-6 py-3 rounded-xl font-semibold hover:bg-cyan-500/20 hover:text-white transition-all duration-300 flex items-center gap-2 glow-cyan">
+                    <a href="{{ url_for('project.project_details', project_id=project.id) }}" class="bg-cyan-500/10 border border-cyan-400/40 text-cyan-400 px-6 py-3 rounded-xl font-semibold hover:bg-cyan-500/20 hover:text-white transition-all duration-300 flex items-center gap-2 glow-cyan">
                         <i class="fas fa-arrow-left"></i>RETURN TO BASE
                     </a>
                 </div>

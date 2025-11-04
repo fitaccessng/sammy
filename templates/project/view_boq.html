@@ -1,0 +1,436 @@
+{% extends 'base.html' %}
+
+{% block title %}BOQ - {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-6">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Bill of Quantities (BOQ)</h1>
+                <p class="text-gray-600">{{ project.name }}</p>
+            </div>
+            <a href="{{ url_for('project.project_details', project_id=project.id) }}" 
+               class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class='bx bx-arrow-back'></i>
+                Back to Project
+            </a>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex flex-wrap gap-3">
+            {% if not boq_items %}
+            <button onclick="loadTemplate()" 
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class='bx bx-download'></i>
+                Load Template
+            </button>
+            {% endif %}
+            <button onclick="openAddModal()" 
+                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class='bx bx-plus'></i>
+                Add Item
+            </button>
+            <button onclick="document.getElementById('excelFile').click()" 
+                    class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class='bx bx-upload'></i>
+                Import Excel
+            </button>
+            <input type="file" id="excelFile" accept=".xlsx,.xls" style="display: none;" onchange="importExcel(this)">
+            {% if boq_items %}
+            <a href="{{ url_for('project.export_boq_excel', project_id=project.id) }}" 
+               class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+                <i class='bx bx-download'></i>
+                Export Excel
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    {% if boq_items %}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm">Total Items</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ boq_items|length }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-list-ul text-blue-600 text-2xl'></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm">Total Cost</p>
+                    <p class="text-2xl font-bold text-gray-800">₦{{ "{:,.2f}".format(total_cost) }}</p>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-money text-green-600 text-2xl'></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-600 text-sm">Categories</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ boq_by_bill|length }}</p>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-category text-purple-600 text-2xl'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- BOQ Table -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        {% if boq_items %}
+        <div class="overflow-x-auto">
+            {% for bill_no, items in boq_by_bill.items() %}
+            <div class="border-b border-gray-200">
+                <div class="bg-gray-50 px-6 py-3">
+                    <h3 class="text-lg font-semibold text-gray-700">{{ bill_no }}</h3>
+                </div>
+                <table class="w-full">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Item No</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Quantity</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Unit</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Unit Price (₦)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Total Cost (₦)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        {% for item in items %}
+                        <tr class="hover:bg-gray-50" data-item-id="{{ item.id }}">
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ item.item_no }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ item.item_description }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ "{:,.2f}".format(item.quantity) }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ item.unit }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ "{:,.2f}".format(item.unit_price) }}</td>
+                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ "{:,.2f}".format(item.total_cost) }}</td>
+                            <td class="px-6 py-4 text-sm">
+                                <div class="flex gap-2">
+                                    <button onclick="openEditModal({{ item.id }})" 
+                                            class="text-blue-600 hover:text-blue-800" title="Edit">
+                                        <i class='bx bx-edit text-xl'></i>
+                                    </button>
+                                    <button onclick="deleteItem({{ item.id }})" 
+                                            class="text-red-600 hover:text-red-800" title="Delete">
+                                        <i class='bx bx-trash text-xl'></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class='bx bx-list-ul text-gray-400 text-6xl mb-4'></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">No BOQ Items</h3>
+            <p class="text-gray-600 mb-6">Get started by loading a template or adding items manually</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="itemModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between p-6 border-b">
+            <h3 id="modalTitle" class="text-xl font-semibold text-gray-800">Add BOQ Item</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                <i class='bx bx-x text-2xl'></i>
+            </button>
+        </div>
+        <form id="itemForm" class="p-6">
+            <input type="hidden" id="itemId">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Bill No</label>
+                    <input type="text" id="billNo" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Item No</label>
+                    <input type="text" id="itemNo" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <textarea id="itemDescription" required rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                    <input type="number" id="quantity" step="0.01" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Unit</label>
+                    <input type="text" id="unit" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                           placeholder="e.g., m², m³, kg, nos">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Unit Price (₦)</label>
+                    <input type="number" id="unitPrice" step="0.01" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <input type="text" id="category"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal()" 
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" 
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Save Item
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Notification Modal -->
+<div id="notificationModal" class="fixed top-4 right-4 z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl border-l-4 p-4 max-w-md" id="notificationContent">
+        <div class="flex items-start gap-3">
+            <i id="notificationIcon" class="text-2xl"></i>
+            <div class="flex-1">
+                <h4 id="notificationTitle" class="font-semibold text-gray-800"></h4>
+                <p id="notificationMessage" class="text-sm text-gray-600 mt-1"></p>
+            </div>
+            <button onclick="closeNotification()" class="text-gray-400 hover:text-gray-600">
+                <i class='bx bx-x text-xl'></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<script>
+const projectId = {{ project.id }};
+const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
+function showNotification(title, message, type = 'success') {
+    const modal = document.getElementById('notificationModal');
+    const content = document.getElementById('notificationContent');
+    const icon = document.getElementById('notificationIcon');
+    const titleEl = document.getElementById('notificationTitle');
+    const messageEl = document.getElementById('notificationMessage');
+    
+    const types = {
+        success: {
+            border: 'border-green-500',
+            icon: 'bx bx-check-circle text-green-500',
+            bg: 'bg-green-50'
+        },
+        error: {
+            border: 'border-red-500',
+            icon: 'bx bx-error-circle text-red-500',
+            bg: 'bg-red-50'
+        },
+        warning: {
+            border: 'border-yellow-500',
+            icon: 'bx bx-error text-yellow-500',
+            bg: 'bg-yellow-50'
+        },
+        info: {
+            border: 'border-blue-500',
+            icon: 'bx bx-info-circle text-blue-500',
+            bg: 'bg-blue-50'
+        }
+    };
+    
+    const config = types[type] || types.info;
+    content.className = `bg-white rounded-lg shadow-xl border-l-4 p-4 max-w-md ${config.border} ${config.bg}`;
+    icon.className = `text-2xl ${config.icon}`;
+    titleEl.textContent = title;
+    messageEl.textContent = message;
+    
+    modal.classList.remove('hidden');
+    
+    setTimeout(() => {
+        closeNotification();
+    }, 5000);
+}
+
+function closeNotification() {
+    document.getElementById('notificationModal').classList.add('hidden');
+}
+
+function openAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add BOQ Item';
+    document.getElementById('itemForm').reset();
+    document.getElementById('itemId').value = '';
+    document.getElementById('itemModal').classList.remove('hidden');
+    document.getElementById('itemModal').classList.add('flex');
+}
+
+function closeModal() {
+    document.getElementById('itemModal').classList.add('hidden');
+    document.getElementById('itemModal').classList.remove('flex');
+}
+
+function openEditModal(itemId) {
+    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+    if (!row) return;
+    
+    const cells = row.querySelectorAll('td');
+    document.getElementById('modalTitle').textContent = 'Edit BOQ Item';
+    document.getElementById('itemId').value = itemId;
+    document.getElementById('itemNo').value = cells[0].textContent.trim();
+    document.getElementById('itemDescription').value = cells[1].textContent.trim();
+    document.getElementById('quantity').value = parseFloat(cells[2].textContent.replace(/,/g, ''));
+    document.getElementById('unit').value = cells[3].textContent.trim();
+    document.getElementById('unitPrice').value = parseFloat(cells[4].textContent.replace(/,/g, ''));
+    
+    // Get bill_no from the section header
+    const billSection = row.closest('div.border-b');
+    const billNoHeader = billSection.querySelector('h3');
+    document.getElementById('billNo').value = billNoHeader.textContent.trim();
+    
+    document.getElementById('itemModal').classList.remove('hidden');
+    document.getElementById('itemModal').classList.add('flex');
+}
+
+document.getElementById('itemForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const itemId = document.getElementById('itemId').value;
+    const url = itemId 
+        ? `/projects/${projectId}/boq/${itemId}/edit`
+        : `/projects/${projectId}/boq/add`;
+    
+    const data = {
+        bill_no: document.getElementById('billNo').value,
+        item_no: document.getElementById('itemNo').value,
+        item_description: document.getElementById('itemDescription').value,
+        quantity: document.getElementById('quantity').value,
+        unit: document.getElementById('unit').value,
+        unit_price: document.getElementById('unitPrice').value,
+        category: document.getElementById('category').value
+    };
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Success', result.message, 'success');
+            closeModal();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('Error', result.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Error', 'An error occurred. Please try again.', 'error');
+    }
+});
+
+async function deleteItem(itemId) {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    
+    try {
+        const response = await fetch(`/projects/${projectId}/boq/${itemId}/delete`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Success', result.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('Error', result.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Error', 'An error occurred. Please try again.', 'error');
+    }
+}
+
+async function loadTemplate() {
+    if (!confirm('This will load BOQ template items based on the project type. Continue?')) return;
+    
+    try {
+        const response = await fetch(`/projects/${projectId}/boq/load-template`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Success', result.message, 'success');
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            showNotification('Error', result.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Error', 'An error occurred. Please try again.', 'error');
+    }
+}
+
+async function importExcel(input) {
+    if (!input.files || !input.files[0]) return;
+    
+    const formData = new FormData();
+    formData.append('file', input.files[0]);
+    
+    try {
+        const response = await fetch(`/projects/${projectId}/boq/import-excel`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Success', result.message, 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            showNotification('Error', result.message, 'error');
+        }
+    } catch (error) {
+        showNotification('Error', 'An error occurred. Please try again.', 'error');
+    }
+    
+    input.value = '';
+}
+</script>
+{% endblock %}

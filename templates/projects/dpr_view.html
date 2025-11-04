@@ -7,7 +7,7 @@
 <div class="space-y-6">
     <!-- Back Navigation -->
     <div class="flex items-center space-x-3">
-        <a href="{{ url_for('project.dpr_list', selected_project_id=dpr.project_id) }}" 
+        <a href="{{ url_for('dpr_list', selected_project_id=dpr.project_id) }}" 
            class="flex items-center text-indigo-600 hover:text-indigo-800">
             <i class="bx bx-arrow-back mr-2"></i>
             Back to DPR List
@@ -213,7 +213,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // DPR Management Functions
     window.approveDPR = function(dprId) {
         if (confirm('Are you sure you want to approve this DPR?')) {
-            fetch(`{{ url_for('project.approve_dpr', dpr_id=0) }}`.replace('0', dprId), {
+            fetch(`{{ url_for('approve_dpr', dpr_id=0) }}`.replace('0', dprId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
     window.rejectDPR = function(dprId) {
         const reason = prompt('Please enter rejection reason:');
         if (reason && reason.trim()) {
-            fetch(`{{ url_for('project.reject_dpr', dpr_id=0) }}`.replace('0', dprId), {
+            fetch(`{{ url_for('reject_dpr', dpr_id=0) }}`.replace('0', dprId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

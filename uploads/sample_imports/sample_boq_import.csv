@@ -1,0 +1,6 @@
+item_description,quantity,unit,unit_price,item_type,category,bill_no,item_no
+Concrete Foundation Work,50,m³,15000.0,Building,Foundation,BD001,001
+Steel Reinforcement Bars,2000,kg,800.0,Building,Materials,BD001,002
+Masonry Block Work,100,m²,8000.0,Building,Masonry,BD001,003
+Roofing Materials,150,m²,12000.0,Building,Roofing,BD001,004
+Electrical Wiring,1,lot,300000.0,Building,Services,BD001,005

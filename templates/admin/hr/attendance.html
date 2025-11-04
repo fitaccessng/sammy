@@ -100,16 +100,16 @@
             <tbody>
                 {% for attendance in attendance_records %}
                 <tr>
-                    <td><a href="{{ url_for('admin.view_employee', employee_id=attendance.employee_id) }}">{{ attendance.employee.name }}</a></td>
+                    <td><a href="{{ url_for('view_employee', employee_id=attendance.employee_id) }}">{{ attendance.employee.name }}</a></td>
                     <td>{{ attendance.date }}</td>
                     <td>{{ attendance.status }}</td>
                     <td>{{ attendance.clock_in }}</td>
                     <td>{{ attendance.clock_out }}</td>
                     <td>
-                        <form method="post" action="{{ url_for('admin.clock_in', employee_id=attendance.employee_id) }}" style="display:inline;">
+                        <form method="post" action="{{ url_for('clock_in', employee_id=attendance.employee_id) }}" style="display:inline;">
                             <button type="submit" class="btn btn-success btn-sm">Clock In</button>
                         </form>
-                        <form method="post" action="{{ url_for('admin.clock_out', employee_id=attendance.employee_id) }}" style="display:inline;">
+                        <form method="post" action="{{ url_for('clock_out', employee_id=attendance.employee_id) }}" style="display:inline;">
                             <button type="submit" class="btn btn-danger btn-sm">Clock Out</button>
                         </form>
                     </td>
@@ -120,6 +120,6 @@
     </div>
 
     <!-- Export Button -->
-    <a href="{{ url_for('admin.export_attendance') }}" class="btn btn-outline-primary mb-4">Export Attendance CSV</a>
+    <a href="{{ url_for('export_attendance') }}" class="btn btn-outline-primary mb-4">Export Attendance CSV</a>
 </div>
 {% endblock %}

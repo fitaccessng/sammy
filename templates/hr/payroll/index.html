@@ -491,7 +491,7 @@
         
         <div class="space-y-6">
             <!-- Approve Form -->
-            <form method="POST" action="{{ url_for('hr.approve_payroll', payroll_id=payroll.approval_details.id) if payroll.approval_details else '#' }}">
+            <form method="POST" action="{{ url_for('approve_payroll', payroll_id=payroll.approval_details.id) if payroll.approval_details else '#' }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <div class="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
                     <h4 class="font-medium text-green-900 mb-2">Approve Payroll</h4>
@@ -507,7 +507,7 @@
             </form>
             
             <!-- Reject Form -->
-            <form method="POST" action="{{ url_for('hr.reject_payroll', payroll_id=payroll.approval_details.id) if payroll.approval_details else '#' }}">
+            <form method="POST" action="{{ url_for('reject_payroll', payroll_id=payroll.approval_details.id) if payroll.approval_details else '#' }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <div class="bg-red-50 border border-red-200 rounded-lg p-4">
                     <h4 class="font-medium text-red-900 mb-3">Reject Payroll</h4>
@@ -538,7 +538,7 @@
             </button>
         </div>
         
-        <form method="POST" action="{{ url_for('hr.process_payroll', payroll_id=payroll.approval_details.id) if payroll.approval_details else '#' }}">
+        <form method="POST" action="{{ url_for('process_payroll', payroll_id=payroll.approval_details.id) if payroll.approval_details else '#' }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
             <div class="space-y-4">
                 <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">

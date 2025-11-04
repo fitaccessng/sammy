@@ -34,7 +34,7 @@
                 <!-- Equipment Management -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Equipment</h2>
-                    <a href="{{ url_for('quarry.equipment') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                    <a href="{{ url_for('admin.equipment') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-truck text-xl'></i>
                         <span>Equipment Management</span>
                     </a>
@@ -70,7 +70,7 @@
                 <!-- Reports -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports</h2>
-                    <a href="{{ url_for('quarry.reports') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                    <a href="{{ url_for('hr.reports') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-report text-xl'></i>
                         <span>Quarry Reports</span>
                     </a>
@@ -98,16 +98,16 @@
                             
                             <!-- Dropdown Menu -->
                             <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                                <a href="{{ url_for('quarry.profile') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="{{ url_for('procurement.profile') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class='bx bx-user mr-2'></i>
                                     Profile
                                 </a>
-                                <a href="{{ url_for('quarry.settings') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <a href="{{ url_for('project.settings') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class='bx bx-cog mr-2'></i>
                                     Settings
                                 </a>
                                 <hr class="my-1 border-gray-200">
-                                <a href="{{ url_for('quarry.logout') }}" 
+                                <a href="{{ url_for('logout') }}" 
                                    class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                                     Logout
                                 </a>

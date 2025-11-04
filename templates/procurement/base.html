@@ -42,7 +42,7 @@
                 <!-- Asset Management -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Asset Management</h2>
-                    <a href="{{ url_for('procurement.assets') }}" 
+                    <a href="{{ url_for('admin.assets') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-box text-xl'></i>
                         <span>Assets Directory</span>
@@ -82,7 +82,7 @@
                 <!-- Inventory Management -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Inventory</h2>
-                    <a href="{{ url_for('procurement.inventory') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                    <a href="{{ url_for('procurement.get_inventory') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-box text-xl'></i>
                         <span>Inventory Management</span>
                     </a>
@@ -91,7 +91,7 @@
                 <!-- Reports -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports</h2>
-                    <a href="{{ url_for('procurement.reports') }}" 
+                    <a href="{{ url_for('hr.reports') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-report text-xl'></i>
                         <span>Reports</span>
@@ -138,13 +138,13 @@
                                     <i class='bx bx-user mr-2'></i>
                                     Profile
                                 </a>
-                                <a href="{{ url_for('procurement.settings') }}" 
+                                <a href="{{ url_for('project.settings') }}" 
                                    class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
                                     <i class='bx bx-cog mr-2'></i>
                                     Settings
                                 </a>
                                 <hr class="my-1 border-gray-200">
-                                <a href="{{ url_for('procurement.logout') }}" 
+                                <a href="{{ url_for('logout') }}" 
                                    class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                                     <i class='bx bx-log-out mr-2'></i>
                                     Logout

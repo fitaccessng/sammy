@@ -497,7 +497,7 @@
                                 <div class="flex items-center">
                                     <div class="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                                     {% if milestone.project %}
-                                        <a href="{{ url_for('admin.milestones', project_id=milestone.project.id) }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                                        <a href="{{ url_for('milestones', project_id=milestone.project.id) }}" class="text-blue-600 hover:text-blue-800 font-medium">
                                             {{ milestone.project.name }}
                                         </a>
                                     {% else %}
@@ -535,7 +535,7 @@
                             <td>
                                 <div class="flex items-center space-x-2">
                                     {% if milestone.project %}
-                                    <a href="{{ url_for('admin.milestones', project_id=milestone.project.id) }}" class="btn-modern btn-secondary-modern" style="padding: 0.5rem; font-size: 0.875rem;" title="View Project Milestones">
+                                    <a href="{{ url_for('milestones', project_id=milestone.project.id) }}" class="btn-modern btn-secondary-modern" style="padding: 0.5rem; font-size: 0.875rem;" title="View Project Milestones">
                                         <i class='bx bx-show'></i>
                                     </a>
                                     {% endif %}
@@ -594,7 +594,7 @@
                             <div class="text-xs text-gray-500">Overdue</div>
                         </div>
                         {% if stats.project_id %}
-                        <a href="{{ url_for('admin.milestones', project_id=stats.project_id) }}" class="btn-modern btn-primary-modern" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
+                        <a href="{{ url_for('milestones', project_id=stats.project_id) }}" class="btn-modern btn-primary-modern" style="padding: 0.5rem 1rem; font-size: 0.875rem;">
                             <i class='bx bx-show'></i>
                             View
                         </a>
@@ -652,7 +652,7 @@
                            
                             <td>
                                 {% if milestone.project %}
-                                    <a href="{{ url_for('admin.milestones', project_id=milestone.project.id) }}" class="text-blue-600 hover:text-blue-800 font-medium">
+                                    <a href="{{ url_for('milestones', project_id=milestone.project.id) }}" class="text-blue-600 hover:text-blue-800 font-medium">
                                         {{ milestone.project.name }}
                                     </a>
                                 {% else %}

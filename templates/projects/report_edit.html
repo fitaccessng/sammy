@@ -8,7 +8,7 @@
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-bold text-gray-800">Edit Report</h1>
-            <a href="{{ url_for('project.view_report', report_id=report.id) }}" 
+            <a href="{{ url_for('view_report', report_id=report.id) }}" 
                class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
                 Cancel
             </a>
@@ -115,7 +115,7 @@
 
             <!-- Action Buttons -->
             <div class="flex justify-end space-x-3 pt-6 border-t">
-                <a href="{{ url_for('project.view_report', report_id=report.id) }}" 
+                <a href="{{ url_for('view_report', report_id=report.id) }}" 
                    class="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600">
                     Cancel
                 </a>

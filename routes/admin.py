@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, render_template, flash, redirect, url_for, session, send_file, current_app
 from flask_login import current_user, login_required
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 import csv
 import io
 import os
@@ -791,7 +791,6 @@ def projects():
         }
         
         # Pass current date for template calculations
-        from datetime import date
         current_date_obj = date.today()
         
         return render_template('admin/projects.html', 
@@ -2175,7 +2174,7 @@ def profile():
         
         if not current_user.is_authenticated:
             flash('Please log in to view profile', 'error')
-            return redirect(url_for('main.login'))
+            return redirect(url_for('login'))
         
         user = current_user
         
@@ -2199,7 +2198,7 @@ def logout():
         # Clear session
         session.clear()
         flash('You have been logged out successfully', 'success')
-        return redirect(url_for('main.login'))
+        return redirect(url_for('login'))
     except Exception as e:
         flash(f'Error during logout: {str(e)}', 'error')
         return redirect(url_for('admin.dashboard'))

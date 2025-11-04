@@ -124,10 +124,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const action = this.querySelector('span.text-sm').textContent;
             switch(action) {
                 case 'Change Password':
-                    window.location.href = "{{ url_for('quarry.settings') }}#password";
+                    window.location.href = "{{ url_for('project.settings') }}#password";
                     break;
                 case 'Notification Preferences':
-                    window.location.href = "{{ url_for('quarry.settings') }}#notifications";
+                    window.location.href = "{{ url_for('project.settings') }}#notifications";
                     break;
                 case 'Activity Log':
                     // Add activity log view logic here

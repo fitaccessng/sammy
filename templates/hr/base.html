@@ -107,7 +107,7 @@
                         <i class='bx bxs-report text-xl'></i>
                         <span>HR Reports</span>
                     </a>
-                    <a href="{{ url_for('hr.analytics') }}" 
+                    <a href="{{ url_for('procurement.analytics') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-bar-chart-alt-2 text-xl'></i>
                         <span>Analytics</span>
@@ -136,10 +136,10 @@
                             <!-- Dropdown Menu -->
                             <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                                 <div class="py-1">
-                                    <a href="{{ url_for('hr.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                                    <a href="{{ url_for('hr.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                    <a href="{{ url_for('procurement.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
+                                    <a href="{{ url_for('project.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
                                     <div class="border-t border-gray-100"></div>
-                                    <a href="{{ url_for('hr.logout') }}" 
+                                    <a href="{{ url_for('logout') }}" 
                                        class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                                         Logout
                                     </a>

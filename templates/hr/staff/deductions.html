@@ -13,11 +13,11 @@
                     <p class="text-gray-600">{{ employee.name }} - {{ employee.staff_code or 'N/A' }}</p>
                 </div>
                 <div class="flex space-x-3">
-                    <a href="{{ url_for('hr.add_staff_deduction', staff_id=employee.id) }}" 
+                    <a href="{{ url_for('add_staff_deduction', staff_id=employee.id) }}" 
                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
                         <i class='bx bx-plus mr-2'></i>Add Deduction
                     </a>
-                    <a href="{{ url_for('hr.staff') }}" 
+                    <a href="{{ url_for('hr.staff_list') }}" 
                        class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-200">
                         <i class='bx bx-arrow-back mr-2'></i>Back to Staff
                     </a>
@@ -99,7 +99,7 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 {% if deduction.status == 'active' %}
-                                <form method="POST" action="{{ url_for('hr.toggle_deduction_status', deduction_id=deduction.id) }}" class="inline">
+                                <form method="POST" action="{{ url_for('toggle_deduction_status', deduction_id=deduction.id) }}" class="inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                     <button type="submit" class="text-red-600 hover:text-red-900" 
                                             onclick="return confirm('Are you sure you want to cancel this deduction?')">
@@ -107,7 +107,7 @@
                                     </button>
                                 </form>
                                 {% elif deduction.status == 'cancelled' %}
-                                <form method="POST" action="{{ url_for('hr.toggle_deduction_status', deduction_id=deduction.id) }}" class="inline">
+                                <form method="POST" action="{{ url_for('toggle_deduction_status', deduction_id=deduction.id) }}" class="inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                     <button type="submit" class="text-green-600 hover:text-green-900">
                                         Reactivate
@@ -127,7 +127,7 @@
                 <i class='bx bx-receipt text-4xl text-gray-400 mb-4'></i>
                 <h3 class="text-lg font-medium text-gray-900 mb-2">No Deductions Found</h3>
                 <p class="text-gray-500 mb-4">This employee has no active deductions.</p>
-                <a href="{{ url_for('hr.add_staff_deduction', staff_id=employee.id) }}" 
+                <a href="{{ url_for('add_staff_deduction', staff_id=employee.id) }}" 
                    class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-200">
                     <i class='bx bx-plus mr-2'></i>Add First Deduction
                 </a>

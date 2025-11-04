@@ -22,7 +22,7 @@
                     {% endif %}
                 </div>
                 <div class="flex space-x-3">
-                    <a href="{{ url_for('project.edit_project', project_id=project.id) }}" 
+                    <a href="{{ url_for('admin.edit_project', project_id=project.id) }}" 
                        class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                         Edit Project
                     </a>
@@ -317,7 +317,7 @@
 
     <!-- Actions Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <a href="{{ url_for('project.project_timeline', project_id=project.id) }}" 
+        <a href="{{ url_for('project_timeline', project_id=project.id) }}" 
            class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
             <i class="bx bx-calendar text-2xl text-indigo-600"></i>
             <h3 class="mt-2 text-lg font-medium text-gray-900">Timeline</h3>

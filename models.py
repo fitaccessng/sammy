@@ -898,18 +898,40 @@ class Leave(db.Model):
 
 # --- Additional Project Management Models ---
 class BOQItem(db.Model):
-    """Bill of Quantities Item for project cost tracking"""
+    """Bill of Quantities line items for construction projects"""
     __tablename__ = 'boq_items'
+    
     id = db.Column(db.Integer, primary_key=True)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    
+    # BOQ classification
+    bill_no = db.Column(db.String(50))  # e.g., "BILL NO. 4", "SUBSTRUCTURE"
+    item_no = db.Column(db.String(50))  # e.g., "4.01", "4.02", "A1"
+    
+    # Legacy fields (keeping for compatibility)
     item_description = db.Column(db.String(256), nullable=False)
     quantity = db.Column(db.Float, nullable=False)
     unit = db.Column(db.String(50), nullable=False)
     unit_price = db.Column(db.Float, nullable=False)
     total_cost = db.Column(db.Float, nullable=False)
-    category = db.Column(db.String(100), nullable=True)
+    
+    # Enhanced fields
+    item_type = db.Column(db.String(50))  # Bridge, Building, Road, Culvert, etc.
+    category = db.Column(db.String(100), nullable=True)  # Pavements, Substructure, Roof, etc.
+    is_template = db.Column(db.Boolean, default=False)  # Template items vs project-specific
+    status = db.Column(db.String(20), default='Pending')  # Pending, Ordered, Delivered, Used
+    
+    # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    material_schedules = db.relationship('MaterialSchedule', backref='boq_item', lazy=True)
+    
+    def calculate_total_cost(self):
+        """Calculate total cost from quantity and unit price"""
+        self.total_cost = self.quantity * self.unit_price
+        return self.total_cost
     
     def __repr__(self):
         return f'<BOQItem {self.item_description}>'
@@ -1056,3 +1078,59 @@ class DPRMaterialUsage(db.Model):
     
     def __repr__(self):
         return f'<DPRMaterialUsage {self.item_number}: {self.description}>'
+
+
+# --- Material Schedule Model ---
+class MaterialSchedule(db.Model):
+    """Material schedule tracking for BOQ items"""
+    __tablename__ = 'material_schedules'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)  # Nullable for templates
+    boq_item_id = db.Column(db.Integer, db.ForeignKey('boq_items.id'), nullable=True)
+    
+    # Material details
+    material_name = db.Column(db.String(255), nullable=False)
+    specification = db.Column(db.Text)  # Technical specifications
+    
+    # Quantity planning
+    required_qty = db.Column(db.Float, default=0.0)
+    ordered_qty = db.Column(db.Float, default=0.0)
+    received_qty = db.Column(db.Float, default=0.0)
+    used_qty = db.Column(db.Float, default=0.0)
+    
+    unit = db.Column(db.String(50))  # m², m³, kg, nos, etc.
+    
+    # Cost tracking
+    unit_cost = db.Column(db.Float, default=0.0)
+    total_cost = db.Column(db.Float, default=0.0)
+    
+    # Schedule
+    required_date = db.Column(db.Date)
+    delivery_date = db.Column(db.Date)
+    
+    # Status
+    status = db.Column(db.String(50), default='Planned')  # Planned, Ordered, Delivered, In Use, Depleted
+    
+    # Supplier information
+    supplier_name = db.Column(db.String(255))
+    supplier_contact = db.Column(db.String(100))
+    
+    # Tracking
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    project = db.relationship('Project', backref='material_schedules')
+    
+    def calculate_total_cost(self):
+        """Calculate total cost from quantity and unit cost"""
+        self.total_cost = self.required_qty * self.unit_cost
+        return self.total_cost
+    
+    def remaining_qty(self):
+        """Calculate remaining quantity to be received"""
+        return self.ordered_qty - self.received_qty
+    
+    def __repr__(self):
+        return f'<MaterialSchedule {self.material_name}: {self.required_qty} {self.unit}>'

@@ -2443,11 +2443,11 @@ def logout():
         # Clear the session
         session.clear()
         flash("You have been successfully logged out", "success")
-        return redirect(url_for('main.login'))
+        return redirect(url_for('login'))
     except Exception as e:
         current_app.logger.error(f"Logout error: {str(e)}")
         flash("Error during logout", "error")
-        return redirect(url_for('main.login'))
+        return redirect(url_for('login'))
 
 # Settings
 @project_bp.route('/settings', methods=['GET', 'POST'])
@@ -5434,3 +5434,435 @@ def export_project_dprs(project_id):
         import traceback
         current_app.logger.error(f"Traceback: {traceback.format_exc()}")
         return jsonify({'success': False, 'message': 'Failed to export DPRs'}), 500
+
+
+# --- BOQ (Bill of Quantities) Management Routes ---
+
+@project_bp.route('/projects/<int:project_id>/boq')
+@login_required
+def view_boq(project_id):
+    """View BOQ for a project"""
+    try:
+        project = db.session.get(Project, project_id)
+        if not project:
+            flash('Project not found', 'error')
+            return redirect(url_for('project.projects_dashboard'))
+        
+        # Check access
+        if not current_user.has_role(Roles.SUPER_HQ):
+            user_projects = get_user_accessible_projects(current_user)
+            if project not in user_projects:
+                flash('You do not have access to this project', 'error')
+                return redirect(url_for('project.projects_dashboard'))
+        
+        # Import BOQItem here to avoid circular imports
+        from models import BOQItem
+        
+        # Get BOQ items for this project
+        boq_items = BOQItem.query.filter_by(project_id=project_id).order_by(
+            BOQItem.bill_no, BOQItem.item_no
+        ).all()
+        
+        # Calculate totals
+        total_cost = sum(item.total_cost for item in boq_items)
+        
+        # Group by bill number
+        boq_by_bill = {}
+        for item in boq_items:
+            if item.bill_no not in boq_by_bill:
+                boq_by_bill[item.bill_no] = []
+            boq_by_bill[item.bill_no].append(item)
+        
+        return render_template('project/view_boq.html',
+                             project=project,
+                             boq_items=boq_items,
+                             boq_by_bill=boq_by_bill,
+                             total_cost=total_cost)
+    
+    except Exception as e:
+        current_app.logger.error(f"Error viewing BOQ: {str(e)}")
+        flash('Error loading BOQ', 'error')
+        return redirect(url_for('project.projects_dashboard'))
+
+
+@project_bp.route('/projects/<int:project_id>/boq/load-template', methods=['POST'])
+@login_required
+def load_boq_template(project_id):
+    """Load BOQ template items based on project type"""
+    try:
+        project = db.session.get(Project, project_id)
+        if not project:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Check access
+        if not current_user.has_role(Roles.SUPER_HQ):
+            user_projects = get_user_accessible_projects(current_user)
+            if project not in user_projects:
+                return jsonify({'success': False, 'message': 'Access denied'}), 403
+        
+        from models import BOQItem
+        
+        # Get template items based on project type
+        project_type = project.project_type
+        if not project_type:
+            return jsonify({'success': False, 'message': 'Project type not set'}), 400
+        
+        # Map combined project types to individual templates
+        item_types = []
+        if 'Bridge' in project_type:
+            item_types.append('Bridge')
+        if 'Building' in project_type:
+            item_types.append('Building')
+        if 'Road' in project_type:
+            item_types.append('Road')
+        if 'Culvert' in project_type:
+            item_types.append('Culvert')
+        
+        if not item_types:
+            # Default to exact match
+            item_types = [project_type]
+        
+        # Get template items
+        template_items = BOQItem.query.filter(
+            BOQItem.is_template == True,
+            BOQItem.item_type.in_(item_types)
+        ).all()
+        
+        if not template_items:
+            return jsonify({'success': False, 'message': f'No BOQ template found for {project_type}'}), 404
+        
+        # Copy template items to project
+        items_added = 0
+        for template in template_items:
+            new_item = BOQItem(
+                project_id=project_id,
+                bill_no=template.bill_no,
+                item_no=template.item_no,
+                item_description=template.item_description,
+                quantity=template.quantity,
+                unit=template.unit,
+                unit_price=template.unit_price,
+                total_cost=template.total_cost,
+                item_type=template.item_type,
+                category=template.category,
+                is_template=False
+            )
+            db.session.add(new_item)
+            items_added += 1
+        
+        db.session.commit()
+        
+        current_app.logger.info(f"User {current_user.id} loaded {items_added} BOQ template items for project {project_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': f'Successfully loaded {items_added} BOQ items from template',
+            'items_added': items_added
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error loading BOQ template: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to load BOQ template'}), 500
+
+
+@project_bp.route('/projects/<int:project_id>/boq/add', methods=['POST'])
+@login_required
+def add_boq_item(project_id):
+    """Add a new BOQ item to a project"""
+    try:
+        project = db.session.get(Project, project_id)
+        if not project:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Check access
+        if not current_user.has_role(Roles.SUPER_HQ):
+            user_projects = get_user_accessible_projects(current_user)
+            if project not in user_projects:
+                return jsonify({'success': False, 'message': 'Access denied'}), 403
+        
+        from models import BOQItem
+        
+        data = request.get_json()
+        
+        # Create new BOQ item
+        new_item = BOQItem(
+            project_id=project_id,
+            bill_no=data.get('bill_no'),
+            item_no=data.get('item_no'),
+            item_description=data.get('item_description'),
+            quantity=float(data.get('quantity', 0)),
+            unit=data.get('unit'),
+            unit_price=float(data.get('unit_price', 0)),
+            category=data.get('category'),
+            is_template=False
+        )
+        new_item.calculate_total_cost()
+        
+        db.session.add(new_item)
+        db.session.commit()
+        
+        current_app.logger.info(f"User {current_user.id} added BOQ item {new_item.id} to project {project_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'BOQ item added successfully',
+            'item': {
+                'id': new_item.id,
+                'bill_no': new_item.bill_no,
+                'item_no': new_item.item_no,
+                'item_description': new_item.item_description,
+                'quantity': new_item.quantity,
+                'unit': new_item.unit,
+                'unit_price': new_item.unit_price,
+                'total_cost': new_item.total_cost
+            }
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error adding BOQ item: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to add BOQ item'}), 500
+
+
+@project_bp.route('/projects/<int:project_id>/boq/<int:item_id>/edit', methods=['POST'])
+@login_required
+def edit_boq_item(project_id, item_id):
+    """Edit an existing BOQ item"""
+    try:
+        from models import BOQItem
+        
+        item = db.session.get(BOQItem, item_id)
+        if not item or item.project_id != project_id:
+            return jsonify({'success': False, 'message': 'BOQ item not found'}), 404
+        
+        # Check access
+        project = db.session.get(Project, project_id)
+        if not current_user.has_role(Roles.SUPER_HQ):
+            user_projects = get_user_accessible_projects(current_user)
+            if project not in user_projects:
+                return jsonify({'success': False, 'message': 'Access denied'}), 403
+        
+        data = request.get_json()
+        
+        # Update item
+        item.bill_no = data.get('bill_no', item.bill_no)
+        item.item_no = data.get('item_no', item.item_no)
+        item.item_description = data.get('item_description', item.item_description)
+        item.quantity = float(data.get('quantity', item.quantity))
+        item.unit = data.get('unit', item.unit)
+        item.unit_price = float(data.get('unit_price', item.unit_price))
+        item.category = data.get('category', item.category)
+        
+        item.calculate_total_cost()
+        
+        db.session.commit()
+        
+        current_app.logger.info(f"User {current_user.id} edited BOQ item {item_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'BOQ item updated successfully',
+            'item': {
+                'id': item.id,
+                'bill_no': item.bill_no,
+                'item_no': item.item_no,
+                'item_description': item.item_description,
+                'quantity': item.quantity,
+                'unit': item.unit,
+                'unit_price': item.unit_price,
+                'total_cost': item.total_cost
+            }
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error editing BOQ item: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to update BOQ item'}), 500
+
+
+@project_bp.route('/projects/<int:project_id>/boq/<int:item_id>/delete', methods=['POST'])
+@login_required
+def delete_boq_item(project_id, item_id):
+    """Delete a BOQ item"""
+    try:
+        from models import BOQItem
+        
+        item = db.session.get(BOQItem, item_id)
+        if not item or item.project_id != project_id:
+            return jsonify({'success': False, 'message': 'BOQ item not found'}), 404
+        
+        # Check access
+        project = db.session.get(Project, project_id)
+        if not current_user.has_role(Roles.SUPER_HQ):
+            user_projects = get_user_accessible_projects(current_user)
+            if project not in user_projects:
+                return jsonify({'success': False, 'message': 'Access denied'}), 403
+        
+        db.session.delete(item)
+        db.session.commit()
+        
+        current_app.logger.info(f"User {current_user.id} deleted BOQ item {item_id}")
+        
+        return jsonify({
+            'success': True,
+            'message': 'BOQ item deleted successfully'
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error deleting BOQ item: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to delete BOQ item'}), 500
+
+
+@project_bp.route('/projects/<int:project_id>/boq/import-excel', methods=['POST'])
+@login_required
+def import_boq_excel(project_id):
+    """Import BOQ items from Excel file"""
+    try:
+        project = db.session.get(Project, project_id)
+        if not project:
+            return jsonify({'success': False, 'message': 'Project not found'}), 404
+        
+        # Check access
+        if not current_user.has_role(Roles.SUPER_HQ):
+            user_projects = get_user_accessible_projects(current_user)
+            if project not in user_projects:
+                return jsonify({'success': False, 'message': 'Access denied'}), 403
+        
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'message': 'No file uploaded'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'success': False, 'message': 'No file selected'}), 400
+        
+        if not file.filename.endswith(('.xlsx', '.xls')):
+            return jsonify({'success': False, 'message': 'Invalid file format. Please upload an Excel file'}), 400
+        
+        from models import BOQItem
+        import pandas as pd
+        
+        # Read Excel file
+        df = pd.read_excel(file)
+        
+        # Validate required columns
+        required_columns = ['bill_no', 'item_no', 'item_description', 'quantity', 'unit', 'unit_price']
+        missing_columns = [col for col in required_columns if col not in df.columns]
+        if missing_columns:
+            return jsonify({
+                'success': False,
+                'message': f'Missing required columns: {", ".join(missing_columns)}'
+            }), 400
+        
+        # Import items
+        items_added = 0
+        errors = []
+        
+        for index, row in df.iterrows():
+            try:
+                new_item = BOQItem(
+                    project_id=project_id,
+                    bill_no=str(row['bill_no']),
+                    item_no=str(row['item_no']),
+                    item_description=str(row['item_description']),
+                    quantity=float(row['quantity']),
+                    unit=str(row['unit']),
+                    unit_price=float(row['unit_price']),
+                    category=str(row.get('category', '')),
+                    is_template=False
+                )
+                new_item.calculate_total_cost()
+                db.session.add(new_item)
+                items_added += 1
+            except Exception as e:
+                errors.append(f"Row {index + 2}: {str(e)}")
+        
+        db.session.commit()
+        
+        current_app.logger.info(f"User {current_user.id} imported {items_added} BOQ items to project {project_id}")
+        
+        message = f'Successfully imported {items_added} BOQ items'
+        if errors:
+            message += f'. {len(errors)} errors occurred.'
+        
+        return jsonify({
+            'success': True,
+            'message': message,
+            'items_added': items_added,
+            'errors': errors if errors else None
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error importing BOQ from Excel: {str(e)}")
+        return jsonify({'success': False, 'message': 'Failed to import BOQ'}), 500
+
+
+@project_bp.route('/projects/<int:project_id>/boq/export-excel')
+@login_required
+def export_boq_excel(project_id):
+    """Export BOQ items to Excel file"""
+    try:
+        project = db.session.get(Project, project_id)
+        if not project:
+            flash('Project not found', 'error')
+            return redirect(url_for('project.projects_dashboard'))
+        
+        # Check access
+        if not current_user.has_role(Roles.SUPER_HQ):
+            user_projects = get_user_accessible_projects(current_user)
+            if project not in user_projects:
+                flash('Access denied', 'error')
+                return redirect(url_for('project.projects_dashboard'))
+        
+        from models import BOQItem
+        import pandas as pd
+        from io import BytesIO
+        from flask import make_response
+        
+        # Get BOQ items
+        boq_items = BOQItem.query.filter_by(project_id=project_id).order_by(
+            BOQItem.bill_no, BOQItem.item_no
+        ).all()
+        
+        if not boq_items:
+            flash('No BOQ items to export', 'warning')
+            return redirect(url_for('project.view_boq', project_id=project_id))
+        
+        # Create DataFrame
+        data = []
+        for item in boq_items:
+            data.append({
+                'Bill No': item.bill_no,
+                'Item No': item.item_no,
+                'Description': item.item_description,
+                'Quantity': item.quantity,
+                'Unit': item.unit,
+                'Unit Price': item.unit_price,
+                'Total Cost': item.total_cost,
+                'Category': item.category
+            })
+        
+        df = pd.DataFrame(data)
+        
+        # Create Excel file
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, sheet_name='BOQ', index=False)
+        
+        output.seek(0)
+        
+        response = make_response(output.getvalue())
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        response.headers['Content-Disposition'] = f'attachment; filename={project.name}_BOQ.xlsx'
+        
+        current_app.logger.info(f"User {current_user.id} exported BOQ for project {project_id}")
+        
+        return response
+    
+    except Exception as e:
+        current_app.logger.error(f"Error exporting BOQ to Excel: {str(e)}")
+        flash('Error exporting BOQ', 'error')
+        return redirect(url_for('project.view_boq', project_id=project_id))
+

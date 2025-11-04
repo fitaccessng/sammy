@@ -1,0 +1,557 @@
+{% extends "admin/base_simple.html" %}
+
+{% block title %}All Approvals - Construction Management System{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2">All Pending Approvals</h2>
+    <p class="text-gray-600">Review and approve requests from all departments</p>
+</div>
+
+<!-- Department Summary Cards -->
+<div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
+    <!-- Total -->
+    <div class="card bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm opacity-90">Total Pending</p>
+                <h3 class="text-3xl font-bold mt-1">{{ totals.total }}</h3>
+            </div>
+            <i class='bx bxs-check-circle text-4xl opacity-80'></i>
+        </div>
+    </div>
+
+    <!-- Procurement -->
+    <div class="card bg-white p-6 border-l-4 border-purple-500">
+        <p class="text-xs text-gray-500 uppercase">Procurement</p>
+        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ totals.procurement }}</h3>
+    </div>
+
+    <!-- HR -->
+    <div class="card bg-white p-6 border-l-4 border-green-500">
+        <p class="text-xs text-gray-500 uppercase">HR</p>
+        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ totals.hr }}</h3>
+    </div>
+
+    <!-- Finance -->
+    <div class="card bg-white p-6 border-l-4 border-yellow-500">
+        <p class="text-xs text-gray-500 uppercase">Finance</p>
+        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ totals.finance }}</h3>
+    </div>
+
+    <!-- Projects -->
+    <div class="card bg-white p-6 border-l-4 border-blue-500">
+        <p class="text-xs text-gray-500 uppercase">Projects</p>
+        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ totals.project_management }}</h3>
+    </div>
+
+    <!-- Cost Control -->
+    <div class="card bg-white p-6 border-l-4 border-red-500">
+        <p class="text-xs text-gray-500 uppercase">Cost Control</p>
+        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ totals.cost_control }}</h3>
+    </div>
+
+    <!-- Quarry/Safety -->
+    <div class="card bg-white p-6 border-l-4 border-orange-500">
+        <p class="text-xs text-gray-500 uppercase">Quarry/Safety</p>
+        <h3 class="text-2xl font-bold text-gray-800 mt-1">{{ totals.quarry_safety }}</h3>
+    </div>
+</div>
+
+<!-- Approvals List -->
+<div class="card bg-white">
+    <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-800">All Approval Requests</h3>
+    </div>
+
+    {% if approvals %}
+    <div class="overflow-x-auto table-container">
+        <table class="w-full">
+            <thead class="bg-gray-50 border-b border-gray-200">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requested By</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+                {% for approval in approvals %}
+                <tr class="hover:bg-gray-50" data-approval-index="{{ loop.index0 }}">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
+                            {% if approval.priority == 'High' %}bg-red-100 text-red-800
+                            {% elif approval.priority == 'Medium' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {{ approval.priority }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm font-medium text-gray-900">{{ approval.department }}</span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">{{ approval.title }}</div>
+                        <div class="text-xs text-gray-500">{{ approval.type.replace('_', ' ').title() }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="text-sm text-gray-700">{{ approval.description[:60] }}{% if approval.description|length > 60 %}...{% endif %}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if approval.amount > 0 %}
+                        <span class="text-sm font-semibold text-gray-900">₦{{ "{:,.2f}".format(approval.amount) }}</span>
+                        {% else %}
+                        <span class="text-sm text-gray-400">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm text-gray-700">{{ approval.requested_by }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="text-sm text-gray-500">{{ approval.requested_date }}</span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="openReviewModal({{ loop.index0 }})" 
+                                class="px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 transition-colors">
+                            <i class='bx bx-show mr-1'></i>Review
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="p-12 text-center">
+        <i class='bx bx-check-circle text-6xl text-green-300 mb-4'></i>
+        <p class="text-gray-500 text-lg">No pending approvals</p>
+        <p class="text-sm text-gray-400 mt-2">All requests have been processed</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-5 border w-full max-w-4xl shadow-lg rounded-md bg-white mb-10">
+        <!-- Modal Header -->
+        <div class="flex items-center justify-between border-b pb-3 mb-4">
+            <h3 class="text-2xl font-bold text-gray-900">
+                <i class='bx bx-file-find mr-2'></i>
+                Review Request
+            </h3>
+            <button onclick="closeReviewModal()" class="text-gray-400 hover:text-gray-600">
+                <i class='bx bx-x text-3xl'></i>
+            </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="max-h-[70vh] overflow-y-auto">
+            <!-- Request Summary -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-lg mb-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-1">Department</p>
+                        <p id="modal-department" class="text-lg font-semibold text-gray-900">-</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-1">Priority</p>
+                        <p id="modal-priority" class="text-lg font-semibold">-</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-1">Request Type</p>
+                        <p id="modal-type" class="text-lg font-semibold text-gray-900">-</p>
+                    </div>
+                    <div>
+                        <p class="text-xs text-gray-500 uppercase mb-1">Date</p>
+                        <p id="modal-date" class="text-lg font-semibold text-gray-900">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Request Details -->
+            <div class="bg-white border border-gray-200 p-6 rounded-lg mb-4">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Request Details</h4>
+                <div class="space-y-3">
+                    <div>
+                        <p class="text-sm text-gray-500 uppercase">Title</p>
+                        <p id="modal-title" class="text-base text-gray-900 font-medium mt-1">-</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-500 uppercase">Description</p>
+                        <p id="modal-description" class="text-base text-gray-900 mt-1">-</p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase">Requested By</p>
+                            <p id="modal-requester" class="text-base text-gray-900 font-medium mt-1">-</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 uppercase">Amount</p>
+                            <p id="modal-amount" class="text-base text-gray-900 font-semibold mt-1">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Details -->
+            <div id="modal-additional-details" class="bg-blue-50 p-6 rounded-lg mb-4">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Additional Information</h4>
+                <div id="modal-details-content" class="text-sm text-gray-700"></div>
+            </div>
+
+            <!-- Decision Form -->
+            <div class="border-t pt-4 mt-4">
+                <h4 class="text-lg font-semibold text-gray-900 mb-3">Your Decision</h4>
+                
+                <!-- Comments -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        Comments / Reason
+                        <span class="text-red-500" id="comment-required" style="display:none;">*</span>
+                    </label>
+                    <textarea id="modal-comments" rows="4" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              placeholder="Enter your comments or reason for decision..."></textarea>
+                </div>
+
+                <!-- Forward Option -->
+                <div class="mb-4">
+                    <label class="flex items-center">
+                        <input type="checkbox" id="modal-forward-checkbox" onchange="toggleForwardSection()" 
+                               class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                        <span class="ml-2 text-sm font-medium text-gray-700">Forward to another approver</span>
+                    </label>
+                </div>
+
+                <!-- Forward Section -->
+                <div id="modal-forward-section" class="hidden bg-yellow-50 p-4 rounded-lg mb-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Approver Email *</label>
+                            <input type="email" id="modal-forward-email" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="approver@example.com">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Message (Optional)</label>
+                            <input type="text" id="modal-forward-message" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                   placeholder="Add a note for the next approver">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-3">
+                    <button onclick="processApproval('approve')" 
+                            class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium">
+                        <i class='bx bx-check-circle mr-2'></i>Approve Request
+                    </button>
+                    <button onclick="processApproval('reject')" 
+                            class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
+                        <i class='bx bx-x-circle mr-2'></i>Reject Request
+                    </button>
+                    <button onclick="closeReviewModal()" 
+                            class="px-6 py-3 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition-colors font-medium">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Modal -->
+<div id="notificationModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all" onclick="event.stopPropagation()">
+        <div class="p-6">
+            <div class="flex items-center justify-center mb-4">
+                <div id="notif-icon" class="w-16 h-16 rounded-full flex items-center justify-center">
+                    <i class='bx text-4xl'></i>
+                </div>
+            </div>
+            <h3 id="notif-title" class="text-xl font-bold text-center text-gray-800 mb-2"></h3>
+            <p id="notif-message" class="text-center text-gray-600 mb-6"></p>
+            <button onclick="closeNotification()" class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold">
+                OK
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentReviewData = null;
+const approvalsData = {{ approvals|tojson|safe }};
+
+// Notification functions
+function showNotification(title, message, type = 'info') {
+    const modal = document.getElementById('notificationModal');
+    const icon = modal.querySelector('#notif-icon');
+    const iconElement = icon.querySelector('i');
+    const titleElement = document.getElementById('notif-title');
+    const messageElement = document.getElementById('notif-message');
+    
+    titleElement.textContent = title;
+    messageElement.textContent = message;
+    
+    // Set icon and color based on type
+    icon.className = 'w-16 h-16 rounded-full flex items-center justify-center';
+    iconElement.className = 'bx text-4xl';
+    
+    if (type === 'success') {
+        icon.classList.add('bg-green-100');
+        iconElement.classList.add('bx-check-circle', 'text-green-600');
+    } else if (type === 'error') {
+        icon.classList.add('bg-red-100');
+        iconElement.classList.add('bx-error-circle', 'text-red-600');
+    } else if (type === 'warning') {
+        icon.classList.add('bg-yellow-100');
+        iconElement.classList.add('bx-error', 'text-yellow-600');
+    } else {
+        icon.classList.add('bg-blue-100');
+        iconElement.classList.add('bx-info-circle', 'text-blue-600');
+    }
+    
+    modal.classList.remove('hidden');
+}
+
+function closeNotification() {
+    document.getElementById('notificationModal').classList.add('hidden');
+}
+
+function openReviewModal(index) {
+    currentReviewData = approvalsData[index];
+    const modal = document.getElementById('reviewModal');
+    
+    // Populate modal
+    document.getElementById('modal-department').textContent = currentReviewData.department;
+    document.getElementById('modal-type').textContent = currentReviewData.type.replace(/_/g, ' ').toUpperCase();
+    document.getElementById('modal-title').textContent = currentReviewData.title;
+    document.getElementById('modal-description').textContent = currentReviewData.description;
+    document.getElementById('modal-requester').textContent = currentReviewData.requested_by;
+    document.getElementById('modal-date').textContent = currentReviewData.requested_date;
+    document.getElementById('modal-amount').textContent = currentReviewData.amount > 0 ? 
+        '₦' + currentReviewData.amount.toLocaleString('en-NG', {minimumFractionDigits: 2}) : 'N/A';
+    
+    // Priority with color
+    const priorityEl = document.getElementById('modal-priority');
+    priorityEl.textContent = currentReviewData.priority;
+    priorityEl.className = 'text-lg font-semibold';
+    if (currentReviewData.priority === 'High') {
+        priorityEl.classList.add('text-red-600');
+    } else if (currentReviewData.priority === 'Medium') {
+        priorityEl.classList.add('text-yellow-600');
+    } else {
+        priorityEl.classList.add('text-green-600');
+    }
+    
+    // Additional details
+    const detailsContent = document.getElementById('modal-details-content');
+    if (currentReviewData.details && Object.keys(currentReviewData.details).length > 0) {
+        let html = '<div class="grid grid-cols-2 gap-3">';
+        for (const [key, value] of Object.entries(currentReviewData.details)) {
+            if (key !== 'requester_email') {
+                html += `<div><p class="text-xs text-gray-500 uppercase">${key.replace(/_/g, ' ')}</p><p class="font-medium text-gray-900">${value}</p></div>`;
+            }
+        }
+        html += '</div>';
+        detailsContent.innerHTML = html;
+    }
+    
+    // Reset form
+    document.getElementById('modal-comments').value = '';
+    document.getElementById('modal-forward-checkbox').checked = false;
+    document.getElementById('modal-forward-section').classList.add('hidden');
+    document.getElementById('modal-forward-email').value = '';
+    document.getElementById('modal-forward-message').value = '';
+    
+    modal.classList.remove('hidden');
+}
+
+function closeReviewModal() {
+    document.getElementById('reviewModal').classList.add('hidden');
+    currentReviewData = null;
+}
+
+function toggleForwardSection() {
+    const checkbox = document.getElementById('modal-forward-checkbox');
+    const section = document.getElementById('modal-forward-section');
+    section.classList.toggle('hidden', !checkbox.checked);
+}
+
+function processApproval(action) {
+    console.log('processApproval called with action:', action);
+    
+    if (!currentReviewData) {
+        showNotification('Error', 'No review data found.', 'error');
+        return;
+    }
+    
+    const comments = document.getElementById('modal-comments').value;
+    const forward = document.getElementById('modal-forward-checkbox').checked;
+    const forwardEmail = document.getElementById('modal-forward-email').value;
+    const forwardMessage = document.getElementById('modal-forward-message').value;
+    
+    console.log('Forward:', forward, 'Email:', forwardEmail, 'Message:', forwardMessage);
+    
+    // Validation
+    if (action === 'reject' && !comments.trim()) {
+        showNotification('Validation Error', 'Please provide a reason for rejection.', 'warning');
+        return;
+    }
+    
+    if (forward) {
+        if (!forwardEmail.trim()) {
+            showNotification('Validation Error', 'Please enter an email address to forward to.', 'warning');
+            return;
+        }
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(forwardEmail.trim())) {
+            showNotification('Validation Error', 'Please enter a valid email address.', 'warning');
+            return;
+        }
+    }
+    
+    console.log('Validation passed, sending request...');
+    
+    // Disable buttons
+    const buttons = document.querySelectorAll('#reviewModal button');
+    buttons.forEach(btn => btn.disabled = true);
+    
+    // Get CSRF token
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    
+    // Send request
+    fetch('/admin/process-approval-request', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+        },
+        body: JSON.stringify({
+            action: action,
+            type: currentReviewData.type,
+            id: currentReviewData.id,
+            comments: comments,
+            forward: forward,
+            forwardEmail: forwardEmail,
+            forwardMessage: forwardMessage
+        })
+    })
+    .then(response => {
+        console.log('Response status:', response.status);
+        console.log('Response headers:', response.headers.get('content-type'));
+        return response.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            const actionText = action === 'approve' ? 'Approved' : 'Rejected';
+            
+            // Save reference to current data before closing modal
+            const processedItem = currentReviewData;
+            const itemIndex = approvalsData.indexOf(processedItem);
+            
+            // Close modal
+            closeReviewModal();
+            
+            // Remove the approved/rejected item from the DOM
+            const approvalRow = document.querySelector(`tr[data-approval-index="${itemIndex}"]`);
+            if (approvalRow) {
+                approvalRow.style.transition = 'opacity 0.3s ease-out, transform 0.3s ease-out';
+                approvalRow.style.opacity = '0';
+                approvalRow.style.transform = 'translateX(20px)';
+                setTimeout(() => approvalRow.remove(), 300);
+            }
+            
+            // Update counts
+            updateCounts(processedItem.department);
+            
+            // Remove from data array
+            if (itemIndex > -1) {
+                approvalsData.splice(itemIndex, 1);
+            }
+            
+            // Show success notification
+            showNotification(
+                'Success!', 
+                `Request ${actionText.toLowerCase()} successfully! Email notifications have been sent.`, 
+                'success'
+            );
+            
+            // Check if no more approvals left
+            if (approvalsData.length === 0) {
+                setTimeout(() => {
+                    document.querySelector('.table-container').innerHTML = `
+                        <div class="text-center py-12">
+                            <i class='bx bx-check-circle text-6xl text-green-500 mb-4'></i>
+                            <h3 class="text-xl font-semibold text-gray-700 mb-2">All Caught Up!</h3>
+                            <p class="text-gray-500">No pending approvals at this time.</p>
+                        </div>
+                    `;
+                }, 400);
+            }
+        } else {
+            showNotification('Error', data.message || 'Failed to process approval', 'error');
+            buttons.forEach(btn => btn.disabled = false);
+        }
+    })
+    .catch(error => {
+        console.error('Fetch error:', error);
+        console.error('Error details:', error.message);
+        showNotification('Error', `An error occurred: ${error.message}. Please try again.`, 'error');
+        buttons.forEach(btn => btn.disabled = false);
+    });
+}
+
+function updateCounts(department) {
+    // Update total count
+    const totalElement = document.querySelector('.bg-gradient-to-br.from-blue-500 h3');
+    if (totalElement) {
+        const currentTotal = parseInt(totalElement.textContent) || 0;
+        totalElement.textContent = Math.max(0, currentTotal - 1);
+    }
+    
+    // Update department-specific count
+    const departmentMap = {
+        'Procurement': 'procurement',
+        'HR': 'hr',
+        'Finance': 'finance',
+        'Project Management': 'project_management',
+        'Cost Control': 'cost_control',
+        'Quarry/Safety': 'quarry_safety',
+        'General': 'documents'
+    };
+    
+    const deptKey = departmentMap[department];
+    if (deptKey) {
+        // Find the department card and update its count
+        const cards = document.querySelectorAll('.card.bg-white p.text-xs.text-gray-500.uppercase');
+        cards.forEach(card => {
+            if (card.textContent.trim() === department) {
+                const countElement = card.parentElement.querySelector('h3');
+                if (countElement) {
+                    const currentCount = parseInt(countElement.textContent) || 0;
+                    countElement.textContent = Math.max(0, currentCount - 1);
+                }
+            }
+        });
+    }
+}
+
+// Close modal on outside click
+document.getElementById('reviewModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeReviewModal();
+});
+
+document.getElementById('notificationModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeNotification();
+});
+</script>
+
+{% endblock %}

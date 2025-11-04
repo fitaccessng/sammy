@@ -20,7 +20,7 @@
     </div>
 
     {% if accessible_projects %}
-    <form method="GET" action="{{ url_for('project.equipment') }}">
+    <form method="GET" action="{{ url_for('admin.equipment') }}">
         <select name="project_id" class="px-4 py-2 border rounded-lg" onchange="this.form.submit()">
             <option value="">-- Select Project --</option>
             {% for proj in accessible_projects %}
@@ -72,7 +72,7 @@
     {% if can_manage %}
     <div class="bg-white rounded-lg shadow p-6">
         <h3 class="text-lg font-semibold mb-4">Add New Equipment</h3>
-        <form method="POST" action="{{ url_for('project.equipment') }}">
+        <form method="POST" action="{{ url_for('admin.equipment') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="hidden" name="project_id" value="{{ selected_project.id }}">
             <input type="hidden" name="add_equipment" value="1">

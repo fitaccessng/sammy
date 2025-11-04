@@ -11,7 +11,7 @@
         <h2 class="text-2xl font-bold text-gray-800 mb-2">Payroll Approvals</h2>
         <p class="text-gray-600">Review and approve payroll submissions from HR</p>
     </div>
-    <a href="{{ url_for('admin.hr_dashboard') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200">
+    <a href="{{ url_for('dashboard.hq_hr_dashboard') }}" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors duration-200">
         <i class='bx bx-arrow-back mr-2'></i>Back to HR Dashboard
     </a>
 </div>
@@ -68,7 +68,7 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div class="flex space-x-2">
-                            <a href="{{ url_for('admin.view_payroll_details', approval_id=approval.id) }}" 
+                            <a href="{{ url_for('view_payroll_details', approval_id=approval.id) }}" 
                                class="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors duration-200">
                                 <i class='bx bx-show mr-1'></i>Review
                             </a>
@@ -85,7 +85,7 @@
     <i class='bx bxs-wallet text-6xl text-gray-300 mb-4'></i>
     <h3 class="text-lg font-semibold text-gray-800 mb-2">No Pending Approvals</h3>
     <p class="text-gray-600 mb-4">There are currently no payroll submissions awaiting approval.</p>
-    <a href="{{ url_for('admin.hr_dashboard') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
+    <a href="{{ url_for('dashboard.hq_hr_dashboard') }}" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200">
         <i class='bx bx-dashboard mr-2'></i>Back to HR Dashboard
     </a>
 </div>
@@ -96,7 +96,7 @@
     <div class="card bg-white p-6">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <a href="{{ url_for('admin.hr_dashboard') }}" 
+            <a href="{{ url_for('dashboard.hq_hr_dashboard') }}" 
                class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-md transition-all duration-200">
                 <div class="bg-blue-100 p-2 rounded-lg mr-3">
                     <i class='bx bxs-dashboard text-blue-600'></i>

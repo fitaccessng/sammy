@@ -8,7 +8,7 @@ def role_required(allowed_roles):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if not current_user.is_authenticated:
-                return redirect(url_for('main.login'))
+                return redirect(url_for('login'))
             if not any(current_user.has_role(role) for role in allowed_roles):
                 print(f"[DEBUG] role_required: user_role={current_user.role}, allowed_roles={allowed_roles}")
                 print(f"[DEBUG] User role: '{current_user.role}' (type: {type(current_user.role)})")

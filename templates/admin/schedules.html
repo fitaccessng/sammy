@@ -471,7 +471,7 @@
                                     <i class='bx bx-show'></i>
                                     View
                                 </a>
-                                <a href="{{ url_for('admin.edit_schedule', schedule_id=schedule.id) }}" 
+                                <a href="{{ url_for('edit_schedule', schedule_id=schedule.id) }}" 
                                    class="btn-success-modern btn-sm-modern" 
                                    title="Edit Schedule">
                                     <i class='bx bx-edit'></i>
@@ -581,7 +581,7 @@
         </div>
         <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
             <div class="flex justify-end space-x-2">
-                <a href="{{ url_for('admin.edit_schedule', schedule_id=schedule.id) }}" class="btn-primary-modern btn-sm-modern">
+                <a href="{{ url_for('edit_schedule', schedule_id=schedule.id) }}" class="btn-primary-modern btn-sm-modern">
                     <i class='bx bx-edit'></i>
                     Edit Schedule
                 </a>
@@ -623,7 +623,7 @@
         </div>
         <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
             <div class="flex justify-end space-x-2">
-                <form method="POST" action="{{ url_for('admin.delete_schedule', schedule_id=schedule.id) }}" style="display: inline;">
+                <form method="POST" action="{{ url_for('delete_schedule', schedule_id=schedule.id) }}" style="display: inline;">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
                     <button type="submit" class="btn-danger-modern btn-sm-modern">
                         <i class='bx bx-trash'></i>

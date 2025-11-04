@@ -46,6 +46,17 @@
 
 {% block content %}
 <div class="space-y-6">
+    <!-- Project Data for JavaScript -->
+    <script type="application/json" id="project-data">
+        {
+            "id": {{ project.id }},
+            "name": "{{ project.name|e }}",
+            "project_type": "{{ project.project_type or '' }}",
+            "status": "{{ project.status or '' }}",
+            "progress": {{ project.progress or 0 }}
+        }
+    </script>
+
     <!-- Flash Messages as Modals -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
@@ -670,6 +681,423 @@
         </div>
     </div>
 
+    <!-- Material Schedule Section -->
+    <div class="grid grid-cols-1 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-lg">
+            <div class="p-6">
+                <!-- Project Type Selector and Controls -->
+                <div class="mb-6 bg-gray-50 rounded-lg p-4">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center space-x-4">
+                            <h3 class="text-xl font-semibold text-gray-800 flex items-center">
+                                <i class='bx bx-package text-purple-600 mr-2'></i>
+                                Material Schedule & BOQ
+                            </h3>
+                            <div class="flex items-center space-x-2">
+                                <label for="project-type-selector" class="text-sm font-medium text-gray-700">Project Type:</label>
+                                <select id="project-type-selector" 
+                                        class="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        onchange="handleProjectTypeChange(this.value)"
+                                        onfocus="preloadAllCommonTemplates()">
+                                    <option value="">Select Project Type</option>
+                                    <option value="Bridge" {{ 'selected' if project.project_type == 'Bridge' else '' }}>Bridge</option>
+                                    <option value="Building" {{ 'selected' if project.project_type == 'Building' else '' }}>Building</option>
+                                    <option value="Road" {{ 'selected' if project.project_type == 'Road' else '' }}>Road</option>
+                                    <option value="Culvert" {{ 'selected' if project.project_type == 'Culvert' else '' }}>Culvert</option>
+                                    <option value="Road and Bridge" {{ 'selected' if project.project_type == 'Road and Bridge' else '' }}>Road and Bridge</option>
+                                    <option value="Road and Culvert" {{ 'selected' if project.project_type == 'Road and Culvert' else '' }}>Road and Culvert</option>
+                                    <option value="Bridge Road and Culvert" {{ 'selected' if project.project_type == 'Bridge Road and Culvert' else '' }}>Bridge Road and Culvert</option>
+                                    <option value="Construction" {{ 'selected' if project.project_type == 'Construction' else '' }}>Construction</option>
+                                    <option value="Infrastructure" {{ 'selected' if project.project_type == 'Infrastructure' else '' }}>Infrastructure</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="loadBOQTemplates()" 
+                                    class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                <i class='bx bx-download mr-1'></i>
+                                Load BOQ Templates
+                            </button>
+                            <button onclick="generateMaterialSchedule()" 
+                                    class="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm">
+                                <i class='bx bx-refresh mr-1'></i>
+                                Generate Schedule
+                            </button>
+                            <div class="relative">
+                                <input type="file" id="boq-import-file" accept=".xlsx,.xls,.csv" class="hidden" onchange="importBOQFile(this)">
+                                <button onclick="document.getElementById('boq-import-file').click()" 
+                                        class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                                    <i class='bx bx-upload mr-1'></i>
+                                    Import BOQ
+                                </button>
+                            </div>
+                            <div class="relative">
+                                <input type="file" id="material-import-file" accept=".xlsx,.xls,.csv" class="hidden" onchange="importMaterialFile(this)">
+                                <button onclick="document.getElementById('material-import-file').click()" 
+                                        class="px-3 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm">
+                                    <i class='bx bx-upload mr-1'></i>
+                                    Import Materials
+                                </button>
+                            </div>
+                            <button onclick="exportMaterialSchedule()" 
+                                    class="px-3 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm">
+                                <i class='bx bx-download mr-1'></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Template Loading Status -->
+                <div id="template-loading-status" class="hidden mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-center">
+                        <i class='bx bx-loader-alt bx-spin text-blue-600 mr-2'></i>
+                        <span class="text-blue-800 text-sm">Loading project templates...</span>
+                    </div>
+                </div>
+
+                <!-- Tabs for BOQ and Material Schedule -->
+                <div class="mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                            <button onclick="switchTab('boq')" 
+                                    id="boq-tab"
+                                    class="tab-button active border-purple-500 text-purple-600 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                                <i class='bx bx-calculator mr-1'></i>
+                                Bill of Quantities (BOQ)
+                            </button>
+                            <button onclick="switchTab('materials')" 
+                                    id="materials-tab"
+                                    class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm">
+                                <i class='bx bx-package mr-1'></i>
+                                Material Schedule
+                            </button>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- BOQ Tab Content -->
+                <div id="boq-content" class="tab-content">
+                    <div class="mb-4 flex justify-between items-center">
+                        <h4 class="text-lg font-semibold text-gray-800">Bill of Quantities</h4>
+                        <button onclick="addNewBOQRow()" 
+                                class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                            <i class='bx bx-plus mr-1'></i>
+                            Add New Item
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        {% if boq_items %}
+                        <table class="w-full table-auto" id="boq-table">
+                            <thead>
+                                <tr class="bg-gray-50 border-b">
+                                    <th class="text-left py-3 px-4 font-semibold text-sm text-gray-700">Item Description</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-sm text-gray-700">Unit</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-sm text-gray-700">Quantity</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-sm text-gray-700">Unit Cost</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-sm text-gray-700">Total Cost</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-sm text-gray-700">Type</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-sm text-gray-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100" id="boq-table-body">
+                                {% for item in boq_items %}
+                                <tr class="hover:bg-gray-50 transition-colors" data-item-id="{{ item.id }}">
+                                    <td class="py-4 px-4">
+                                        <input type="text" 
+                                               value="{{ item.item_description }}" 
+                                               class="w-full border-0 bg-transparent focus:bg-white focus:border-gray-300 rounded px-2 py-1 text-sm"
+                                               onchange="updateBOQItem({{ item.id }}, 'item_description', this.value)"
+                                               ondblclick="this.focus()">
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        <input type="text" 
+                                               value="{{ item.unit or '' }}" 
+                                               class="w-20 border-0 bg-transparent focus:bg-white focus:border-gray-300 rounded px-2 py-1 text-sm text-center"
+                                               onchange="updateBOQItem({{ item.id }}, 'unit', this.value)"
+                                               ondblclick="this.focus()">
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        <input type="number" 
+                                               value="{{ item.quantity or 0 }}" 
+                                               class="w-24 border-0 bg-transparent focus:bg-white focus:border-gray-300 rounded px-2 py-1 text-sm text-center"
+                                               onchange="updateBOQItem({{ item.id }}, 'quantity', this.value)"
+                                               ondblclick="this.focus()">
+                                    </td>
+                                    <td class="py-4 px-4 text-right">
+                                        <input type="number" 
+                                               value="{{ item.unit_price or 0 }}" 
+                                               step="0.01"
+                                               class="w-32 border-0 bg-transparent focus:bg-white focus:border-gray-300 rounded px-2 py-1 text-sm text-right"
+                                               onchange="updateBOQItem({{ item.id }}, 'unit_price', this.value)"
+                                               ondblclick="this.focus()">
+                                    </td>
+                                    <td class="py-4 px-4 text-right">
+                                        <span class="text-sm font-semibold text-green-700">₦{{ "{:,.2f}".format(item.total_cost) if item.total_cost else '0.00' }}</span>
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        <input type="text" 
+                                               value="{{ item.item_type or '' }}" 
+                                               class="w-24 border-0 bg-transparent focus:bg-white focus:border-gray-300 rounded px-2 py-1 text-sm text-center"
+                                               onchange="updateBOQItem({{ item.id }}, 'item_type', this.value)"
+                                               ondblclick="this.focus()">
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        <div class="flex justify-center space-x-2">
+                                            <button onclick="saveBOQItem({{ item.id }})" 
+                                                    class="text-green-600 hover:text-green-800 p-1 rounded" title="Save Changes">
+                                                <i class='bx bx-save text-sm'></i>
+                                            </button>
+                                            <button onclick="deleteBOQItem({{ item.id }})" 
+                                                    class="text-red-600 hover:text-red-800 p-1 rounded" title="Delete Item">
+                                                <i class='bx bx-trash text-sm'></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div id="boq-empty-state" class="text-center py-8">
+                            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class='bx bx-calculator text-2xl text-blue-400'></i>
+                            </div>
+                            <p class="text-gray-500 text-sm mb-4">No BOQ items found</p>
+                            <p class="text-xs text-gray-400 mb-4">Load templates or import BOQ data to get started</p>
+                            <div class="flex justify-center space-x-2">
+                                <button onclick="loadBOQTemplatesFromButton()" 
+                                        id="load-templates-btn"
+                                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i class='bx bx-download mr-1'></i>
+                                    Load Templates
+                                </button>
+                                <button onclick="document.getElementById('boq-import-file').click()" 
+                                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                                    <i class='bx bx-upload mr-1'></i>
+                                    Import BOQ
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- BOQ Loading Skeleton -->
+                        <div id="boq-loading-skeleton" class="hidden">
+                            <div class="bg-white rounded-lg shadow-sm border">
+                                <div class="px-6 py-4 border-b border-gray-200">
+                                    <div class="h-6 bg-gray-200 rounded animate-pulse w-48"></div>
+                                </div>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-6 py-3"><div class="h-4 bg-gray-200 rounded animate-pulse"></div></th>
+                                                <th class="px-6 py-3"><div class="h-4 bg-gray-200 rounded animate-pulse"></div></th>
+                                                <th class="px-6 py-3"><div class="h-4 bg-gray-200 rounded animate-pulse"></div></th>
+                                                <th class="px-6 py-3"><div class="h-4 bg-gray-200 rounded animate-pulse"></div></th>
+                                                <th class="px-6 py-3"><div class="h-4 bg-gray-200 rounded animate-pulse"></div></th>
+                                                <th class="px-6 py-3"><div class="h-4 bg-gray-200 rounded animate-pulse"></div></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            <tr class="animate-pulse">
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-full"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-16"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-12"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-20"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-24"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-8"></div></td>
+                                            </tr>
+                                            <tr class="animate-pulse">
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-full"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-16"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-12"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-20"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-24"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-8"></div></td>
+                                            </tr>
+                                            <tr class="animate-pulse">
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-full"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-16"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-12"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-20"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-24"></div></td>
+                                                <td class="px-6 py-4"><div class="h-4 bg-gray-200 rounded w-8"></div></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="px-6 py-4 border-t border-gray-200 bg-purple-50">
+                                    <div class="flex items-center justify-center space-x-2">
+                                        <div class="w-4 h-4 bg-purple-400 rounded-full animate-bounce"></div>
+                                        <div class="w-4 h-4 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.1s"></div>
+                                        <div class="w-4 h-4 bg-purple-400 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                                        <span class="text-purple-600 font-medium ml-2">Loading templates...</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Material Schedule Tab Content -->
+                <div id="materials-content" class="tab-content hidden">
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="text-lg font-semibold text-gray-800">Material Schedule</h4>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="loadMaterialTemplates()" 
+                                        class="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                                    <i class='bx bx-download mr-1'></i>
+                                    Load Material Templates
+                                </button>
+                                <button onclick="addNewMaterialRow()" 
+                                        class="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm">
+                                    <i class='bx bx-plus mr-1'></i>
+                                    Add New Material
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        {% if material_schedules %}
+                        <table class="w-full table-auto" id="materials-table">
+                            <thead>
+                                <tr class="bg-gray-50 border-b">
+                                    <th class="text-left py-3 px-4 font-semibold text-sm text-gray-700">Material/Item</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-sm text-gray-700">Unit</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-sm text-gray-700">Quantity</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-sm text-gray-700">Unit Cost</th>
+                                    <th class="text-right py-3 px-4 font-semibold text-sm text-gray-700">Total Cost</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-sm text-gray-700">Status</th>
+                                    <th class="text-center py-3 px-4 font-semibold text-sm text-gray-700">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100" id="materials-table-body">
+                                {% for item in material_schedules %}
+                                <tr class="hover:bg-gray-50 transition-colors" data-item-id="{{ item.id }}">
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                                                <i class='bx bx-package text-purple-600 text-sm'></i>
+                                            </div>
+                                            <div>
+                                                <input type="text" 
+                                                       value="{{ item.material_name }}" 
+                                                       class="w-full border-0 bg-transparent focus:bg-white focus:border-gray-300 rounded px-2 py-1 text-sm font-medium"
+                                                       onchange="updateMaterialItem({{ item.id }}, 'material_name', this.value)"
+                                                       ondblclick="this.focus()">
+                                                {% if item.specification %}
+                                                <p class="text-xs text-gray-500">Spec: {{ item.specification[:50] }}{% if item.specification|length > 50 %}...{% endif %}</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        <input type="text" 
+                                               value="{{ item.unit or '' }}" 
+                                               class="w-20 border-0 bg-transparent focus:bg-white focus:border-gray-300 rounded px-2 py-1 text-sm text-center"
+                                               onchange="updateMaterialItem({{ item.id }}, 'unit', this.value)"
+                                               ondblclick="this.focus()">
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        <input type="number" 
+                                               value="{{ item.required_qty or 0 }}" 
+                                               class="w-24 border-0 bg-transparent focus:bg-white focus:border-gray-300 rounded px-2 py-1 text-sm text-center font-medium"
+                                               onchange="updateMaterialItem({{ item.id }}, 'required_qty', this.value)"
+                                               ondblclick="this.focus()">
+                                    </td>
+                                    <td class="py-4 px-4 text-right">
+                                        <input type="number" 
+                                               value="{{ item.unit_cost or 0 }}" 
+                                               step="0.01"
+                                               class="w-32 border-0 bg-transparent focus:bg-white focus:border-gray-300 rounded px-2 py-1 text-sm text-right"
+                                               onchange="updateMaterialItem({{ item.id }}, 'unit_cost', this.value)"
+                                               ondblclick="this.focus()">
+                                    </td>
+                                    <td class="py-4 px-4 text-right">
+                                        <span class="text-sm font-semibold text-green-700">₦{{ "{:,.2f}".format(item.total_cost) if item.total_cost else '0.00' }}</span>
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        <select class="text-xs px-2 py-1 rounded-full border-0 
+                                                {% if item.status == 'Ordered' %}bg-blue-100 text-blue-800
+                                                {% elif item.status == 'Delivered' %}bg-green-100 text-green-800
+                                                {% elif item.status == 'Planned' %}bg-yellow-100 text-yellow-800
+                                                {% elif item.status == 'In Use' %}bg-purple-100 text-purple-800
+                                                {% else %}bg-gray-100 text-gray-800{% endif %}"
+                                                onchange="updateMaterialStatus({{ item.id }}, this.value)">
+                                            <option value="Planned" {{ 'selected' if not item.status or item.status == 'Planned' else '' }}>Planned</option>
+                                            <option value="Ordered" {{ 'selected' if item.status == 'Ordered' else '' }}>Ordered</option>
+                                            <option value="Delivered" {{ 'selected' if item.status == 'Delivered' else '' }}>Delivered</option>
+                                            <option value="In Use" {{ 'selected' if item.status == 'In Use' else '' }}>In Use</option>
+                                            <option value="Depleted" {{ 'selected' if item.status == 'Depleted' else '' }}>Depleted</option>
+                                        </select>
+                                    </td>
+                                    <td class="py-4 px-4 text-center">
+                                        <div class="flex justify-center space-x-2">
+                                            <button onclick="saveMaterialItem({{ item.id }})" 
+                                                    class="text-green-600 hover:text-green-800 p-1 rounded" title="Save Changes">
+                                                <i class='bx bx-save text-sm'></i>
+                                            </button>
+                                            <button onclick="deleteMaterialItem({{ item.id }})" 
+                                                    class="text-red-600 hover:text-red-800 p-1 rounded" title="Delete Item">
+                                                <i class='bx bx-trash text-sm'></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        
+                        <!-- Material Schedule Summary -->
+                        <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <div class="bg-blue-50 p-4 rounded-lg">
+                                <p class="text-xs text-blue-600 font-medium uppercase tracking-wide">Total Items</p>
+                                <p class="text-2xl font-bold text-blue-900">{{ material_schedules|length }}</p>
+                            </div>
+                            <div class="bg-green-50 p-4 rounded-lg">
+                                <p class="text-xs text-green-600 font-medium uppercase tracking-wide">Total Value</p>
+                                <p class="text-2xl font-bold text-green-900">₦{{ "{:,.0f}".format(total_material_cost) if total_material_cost else '0' }}</p>
+                            </div>
+                            <div class="bg-yellow-50 p-4 rounded-lg">
+                                <p class="text-xs text-yellow-600 font-medium uppercase tracking-wide">Pending Orders</p>
+                                <p class="text-2xl font-bold text-yellow-900">{{ material_schedules|selectattr('status', 'equalto', 'Planned')|list|length }}</p>
+                            </div>
+                            <div class="bg-purple-50 p-4 rounded-lg">
+                                <p class="text-xs text-purple-600 font-medium uppercase tracking-wide">Project Type</p>
+                                <p class="text-sm font-bold text-purple-900">{{ project.project_type or 'General' }}</p>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div id="materials-empty-state" class="text-center py-8">
+                            <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class='bx bx-package text-2xl text-purple-400'></i>
+                            </div>
+                            <p class="text-gray-500 text-sm mb-4">No materials in schedule yet</p>
+                            <p class="text-xs text-gray-400 mb-4">Materials will be generated from BOQ items</p>
+                            <div class="flex justify-center space-x-2">
+                                <button onclick="loadBOQTemplates()" 
+                                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                                    <i class='bx bx-download mr-1'></i>
+                                    Load BOQ First
+                                </button>
+                                <button onclick="document.getElementById('material-import-file').click()" 
+                                        class="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors">
+                                    <i class='bx bx-upload mr-1'></i>
+                                    Import Materials
+                                </button>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Document Management & Activity Sections -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <!-- Document Management -->
@@ -979,21 +1407,21 @@
 
     <!-- Actions Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <a href="{{ url_for('project.project_timeline', project_id=project.id) }}" 
+        <a href="{{ url_for('admin.milestones', project_id=project.id) }}" 
            class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
             <i class="bx bx-calendar text-2xl text-indigo-600"></i>
             <h3 class="mt-2 text-lg font-medium text-gray-900">Timeline</h3>
             <p class="mt-1 text-sm text-gray-500">View project milestones and timeline</p>
         </a>
 
-        <a href="{{ url_for('project.reports_index') }}" 
+        <a href="{{ url_for('admin.projects') }}" 
            class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow">
             <i class="bx bx-file text-2xl text-indigo-600"></i>
             <h3 class="mt-2 text-lg font-medium text-gray-900">Reports</h3>
             <p class="mt-1 text-sm text-gray-500">Access project reports and documents</p>
         </a>
 
-        <button class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow text-left">
+        <button onclick="editProject()" class="bg-white p-6 rounded-lg shadow hover:shadow-md transition-shadow text-left">
             <i class="bx bx-cog text-2xl text-indigo-600"></i>
             <h3 class="mt-2 text-lg font-medium text-gray-900">Settings</h3>
             <p class="mt-1 text-sm text-gray-500">Configure project settings</p>
@@ -1537,6 +1965,73 @@
 
     <!-- JavaScript Functions -->
     <script>
+        // Project Data from Server
+        const projectDataElement = document.getElementById('project-data');
+        const projectData = JSON.parse(projectDataElement.textContent);
+        console.log('Project data loaded:', projectData);
+        
+        // Template Cache System for Fast Loading
+        const templateCache = {
+            cache: new Map(),
+            preloadPromises: new Map(),
+            
+            // Check if templates are cached for a project type
+            hasTemplates(projectType) {
+                return this.cache.has(projectType);
+            },
+            
+            // Get cached templates
+            getTemplates(projectType) {
+                return this.cache.get(projectType) || [];
+            },
+            
+            // Cache templates for a project type
+            setTemplates(projectType, templates) {
+                this.cache.set(projectType, templates);
+                console.log(`Cached ${templates.length} templates for ${projectType}`);
+            },
+            
+            // Preload templates for a project type
+            preloadTemplates(projectType) {
+                if (this.hasTemplates(projectType) || this.preloadPromises.has(projectType)) {
+                    return Promise.resolve();
+                }
+                
+                console.log(`Preloading templates for ${projectType}...`);
+                const promise = this.fetchTemplatesFromServer(projectType);
+                this.preloadPromises.set(projectType, promise);
+                return promise;
+            },
+            
+            // Fetch templates from server
+            fetchTemplatesFromServer(projectType) {
+                return fetch(`/admin/projects/${projectData.id}/get_boq_templates`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ project_type: projectType })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.setTemplates(projectType, data.templates);
+                        this.preloadPromises.delete(projectType);
+                        return data.templates;
+                    }
+                    throw new Error(data.message || 'Failed to fetch templates');
+                });
+            },
+            
+            // Clear cache (useful for development)
+            clearCache() {
+                this.cache.clear();
+                this.preloadPromises.clear();
+                console.log('Template cache cleared');
+            }
+        };
+
         // Modal Management
         function openModal(modalId) {
             document.getElementById(modalId).classList.remove('hidden');
@@ -1615,7 +2110,7 @@
         }
 
         // Staff Management
-        function removeStaff(staffId) {
+        function removeStaff(staffId, staffName) {
             if (confirm('Are you sure you want to remove this staff member from the project?')) {
                 // Create and submit a form for staff removal
                 const form = document.createElement('form');
@@ -2199,6 +2694,966 @@
                 submitBtn.disabled = false;
             });
         }
+
+        // Material Schedule Functions
+        function generateMaterialSchedule() {
+            showFlashModal('info', 'Generating material schedule from BOQ items...');
+            
+            fetch(`/admin/projects/${projectData.id}/generate_material_schedule`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', `Generated ${data.materials_added || 0} material items from BOQ`);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showFlashModal('error', data.message || 'Failed to generate material schedule');
+                }
+            })
+            .catch(error => {
+                console.error('Error generating material schedule:', error);
+                showFlashModal('error', 'An error occurred while generating material schedule');
+            });
+        }
+
+        function exportMaterialSchedule() {
+            showFlashModal('info', 'Preparing material schedule export...');
+            
+            window.location.href = `/admin/projects/${projectData.id}/export_material_schedule`;
+            
+            // Show success message after a delay
+            setTimeout(() => {
+                showFlashModal('success', 'Material schedule exported successfully!');
+            }, 2000);
+        }
+
+        // Tab Switching Functions
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+            
+            // Remove active class from all tabs
+            document.querySelectorAll('.tab-button').forEach(tab => {
+                tab.classList.remove('active', 'border-purple-500', 'text-purple-600');
+                tab.classList.add('border-transparent', 'text-gray-500');
+            });
+            
+            // Show selected tab content
+            const selectedContent = document.getElementById(tabName + '-content');
+            if (selectedContent) {
+                selectedContent.classList.remove('hidden');
+            }
+            
+            // Activate selected tab
+            const selectedTab = document.getElementById(tabName + '-tab');
+            if (selectedTab) {
+                selectedTab.classList.add('active', 'border-purple-500', 'text-purple-600');
+                selectedTab.classList.remove('border-transparent', 'text-gray-500');
+            }
+        }
+
+        // Preloading and Enhanced Template Functions
+        function preloadAllCommonTemplates() {
+            const commonTypes = ['Bridge', 'Building', 'Road', 'Culvert'];
+            commonTypes.forEach(type => {
+                if (!templateCache.hasTemplates(type)) {
+                    templateCache.preloadTemplates(type).catch(err => {
+                        console.log(`Failed to preload ${type} templates:`, err);
+                    });
+                }
+            });
+        }
+
+        function handleProjectTypeChange(projectType) {
+            if (!projectType) return;
+            
+            // Update visual indicator immediately
+            showTemplateLoadingStatus(true);
+            const statusDiv = document.getElementById('template-loading-status');
+            if (statusDiv) {
+                statusDiv.innerHTML = '<i class="fas fa-magic text-purple-600 mr-2"></i>Templates ready for loading...';
+            }
+            
+            // Preload templates for instant access
+            templateCache.preloadTemplates(projectType).then(() => {
+                showTemplateLoadingStatus(false);
+                const count = templateCache.getTemplates(projectType).length;
+                showFlashModal('info', `${count} ${projectType} templates are ready! Click "Load Templates" to add them.`);
+            }).catch(err => {
+                showTemplateLoadingStatus(false);
+                console.error('Preload failed:', err);
+            });
+        }
+
+        function loadProjectTypeTemplatesInstant(projectType) {
+            if (!projectType) return;
+            
+            const loadButton = document.getElementById('load-templates-btn');
+            if (loadButton) {
+                loadButton.disabled = true;
+                loadButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+            }
+            
+            // Check cache first for instant loading
+            if (templateCache.hasTemplates(projectType)) {
+                const templates = templateCache.getTemplates(projectType);
+                console.log(`Loading ${templates.length} cached templates instantly...`);
+                
+                // Still need to call server to add to project, but we can show preview immediately
+                loadTemplatesFromCache(projectType, templates);
+                return;
+            }
+            
+            // Fall back to original loading if not cached
+            loadProjectTypeTemplates(projectType);
+        }
+
+        function loadTemplatesFromCache(projectType, templates) {
+            // Show skeleton for better UX
+            showLoadingSkeleton(true);
+            
+            // Call server to actually add templates to project
+            fetch(`/admin/projects/${projectData.id}/load_boq_templates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    project_type: projectType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoadingSkeleton(false);
+                showTemplateLoadingStatus(false);
+                const loadButton = document.getElementById('load-templates-btn');
+                if (loadButton) {
+                    loadButton.disabled = false;
+                    loadButton.innerHTML = '<i class="fas fa-download mr-2"></i>Load Templates';
+                }
+                
+                if (data.success) {
+                    showFlashModal('success', `⚡ ${projectType} templates loaded instantly! Added ${data.items_added} items.`);
+                    // Refresh the current tab content
+                    const activeTab = document.querySelector('.tab-button.active');
+                    if (activeTab) {
+                        const tabName = activeTab.getAttribute('onclick').includes('boq') ? 'boq' : 'materials';
+                        switchTab(tabName);
+                    }
+                } else {
+                    showFlashModal('error', 'Failed to load templates: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                showLoadingSkeleton(false);
+                showTemplateLoadingStatus(false);
+                const loadButton = document.getElementById('load-templates-btn');
+                if (loadButton) {
+                    loadButton.disabled = false;
+                    loadButton.innerHTML = '<i class="fas fa-download mr-2"></i>Load Templates';
+                }
+                showFlashModal('error', 'Failed to load project templates: ' + error.message);
+                console.error('Template loading error:', error);
+            });
+        }
+
+        function showLoadingSkeleton(show) {
+            const skeleton = document.getElementById('boq-loading-skeleton');
+            const boqContent = document.querySelector('[id^="boq-tab"]');
+            
+            if (show) {
+                if (skeleton) skeleton.classList.remove('hidden');
+                if (boqContent) boqContent.style.opacity = '0.3';
+            } else {
+                if (skeleton) skeleton.classList.add('hidden');
+                if (boqContent) boqContent.style.opacity = '1';
+            }
+        }
+
+        // Project Type Template Loading
+        function loadProjectTypeTemplates(projectType) {
+            if (!projectType) return;
+            
+            const loadButton = document.getElementById('load-templates-btn');
+            if (loadButton) {
+                loadButton.disabled = true;
+                loadButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+            }
+            
+            showTemplateLoadingStatus(true);
+            
+            // Load BOQ templates directly
+            fetch(`/admin/projects/${projectData.id}/load_boq_templates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    project_type: projectType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showTemplateLoadingStatus(false);
+                if (loadButton) {
+                    loadButton.disabled = false;
+                    loadButton.innerHTML = '<i class="fas fa-download mr-2"></i>Load Templates';
+                }
+                
+                if (data.success) {
+                    showFlashModal('success', `${projectType} templates loaded successfully! Added ${data.items_added} items.`);
+                    // Refresh the current tab content instead of reloading entire page
+                    const activeTab = document.querySelector('.tab-button.active');
+                    if (activeTab) {
+                        const tabName = activeTab.getAttribute('onclick').includes('boq') ? 'boq' : 'materials';
+                        switchTab(tabName);
+                    }
+                } else {
+                    showFlashModal('error', 'Failed to load templates: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                showTemplateLoadingStatus(false);
+                if (loadButton) {
+                    loadButton.disabled = false;
+                    loadButton.innerHTML = '<i class="fas fa-download mr-2"></i>Load Templates';
+                }
+                showFlashModal('error', 'Failed to load project templates: ' + error.message);
+                console.error('Template loading error:', error);
+            });
+        }
+
+        function loadBOQTemplatesFromButton() {
+            const projectTypeSelector = document.getElementById('project-type-selector');
+            const selectedType = projectTypeSelector ? projectTypeSelector.value : null;
+            
+            if (!selectedType) {
+                showFlashModal('warning', 'Please select a project type first');
+                return;
+            }
+            
+            console.log('Loading templates for project type:', selectedType);
+            console.log('Project data:', projectData);
+            
+            // Use simple direct loading for debugging
+            loadProjectTypeTemplatesSimple(selectedType);
+        }
+
+        function loadProjectTypeTemplatesSimple(projectType) {
+            if (!projectType) return;
+            
+            console.log('Starting template load for:', projectType);
+            
+            const loadButton = document.getElementById('load-templates-btn');
+            if (loadButton) {
+                loadButton.disabled = true;
+                loadButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+            }
+            
+            showFlashModal('info', `Loading ${projectType} templates...`);
+            
+            // Direct API call without cache
+            fetch(`/admin/projects/${projectData.id}/load_boq_templates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': projectData.csrf
+                },
+                body: JSON.stringify({
+                    project_type: projectType
+                })
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Response data:', data);
+                if (loadButton) {
+                    loadButton.disabled = false;
+                    loadButton.innerHTML = '<i class="fas fa-download mr-2"></i>Load Templates';
+                }
+                
+                if (data.success) {
+                    showFlashModal('success', `${projectType} templates loaded successfully! Added ${data.items_added} items.`);
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1500);
+                } else {
+                    showFlashModal('error', 'Failed to load templates: ' + (data.message || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Template loading error:', error);
+                if (loadButton) {
+                    loadButton.disabled = false;
+                    loadButton.innerHTML = '<i class="fas fa-download mr-2"></i>Load Templates';
+                }
+                showFlashModal('error', 'Failed to load project templates: ' + error.message);
+            });
+        }
+
+        function updateProjectType(projectType) {
+            return fetch(`/admin/projects/${projectData.id}/edit`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    project_type: projectType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message || 'Failed to update project type');
+                }
+                return data;
+            });
+        }
+
+        function loadBOQTemplates(projectType = null) {
+            const selectedType = projectType || document.getElementById('project-type-selector').value;
+            if (!selectedType) {
+                showFlashModal('warning', 'Please select a project type first');
+                return Promise.reject('No project type selected');
+            }
+            
+            return fetch(`/admin/projects/${projectData.id}/load_boq_templates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    project_type: selectedType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', `${data.items_added || 0} BOQ template items loaded`);
+                    // Refresh the BOQ table
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    throw new Error(data.message || 'Failed to load BOQ templates');
+                }
+                return data;
+            });
+        }
+
+        function showTemplateLoadingStatus(show) {
+            const statusDiv = document.getElementById('template-loading-status');
+            if (statusDiv) {
+                if (show) {
+                    statusDiv.classList.remove('hidden');
+                } else {
+                    statusDiv.classList.add('hidden');
+                }
+            }
+        }
+
+        // Load Material Schedule Templates
+        function loadMaterialTemplates() {
+            if (!confirm('This will load material schedule templates. Any existing material schedule data will remain. Continue?')) {
+                return;
+            }
+            
+            showFlashModal('info', 'Loading material schedule templates...');
+            
+            fetch(`/admin/projects/{{ project.id }}/load_material_templates`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', `${data.message}. Refreshing page...`);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    throw new Error(data.message || 'Failed to load material templates');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading material templates:', error);
+                showFlashModal('error', `Error: ${error.message}`);
+            });
+        }
+
+        // Import Functions
+        function importBOQFile(fileInput) {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('boq_file', file);
+            formData.append('csrf_token', '{{ csrf_token }}');
+            
+            showFlashModal('info', 'Importing BOQ data...');
+            
+            fetch(`/admin/projects/${projectData.id}/import_boq`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', `Successfully imported ${data.items_imported || 0} BOQ items`);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showFlashModal('error', data.message || 'Failed to import BOQ data');
+                }
+            })
+            .catch(error => {
+                console.error('BOQ import error:', error);
+                showFlashModal('error', 'An error occurred while importing BOQ data');
+            })
+            .finally(() => {
+                fileInput.value = ''; // Reset file input
+            });
+        }
+
+        function importMaterialFile(fileInput) {
+            const file = fileInput.files[0];
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('material_file', file);
+            formData.append('csrf_token', '{{ csrf_token }}');
+            
+            showFlashModal('info', 'Importing material schedule...');
+            
+            fetch(`/admin/projects/${projectData.id}/import_materials`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', `Successfully imported ${data.items_imported || 0} material items`);
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showFlashModal('error', data.message || 'Failed to import material schedule');
+                }
+            })
+            .catch(error => {
+                console.error('Material import error:', error);
+                showFlashModal('error', 'An error occurred while importing material schedule');
+            })
+            .finally(() => {
+                fileInput.value = ''; // Reset file input
+            });
+        }
+
+        // Inline Editing Functions
+        function updateBOQItem(itemId, field, value) {
+            // Store the change temporarily
+            if (!window.boqChanges) window.boqChanges = {};
+            if (!window.boqChanges[itemId]) window.boqChanges[itemId] = {};
+            window.boqChanges[itemId][field] = value;
+            
+            // Calculate total cost if quantity or unit_price changed
+            if (field === 'quantity' || field === 'unit_price') {
+                const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                if (row) {
+                    const quantity = parseFloat(window.boqChanges[itemId].quantity || row.querySelector('input[onchange*="quantity"]').value || 0);
+                    const unitPrice = parseFloat(window.boqChanges[itemId].unit_price || row.querySelector('input[onchange*="unit_price"]').value || 0);
+                    const totalCost = quantity * unitPrice;
+                    
+                    const totalCell = row.querySelector('td:nth-child(5) span');
+                    if (totalCell) {
+                        totalCell.textContent = `₦${totalCost.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                    }
+                }
+            }
+        }
+
+        function saveBOQItem(itemId) {
+            if (!window.boqChanges || !window.boqChanges[itemId]) {
+                showFlashModal('info', 'No changes to save');
+                return;
+            }
+            
+            fetch(`/admin/projects/${projectData.id}/update_boq_item`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    item_id: itemId,
+                    updates: window.boqChanges[itemId]
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', 'BOQ item updated successfully');
+                    // Clear the changes for this item
+                    delete window.boqChanges[itemId];
+                } else {
+                    showFlashModal('error', data.message || 'Failed to update BOQ item');
+                }
+            })
+            .catch(error => {
+                console.error('BOQ update error:', error);
+                showFlashModal('error', 'An error occurred while updating BOQ item');
+            });
+        }
+
+        function deleteBOQItem(itemId) {
+            if (!confirm('Are you sure you want to delete this BOQ item?')) return;
+            
+            fetch(`/admin/projects/${projectData.id}/delete_boq_item`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    item_id: itemId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', 'BOQ item deleted successfully');
+                    // Remove the row from the table
+                    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+                } else {
+                    showFlashModal('error', data.message || 'Failed to delete BOQ item');
+                }
+            })
+            .catch(error => {
+                console.error('BOQ delete error:', error);
+                showFlashModal('error', 'An error occurred while deleting BOQ item');
+            });
+        }
+
+        function addNewBOQRow() {
+            const tableBody = document.getElementById('boq-table-body');
+            if (!tableBody) {
+                showFlashModal('error', 'BOQ table not found');
+                return;
+            }
+            
+            // Create new row with temporary ID
+            const tempId = 'new_' + Date.now();
+            const newRow = document.createElement('tr');
+            newRow.className = 'hover:bg-gray-50 transition-colors';
+            newRow.setAttribute('data-item-id', tempId);
+            newRow.innerHTML = `
+                <td class="py-4 px-4">
+                    <input type="text" 
+                           value="New Item" 
+                           class="w-full border-0 bg-white border-gray-300 rounded px-2 py-1 text-sm focus:ring-2 focus:ring-purple-500"
+                           onchange="updateBOQItem('${tempId}', 'item_description', this.value)"
+                           ondblclick="this.focus()">
+                </td>
+                <td class="py-4 px-4 text-center">
+                    <input type="text" 
+                           value="unit" 
+                           class="w-20 border-0 bg-white border-gray-300 rounded px-2 py-1 text-sm text-center focus:ring-2 focus:ring-purple-500"
+                           onchange="updateBOQItem('${tempId}', 'unit', this.value)"
+                           ondblclick="this.focus()">
+                </td>
+                <td class="py-4 px-4 text-center">
+                    <input type="number" 
+                           value="1" 
+                           class="w-24 border-0 bg-white border-gray-300 rounded px-2 py-1 text-sm text-center focus:ring-2 focus:ring-purple-500"
+                           onchange="updateBOQItem('${tempId}', 'quantity', this.value)"
+                           ondblclick="this.focus()">
+                </td>
+                <td class="py-4 px-4 text-right">
+                    <input type="number" 
+                           value="0" 
+                           step="0.01"
+                           class="w-32 border-0 bg-white border-gray-300 rounded px-2 py-1 text-sm text-right focus:ring-2 focus:ring-purple-500"
+                           onchange="updateBOQItem('${tempId}', 'unit_price', this.value)"
+                           ondblclick="this.focus()">
+                </td>
+                <td class="py-4 px-4 text-right">
+                    <span class="text-sm font-semibold text-green-700">₦0.00</span>
+                </td>
+                <td class="py-4 px-4 text-center">
+                    <input type="text" 
+                           value="" 
+                           class="w-24 border-0 bg-white border-gray-300 rounded px-2 py-1 text-sm text-center focus:ring-2 focus:ring-purple-500"
+                           onchange="updateBOQItem('${tempId}', 'item_type', this.value)"
+                           ondblclick="this.focus()">
+                </td>
+                <td class="py-4 px-4 text-center">
+                    <div class="flex justify-center space-x-2">
+                        <button onclick="saveNewBOQItem('${tempId}')" 
+                                class="text-green-600 hover:text-green-800 p-1 rounded" title="Save New Item">
+                            <i class='bx bx-save text-sm'></i>
+                        </button>
+                        <button onclick="cancelNewBOQItem('${tempId}')" 
+                                class="text-red-600 hover:text-red-800 p-1 rounded" title="Cancel">
+                            <i class='bx bx-x text-sm'></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            
+            tableBody.appendChild(newRow);
+            
+            // Focus on the first input
+            const firstInput = newRow.querySelector('input');
+            if (firstInput) {
+                firstInput.focus();
+                firstInput.select();
+            }
+        }
+
+        function saveNewBOQItem(tempId) {
+            if (!window.boqChanges || !window.boqChanges[tempId]) {
+                showFlashModal('warning', 'Please enter item details before saving');
+                return;
+            }
+            
+            fetch(`/admin/projects/${projectData.id}/add_boq_item`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify(window.boqChanges[tempId])
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', 'New BOQ item added successfully');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    showFlashModal('error', data.message || 'Failed to add BOQ item');
+                }
+            })
+            .catch(error => {
+                console.error('BOQ add error:', error);
+                showFlashModal('error', 'An error occurred while adding BOQ item');
+            });
+        }
+
+        function cancelNewBOQItem(tempId) {
+            const row = document.querySelector(`tr[data-item-id="${tempId}"]`);
+            if (row) {
+                row.remove();
+            }
+            if (window.boqChanges && window.boqChanges[tempId]) {
+                delete window.boqChanges[tempId];
+            }
+        }
+
+        // Material Schedule specific functions
+        function updateMaterialItem(itemId, field, value) {
+            fetch(`/admin/projects/${projectData.id}/update_material_item`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    item_id: itemId,
+                    field: field,
+                    value: value
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log(`Material ${field} updated successfully`);
+                    // Update total cost display if it was returned
+                    if (data.total_cost !== undefined) {
+                        const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                        if (row) {
+                            const totalCostCell = row.querySelector('td:nth-child(5) span');
+                            if (totalCostCell) {
+                                totalCostCell.textContent = `₦${data.total_cost.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                            }
+                        }
+                    }
+                } else {
+                    showFlashModal('error', data.message || 'Failed to update material item');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating material item:', error);
+                showFlashModal('error', 'An error occurred while updating material item');
+            });
+        }
+
+        function saveMaterialItem(itemId) {
+            showFlashModal('success', 'Material item saved successfully');
+        }
+
+        function deleteMaterialItem(itemId) {
+            if (!confirm('Are you sure you want to delete this material item?')) return;
+            
+            fetch(`/admin/projects/${projectData.id}/delete_material_item`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    item_id: itemId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', 'Material item deleted successfully');
+                    // Remove the row from the table
+                    const row = document.querySelector(`tr[data-item-id="${itemId}"]`);
+                    if (row) {
+                        row.remove();
+                    }
+                } else {
+                    showFlashModal('error', data.message || 'Failed to delete material item');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting material item:', error);
+                showFlashModal('error', 'An error occurred while deleting material item');
+            });
+        }
+
+        function addNewMaterialRow() {
+            const materialName = prompt('Enter material name:');
+            if (!materialName) return;
+            
+            const requiredQty = prompt('Enter required quantity:', '1') || '1';
+            const unit = prompt('Enter unit (e.g., kg, m², pieces):', 'unit') || 'unit';
+            const unitCost = prompt('Enter unit cost:', '0') || '0';
+            
+            fetch(`/admin/projects/${projectData.id}/add_material_item`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    material_name: materialName,
+                    required_qty: parseFloat(requiredQty),
+                    unit: unit,
+                    unit_cost: parseFloat(unitCost)
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', 'Material item added successfully');
+                    setTimeout(() => location.reload(), 1500);
+                } else {
+                    showFlashModal('error', data.message || 'Failed to add material item');
+                }
+            })
+            .catch(error => {
+                console.error('Error adding material item:', error);
+                showFlashModal('error', 'An error occurred while adding material item');
+            });
+        }
+
+        function updateMaterialStatus(itemId, newStatus) {
+            fetch(`/admin/projects/${projectData.id}/update_material_status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    item_id: itemId,
+                    status: newStatus
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showFlashModal('success', `Material status updated to ${newStatus}`);
+                } else {
+                    showFlashModal('error', data.message || 'Failed to update material status');
+                }
+            })
+            .catch(error => {
+                console.error('Error updating material status:', error);
+                showFlashModal('error', 'An error occurred while updating material status');
+            });
+        }
+
+        // Enhanced Success/Error Modal System
+        function showFlashModal(type, message, duration = 4000) {
+            // Remove existing modals
+            const existingModals = document.querySelectorAll('.flash-modal');
+            existingModals.forEach(modal => modal.remove());
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.className = 'flash-modal fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50';
+            
+            const typeConfig = {
+                success: {
+                    bgColor: 'bg-green-600',
+                    icon: 'bx-check-circle',
+                    textColor: 'text-white'
+                },
+                error: {
+                    bgColor: 'bg-red-600', 
+                    icon: 'bx-error-circle',
+                    textColor: 'text-white'
+                },
+                warning: {
+                    bgColor: 'bg-yellow-600',
+                    icon: 'bx-error',
+                    textColor: 'text-white'
+                },
+                info: {
+                    bgColor: 'bg-blue-600',
+                    icon: 'bx-info-circle',
+                    textColor: 'text-white'
+                }
+            };
+
+            const config = typeConfig[type] || typeConfig.info;
+
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 transform transition-all duration-300 scale-95 opacity-0" id="flash-modal-content">
+                    <div class="${config.bgColor} rounded-t-lg px-6 py-4 flex items-center">
+                        <i class='bx ${config.icon} text-2xl ${config.textColor} mr-3'></i>
+                        <h3 class="${config.textColor} font-semibold capitalize">${type}</h3>
+                    </div>
+                    <div class="px-6 py-4">
+                        <p class="text-gray-700">${message}</p>
+                    </div>
+                    <div class="px-6 py-4 border-t border-gray-100 flex justify-end">
+                        <button onclick="closeFlashModal()" 
+                                class="px-4 py-2 ${config.bgColor} ${config.textColor} rounded-lg hover:opacity-90 transition-opacity">
+                            OK
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Animate in
+            setTimeout(() => {
+                const content = document.getElementById('flash-modal-content');
+                if (content) {
+                    content.classList.remove('scale-95', 'opacity-0');
+                    content.classList.add('scale-100', 'opacity-100');
+                }
+            }, 10);
+
+            // Auto close after duration
+            if (duration > 0) {
+                setTimeout(() => {
+                    closeFlashModal();
+                }, duration);
+            }
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeFlashModal();
+                }
+            });
+        }
+
+        function closeFlashModal() {
+            const modal = document.querySelector('.flash-modal');
+            if (modal) {
+                const content = document.getElementById('flash-modal-content');
+                if (content) {
+                    content.classList.remove('scale-100', 'opacity-100');
+                    content.classList.add('scale-95', 'opacity-0');
+                    setTimeout(() => {
+                        modal.remove();
+                    }, 300);
+                } else {
+                    modal.remove();
+                }
+            }
+        }
+
+        // Override form submission success messages
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check for flash messages from server and show them as modals
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    showFlashModal('{{ category }}', '{{ message|replace("'", "\\'") }}');
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            // Override form submissions to show success modals
+            const forms = document.querySelectorAll('form');
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    const action = form.getAttribute('action');
+                    if (action && action.includes('assign_staff')) {
+                        // Don't prevent default, just show loading message
+                        showFlashModal('info', 'Assigning staff member...', 0);
+                    } else if (action && action.includes('milestone')) {
+                        showFlashModal('info', 'Creating milestone...', 0);
+                    } else if (action && action.includes('boq')) {
+                        showFlashModal('info', 'Adding BOQ item...', 0);
+                    } else if (action && action.includes('upload')) {
+                        showFlashModal('info', 'Uploading document...', 0);
+                    }
+                });
+            });
+        });
     </script>
+</div>
+
+<!-- Success Modal Template (Hidden by default) -->
+<div id="success-modal-template" class="hidden">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4">
+            <div class="bg-green-600 rounded-t-lg px-6 py-4 flex items-center">
+                <i class='bx bx-check-circle text-2xl text-white mr-3'></i>
+                <h3 class="text-white font-semibold">Success</h3>
+            </div>
+            <div class="px-6 py-4">
+                <p class="text-gray-700" id="success-message-text"></p>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end">
+                <button onclick="closeSuccessModal()" 
+                        class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock %}

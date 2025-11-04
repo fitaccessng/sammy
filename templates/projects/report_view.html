@@ -10,12 +10,12 @@
             <h1 class="text-3xl font-bold text-gray-800">Report Details</h1>
             <div class="flex space-x-2">
                 {% if user_role in ['SUPER_HQ', 'PROJECT_MANAGER'] %}
-                <a href="{{ url_for('project.edit_report', report_id=report.id) }}" 
+                <a href="{{ url_for('edit_report', report_id=report.id) }}" 
                    class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                     Edit Report
                 </a>
                 {% endif %}
-                <a href="{{ url_for('project.export_report', report_id=report.id) }}" 
+                <a href="{{ url_for('export_report', report_id=report.id) }}" 
                    class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                     Export
                 </a>

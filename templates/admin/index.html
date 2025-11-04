@@ -4,104 +4,92 @@
 
 {% block content %}
 <!-- Page Header -->
-<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-    <h1 class="h2">Administration Dashboard</h1>
-    <div class="btn-toolbar mb-2 mb-md-0">
-        <div class="btn-group me-2">
-            <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
-        </div>
-        <button type="button" class="btn btn-sm btn-primary">
-            <i class="fas fa-download me-1"></i>
+<div class="flex justify-between flex-wrap items-center pt-6 pb-4 mb-6 border-b border-gray-200">
+    <h1 class="text-3xl font-bold text-gray-800">Administration Dashboard</h1>
+    <div class="flex gap-2 mt-2 sm:mt-0">
+        <button type="button" class="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+            Export
+        </button>
+        <button type="button" class="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <i class="fas fa-download"></i>
             Generate Report
         </button>
     </div>
 </div>
 
 <!-- Key Metrics Cards -->
-<div class="row g-4 mb-4">
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="bg-primary-light p-3 rounded-3">
-                            <i class="fas fa-users text-primary fs-4"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="card-title text-muted mb-1">Total Roles</h6>
-                        <h3 class="mb-0 fw-bold text-dark">{{ summary.total_roles or 0 }}</h3>
-                        <small class="text-success">
-                            <i class="fas fa-arrow-up me-1"></i>
-                            Active roles in system
-                        </small>
-                    </div>
+<div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-6">
+    <!-- Active Projects Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="bg-blue-50 p-4 rounded-xl">
+                    <i class="fas fa-project-diagram text-blue-600 text-2xl"></i>
+                </div>
+            </div>
+            <div class="ml-4 flex-1">
+                <p class="text-sm text-gray-500 mb-1">Active Projects</p>
+                <h3 class="text-3xl font-bold text-gray-800">{{ summary.active_projects or 0 }}</h3>
+                <div class="text-sm text-green-600 mt-1">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    <a href="{{ url_for('project.project_home') }}" class="hover:underline">View all projects</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="bg-success-light p-3 rounded-3">
-                            <i class="fas fa-sitemap text-success fs-4"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="card-title text-muted mb-1">Reporting Lines</h6>
-                        <h3 class="mb-0 fw-bold text-dark">{{ summary.total_reporting_lines or 0 }}</h3>
-                        <small class="text-info">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Organizational structure
-                        </small>
-                    </div>
+    <!-- Total Staff Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="bg-green-50 p-4 rounded-xl">
+                    <i class="fas fa-users text-green-600 text-2xl"></i>
+                </div>
+            </div>
+            <div class="ml-4 flex-1">
+                <p class="text-sm text-gray-500 mb-1">Total Staff</p>
+                <h3 class="text-3xl font-bold text-gray-800">{{ summary.total_staff or 0 }}</h3>
+                <div class="text-sm text-blue-600 mt-1">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    <a href="{{ url_for('hr.staff_list') }}" class="hover:underline">Manage staff</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="bg-warning-light p-3 rounded-3">
-                            <i class="fas fa-layer-group text-warning fs-4"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="card-title text-muted mb-1">Approval Levels</h6>
-                        <h3 class="mb-0 fw-bold text-dark">{{ summary.total_approval_hierarchies or 0 }}</h3>
-                        <small class="text-warning">
-                            <i class="fas fa-check-circle me-1"></i>
-                            Workflow processes
-                        </small>
-                    </div>
+    <!-- Active Alerts Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="bg-yellow-50 p-4 rounded-xl">
+                    <i class="fas fa-bell text-yellow-600 text-2xl"></i>
+                </div>
+            </div>
+            <div class="ml-4 flex-1">
+                <p class="text-sm text-gray-500 mb-1">Active Alerts</p>
+                <h3 class="text-3xl font-bold text-gray-800">{{ summary.total_alerts or 0 }}</h3>
+                <div class="text-sm text-yellow-600 mt-1">
+                    <i class="fas fa-exclamation-triangle mr-1"></i>
+                    <a href="#" class="hover:underline">View alerts</a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-12 col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-body">
-                <div class="d-flex align-items-center">
-                    <div class="flex-shrink-0">
-                        <div class="bg-danger-light p-3 rounded-3">
-                            <i class="fas fa-key text-danger fs-4"></i>
-                        </div>
-                    </div>
-                    <div class="flex-grow-1 ms-3">
-                        <h6 class="card-title text-muted mb-1">Permissions</h6>
-                        <h3 class="mb-0 fw-bold text-dark">{{ summary.total_permissions or 0 }}</h3>
-                        <small class="text-danger">
-                            <i class="fas fa-shield-alt me-1"></i>
-                            Access controls
-                        </small>
-                    </div>
+    <!-- Total Projects Card -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow">
+        <div class="flex items-center">
+            <div class="flex-shrink-0">
+                <div class="bg-red-50 p-4 rounded-xl">
+                    <i class="fas fa-folder-open text-red-600 text-2xl"></i>
+                </div>
+            </div>
+            <div class="ml-4 flex-1">
+                <p class="text-sm text-gray-500 mb-1">Total Projects</p>
+                <h3 class="text-3xl font-bold text-gray-800">{{ summary.total_projects or 0 }}</h3>
+                <div class="text-sm text-red-600 mt-1">
+                    <i class="fas fa-archive mr-1"></i>
+                    <a href="{{ url_for('project.project_home') }}" class="hover:underline">All projects</a>
                 </div>
             </div>
         </div>
@@ -109,386 +97,337 @@
 </div>
 
 <!-- Management Sections -->
-<div class="row g-4 mb-4">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
     <!-- Quick Actions -->
-    <div class="col-lg-8">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white border-0 pb-0">
-                <h5 class="card-title mb-0">Administrative Actions</h5>
-                <p class="text-muted small mb-0">Quick access to key management functions</p>
+    <div class="lg:col-span-2">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 h-full">
+            <div class="p-6 border-b border-gray-100">
+                <h5 class="text-xl font-semibold text-gray-800 mb-1">Administrative Actions</h5>
+                <p class="text-sm text-gray-500">Quick access to key management functions</p>
             </div>
-            <div class="card-body">
-                <div class="row g-3">
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ url_for('admin.comprehensive_user_management') }}" class="text-decoration-none">
-                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
-                                <div class="bg-purple-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-users-cog text-purple"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 text-dark">User Management</h6>
-                                    <small class="text-muted">All users, roles & projects</small>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ url_for('admin.roles_view') }}" class="text-decoration-none">
-                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
-                                <div class="bg-primary-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-users text-primary"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 text-dark">Manage Roles</h6>
-                                    <small class="text-muted">Define system roles</small>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ url_for('admin.reporting_lines_view') }}" class="text-decoration-none">
-                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
-                                <div class="bg-success-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-sitemap text-success"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 text-dark">Reporting Lines</h6>
-                                    <small class="text-muted">Org structure</small>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ url_for('admin.approval_hierarchy_view') }}" class="text-decoration-none">
-                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
-                                <div class="bg-warning-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-layer-group text-warning"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 text-dark">Approval Flow</h6>
-                                    <small class="text-muted">Workflow setup</small>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ url_for('admin.permissions_view') }}" class="text-decoration-none">
-                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
-                                <div class="bg-danger-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-key text-danger"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 text-dark">Permissions</h6>
-                                    <small class="text-muted">Access control</small>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-4">
-                        <a href="{{ url_for('admin.oversight_reports_view') }}" class="text-decoration-none">
-                            <div class="d-flex align-items-center p-3 border rounded-3 hover-card">
-                                <div class="bg-info-light p-2 rounded-circle me-3">
-                                    <i class="fas fa-chart-bar text-info"></i>
-                                </div>
-                                <div>
-                                    <h6 class="mb-0 text-dark">Reports</h6>
-                                    <small class="text-muted">System insights</small>
-                                </div>
-                            </div>
-                        </a>
-                    </div>
-                    <div class="col-md-6 col-lg-4">
-                        <div class="d-flex align-items-center p-3 border rounded-3 text-muted">
-                            <div class="bg-secondary-light p-2 rounded-circle me-3">
-                                <i class="fas fa-cogs text-secondary"></i>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- User Management -->
+                    <a href="{{ url_for('admin.comprehensive_user_management') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-purple-100 p-3 rounded-full mr-3 group-hover:bg-purple-200">
+                                <i class="fas fa-users-cog text-purple-600 text-lg"></i>
                             </div>
                             <div>
-                                <h6 class="mb-0">Settings</h6>
-                                <small>Coming soon</small>
+                                <h6 class="font-semibold text-gray-800 mb-0">User Management</h6>
+                                <small class="text-gray-500">All users, roles & projects</small>
                             </div>
                         </div>
-                    </div>
+                    </a>
+                    
+                    <!-- Manage Roles -->
+                    <a href="{{ url_for('admin.roles_view') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-blue-100 p-3 rounded-full mr-3 group-hover:bg-blue-200">
+                                <i class="fas fa-users text-blue-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-semibold text-gray-800 mb-0">Manage Roles</h6>
+                                <small class="text-gray-500">Define system roles</small>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <!-- Reporting Lines -->
+                    <a href="{{ url_for('admin.reporting_lines_view') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-green-300 hover:bg-green-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-green-100 p-3 rounded-full mr-3 group-hover:bg-green-200">
+                                <i class="fas fa-sitemap text-green-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-semibold text-gray-800 mb-0">Reporting Lines</h6>
+                                <small class="text-gray-500">Org structure</small>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <!-- Approval Flow -->
+                    <a href="{{ url_for('admin.approval_hierarchy_view') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-yellow-300 hover:bg-yellow-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-yellow-100 p-3 rounded-full mr-3 group-hover:bg-yellow-200">
+                                <i class="fas fa-layer-group text-yellow-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-semibold text-gray-800 mb-0">Approval Flow</h6>
+                                <small class="text-gray-500">Workflow setup</small>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <!-- Permissions -->
+                    <a href="{{ url_for('admin.permissions_view') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-red-300 hover:bg-red-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-red-100 p-3 rounded-full mr-3 group-hover:bg-red-200">
+                                <i class="fas fa-key text-red-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-semibold text-gray-800 mb-0">Permissions</h6>
+                                <small class="text-gray-500">Access control</small>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <!-- Reports -->
+                    <a href="{{ url_for('admin.oversight_reports_view') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-cyan-300 hover:bg-cyan-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-cyan-100 p-3 rounded-full mr-3 group-hover:bg-cyan-200">
+                                <i class="fas fa-chart-bar text-cyan-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-semibold text-gray-800 mb-0">Reports</h6>
+                                <small class="text-gray-500">System insights</small>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <!-- Procurement Management -->
+                    <a href="{{ url_for('procurement.procurement_home') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-indigo-300 hover:bg-indigo-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-indigo-100 p-3 rounded-full mr-3 group-hover:bg-indigo-200">
+                                <i class="fas fa-shopping-cart text-indigo-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-semibold text-gray-800 mb-0">Procurement</h6>
+                                <small class="text-gray-500">Purchases & suppliers</small>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <!-- Cost Control Management -->
+                    <a href="{{ url_for('cost_control.cost_control_home') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-orange-300 hover:bg-orange-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-orange-100 p-3 rounded-full mr-3 group-hover:bg-orange-200">
+                                <i class="fas fa-calculator text-orange-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-semibold text-gray-800 mb-0">Cost Control</h6>
+                                <small class="text-gray-500">Budget tracking</small>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <!-- Finance Management -->
+                    <a href="{{ url_for('finance.finance_home') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-emerald-300 hover:bg-emerald-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-emerald-100 p-3 rounded-full mr-3 group-hover:bg-emerald-200">
+                                <i class="fas fa-money-bill-wave text-emerald-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-semibold text-gray-800 mb-0">Finance</h6>
+                                <small class="text-gray-500">Payroll & expenses</small>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <!-- Approvals Management -->
+                    <a href="{{ url_for('admin.approvals') }}" class="group">
+                        <div class="flex items-center p-4 border border-gray-200 rounded-lg hover:border-rose-300 hover:bg-rose-50 hover:shadow-md transition-all duration-200">
+                            <div class="bg-rose-100 p-3 rounded-full mr-3 group-hover:bg-rose-200">
+                                <i class="fas fa-clipboard-check text-rose-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h6 class="font-semibold text-gray-800 mb-0">Approvals</h6>
+                                <small class="text-gray-500">Pending approvals</small>
+                            </div>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- System Status -->
-    <div class="col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-white border-0 pb-0">
-                <h5 class="card-title mb-0">System Status</h5>
-                <p class="text-muted small mb-0">Current system health</p>
+    <!-- Recent Activity Log -->
+    <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 h-full">
+            <div class="p-6 border-b border-gray-100">
+                <h5 class="text-xl font-semibold text-gray-800 mb-1">Recent Activity</h5>
+                <p class="text-sm text-gray-500">System-wide activity log</p>
             </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted">Database</span>
-                    <span class="badge bg-success">Online</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted">Authentication</span>
-                    <span class="badge bg-success">Active</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted">Total Employees</span>
-                    <span class="badge bg-primary">{{ summary.total_employees or 0 }}</span>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <span class="text-muted">Admin Users</span>
-                    <span class="badge bg-warning">1</span>
+            <div class="p-6">
+                <div class="space-y-4 max-h-96 overflow-y-auto">
+                    {% if recent_activities %}
+                        {% for activity in recent_activities %}
+                        <div class="flex items-start space-x-3 pb-4 border-b border-gray-100 last:border-0">
+                            <div class="flex-shrink-0">
+                                {% if 'milestone' in activity.action_type.lower() %}
+                                    <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-flag text-blue-600 text-xs"></i>
+                                    </div>
+                                {% elif 'staff' in activity.action_type.lower() or 'assign' in activity.action_type.lower() %}
+                                    <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-user-plus text-green-600 text-xs"></i>
+                                    </div>
+                                {% elif 'document' in activity.action_type.lower() or 'upload' in activity.action_type.lower() %}
+                                    <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-file text-purple-600 text-xs"></i>
+                                    </div>
+                                {% elif 'budget' in activity.action_type.lower() or 'cost' in activity.action_type.lower() %}
+                                    <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-dollar-sign text-yellow-600 text-xs"></i>
+                                    </div>
+                                {% elif 'delete' in activity.action_type.lower() or 'remove' in activity.action_type.lower() %}
+                                    <div class="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-trash text-red-600 text-xs"></i>
+                                    </div>
+                                {% elif 'update' in activity.action_type.lower() or 'edit' in activity.action_type.lower() %}
+                                    <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-edit text-orange-600 text-xs"></i>
+                                    </div>
+                                {% elif 'create' in activity.action_type.lower() or 'add' in activity.action_type.lower() %}
+                                    <div class="w-8 h-8 bg-cyan-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-plus text-cyan-600 text-xs"></i>
+                                    </div>
+                                {% else %}
+                                    <div class="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-info text-gray-600 text-xs"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-sm text-gray-800 font-medium truncate">
+                                    {{ activity.user_name or 'System' }}
+                                </p>
+                                <p class="text-xs text-gray-600 mt-1">
+                                    {{ activity.description[:80] }}{% if activity.description|length > 80 %}...{% endif %}
+                                </p>
+                                <p class="text-xs text-gray-400 mt-1">
+                                    <i class="far fa-clock mr-1"></i>
+                                    {{ activity.created_at.strftime('%b %d, %I:%M %p') if activity.created_at else 'Just now' }}
+                                </p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-8">
+                            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-history text-gray-400 text-2xl"></i>
+                            </div>
+                            <p class="text-sm text-gray-500">No recent activity</p>
+                            <p class="text-xs text-gray-400 mt-1">Activity logs will appear here</p>
+                        </div>
+                    {% endif %}
                 </div>
                 
-                <hr class="my-3">
-                
-                <div class="text-center">
-                    <p class="text-muted small mb-2">Last updated</p>
-                    <p class="text-dark fw-medium mb-0">{{ current_datetime.strftime('%B %d, %Y at %I:%M %p') if current_datetime else 'Just now' }}</p>
+                {% if recent_activities %}
+                <div class="mt-4 pt-4 border-t border-gray-200">
+                    <a href="{{ url_for('admin.activity_log') }}" class="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center justify-center">
+                        View all activity
+                        <i class="fas fa-arrow-right ml-2 text-xs"></i>
+                    </a>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
 <!-- Recent Activity & Analytics -->
-<div class="row g-4">
-    <div class="col-lg-12">
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 pb-0">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title mb-0">Admin Management Overview</h5>
-                        <p class="text-muted small mb-0">Comprehensive system administration tools</p>
-                    </div>
-                    <button class="btn btn-outline-primary btn-sm">
-                        <i class="fas fa-sync me-1"></i>
-                        Refresh
-                    </button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row text-center">
-                    <div class="col-md-3 mb-3">
-                        <div class="border-end">
-                            <h4 class="text-primary mb-1">{{ summary.total_roles or 0 }}</h4>
-                            <p class="text-muted small mb-0">System Roles</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="border-end">
-                            <h4 class="text-success mb-1">{{ summary.total_reporting_lines or 0 }}</h4>
-                            <p class="text-muted small mb-0">Reporting Relationships</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="border-end">
-                            <h4 class="text-warning mb-1">{{ summary.total_approval_hierarchies or 0 }}</h4>
-                            <p class="text-muted small mb-0">Approval Workflows</p>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <h4 class="text-danger mb-1">{{ summary.total_permissions or 0 }}</h4>
-                        <p class="text-muted small mb-0">Access Permissions</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 {% endblock %}
+
 
 {% block styles %}
 <style>
-/* Custom Admin Dashboard Styles */
-.hover-card {
-    transition: all 0.3s ease-in-out;
-    cursor: pointer;
-    border: 1px solid #e3e6f0 !important;
+/* Tailwind custom animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.hover-card:hover {
-    background-color: #f8f9fa !important;
-    transform: translateY(-3px);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-    border-color: #d1d3e2 !important;
+.animate-fade-in-up {
+    animation: fadeInUp 0.6s ease-out forwards;
 }
 
-.card {
-    transition: all 0.3s ease-in-out;
-    border: 1px solid #e3e6f0;
-}
+/* Stagger animation delays for cards */
+.card-1 { animation-delay: 0.1s; }
+.card-2 { animation-delay: 0.2s; }
+.card-3 { animation-delay: 0.3s; }
+.card-4 { animation-delay: 0.4s; }
 
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
-}
-
-/* Custom background opacity classes for Bootstrap 5.1.3 compatibility */
-.bg-primary-light {
-    background-color: rgba(13, 110, 253, 0.1) !important;
-}
-
-.bg-success-light {
-    background-color: rgba(25, 135, 84, 0.1) !important;
-}
-
-.bg-warning-light {
-    background-color: rgba(255, 193, 7, 0.1) !important;
-}
-
-.bg-danger-light {
-    background-color: rgba(220, 53, 69, 0.1) !important;
-}
-
-.bg-info-light {
-    background-color: rgba(13, 202, 240, 0.1) !important;
-}
-
-.bg-secondary-light {
-    background-color: rgba(108, 117, 125, 0.1) !important;
-}
-
-/* Fix for border-end on mobile */
+/* Mobile responsive divider fix */
 @media (max-width: 768px) {
-    .border-end {
+    .divide-x > * {
         border-right: none !important;
-        border-bottom: 1px solid #dee2e6;
+        border-bottom: 1px solid #e5e7eb;
         padding-bottom: 1rem;
         margin-bottom: 1rem;
     }
     
-    .border-end:last-child {
+    .divide-x > *:last-child {
         border-bottom: none !important;
         margin-bottom: 0;
-    }
-}
-
-/* Custom shadow utilities */
-.shadow-sm {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
-}
-
-/* Animation classes */
-.fade-in {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.6s ease-out;
-}
-
-.fade-in.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-/* Custom metric card styling */
-.metric-card {
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    border-left: 4px solid;
-}
-
-.metric-card.border-primary {
-    border-left-color: #0d6efd !important;
-}
-
-.metric-card.border-success {
-    border-left-color: #198754 !important;
-}
-
-.metric-card.border-warning {
-    border-left-color: #ffc107 !important;
-}
-
-.metric-card.border-danger {
-    border-left-color: #dc3545 !important;
-}
-
-/* Professional button styling */
-.btn {
-    transition: all 0.2s ease-in-out;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
-}
-
-/* Icon styling */
-.fs-4 {
-    font-size: 1.5rem !important;
-}
-
-/* Custom spacing */
-.p-3 {
-    padding: 1rem !important;
-}
-
-/* Responsive adjustments */
-@media (max-width: 576px) {
-    .btn-toolbar {
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    
-    .btn-group {
-        width: 100%;
-    }
-    
-    .btn-group .btn {
-        flex: 1;
+        padding-bottom: 0;
     }
 }
 </style>
 {% endblock %}
 
 {% block scripts %}
-
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Add fade-in animation to cards
-    const cards = document.querySelectorAll('.card');
-    cards.forEach((card, index) => {
-        card.classList.add('fade-in');
+    // Add fade-in animations to metric cards
+    const metricCards = document.querySelectorAll('.bg-white.rounded-xl');
+    metricCards.forEach((card, index) => {
+        card.classList.add('animate-fade-in-up', `card-${index + 1}`);
+        card.style.opacity = '0';
         setTimeout(() => {
-            card.classList.add('show');
-        }, index * 150);
+            card.style.opacity = '1';
+        }, index * 100);
     });
     
-    // Add click effects for hover cards
-    const hoverCards = document.querySelectorAll('.hover-card');
-    hoverCards.forEach(card => {
-        card.addEventListener('click', function(e) {
-            // Add a subtle click animation
-            this.style.transform = 'scale(0.97) translateY(-3px)';
+    // Refresh button functionality
+    const refreshBtn = document.querySelector('button:has(.fa-sync)');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            const icon = this.querySelector('.fa-sync');
+            icon.classList.add('animate-spin');
+            
+            // Simulate refresh
             setTimeout(() => {
-                this.style.transform = '';
-            }, 200);
+                icon.classList.remove('animate-spin');
+                location.reload();
+            }, 1000);
         });
-    });
+    }
     
-    // Add smooth hover effects
-    const actionCards = document.querySelectorAll('a .hover-card');
+    // Add hover scale effect to action cards
+    const actionCards = document.querySelectorAll('a > div.border');
     actionCards.forEach(card => {
         card.addEventListener('mouseenter', function() {
-            this.style.borderColor = '#0d6efd';
+            this.style.transform = 'scale(1.02)';
         });
         
         card.addEventListener('mouseleave', function() {
-            this.style.borderColor = '#e3e6f0';
+            this.style.transform = 'scale(1)';
         });
     });
-    
-    // Update timestamp if exists
-    const timestamp = document.querySelector('[data-timestamp]');
-    if (timestamp) {
-        const now = new Date();
-        const options = { 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric', 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        };
-        timestamp.textContent = now.toLocaleDateString('en-US', options);
-    }
 });
 </script>
+
+<style>
+/* Add spin animation for refresh icon */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+</style>
 {% endblock %}

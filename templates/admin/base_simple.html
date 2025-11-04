@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}Construction Admin Dashboard | SammyA{% endblock %}</title>
     
     <!-- Primary BoxIcons CDN with preload -->
@@ -289,10 +290,10 @@
                                 <i class='bx bxs-dashboard mr-3'></i>
                                 <span>Overview</span>
                             </a>
-                            <a href="{{ url_for('admin.oversight_reports_view') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <!-- <a href="{{ url_for('admin.oversight_reports_view') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-data mr-3'></i>
                                 <span>Reports</span>
-                            </a>
+                            </a> -->
                         </div>
                     </div>
                    
@@ -394,7 +395,7 @@
                                 <i class='bx bxs-cart-add mr-3'></i>
                                 <span>Add Order</span>
                             </a>
-                            <a href="{{ url_for('admin.suppliers') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('procurement.suppliers') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-building mr-3'></i>
                                 <span>Suppliers</span>
                             </a>
@@ -490,11 +491,11 @@
                             <i :class="open.user ? 'bx bx-chevron-down' : 'bx bx-chevron-right'" class="ml-auto"></i>
                         </button>
                         <div x-show="open.user" class="space-y-1">
-                            <a href="{{ url_for('admin.profile') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('procurement.profile') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bxs-user mr-3'></i>
                                 <span>Profile</span>
                             </a>
-                            <a href="{{ url_for('admin.logout') }}" class="nav-item flex items-center p-3 rounded-lg">
+                            <a href="{{ url_for('logout') }}" class="nav-item flex items-center p-3 rounded-lg">
                                 <i class='bx bx-log-out mr-3'></i>
                                 <span>Logout</span>
                             </a>

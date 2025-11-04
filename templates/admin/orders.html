@@ -723,7 +723,7 @@
                                     <i class='bx bx-check text-sm mr-1'></i>
                                     Approve
                                 </a>
-                                <form method="POST" action="{{ url_for('admin.reject_order_form', order_id=order.id) }}" style="display: inline;">
+                                <form method="POST" action="{{ url_for('reject_order_form', order_id=order.id) }}" style="display: inline;">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
                                     <button type="submit"
                                             class="inline-flex items-center px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors duration-200">
@@ -774,7 +774,7 @@
         </div>
         <div class="modal-footer">
             <a href="#" class="btn-modal btn-modal-secondary">Cancel</a>
-            <form method="POST" action="{{ url_for('admin.approve_order', order_id=order.id) }}" style="display: inline;">
+            <form method="POST" action="{{ url_for('approve_order', order_id=order.id) }}" style="display: inline;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
                 <button type="submit" class="btn-modal btn-modal-success">
                     <i class='bx bx-check'></i> Approve Order
@@ -799,7 +799,7 @@
         </div>
         <div class="modal-footer">
             <a href="#" class="btn-modal btn-modal-secondary">Cancel</a>
-            <form method="POST" action="{{ url_for('admin.delete_order_form', order_id=order.id) }}" style="display: inline;">
+            <form method="POST" action="{{ url_for('delete_order_form', order_id=order.id) }}" style="display: inline;">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
                 <button type="submit" class="btn-modal btn-modal-danger">
                     <i class='bx bx-trash'></i> Delete Order

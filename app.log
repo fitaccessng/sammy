@@ -17780,3 +17780,2289 @@ TypeError: 'str' object is not callable
 2025-10-29 01:17:50,480 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
 2025-10-29 01:17:50,481 - app - INFO - User 5 (hq_project) accessing 1 projects
 2025-10-29 01:17:50,485 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:17:50] "GET /project/ HTTP/1.1" 200 -
+2025-10-29 01:50:41,828 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.198.128:5000
+2025-10-29 01:50:41,830 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-29 01:50:41,835 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 01:50:45,036 - werkzeug - WARNING -  * Debugger is active!
+2025-10-29 01:50:45,048 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-29 01:51:47,843 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:51:47] "[33mGET /project/ HTTP/1.1[0m" 404 -
+2025-10-29 01:51:53,766 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:51:53] "GET / HTTP/1.1" 200 -
+2025-10-29 01:51:56,396 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:51:56] "GET /login HTTP/1.1" 200 -
+2025-10-29 01:51:59,018 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:51:59] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-10-29 01:51:59,026 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-29 01:51:59,026 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-29 01:51:59,036 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-29 01:51:59,037 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-29 01:51:59,111 - app - ERROR - Project dashboard error: Could not build url for endpoint 'calendar'. Did you mean 'project.calendar' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 13303, in project_home
+    return render_template('projects/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\index.html", line 1, in top-level template code
+    {% extends "projects/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\base.html", line 48, in top-level template code
+    <a href="{{ url_for('calendar') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'calendar'. Did you mean 'project.calendar' instead?
+2025-10-29 01:51:59,188 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:51:59] "[35m[1mGET /project HTTP/1.1[0m" 500 -
+2025-10-29 01:51:59,545 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:51:59] "GET /project?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1" 200 -
+2025-10-29 01:51:59,545 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:51:59] "GET /project?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1" 200 -
+2025-10-29 01:51:59,601 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:51:59] "GET /project?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1" 200 -
+2025-10-29 01:51:59,621 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:51:59] "[36mGET /project?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-29 01:54:22,236 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\fix_missing_prefixes.py', reloading
+2025-10-29 01:54:22,840 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 01:55:31,568 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.198.128:5000
+2025-10-29 01:55:31,568 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-29 01:55:31,572 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 01:55:36,535 - werkzeug - WARNING -  * Debugger is active!
+2025-10-29 01:55:36,548 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-29 01:56:03,858 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-29 01:56:03,858 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-29 01:56:03,866 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-29 01:56:03,867 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-29 01:56:03,956 - app - ERROR - Project dashboard error: Could not build url for endpoint 'hr.staff'. Did you mean 'hr.add_staff' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 13303, in project_home
+    return render_template('projects/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\index.html", line 1, in top-level template code
+    {% extends "projects/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\base.html", line 68, in top-level template code
+    <a href="{{ url_for('hr.staff') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'hr.staff'. Did you mean 'hr.add_staff' instead?
+2025-10-29 01:56:04,018 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:56:04] "[35m[1mGET /project HTTP/1.1[0m" 500 -
+2025-10-29 01:56:04,226 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:56:04] "[36mGET /project?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-10-29 01:56:04,226 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:56:04] "[36mGET /project?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-10-29 01:56:04,277 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:56:04] "[36mGET /project?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-29 01:56:04,296 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 01:56:04] "[36mGET /project?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-29 01:58:20,920 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\fix_endpoint_mismatches.py', reloading
+2025-10-29 01:58:21,568 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 01:59:42,929 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.198.128:5000
+2025-10-29 01:59:42,930 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-29 01:59:42,931 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 01:59:45,290 - werkzeug - WARNING -  * Debugger is active!
+2025-10-29 01:59:45,296 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-29 02:01:09,275 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-29 02:01:09,280 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-29 02:01:09,291 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-29 02:01:09,292 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-29 02:01:09,386 - app - ERROR - Project dashboard error: Could not build url for endpoint 'reports_index'. Did you mean 'project.reports_index' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 13303, in project_home
+    return render_template('projects/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\index.html", line 1, in top-level template code
+    {% extends "projects/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\base.html", line 78, in top-level template code
+    <a href="{{ url_for('reports_index') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'reports_index'. Did you mean 'project.reports_index' instead?
+2025-10-29 02:01:09,464 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:01:09] "[35m[1mGET /project HTTP/1.1[0m" 500 -
+2025-10-29 02:01:09,681 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:01:09] "[36mGET /project?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-10-29 02:01:09,688 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:01:09] "[36mGET /project?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-10-29 02:01:09,727 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:01:09] "[36mGET /project?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-29 02:01:09,745 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:01:09] "[36mGET /project?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-29 02:03:34,482 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\analyze_routing.py', reloading
+2025-10-29 02:03:34,961 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 02:08:33,754 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.198.128:5000
+2025-10-29 02:08:33,755 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-29 02:08:33,758 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 02:08:36,405 - werkzeug - WARNING -  * Debugger is active!
+2025-10-29 02:08:36,415 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-29 02:09:23,113 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\QUICK_REFERENCE.py', reloading
+2025-10-29 02:09:23,675 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 02:09:42,488 - werkzeug - WARNING -  * Debugger is active!
+2025-10-29 02:09:42,495 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-29 02:09:46,663 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\QUICK_REFERENCE.py', reloading
+2025-10-29 02:09:47,075 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 02:09:50,871 - werkzeug - WARNING -  * Debugger is active!
+2025-10-29 02:09:50,884 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-29 02:10:23,604 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\QUICK_REFERENCE.py', reloading
+2025-10-29 02:10:23,911 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 02:14:10,189 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.198.128:5000
+2025-10-29 02:14:10,195 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-29 02:14:10,195 - werkzeug - INFO -  * Restarting with stat
+2025-10-29 02:14:13,279 - werkzeug - WARNING -  * Debugger is active!
+2025-10-29 02:14:13,285 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-29 02:14:16,985 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-29 02:14:16,991 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-29 02:14:16,997 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-29 02:14:16,997 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-29 02:14:17,108 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:14:17] "GET /project HTTP/1.1" 200 -
+2025-10-29 02:15:29,795 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-29 02:15:29,796 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-29 02:15:29,808 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-29 02:15:29,809 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-29 02:15:29,898 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:15:29] "GET /project HTTP/1.1" 200 -
+2025-10-29 02:22:10,443 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-29 02:22:10,455 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-29 02:22:10,466 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-29 02:22:10,466 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-29 02:22:10,642 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:22:10] "GET /project HTTP/1.1" 200 -
+2025-10-29 02:26:37,305 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-29 02:26:37,313 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-29 02:26:37,322 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-29 02:26:37,322 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-29 02:26:37,593 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:26:37] "GET /project HTTP/1.1" 200 -
+2025-10-29 02:26:59,379 - app - INFO - Project route: User 5 (hq_project) accessing project 3
+2025-10-29 02:27:00,214 - app - ERROR - Project details error: Could not build url for endpoint 'procurement.profile'. Did you mean 'procurement.purchases' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 13521, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 278, in top-level template code
+    {% block sidebar %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 493, in block 'sidebar'
+    <a href="{{ url_for('procurement.profile') }}" class="nav-item flex items-center p-3 rounded-lg">
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'procurement.profile'. Did you mean 'procurement.purchases' instead?
+2025-10-29 02:27:00,249 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:27:00] "[32mGET /project/3 HTTP/1.1[0m" 302 -
+2025-10-29 02:27:00,261 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-29 02:27:00,262 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-29 02:27:00,266 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-29 02:27:00,266 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-29 02:27:00,274 - werkzeug - INFO - 127.0.0.1 - - [29/Oct/2025 02:27:00] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:14:12,691 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:14:12] "GET / HTTP/1.1" 200 -
+2025-10-30 18:15:22,033 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:15:22] "GET / HTTP/1.1" 200 -
+2025-10-30 18:16:03,733 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:16:03] "GET / HTTP/1.1" 200 -
+2025-10-30 18:18:43,052 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:18:43] "GET / HTTP/1.1" 200 -
+2025-10-30 18:27:46,927 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:27:46] "GET / HTTP/1.1" 200 -
+2025-10-30 18:30:15,381 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:30:15] "GET /login HTTP/1.1" 200 -
+2025-10-30 18:30:22,236 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:30:22] "[32mGET /project HTTP/1.1[0m" 302 -
+2025-10-30 18:30:22,259 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:30:22] "GET /login?next=/project HTTP/1.1" 200 -
+2025-10-30 18:30:27,459 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:30:27] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-10-30 18:30:27,506 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:30:27,510 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:30:27,525 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:30:27,525 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:30:27,570 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:30:27] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:31:30,526 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:31:30,526 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:31:30,533 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:31:30,533 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:31:30,552 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:31:30] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:32:47,243 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:32:47,244 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:32:47,248 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:32:47,249 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:32:47,269 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:32:47] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:32:52,672 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:32:52,672 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:32:52,675 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:32:52,675 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:32:52,899 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:32:52] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:33:01,694 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:33:01] "[31m[1mGET /hr/tasks HTTP/1.1[0m" 403 -
+2025-10-30 18:33:03,673 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:33:03,673 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:33:03,674 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:33:03,674 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:33:03,674 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:33:03] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:33:05,476 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:33:05,477 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:33:05,503 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:33:05] "GET /project/calendar HTTP/1.1" 200 -
+2025-10-30 18:33:09,716 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:33:09,716 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:33:09,718 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:33:09,719 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:33:09,725 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:33:09] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:35:33,791 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:35:33,804 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:35:33,804 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:35:33,804 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:35:33,969 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:35:33] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:35:58,810 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:35:58,810 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:35:58,813 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:35:58,814 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:35:58,936 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:35:58] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:36:16,142 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:36:16,142 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:36:16,145 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:36:16,146 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:36:16,274 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:36:16] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:36:32,041 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.185.128:5000
+2025-10-30 18:36:32,041 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-30 18:36:32,045 - werkzeug - INFO -  * Restarting with stat
+2025-10-30 18:36:34,580 - werkzeug - WARNING -  * Debugger is active!
+2025-10-30 18:36:34,587 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-30 18:38:54,470 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.185.128:5000
+2025-10-30 18:38:54,473 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-30 18:38:54,476 - werkzeug - INFO -  * Restarting with stat
+2025-10-30 18:38:56,527 - werkzeug - WARNING -  * Debugger is active!
+2025-10-30 18:38:56,527 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-30 18:39:00,852 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:39:00,852 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:39:00,869 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:39:00,869 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:39:00,963 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:39:00] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:39:23,500 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:39:23,502 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:39:23,509 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:39:23,509 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:39:23,532 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:39:23] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:39:25,732 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:39:25,733 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:39:25,736 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:39:25,736 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:39:25,741 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:39:25] "GET /project HTTP/1.1" 200 -
+2025-10-30 18:39:26,376 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:39:26,376 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:39:26,394 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:39:26] "GET /project/calendar HTTP/1.1" 200 -
+2025-10-30 18:39:36,728 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-30 18:39:36,728 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-30 18:39:36,732 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-30 18:39:36,732 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-30 18:39:36,887 - werkzeug - INFO - 127.0.0.1 - - [30/Oct/2025 18:39:36] "GET /project HTTP/1.1" 200 -
+2025-10-31 12:04:36,828 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:04:36] "[32mGET /project HTTP/1.1[0m" 302 -
+2025-10-31 12:04:37,129 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:04:37] "GET /login?next=/project HTTP/1.1" 200 -
+2025-10-31 12:04:40,223 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:04:40] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-10-31 12:04:40,240 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-31 12:04:40,241 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-31 12:04:40,245 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-31 12:04:40,245 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-31 12:04:40,387 - app - ERROR - Project dashboard error: Encountered unknown tag 'else'.
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 13303, in project_home
+    return render_template('projects/index.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\loaders.py", line 138, in load
+    code = environment.compile(source, name, filename)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 768, in compile
+    self.handle_exception(source=source_hint)
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\projects\index.html", line 823, in template
+    {% else %}
+jinja2.exceptions.TemplateSyntaxError: Encountered unknown tag 'else'.
+2025-10-31 12:04:40,606 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:04:40] "[35m[1mGET /project HTTP/1.1[0m" 500 -
+2025-10-31 12:04:41,215 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:04:41] "[36mGET /project?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-10-31 12:04:41,227 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:04:41] "[36mGET /project?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-10-31 12:04:41,317 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:04:41] "[36mGET /project?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 12:04:41,348 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:04:41] "[36mGET /project?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 12:07:01,970 - flask_wtf.csrf - INFO - The CSRF session token is missing.
+2025-10-31 12:07:01,987 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:07:01] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-10-31 12:07:02,028 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:07:02] "GET /login HTTP/1.1" 200 -
+2025-10-31 12:07:08,986 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:07:08] "GET /login HTTP/1.1" 200 -
+2025-10-31 12:07:11,852 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:07:11] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-10-31 12:07:12,241 - app - ERROR - HR dashboard error: Could not build url for endpoint 'procurement.profile'. Did you mean 'procurement.purchases' instead?
+2025-10-31 12:07:12,262 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:07:12] "[35m[1mGET /hr HTTP/1.1[0m" 500 -
+2025-10-31 12:07:16,087 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:07:16] "GET /login HTTP/1.1" 200 -
+2025-10-31 12:07:32,379 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-31 12:07:32,381 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-31 12:07:32,386 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-31 12:07:32,388 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-31 12:07:32,500 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:07:32] "GET /project HTTP/1.1" 200 -
+2025-10-31 12:07:45,308 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:07:45] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-10-31 12:07:45,526 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:07:45] "[35m[1mGET /admin HTTP/1.1[0m" 500 -
+2025-10-31 12:09:03,322 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.209.128:5000
+2025-10-31 12:09:03,322 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 12:09:03,328 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 12:09:05,947 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 12:09:05,961 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 12:09:20,901 - app - INFO - Project route: User 5 (hq_project) accessing project 3
+2025-10-31 12:09:21,786 - app - ERROR - Project details error: Could not build url for endpoint 'procurement.profile'. Did you mean 'procurement.purchases' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 13521, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 278, in top-level template code
+    {% block sidebar %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 493, in block 'sidebar'
+    <a href="{{ url_for('procurement.profile') }}" class="nav-item flex items-center p-3 rounded-lg">
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'procurement.profile'. Did you mean 'procurement.purchases' instead?
+2025-10-31 12:09:21,818 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:09:21] "[32mGET /project/3 HTTP/1.1[0m" 302 -
+2025-10-31 12:09:21,832 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-31 12:09:21,832 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-31 12:09:21,841 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-31 12:09:21,841 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-31 12:09:21,851 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:09:21] "GET /project HTTP/1.1" 200 -
+2025-10-31 12:09:28,599 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-31 12:09:28,609 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-31 12:09:28,741 - app - ERROR - Reports page error: Could not build url for endpoint 'view_report' with values ['report_id']. Did you mean 'project.view_report' instead?
+2025-10-31 12:09:28,741 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:09:28] "[35m[1mGET /project/reports HTTP/1.1[0m" 500 -
+2025-10-31 12:09:31,146 - app - INFO - User 5 (hq_project) accessing project dashboard
+2025-10-31 12:09:31,146 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-31 12:09:31,155 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-31 12:09:31,155 - app - INFO - User 5 (hq_project) accessing 1 projects
+2025-10-31 12:09:31,166 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:09:31] "GET /project HTTP/1.1" 200 -
+2025-10-31 12:09:32,918 - app - INFO - Getting accessible projects for user 5 (hq_project)
+2025-10-31 12:09:32,926 - app - INFO - PROJECT_MANAGER user - 0 managed, 1 assigned, 1 total
+2025-10-31 12:09:33,049 - app - ERROR - DPR list error: Could not build url for endpoint 'approve_dpr' with values ['dpr_id']. Did you mean 'project.approve_dpr' instead?
+2025-10-31 12:09:33,055 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:09:33] "[35m[1mGET /project/dpr HTTP/1.1[0m" 500 -
+2025-10-31 12:34:32,414 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\passenger_wsgi.py', reloading
+2025-10-31 12:34:35,220 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 12:34:41,148 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 12:34:41,160 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 12:36:13,463 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:36:13] "GET / HTTP/1.1" 200 -
+2025-10-31 12:36:14,092 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:36:14] "GET / HTTP/1.1" 200 -
+2025-10-31 12:36:18,407 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:36:18] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-10-31 12:36:20,505 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:36:20] "GET /login HTTP/1.1" 200 -
+2025-10-31 12:36:22,780 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:36:22] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-10-31 12:36:23,414 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 12:36:23] "[35m[1mGET /admin HTTP/1.1[0m" 500 -
+2025-10-31 16:11:35,338 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 16:11:35,343 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 16:11:35,345 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:11:37,729 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:11:37,741 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:12:02,837 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:12:02] "[32mGET /admin/projects/3 HTTP/1.1[0m" 302 -
+2025-10-31 16:12:03,144 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:12:03] "GET /login?next=/admin/projects/3 HTTP/1.1" 200 -
+2025-10-31 16:12:05,391 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:12:05] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-10-31 16:12:05,596 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:12:05] "[35m[1mGET /admin HTTP/1.1[0m" 500 -
+2025-10-31 16:16:21,229 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:16:22,170 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:22:18,300 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 16:22:18,300 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 16:22:18,304 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:22:20,951 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:22:20,959 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:22:24,662 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:22:24] "[35m[1mGET /admin HTTP/1.1[0m" 500 -
+2025-10-31 16:24:07,948 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 16:24:07,948 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 16:24:07,950 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:24:10,352 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:24:10,352 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:25:00,845 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:25:01,236 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:25:04,107 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:25:04,109 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:25:22,985 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:25:23,327 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:25:26,612 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:25:26,612 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:25:30,685 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 16:25:30,686 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 16:25:30,688 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:25:33,471 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:25:33,481 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:25:33,933 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:25:33] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:25:55,236 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:25:55] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:29:56,280 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:29:56,725 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:30:01,486 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:30:01,494 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:30:58,254 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:30:58,601 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:31:02,482 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:31:02,489 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:31:03,308 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:31:03] "[35m[1mGET /admin HTTP/1.1[0m" 500 -
+2025-10-31 16:31:11,772 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:31:11] "[35m[1mGET /admin HTTP/1.1[0m" 500 -
+2025-10-31 16:31:33,755 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 16:31:33,756 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 16:31:33,758 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:31:37,320 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:31:37,324 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:32:07,434 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:32:07] "[35m[1mGET /admin HTTP/1.1[0m" 500 -
+2025-10-31 16:34:00,305 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 16:34:00,307 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 16:34:00,309 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:34:03,267 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:34:03,272 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:36:47,249 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 16:36:47,250 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 16:36:47,252 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:36:50,195 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:36:50,203 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:36:54,773 - app - ERROR - Admin dashboard error: Could not build url for endpoint 'projects.projects_list'. Did you mean 'project.reports_list' instead?
+2025-10-31 16:36:54,811 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8184, in dashboard
+    return render_template('admin/index.html', summary=summary, current_datetime=datetime.now())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\index.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 536, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\index.html", line 102, in block 'content'
+    <a href="{{ url_for('projects.projects_list') }}" class="text-decoration-none text-danger">All projects</a>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'projects.projects_list'. Did you mean 'project.reports_list' instead?
+
+2025-10-31 16:36:54,919 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:36:54] "[35m[1mGET /admin HTTP/1.1[0m" 500 -
+2025-10-31 16:37:58,491 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:37:58] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:39:47,840 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:39:47] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:40:38,184 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:40:38] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:41:17,765 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:41:17] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:42:30,749 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:42:30] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:42:40,942 - app - INFO - Comprehensive user management accessed by Hightower
+2025-10-31 16:42:40,976 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:42:40] "GET /admin/comprehensive-user-management HTTP/1.1" 200 -
+2025-10-31 16:43:30,509 - app - INFO - Comprehensive user management accessed by Hightower
+2025-10-31 16:43:30,521 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:43:30] "GET /admin/comprehensive-user-management HTTP/1.1" 200 -
+2025-10-31 16:44:42,568 - app - INFO - User 1 (super_hq) accessing project dashboard
+2025-10-31 16:44:42,568 - app - INFO - Getting accessible projects for user 1 (super_hq)
+2025-10-31 16:44:42,571 - app - INFO - SUPER_HQ user - returning all 3 projects
+2025-10-31 16:44:42,571 - app - INFO - User 1 (super_hq) accessing 3 projects
+2025-10-31 16:44:42,630 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:44:42] "GET /project HTTP/1.1" 200 -
+2025-10-31 16:44:47,308 - app - ERROR - Staff list error: Could not build url for endpoint 'assign_role' with values ['staff_id']. Did you mean 'hr.assign_role' instead?
+2025-10-31 16:44:47,317 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:44:47] "GET /hr/staff HTTP/1.1" 200 -
+2025-10-31 16:46:19,250 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:46:19] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:48:26,109 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:48:26] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:49:57,435 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:49:57] "[31m[1mGET /procurement HTTP/1.1[0m" 403 -
+2025-10-31 16:50:22,849 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:50:23,823 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:50:26,869 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:50:26,873 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:50:32,809 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:50:33,103 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:50:35,153 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:50:35,159 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:50:47,344 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:50:47] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:50:53,532 - app - ERROR - Error in oversight_reports_view: 'PurchaseOrder' object has no attribute 'supplier'
+2025-10-31 16:50:53,548 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:50:53] "[35m[1mGET /admin/oversight-reports-view HTTP/1.1[0m" 500 -
+2025-10-31 16:51:20,751 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:51:20] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:52:18,006 - app - ERROR - Error in oversight_reports_view: 'PurchaseOrder' object has no attribute 'supplier'
+2025-10-31 16:52:18,020 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:52:18] "[35m[1mGET /admin/oversight-reports-view HTTP/1.1[0m" 500 -
+2025-10-31 16:52:31,591 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:52:32,157 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:52:35,093 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:52:35,097 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:52:35,446 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:52:35,937 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:52:38,955 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:52:38,961 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:53:14,955 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:53:14] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:53:17,035 - app - ERROR - Activity log error: admin/activity_log.html
+2025-10-31 16:53:17,046 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8247, in activity_log
+    return render_template('admin/activity_log.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 150, in render_template
+    template = app.jinja_env.get_or_select_template(template_name_or_list)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1081, in get_or_select_template
+    return self.get_template(template_name_or_list, parent, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1010, in get_template
+    return self._load_template(name, globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 969, in _load_template
+    template = self.loader.load(self, name, self.make_globals(globals))
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\loaders.py", line 126, in load
+    source, filename, uptodate = self.get_source(environment, name)
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 64, in get_source
+    return self._get_source_fast(environment, template)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 98, in _get_source_fast
+    raise TemplateNotFound(template)
+jinja2.exceptions.TemplateNotFound: admin/activity_log.html
+
+2025-10-31 16:53:17,048 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:53:17] "[32mGET /admin/activity-log HTTP/1.1[0m" 302 -
+2025-10-31 16:53:17,064 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:53:17] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:53:53,067 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:53:53] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:53:55,827 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:53:55] "GET /admin/activity-log HTTP/1.1" 200 -
+2025-10-31 16:54:13,090 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:54:13] "GET /admin/activity-log?action_type=milestone_added&user_name=Hightower&date_from=&date_to= HTTP/1.1" 200 -
+2025-10-31 16:54:17,448 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:54:17] "GET /admin/activity-log?action_type=document_uploaded&user_name=Hightower&date_from=&date_to= HTTP/1.1" 200 -
+2025-10-31 16:54:21,209 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:54:21] "GET /admin/activity-log?action_type=document_uploaded&user_name=&date_from=&date_to= HTTP/1.1" 200 -
+2025-10-31 16:54:23,001 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:54:23] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:56:11,282 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:56:11,671 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:56:14,799 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:56:14,804 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:56:25,244 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 16:56:25,543 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 16:56:27,855 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 16:56:27,859 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 16:58:59,953 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:58:59] "GET /admin HTTP/1.1" 200 -
+2025-10-31 16:59:05,766 - app - ERROR - Error in oversight_reports_view: 'PurchaseOrder' object has no attribute 'supplier'
+2025-10-31 16:59:05,775 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 16:59:05] "[35m[1mGET /admin/oversight-reports-view HTTP/1.1[0m" 500 -
+2025-10-31 17:01:41,109 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:01:41,692 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:01:45,623 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:01:45,636 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:01:58,780 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:01:59,130 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:02:02,550 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:02:02,558 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:02:20,343 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:02:20] "GET /admin HTTP/1.1" 200 -
+2025-10-31 17:02:23,460 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:02:23] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:05:15,506 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:05:15] "GET /admin/add-project HTTP/1.1" 200 -
+2025-10-31 17:05:24,050 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:05:24] "[35m[1mGET /admin/projects HTTP/1.1[0m" 500 -
+2025-10-31 17:05:49,086 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:05:49] "[35m[1mGET /admin/schedules HTTP/1.1[0m" 500 -
+2025-10-31 17:05:51,883 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:05:51] "GET /admin/orders HTTP/1.1" 200 -
+2025-10-31 17:05:56,172 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:05:56] "GET /admin/assets HTTP/1.1" 200 -
+2025-10-31 17:05:59,776 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:05:59] "GET /admin/analytics-custom HTTP/1.1" 200 -
+2025-10-31 17:11:45,430 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:11:45] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:12:09,650 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:12:09] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:12:51,781 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:12:51] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:13:25,672 - app - ERROR - Error in oversight_reports_view: Could not build url for endpoint 'finance.budgets'. Did you mean 'finance.audit' instead?
+2025-10-31 17:13:25,678 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:13:25] "[35m[1mGET /admin/oversight-reports-view HTTP/1.1[0m" 500 -
+2025-10-31 17:16:53,769 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:16:55,425 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:16:59,491 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:16:59,499 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:18:14,543 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:18:15,017 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:18:18,533 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:18:18,539 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:18:18,943 - app - ERROR - Error in oversight_reports_view: Entity namespace for "budgets" has no property "status"
+2025-10-31 17:18:18,967 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:18:18] "[35m[1mGET /admin/oversight-reports-view HTTP/1.1[0m" 500 -
+2025-10-31 17:23:56,374 - app - ERROR - Error in oversight_reports_view: Entity namespace for "budgets" has no property "status"
+2025-10-31 17:23:56,379 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:23:56] "[35m[1mGET /admin/oversight-reports-view HTTP/1.1[0m" 500 -
+2025-10-31 17:26:51,813 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:26:52,627 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:26:56,603 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:26:56,611 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:27:15,701 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:27:16,099 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:27:18,709 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:27:18,719 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:27:38,319 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:27:38] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:28:02,269 - app - INFO - Starting payroll route processing
+2025-10-31 17:28:02,272 - app - INFO - Current date info: 2025-10-31 17:28:02.272111, month: 10, year: 2025
+2025-10-31 17:28:02,274 - app - INFO - Total payroll calculated: 244800.0
+2025-10-31 17:28:02,367 - app - ERROR - Payroll error: 'function' object has no attribute 'monthrange'
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 4983, in payroll
+    last_day = calendar.monthrange(current_year, current_month)[1]
+               ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'function' object has no attribute 'monthrange'
+2025-10-31 17:28:02,396 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:28:02] "[35m[1mGET /hr/payroll HTTP/1.1[0m" 500 -
+2025-10-31 17:28:12,654 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:28:12] "GET /admin/orders HTTP/1.1" 200 -
+2025-10-31 17:38:18,157 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:38:19,290 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:38:23,187 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:38:23,201 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:38:41,394 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:38:41,790 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:38:45,917 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:38:45,926 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:38:46,478 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:38:46] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:38:52,041 - app - INFO - Starting payroll route processing
+2025-10-31 17:38:52,043 - app - INFO - Current date info: 2025-10-31 17:38:52.043151, month: 10, year: 2025
+2025-10-31 17:38:52,047 - app - INFO - Total payroll calculated: 244800.0
+2025-10-31 17:38:52,185 - app - ERROR - Payroll error: 'function' object has no attribute 'monthrange'
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 4983, in payroll
+    last_day = calendar.monthrange(current_year, current_month)[1]
+               ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'function' object has no attribute 'monthrange'
+2025-10-31 17:38:52,232 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:38:52] "[35m[1mGET /hr/payroll HTTP/1.1[0m" 500 -
+2025-10-31 17:38:55,845 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:38:55] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:38:59,054 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:38:59] "GET /admin/orders HTTP/1.1" 200 -
+2025-10-31 17:42:19,181 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:42:19,996 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:42:23,420 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:42:23,433 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:42:59,883 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:43:00,191 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:43:02,322 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:43:02,324 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:45:29,848 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:45:29] "GET /admin/roles-view HTTP/1.1" 200 -
+2025-10-31 17:45:48,314 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:45:48,840 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:45:51,888 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:45:51,897 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:45:53,095 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:45:53] "GET /admin/reporting-lines-view HTTP/1.1" 200 -
+2025-10-31 17:46:02,861 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:46:03,242 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:46:05,424 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:46:05,428 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:48:03,106 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 17:48:03,106 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 17:48:03,107 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:48:05,112 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:48:05,120 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:48:27,946 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:48:27] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:48:38,289 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:48:38] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:48:51,664 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:48:51] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:48:53,347 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:48:53] "GET /admin/orders HTTP/1.1" 200 -
+2025-10-31 17:48:58,192 - app - INFO - Starting payroll route processing
+2025-10-31 17:48:58,193 - app - INFO - Current date info: 2025-10-31 17:48:58.193386, month: 10, year: 2025
+2025-10-31 17:48:58,195 - app - INFO - Total payroll calculated: 244800.0
+2025-10-31 17:48:58,206 - app - ERROR - Payroll error: 'function' object has no attribute 'monthrange'
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 4983, in payroll
+    last_day = calendar.monthrange(current_year, current_month)[1]
+               ^^^^^^^^^^^^^^^^^^^
+AttributeError: 'function' object has no attribute 'monthrange'
+2025-10-31 17:48:58,233 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:48:58] "[35m[1mGET /hr/payroll HTTP/1.1[0m" 500 -
+2025-10-31 17:49:00,815 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:49:00] "GET /finance HTTP/1.1" 200 -
+2025-10-31 17:49:01,228 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:49:01] "[36mGET /static/js/finance.js HTTP/1.1[0m" 304 -
+2025-10-31 17:49:47,506 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:49:47] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 17:50:03,139 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:50:03] "GET /admin HTTP/1.1" 200 -
+2025-10-31 17:50:09,149 - app - ERROR - Approvals page error: type object 'Budget' has no attribute 'status'
+2025-10-31 17:50:09,152 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8287, in approvals
+    Budget.status.in_(['pending', 'Pending'])
+    ^^^^^^^^^^^^^
+AttributeError: type object 'Budget' has no attribute 'status'
+
+2025-10-31 17:50:09,154 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:50:09] "[32mGET /admin/approvals HTTP/1.1[0m" 302 -
+2025-10-31 17:50:09,175 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:50:09] "GET /admin HTTP/1.1" 200 -
+2025-10-31 17:50:59,045 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:50:59,473 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:51:02,292 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:51:02,297 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:51:47,940 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:51:48,226 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:51:50,986 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:51:50,992 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:51:56,486 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 17:51:56,486 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 17:51:56,488 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:51:58,569 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:51:58,575 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:52:29,686 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:29] "GET /admin HTTP/1.1" 200 -
+2025-10-31 17:52:34,771 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:34] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 17:52:43,415 - app - INFO - Starting expenses route
+2025-10-31 17:52:43,417 - app - INFO - Filters: status=all, category=all
+2025-10-31 17:52:43,417 - app - INFO - Executing pagination query
+2025-10-31 17:52:43,423 - app - INFO - Found 4 expenses
+2025-10-31 17:52:43,423 - app - INFO - Getting categories
+2025-10-31 17:52:43,425 - app - INFO - Found 4 categories: ['Equipment', 'Fuel', 'Materials', 'Office Supplies']
+2025-10-31 17:52:43,426 - app - INFO - Calculating stats for 10/2025
+2025-10-31 17:52:43,440 - app - INFO - Stats calculated: total=630000.0, pending=395000.0, budget=110825000.0
+2025-10-31 17:52:43,440 - app - INFO - Rendering template
+2025-10-31 17:52:43,558 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:43] "[35m[1mGET /finance/expenses HTTP/1.1[0m" 500 -
+2025-10-31 17:52:43,826 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:43] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-10-31 17:52:43,830 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:43] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-10-31 17:52:43,905 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:43] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 17:52:43,925 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:43] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 17:52:53,865 - app - INFO - Starting expenses route
+2025-10-31 17:52:53,865 - app - INFO - Filters: status=all, category=all
+2025-10-31 17:52:53,867 - app - INFO - Executing pagination query
+2025-10-31 17:52:53,869 - app - INFO - Found 4 expenses
+2025-10-31 17:52:53,870 - app - INFO - Getting categories
+2025-10-31 17:52:53,871 - app - INFO - Found 4 categories: ['Equipment', 'Fuel', 'Materials', 'Office Supplies']
+2025-10-31 17:52:53,871 - app - INFO - Calculating stats for 10/2025
+2025-10-31 17:52:53,880 - app - INFO - Stats calculated: total=630000.0, pending=395000.0, budget=110825000.0
+2025-10-31 17:52:53,880 - app - INFO - Rendering template
+2025-10-31 17:52:53,940 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:53] "[35m[1mGET /finance/expenses HTTP/1.1[0m" 500 -
+2025-10-31 17:52:53,976 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:53] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-10-31 17:52:53,983 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:53] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-10-31 17:52:53,996 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:52:53] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 17:53:23,460 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:53:23,839 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:53:27,079 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:53:27,096 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:53:47,610 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:53:47,904 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:53:50,247 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:53:50,251 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:53:53,959 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 17:53:53,961 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 17:53:53,962 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:53:57,756 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:53:57,761 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:54:12,117 - app - INFO - Starting expenses route
+2025-10-31 17:54:12,117 - app - INFO - Filters: status=all, category=all
+2025-10-31 17:54:12,118 - app - INFO - Executing pagination query
+2025-10-31 17:54:12,125 - app - INFO - Found 4 expenses
+2025-10-31 17:54:12,126 - app - INFO - Getting categories
+2025-10-31 17:54:12,127 - app - INFO - Found 4 categories: ['Equipment', 'Fuel', 'Materials', 'Office Supplies']
+2025-10-31 17:54:12,128 - app - INFO - Calculating stats for 10/2025
+2025-10-31 17:54:12,138 - app - INFO - Stats calculated: total=630000.0, pending=395000.0, budget=110825000.0
+2025-10-31 17:54:12,138 - app - INFO - Rendering template
+2025-10-31 17:54:12,237 - app - ERROR - Expenses loading error: Could not build url for endpoint 'export_expenses' with values ['format']. Did you mean 'finance.export_expenses' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 2333, in expenses
+    return render_template('finance/financial/expenses.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\finance\financial\expenses.html", line 1, in top-level template code
+    {% extends "finance/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\finance\base.html", line 117, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\finance\financial\expenses.html", line 112, in block 'content'
+    <a href="{{ url_for('export_expenses', format='excel') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'export_expenses' with values ['format']. Did you mean 'finance.export_expenses' instead?
+
+2025-10-31 17:54:12,312 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:54:12] "[35m[1mGET /finance/expenses HTTP/1.1[0m" 500 -
+2025-10-31 17:54:12,515 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:54:12] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-10-31 17:54:12,517 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:54:12] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-10-31 17:54:12,537 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:54:12] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 17:54:12,552 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:54:12] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 17:56:03,620 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 17:56:03,621 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 17:56:03,622 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:56:05,740 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:56:05,745 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:56:08,688 - app - INFO - Starting expenses route
+2025-10-31 17:56:08,689 - app - INFO - Filters: status=all, category=all
+2025-10-31 17:56:08,690 - app - INFO - Executing pagination query
+2025-10-31 17:56:08,702 - app - INFO - Found 4 expenses
+2025-10-31 17:56:08,702 - app - INFO - Getting categories
+2025-10-31 17:56:08,705 - app - INFO - Found 4 categories: ['Equipment', 'Fuel', 'Materials', 'Office Supplies']
+2025-10-31 17:56:08,705 - app - INFO - Calculating stats for 10/2025
+2025-10-31 17:56:08,718 - app - INFO - Stats calculated: total=630000.0, pending=395000.0, budget=110825000.0
+2025-10-31 17:56:08,718 - app - INFO - Rendering template
+2025-10-31 17:56:08,803 - app - ERROR - Expenses loading error: Could not build url for endpoint 'export_expenses' with values ['format']. Did you mean 'finance.export_expenses' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 2333, in expenses
+    return render_template('finance/financial/expenses.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\finance\financial\expenses.html", line 1, in top-level template code
+    {% extends "finance/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\finance\base.html", line 117, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\finance\financial\expenses.html", line 112, in block 'content'
+    <a href="{{ url_for('export_expenses', format='excel') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'export_expenses' with values ['format']. Did you mean 'finance.export_expenses' instead?
+
+2025-10-31 17:56:08,864 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:56:08] "[35m[1mGET /finance/expenses HTTP/1.1[0m" 500 -
+2025-10-31 17:56:09,045 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:56:09] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-10-31 17:56:09,053 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:56:09] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-10-31 17:56:09,230 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:56:09] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 17:56:09,252 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:56:09] "[36mGET /finance/expenses?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 17:56:15,347 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:56:15,730 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:56:18,418 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:56:18,423 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:56:24,345 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:56:24,721 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:56:26,721 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:56:26,726 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:56:55,824 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 17:56:55,824 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 17:56:55,826 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 17:56:57,808 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 17:56:57,813 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 17:57:01,423 - app - INFO - Starting expenses route
+2025-10-31 17:57:01,423 - app - INFO - Filters: status=all, category=all
+2025-10-31 17:57:01,424 - app - INFO - Executing pagination query
+2025-10-31 17:57:01,435 - app - INFO - Found 4 expenses
+2025-10-31 17:57:01,435 - app - INFO - Getting categories
+2025-10-31 17:57:01,437 - app - INFO - Found 4 categories: ['Equipment', 'Fuel', 'Materials', 'Office Supplies']
+2025-10-31 17:57:01,437 - app - INFO - Calculating stats for 10/2025
+2025-10-31 17:57:01,452 - app - INFO - Stats calculated: total=630000.0, pending=395000.0, budget=110825000.0
+2025-10-31 17:57:01,452 - app - INFO - Rendering template
+2025-10-31 17:57:01,573 - app - ERROR - Expenses loading error: Could not build url for endpoint 'export_expenses' with values ['format']. Did you mean 'finance.export_expenses' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 2333, in expenses
+    return render_template('finance/financial/expenses.html',
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\finance\financial\expenses.html", line 1, in top-level template code
+    {% extends "finance/base.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\finance\base.html", line 117, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\finance\financial\expenses.html", line 112, in block 'content'
+    <a href="{{ url_for('export_expenses', format='excel') }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'export_expenses' with values ['format']. Did you mean 'finance.export_expenses' instead?
+
+2025-10-31 17:57:01,577 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:57:01] "[32mGET /finance/expenses HTTP/1.1[0m" 302 -
+2025-10-31 17:57:01,707 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:57:01] "GET /finance HTTP/1.1" 200 -
+2025-10-31 17:57:02,076 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:57:02] "[36mGET /static/js/finance.js HTTP/1.1[0m" 304 -
+2025-10-31 17:59:39,366 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:59:39] "[35m[1mGET /admin/projects HTTP/1.1[0m" 500 -
+2025-10-31 17:59:45,971 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 17:59:45] "GET /admin/add-project HTTP/1.1" 200 -
+2025-10-31 17:59:55,970 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 17:59:56,998 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:00:00,058 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:00:00,062 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:00:48,538 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:00:48,868 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:00:51,007 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:00:51,011 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:00:52,148 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:00:52] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:00:55,031 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:00:55] "GET /admin/oversight-reports-view HTTP/1.1" 200 -
+2025-10-31 18:00:59,645 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:00:59] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:01:27,121 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:01:27] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:01:27,297 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:01:27,801 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:01:30,448 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:01:30,448 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:01:37,568 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:01:37,882 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:01:39,853 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:01:39,853 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:02:44,821 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:02:45,189 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:02:47,479 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:02:47,483 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:03:32,796 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:03:33,220 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:03:35,573 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:03:35,578 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:03:37,315 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:03:37] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:03:43,463 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 18:03:43,464 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 18:03:43,465 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:03:45,571 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:03:45,578 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:05:15,666 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:05:15] "GET /admin/approval-hierarchy-view HTTP/1.1" 200 -
+2025-10-31 18:05:31,082 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:05:31] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:05:33,817 - app - ERROR - Approvals page error: type object 'Asset' has no attribute 'date_acquired'
+2025-10-31 18:05:33,829 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8308, in approvals
+    ).order_by(Asset.date_acquired.desc()).all()
+               ^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'Asset' has no attribute 'date_acquired'
+
+2025-10-31 18:05:33,830 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:05:33] "[32mGET /admin/approvals HTTP/1.1[0m" 302 -
+2025-10-31 18:05:33,852 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:05:33] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:05:46,565 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:05:46] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:06:52,865 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:06:52] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:06:55,117 - app - ERROR - Approvals page error: type object 'Asset' has no attribute 'date_acquired'
+2025-10-31 18:06:55,121 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8308, in approvals
+    ).order_by(Asset.date_acquired.desc()).all()
+               ^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'Asset' has no attribute 'date_acquired'
+
+2025-10-31 18:06:55,122 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:06:55] "[32mGET /admin/approvals HTTP/1.1[0m" 302 -
+2025-10-31 18:06:55,138 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:06:55] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:07:30,873 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:07:30] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:07:36,595 - app - ERROR - Approvals page error: type object 'Asset' has no attribute 'date_acquired'
+2025-10-31 18:07:36,599 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8308, in approvals
+    ).order_by(Asset.date_acquired.desc()).all()
+               ^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'Asset' has no attribute 'date_acquired'
+
+2025-10-31 18:07:36,601 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:07:36] "[32mGET /admin/approvals HTTP/1.1[0m" 302 -
+2025-10-31 18:07:36,619 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:07:36] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:07:38,800 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:07:38] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:07:40,877 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:07:41,936 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:07:46,650 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:07:46,657 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:07:51,319 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:07:51] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:07:52,995 - app - ERROR - Approvals page error: type object 'Incident' has no attribute 'reported_at'
+2025-10-31 18:07:53,010 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8313, in approvals
+    ).order_by(Incident.reported_at.desc()).all()
+               ^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'Incident' has no attribute 'reported_at'. Did you mean: 'reported_by'?
+
+2025-10-31 18:07:53,013 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:07:53] "[32mGET /admin/approvals HTTP/1.1[0m" 302 -
+2025-10-31 18:07:53,034 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:07:53] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:07:55,287 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:07:55,953 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:07:59,696 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:07:59,706 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:08:15,329 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:08:15] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:08:17,277 - app - ERROR - Approvals page error: type object 'Incident' has no attribute 'reported_at'
+2025-10-31 18:08:17,297 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8313, in approvals
+    ).order_by(Incident.reported_at.desc()).all()
+               ^^^^^^^^^^^^^^^^^^^^
+AttributeError: type object 'Incident' has no attribute 'reported_at'. Did you mean: 'reported_by'?
+
+2025-10-31 18:08:17,300 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:08:17] "[32mGET /admin/approvals HTTP/1.1[0m" 302 -
+2025-10-31 18:08:17,322 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:08:17] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:08:52,926 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:08:53,289 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:08:55,648 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:08:55,655 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:09:09,492 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:09:09,813 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:09:13,312 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:09:13,316 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:10:49,047 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:10:49,437 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:10:53,647 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:10:53,657 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:10:54,269 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:10:54] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:11:04,880 - app - ERROR - Approvals page error: 'Expense' object has no attribute 'employee'
+2025-10-31 18:11:04,909 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8405, in approvals
+    employee_name = expense.employee.full_name if expense.employee else 'Unknown'
+                                                  ^^^^^^^^^^^^^^^^
+AttributeError: 'Expense' object has no attribute 'employee'
+
+2025-10-31 18:11:04,915 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:11:04] "[32mGET /admin/approvals HTTP/1.1[0m" 302 -
+2025-10-31 18:11:04,941 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:11:04] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:14:50,540 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:14:51,580 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:14:56,312 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:14:56,317 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:15:17,085 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:15:17,597 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:15:22,767 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:15:22,774 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:15:29,760 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:15:30,198 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:15:33,862 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:15:33,862 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:15:48,713 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:15:49,150 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:15:54,113 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:15:54,120 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:16:09,958 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:16:10,425 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:16:14,184 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:16:14,192 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:16:32,409 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:16:33,053 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:16:38,459 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:16:38,473 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:17:36,692 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:17:37,131 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:17:41,037 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:17:41,041 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:18:44,787 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:18:44] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:18:47,744 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:18:48,315 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:18:52,312 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:18:52,312 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:21:23,115 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:21:23,507 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:21:26,247 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:21:26,252 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:21:45,584 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:21:45] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:21:48,491 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:21:48] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:22:14,854 - flask_wtf.csrf - INFO - The CSRF token is missing.
+2025-10-31 18:22:14,854 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:22:14] "[32mPOST /admin/process-approval-request HTTP/1.1[0m" 302 -
+2025-10-31 18:22:14,898 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:22:14] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:25:06,219 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:25:07,311 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:25:09,732 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:25:09,737 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:25:15,641 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:25:16,000 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:25:18,271 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:25:18,273 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:25:32,139 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:25:32,448 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:25:34,644 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:25:34,649 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:25:43,956 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:25:44,364 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:25:46,807 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:25:46,812 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:25:49,335 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:25:49,678 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:25:52,004 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:25:52,034 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:26:07,552 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:26:07,930 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:26:10,070 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:26:10,073 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:26:19,521 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:26:20,009 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:26:23,227 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:26:23,232 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:26:24,034 - app - ERROR - Approvals page error: 'str' object is not callable
+2025-10-31 18:26:24,057 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8551, in approvals
+    return render_template('admin/approvals_new.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\approvals_new.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 6, in top-level template code
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: 'str' object is not callable
+
+2025-10-31 18:26:24,062 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:26:24] "[32mGET /admin/approvals HTTP/1.1[0m" 302 -
+2025-10-31 18:26:24,203 - app - ERROR - Admin dashboard error: 'str' object is not callable
+2025-10-31 18:26:24,219 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8188, in dashboard
+    return render_template('admin/index.html', summary=summary, current_datetime=datetime.now(), recent_activities=recent_activities)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\index.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 6, in top-level template code
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: 'str' object is not callable
+
+2025-10-31 18:26:24,274 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:26:24] "[35m[1mGET /admin HTTP/1.1[0m" 500 -
+2025-10-31 18:28:42,759 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:28:42] "GET /admin HTTP/1.1" 200 -
+2025-10-31 18:28:46,942 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:28:46] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:28:59,188 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:28:59,194 - app - ERROR - Error processing approval: 'User' object has no attribute 'username'
+2025-10-31 18:28:59,197 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8707, in process_approval_request
+    <p>A request has been forwarded to you for approval by <strong>{current_user.username}</strong>.</p>
+                                                                    ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'username'
+
+2025-10-31 18:28:59,199 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:28:59] "[35m[1mPOST /admin/process-approval-request HTTP/1.1[0m" 500 -
+2025-10-31 18:29:04,449 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:29:04,451 - app - ERROR - Error processing approval: 'User' object has no attribute 'username'
+2025-10-31 18:29:04,453 - app - ERROR - Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 8707, in process_approval_request
+    <p>A request has been forwarded to you for approval by <strong>{current_user.username}</strong>.</p>
+                                                                    ^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'User' object has no attribute 'username'
+
+2025-10-31 18:29:04,454 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:29:04] "[35m[1mPOST /admin/process-approval-request HTTP/1.1[0m" 500 -
+2025-10-31 18:29:51,327 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:29:51,939 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:29:54,827 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:29:54,833 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:29:56,217 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:29:56,529 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:29:59,021 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:29:59,023 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:30:09,498 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:30:09,863 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:30:12,487 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:30:12,492 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:30:23,143 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:30:23,495 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:30:25,696 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:30:25,700 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:31:17,813 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:31:18,173 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:31:21,107 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:31:21,114 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:31:21,705 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:31:21] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:31:32,300 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:31:32,313 - app - ERROR - Failed to send forward email: send_email() got an unexpected keyword argument 'to'
+2025-10-31 18:31:32,315 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:31:32] "POST /admin/process-approval-request HTTP/1.1" 200 -
+2025-10-31 18:31:36,675 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:31:36] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:35:32,998 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:35:32] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:35:41,982 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:35:41,986 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:35:41] "POST /admin/process-approval-request HTTP/1.1" 200 -
+2025-10-31 18:35:44,025 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:35:44] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:35:46,673 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:35:46] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:38:33,543 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:38:33] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:38:39,056 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:38:39,060 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:38:39] "POST /admin/process-approval-request HTTP/1.1" 200 -
+2025-10-31 18:38:53,650 - app - INFO - Processing approval: approve for budget #4
+2025-10-31 18:38:53,653 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:38:53] "POST /admin/process-approval-request HTTP/1.1" 200 -
+2025-10-31 18:39:54,181 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:39:55,477 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:39:59,610 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:39:59,618 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:40:13,640 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:40:14,032 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:40:16,360 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:40:16,367 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:40:34,494 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:40:34] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:40:41,030 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:40:41,045 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:40:41] "POST /admin/process-approval-request HTTP/1.1" 200 -
+2025-10-31 18:42:21,576 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:42:22,022 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:42:25,636 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:42:25,641 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:42:48,561 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:42:48,867 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:42:52,767 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:42:52,778 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:42:54,176 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:42:54] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:43:00,642 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:43:00,644 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:43:00] "POST /admin/process-approval-request HTTP/1.1" 200 -
+2025-10-31 18:44:23,217 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 18:44:23,859 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:45:13,814 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 18:45:13,815 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 18:45:13,816 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 18:45:15,726 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 18:45:15,731 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 18:45:51,684 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:45:51] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:46:00,541 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:46:00,542 - app - INFO - Successfully committed approve for budget #3
+2025-10-31 18:46:00,544 - app - INFO - Returning success response for approve on budget #3
+2025-10-31 18:46:00,544 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:46:00] "POST /admin/process-approval-request HTTP/1.1" 200 -
+2025-10-31 18:47:22,477 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:47:22] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:47:30,102 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:47:30,107 - app - INFO - Successfully committed approve for budget #3
+2025-10-31 18:47:30,107 - app - INFO - Returning success response for approve on budget #3
+2025-10-31 18:47:30,108 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:47:30] "POST /admin/process-approval-request HTTP/1.1" 200 -
+2025-10-31 18:53:04,294 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:53:04] "GET /admin/approvals HTTP/1.1" 200 -
+2025-10-31 18:53:34,894 - app - INFO - Processing approval: approve for budget #3
+2025-10-31 18:53:34,897 - app - INFO - Successfully committed approve for budget #3
+2025-10-31 18:53:34,937 - app - ERROR - Failed to send forward email: send_email() got an unexpected keyword argument 'to'
+2025-10-31 18:53:34,937 - app - INFO - Returning success response for approve on budget #3
+2025-10-31 18:53:34,938 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:53:34] "POST /admin/process-approval-request HTTP/1.1" 200 -
+2025-10-31 18:54:18,226 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 18:54:18] "GET /admin/add-project HTTP/1.1" 200 -
+2025-10-31 19:04:04,306 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-10-31 19:04:06,399 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:22:03,767 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 19:22:03,767 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 19:22:03,775 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:22:05,748 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:22:05,766 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:22:11,313 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:22:11] "GET /admin/add-project HTTP/1.1" 200 -
+2025-10-31 19:29:19,451 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:29:19] "GET /admin/add-project HTTP/1.1" 200 -
+2025-10-31 19:32:38,763 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:32:38] "[32mPOST /admin/add-project HTTP/1.1[0m" 302 -
+2025-10-31 19:32:38,794 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:32:38] "[35m[1mGET /admin/projects HTTP/1.1[0m" 500 -
+2025-10-31 19:34:05,695 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\routes\\admin.py', reloading
+2025-10-31 19:34:06,567 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:34:10,672 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:34:10,681 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:34:14,343 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\routes\\admin.py', reloading
+2025-10-31 19:34:14,671 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:34:16,994 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:34:17,010 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:38:46,884 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\routes\\admin.py', reloading
+2025-10-31 19:38:48,510 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:38:54,903 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:38:54,928 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:38:55,828 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:38:55] "[35m[1mGET /admin/projects HTTP/1.1[0m" 500 -
+2025-10-31 19:38:55,828 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:38:55] "[35m[1mGET /admin/projects HTTP/1.1[0m" 500 -
+2025-10-31 19:42:45,881 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 19:42:45,881 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 19:42:45,881 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:42:48,613 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:42:48,615 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:44:08,347 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:44:08] "[35m[1mGET /admin/projects HTTP/1.1[0m" 500 -
+2025-10-31 19:45:37,094 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 19:45:37,871 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:45:42,301 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:45:42,307 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:48:09,566 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 19:48:09,951 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:48:13,764 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:48:13,771 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:48:25,620 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 19:48:25,620 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 19:48:25,628 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:48:28,152 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:48:28,158 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:50:19,911 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:50:19] "[35m[1mGET /admin/projects HTTP/1.1[0m" 500 -
+2025-10-31 19:51:55,340 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 19:51:56,178 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:51:59,801 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:51:59,807 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:53:05,430 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-10-31 19:53:05,826 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:53:10,009 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:53:10,015 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:53:15,485 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 19:53:15,485 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 19:53:15,489 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 19:53:17,847 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 19:53:17,851 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 19:54:25,489 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:54:25] "[35m[1mGET /admin/projects HTTP/1.1[0m" 500 -
+2025-10-31 19:57:02,936 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:57:02] "GET /admin/projects HTTP/1.1" 200 -
+2025-10-31 19:57:24,485 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:57:24] "GET /admin/projects HTTP/1.1" 200 -
+2025-10-31 19:57:28,640 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:57:28] "GET /admin/projects HTTP/1.1" 200 -
+2025-10-31 19:57:32,214 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:57:32] "GET /admin HTTP/1.1" 200 -
+2025-10-31 19:57:39,934 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:57:39] "GET /admin/projects HTTP/1.1" 200 -
+2025-10-31 19:57:45,467 - app - INFO - Project route: User 1 (super_hq) accessing project 4
+2025-10-31 19:57:45,830 - app - ERROR - Project details error: Could not build url for endpoint 'milestones' with values ['project_id']. Did you mean 'admin.milestones' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 14362, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 860, in block 'content'
+    <a href="{{ url_for('milestones', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'milestones' with values ['project_id']. Did you mean 'admin.milestones' instead?
+2025-10-31 19:57:45,876 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:57:45] "[32mGET /project/4 HTTP/1.1[0m" 302 -
+2025-10-31 19:57:45,901 - app - INFO - User 1 (super_hq) accessing project dashboard
+2025-10-31 19:57:45,901 - app - INFO - Getting accessible projects for user 1 (super_hq)
+2025-10-31 19:57:45,901 - app - INFO - SUPER_HQ user - returning all 4 projects
+2025-10-31 19:57:45,901 - app - INFO - User 1 (super_hq) accessing 4 projects
+2025-10-31 19:57:46,018 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 19:57:46] "GET /project HTTP/1.1" 200 -
+2025-10-31 20:01:39,750 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 20:01:39] "GET /admin/projects HTTP/1.1" 200 -
+2025-10-31 20:01:44,911 - app - INFO - Project route: User 1 (super_hq) accessing project 4
+2025-10-31 20:01:45,333 - app - ERROR - Project details error: Could not build url for endpoint 'project_timeline' with values ['project_id']. Did you mean 'project.project_timeline' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 14362, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 982, in block 'content'
+    <a href="{{ url_for('project_timeline', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project_timeline' with values ['project_id']. Did you mean 'project.project_timeline' instead?
+2025-10-31 20:01:45,356 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 20:01:45] "[32mGET /project/4 HTTP/1.1[0m" 302 -
+2025-10-31 20:01:45,386 - app - INFO - User 1 (super_hq) accessing project dashboard
+2025-10-31 20:01:45,386 - app - INFO - Getting accessible projects for user 1 (super_hq)
+2025-10-31 20:01:45,386 - app - INFO - SUPER_HQ user - returning all 4 projects
+2025-10-31 20:01:45,386 - app - INFO - User 1 (super_hq) accessing 4 projects
+2025-10-31 20:01:45,424 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 20:01:45] "GET /project HTTP/1.1" 200 -
+2025-10-31 21:36:43,741 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:36:43] "[35m[1mGET /admin/projects HTTP/1.1[0m" 500 -
+2025-10-31 21:36:44,500 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:36:44] "[36mGET /admin/projects?__debugger__=yes&cmd=resource&f=style.css HTTP/1.1[0m" 304 -
+2025-10-31 21:36:44,504 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:36:44] "[36mGET /admin/projects?__debugger__=yes&cmd=resource&f=debugger.js HTTP/1.1[0m" 304 -
+2025-10-31 21:36:44,609 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:36:44] "[36mGET /admin/projects?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 21:36:44,667 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:36:44] "[36mGET /admin/projects?__debugger__=yes&cmd=resource&f=console.png HTTP/1.1[0m" 304 -
+2025-10-31 21:39:17,726 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\utils\\decorators.py', reloading
+2025-10-31 21:39:20,981 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 21:39:26,465 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 21:39:26,483 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 21:40:01,856 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\utils\\decorators.py', reloading
+2025-10-31 21:40:02,342 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 21:40:06,269 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 21:40:06,280 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 21:40:08,686 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\routes\\project.py', reloading
+2025-10-31 21:40:09,596 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 21:40:13,561 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 21:40:13,620 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 21:40:14,284 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\routes\\project.py', reloading
+2025-10-31 21:40:14,725 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 21:40:17,465 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 21:40:17,467 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 21:41:08,867 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\routes\\admin.py', reloading
+2025-10-31 21:41:09,254 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 21:41:12,104 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 21:41:12,117 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 21:41:24,202 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\routes\\admin.py', reloading
+2025-10-31 21:41:24,621 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 21:41:28,184 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 21:41:28,190 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 21:41:44,946 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-10-31 21:41:44,946 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-10-31 21:41:44,949 - werkzeug - INFO -  * Restarting with stat
+2025-10-31 21:41:47,439 - werkzeug - WARNING -  * Debugger is active!
+2025-10-31 21:41:47,442 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-10-31 21:44:37,426 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:44:37] "[32mGET /admin/projects HTTP/1.1[0m" 302 -
+2025-10-31 21:44:38,016 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:44:38] "GET /login HTTP/1.1" 200 -
+2025-10-31 21:44:45,374 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:44:45] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-10-31 21:44:46,006 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:44:46] "GET /admin HTTP/1.1" 200 -
+2025-10-31 21:44:51,686 - app - INFO - User 1 (super_hq) accessing project dashboard
+2025-10-31 21:44:51,688 - app - INFO - Getting accessible projects for user 1 (super_hq)
+2025-10-31 21:44:51,693 - app - INFO - SUPER_HQ user - returning all 4 projects
+2025-10-31 21:44:51,694 - app - INFO - User 1 (super_hq) accessing 4 projects
+2025-10-31 21:44:51,814 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:44:51] "GET /project HTTP/1.1" 200 -
+2025-10-31 21:44:57,144 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:44:57] "GET /admin/projects HTTP/1.1" 200 -
+2025-10-31 21:44:59,741 - app - INFO - Project route: User 1 (super_hq) accessing project 4
+2025-10-31 21:45:00,202 - app - ERROR - Project details error: Could not build url for endpoint 'project_timeline' with values ['project_id']. Did you mean 'project.project_timeline' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 14362, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 982, in block 'content'
+    <a href="{{ url_for('project_timeline', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project_timeline' with values ['project_id']. Did you mean 'project.project_timeline' instead?
+2025-10-31 21:45:00,247 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:45:00] "[32mGET /project/4 HTTP/1.1[0m" 302 -
+2025-10-31 21:45:00,263 - app - INFO - User 1 (super_hq) accessing project dashboard
+2025-10-31 21:45:00,263 - app - INFO - Getting accessible projects for user 1 (super_hq)
+2025-10-31 21:45:00,266 - app - INFO - SUPER_HQ user - returning all 4 projects
+2025-10-31 21:45:00,266 - app - INFO - User 1 (super_hq) accessing 4 projects
+2025-10-31 21:45:00,292 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:45:00] "GET /project HTTP/1.1" 200 -
+2025-10-31 21:52:10,411 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:52:10] "GET /admin/projects HTTP/1.1" 200 -
+2025-10-31 21:52:23,695 - app - INFO - User 1 accessing project 4
+2025-10-31 21:52:23,799 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-10-31 21:52:24,116 - app - ERROR - Admin project details error: Could not build url for endpoint 'project_timeline' with values ['project_id']. Did you mean 'project.project_timeline' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 12132, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 982, in block 'content'
+    <a href="{{ url_for('project_timeline', project_id=project.id) }}"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project_timeline' with values ['project_id']. Did you mean 'project.project_timeline' instead?
+2025-10-31 21:52:24,158 - app - ERROR - Error type: BuildError
+2025-10-31 21:52:24,158 - app - ERROR - Error args: ('project_timeline', {'project_id': 4}, None)
+2025-10-31 21:52:24,164 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:52:24] "[32mGET /admin/projects/4 HTTP/1.1[0m" 302 -
+2025-10-31 21:52:24,191 - werkzeug - INFO - 127.0.0.1 - - [31/Oct/2025 21:52:24] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-01 04:15:35,811 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:15:35] "[32mGET /admin/projects HTTP/1.1[0m" 302 -
+2025-11-01 04:15:35,948 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:15:35] "GET /login HTTP/1.1" 200 -
+2025-11-01 04:15:38,797 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:15:38] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-11-01 04:15:38,893 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:15:38] "GET /admin HTTP/1.1" 200 -
+2025-11-01 04:15:44,170 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:15:44] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-01 04:15:47,438 - app - INFO - User 1 accessing project 4
+2025-11-01 04:15:47,449 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-01 04:15:47,836 - app - ERROR - Admin project details error: 'str' object is not callable
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 12132, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1023, in block 'content'
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: 'str' object is not callable
+2025-11-01 04:15:47,855 - app - ERROR - Error type: TypeError
+2025-11-01 04:15:47,855 - app - ERROR - Error args: ("'str' object is not callable",)
+2025-11-01 04:15:47,857 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:15:47] "[32mGET /admin/projects/4 HTTP/1.1[0m" 302 -
+2025-11-01 04:15:47,873 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:15:47] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-01 04:26:56,520 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:26:56] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-01 04:27:10,555 - app - INFO - User 1 accessing project 4
+2025-11-01 04:27:11,142 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-01 04:27:14,638 - app - ERROR - Admin project details error: Could not build url for endpoint 'project_reports' with values ['project_id']. Did you mean 'admin.project_reports' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 12132, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1796, in block 'content'
+    window.location.href = `{{ url_for('project_reports', project_id=project.id) }}`;
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project_reports' with values ['project_id']. Did you mean 'admin.project_reports' instead?
+2025-11-01 04:27:14,951 - app - ERROR - Error type: BuildError
+2025-11-01 04:27:14,953 - app - ERROR - Error args: ('project_reports', {'project_id': 4}, None)
+2025-11-01 04:27:14,968 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:27:14] "[32mGET /admin/projects/4 HTTP/1.1[0m" 302 -
+2025-11-01 04:27:15,134 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:27:15] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-01 04:27:18,489 - app - INFO - User 1 accessing project 4
+2025-11-01 04:27:18,617 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-01 04:27:18,753 - app - ERROR - Admin project details error: Could not build url for endpoint 'project_reports' with values ['project_id']. Did you mean 'admin.project_reports' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 12132, in project_details
+    return render_template('admin/view_project.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\view_project.html", line 1796, in block 'content'
+    window.location.href = `{{ url_for('project_reports', project_id=project.id) }}`;
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project_reports' with values ['project_id']. Did you mean 'admin.project_reports' instead?
+2025-11-01 04:27:18,789 - app - ERROR - Error type: BuildError
+2025-11-01 04:27:18,790 - app - ERROR - Error args: ('project_reports', {'project_id': 4}, None)
+2025-11-01 04:27:18,794 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:27:18] "[32mGET /admin/projects/4 HTTP/1.1[0m" 302 -
+2025-11-01 04:27:18,940 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:27:18] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-01 04:31:11,691 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:31:11] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-01 04:31:15,409 - app - INFO - User 1 accessing project 4
+2025-11-01 04:31:15,415 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-01 04:31:15,760 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 04:31:15] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-01 05:59:11,217 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 05:59:11] "[32mGET /admin/projects/4 HTTP/1.1[0m" 302 -
+2025-11-01 05:59:11,677 - werkzeug - INFO - 127.0.0.1 - - [01/Nov/2025 05:59:11] "GET /login?next=/admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 10:09:31,896 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-11-02 10:09:31,898 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-02 10:09:31,904 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:09:34,714 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:09:34,723 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:13:44,569 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:13:44] "GET / HTTP/1.1" 200 -
+2025-11-02 10:13:47,516 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:13:47] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-11-02 10:20:49,229 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:20:49] "GET /login HTTP/1.1" 200 -
+2025-11-02 10:20:53,673 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:20:53] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-11-02 10:20:55,346 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:20:55] "GET /admin HTTP/1.1" 200 -
+2025-11-02 10:21:08,535 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:21:08] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-02 10:21:12,155 - app - INFO - User 1 accessing project 4
+2025-11-02 10:21:12,174 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 10:21:12,563 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:21:12] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 10:26:09,634 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-02 10:26:11,176 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:26:15,986 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:26:15,996 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:26:37,228 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-02 10:26:37,704 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:26:41,174 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:26:41,186 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:37:08,109 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-02 10:37:09,646 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:37:15,805 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:37:15,816 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:38:43,185 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_boq_status_migration.py', reloading
+2025-11-02 10:38:43,852 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:38:51,506 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:38:51,518 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:39:03,689 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_boq_status_migration.py', reloading
+2025-11-02 10:39:04,110 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:39:08,559 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:39:08,579 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:39:27,440 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_boq_status_migration.py', reloading
+2025-11-02 10:39:27,878 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:39:32,136 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:39:32,147 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:39:43,279 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_boq_status_migration.py', reloading
+2025-11-02 10:39:43,892 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:39:48,088 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:39:48,104 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:40:19,971 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-02 10:40:20,473 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:40:25,341 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:40:25,350 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:40:29,643 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-02 10:40:30,018 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:40:34,081 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:40:34,094 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:40:57,011 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-11-02 10:40:57,011 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-02 10:40:57,021 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 10:41:01,663 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 10:41:01,677 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 10:41:01,722 - app - INFO - User 1 accessing project 4
+2025-11-02 10:41:01,735 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 10:41:02,302 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:41:02] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 10:41:14,040 - app - INFO - User 1 accessing project 4
+2025-11-02 10:41:14,048 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 10:41:14,077 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:41:14] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 10:43:13,413 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:43:13] "GET /?id=f6a9725c-c69a-4fa2-a2d9-b5c38d4375be&vscodeBrowserReqId=1762076593272 HTTP/1.1" 200 -
+2025-11-02 10:43:43,398 - app - INFO - User 1 accessing project 4
+2025-11-02 10:43:43,422 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 10:43:43,471 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:43:43] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 10:47:42,510 - app - INFO - User 1 accessing project 4
+2025-11-02 10:47:42,522 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 10:47:42,566 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 10:47:42] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 10:59:12,187 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-02 10:59:14,293 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 11:04:01,157 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-11-02 11:04:01,157 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-02 11:04:01,172 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 11:04:03,170 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 11:04:03,170 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 11:07:44,851 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\create_sample_imports.py', reloading
+2025-11-02 11:07:45,648 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 11:11:12,219 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-11-02 11:11:12,221 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-02 11:11:12,227 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 11:11:17,271 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 11:11:17,283 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 11:11:17,883 - app - INFO - User 1 accessing project 4
+2025-11-02 11:11:17,913 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 11:11:18,452 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 11:11:18] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 11:11:34,737 - app - INFO - User 1 accessing project 4
+2025-11-02 11:11:34,750 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 11:11:34,820 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 11:11:34] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 11:15:35,100 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-02 11:15:36,116 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 11:15:41,099 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 11:15:41,111 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 11:18:07,105 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_boq_indexes.py', reloading
+2025-11-02 11:22:09,945 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.144.128:5000
+2025-11-02 11:22:09,946 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-02 11:22:09,948 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 11:22:11,887 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 11:22:11,887 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 11:22:19,125 - app - INFO - User 1 accessing project 4
+2025-11-02 11:22:19,134 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 11:22:19,387 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 11:22:19] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 22:01:27,168 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 22:01:27] "[32mGET /admin/projects/4 HTTP/1.1[0m" 302 -
+2025-11-02 22:01:27,702 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 22:01:27] "GET /login?next=/admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 22:01:31,132 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 22:01:31] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-11-02 22:01:31,307 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 22:01:31] "GET /admin HTTP/1.1" 200 -
+2025-11-02 22:01:36,704 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 22:01:36] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-02 22:01:39,511 - app - INFO - User 1 accessing project 4
+2025-11-02 22:01:39,562 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 22:01:39,657 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 22:01:39] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 22:05:51,691 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-02 22:05:54,035 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 22:05:59,221 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 22:05:59,241 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 22:06:17,194 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-02 22:06:17,660 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 22:06:27,289 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 22:06:27,303 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 22:10:25,599 - app - INFO - User 1 accessing project 4
+2025-11-02 22:10:25,645 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 22:10:26,814 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 22:10:26] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 22:10:47,180 - app - INFO - User 1 accessing project 4
+2025-11-02 22:10:47,185 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 22:10:47,220 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 22:10:47] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-02 22:37:40,279 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.155.128:5000
+2025-11-02 22:37:40,279 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-02 22:37:40,279 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 22:37:43,355 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 22:37:43,512 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 22:43:52,091 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.155.128:5000
+2025-11-02 22:43:52,095 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-02 22:43:52,099 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 22:43:56,849 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 22:43:56,861 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 22:45:16,498 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\test_boq_routes.py', reloading
+2025-11-02 22:45:16,468 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\test_boq_routes.py', reloading
+2025-11-02 22:45:16,971 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 22:45:18,950 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 22:45:22,917 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 22:45:22,924 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 22:45:22,986 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 22:45:22,996 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 22:46:33,505 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.155.128:5000
+2025-11-02 22:46:33,507 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-02 22:46:33,549 - werkzeug - INFO -  * Restarting with stat
+2025-11-02 22:46:42,379 - werkzeug - WARNING -  * Debugger is active!
+2025-11-02 22:46:42,414 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-02 22:46:45,813 - app - INFO - User 1 accessing project 4
+2025-11-02 22:46:45,944 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-02 22:46:48,117 - werkzeug - INFO - 127.0.0.1 - - [02/Nov/2025 22:46:48] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-03 05:00:37,574 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:00:37] "[32mGET /admin/projects/4 HTTP/1.1[0m" 302 -
+2025-11-03 05:00:40,085 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:00:40] "GET /login?next=/admin/projects/4 HTTP/1.1" 200 -
+2025-11-03 05:01:13,380 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:01:13] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-11-03 05:01:13,659 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:01:13] "GET /admin HTTP/1.1" 200 -
+2025-11-03 05:04:04,119 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:04:04] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-03 05:04:08,119 - app - INFO - User 1 accessing project 4
+2025-11-03 05:04:08,165 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:04:08,244 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:04:08] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-03 05:10:17,313 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:10:17,344 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:10:21,057 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:10:21,109 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:10:27,944 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:10:27,952 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:10:27,959 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:10:27,962 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:10:43,105 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:10:43,384 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:10:43,938 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:10:44,313 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:10:51,445 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:10:51,458 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:10:51,473 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:10:51,486 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:11:23,574 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:11:23] "[35m[1mGET /admin/milestones/4 HTTP/1.1[0m" 500 -
+2025-11-03 05:11:26,616 - app - INFO - User 1 accessing project 4
+2025-11-03 05:11:26,625 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:11:27,333 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:11:27] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-03 05:11:34,017 - app - INFO - Accessing project reports for project_id: 4
+2025-11-03 05:11:34,018 - app - INFO - Project found: Provision of Asphaltic Access Road to Turkish Nile University
+2025-11-03 05:11:34,152 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:11:34] "GET /admin/projects/4/reports HTTP/1.1" 200 -
+2025-11-03 05:13:06,693 - app - INFO - Project route: User 1 (super_hq) accessing project 4
+2025-11-03 05:13:07,357 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:13:07] "GET /project/4 HTTP/1.1" 200 -
+2025-11-03 05:13:13,102 - app - INFO - Accessing budget analysis for project_id: 4
+2025-11-03 05:13:13,651 - app - ERROR - Error loading budget analysis for project 4: Could not build url for endpoint 'project_reports' with values ['project_id']. Did you mean 'admin.project_reports' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 13858, in budget_analysis
+    return render_template('admin/budget_analysis.html', **budget_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\budget_analysis.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\budget_analysis.html", line 73, in block 'content'
+    <a href="{{ url_for('project_reports', project_id=project.id) }}" class="bg-blue-500/10 border border-blue-400/40 text-blue-400 px-6 py-3 rounded-xl font-semibold hover:bg-blue-500/20 hover:text-white transition-all duration-300 flex items-center gap-2 glow-blue">
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project_reports' with values ['project_id']. Did you mean 'admin.project_reports' instead?
+2025-11-03 05:13:13,790 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:13:13] "[32mGET /admin/projects/4/budget-analysis HTTP/1.1[0m" 302 -
+2025-11-03 05:13:13,824 - app - INFO - User 1 accessing project 4
+2025-11-03 05:13:13,827 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:13:13,868 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:13:13] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-03 05:13:21,172 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:13:21] "[33mGET /admin/projects/4/settings HTTP/1.1[0m" 404 -
+2025-11-03 05:14:21,907 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:14:22,592 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:14:24,892 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:14:25,083 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:14:40,656 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:14:40,658 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:14:40,675 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:14:40,682 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:15:31,556 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:15:31,889 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:15:32,096 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:15:32,518 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:15:37,855 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:15:37,863 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:15:37,874 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:15:37,883 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:15:59,104 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:15:59,151 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:15:59,678 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:15:59,715 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:16:03,776 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:16:03,786 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:16:03,819 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:16:03,828 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:17:19,741 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.119.128:5000
+2025-11-03 05:17:19,742 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-03 05:17:19,746 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:17:27,343 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:17:27,492 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:17:28,853 - app - INFO - User 1 accessing project 4
+2025-11-03 05:17:29,041 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:17:30,123 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:17:30] "GET /admin/projects/4 HTTP/1.1" 200 -
+2025-11-03 05:19:16,300 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:19:16] "GET /admin/add-project HTTP/1.1" 200 -
+2025-11-03 05:21:02,256 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:21:02] "[32mPOST /admin/add-project HTTP/1.1[0m" 302 -
+2025-11-03 05:21:02,500 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:21:02] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-03 05:21:11,162 - app - INFO - User 1 accessing project 5
+2025-11-03 05:21:11,176 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:21:11,220 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:21:11] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 05:22:02,008 - app - INFO - User 1 accessing project 5
+2025-11-03 05:22:02,015 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:22:02,044 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:22:02] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 05:22:05,673 - app - INFO - User 1 accessing project 5
+2025-11-03 05:22:05,677 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:22:05,690 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:22:05] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 05:27:33,699 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:27:33,918 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:27:37,735 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:27:37,713 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:27:44,226 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:27:44,226 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:27:44,239 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:27:44,239 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:28:17,453 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:28:17,516 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-03 05:28:18,077 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:28:18,091 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:38:03,784 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.119.128:5000
+2025-11-03 05:38:03,807 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-03 05:38:03,819 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 05:38:08,080 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 05:38:08,118 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 05:38:12,533 - app - INFO - User 1 accessing project 5
+2025-11-03 05:38:12,554 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:38:13,086 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:38:13] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 05:45:15,421 - app - INFO - User 1 accessing project 5
+2025-11-03 05:45:15,487 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:45:15,681 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:45:15] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 05:45:19,312 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:45:19] "POST /admin/projects/5/load_boq_templates HTTP/1.1" 200 -
+2025-11-03 05:45:20,840 - app - INFO - User 1 accessing project 5
+2025-11-03 05:45:20,846 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:45:20,877 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:45:20] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 05:45:54,335 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:45:54] "POST /admin/projects/5/load_boq_templates HTTP/1.1" 200 -
+2025-11-03 05:45:55,861 - app - INFO - User 1 accessing project 5
+2025-11-03 05:45:55,866 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:45:55,891 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:45:55] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 05:46:01,049 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:46:01] "POST /admin/projects/5/generate_material_schedule HTTP/1.1" 200 -
+2025-11-03 05:46:02,578 - app - INFO - User 1 accessing project 5
+2025-11-03 05:46:02,607 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:46:02,636 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:46:02] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 05:46:23,418 - app - INFO - Cached 4 templates for Bridge
+2025-11-03 05:46:23,422 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:46:23] "POST /admin/projects/5/get_boq_templates HTTP/1.1" 200 -
+2025-11-03 05:46:23,474 - app - INFO - Cached 4 templates for Road
+2025-11-03 05:46:23,475 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:46:23] "POST /admin/projects/5/get_boq_templates HTTP/1.1" 200 -
+2025-11-03 05:46:23,476 - app - INFO - Cached 3 templates for Culvert
+2025-11-03 05:46:23,476 - app - INFO - Cached 4 templates for Building
+2025-11-03 05:46:23,477 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:46:23] "POST /admin/projects/5/get_boq_templates HTTP/1.1" 200 -
+2025-11-03 05:46:23,478 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:46:23] "POST /admin/projects/5/get_boq_templates HTTP/1.1" 200 -
+2025-11-03 05:46:35,566 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:46:35] "POST /admin/projects/5/load_boq_templates HTTP/1.1" 200 -
+2025-11-03 05:46:37,110 - app - INFO - User 1 accessing project 5
+2025-11-03 05:46:37,113 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 05:46:37,149 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:46:37] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 05:47:26,399 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 05:47:26] "POST /admin/projects/5/update_boq_item HTTP/1.1" 200 -
+2025-11-03 06:31:59,363 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.119.128:5000
+2025-11-03 06:31:59,364 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-03 06:31:59,371 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:32:03,480 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 06:32:03,490 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 06:38:45,512 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.119.128:5000
+2025-11-03 06:38:45,514 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-03 06:38:45,516 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:38:48,228 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 06:38:48,254 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 06:41:32,256 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:41:32] "[32mPOST /admin/projects/5/upload_document HTTP/1.1[0m" 302 -
+2025-11-03 06:41:32,288 - app - INFO - User 1 accessing project 5
+2025-11-03 06:41:32,296 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 06:41:32,799 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:41:32] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 06:41:46,364 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:41:46] "[35m[1mGET /admin/milestones/5 HTTP/1.1[0m" 500 -
+2025-11-03 06:41:59,030 - app - INFO - Accessing project reports for project_id: 5
+2025-11-03 06:41:59,030 - app - INFO - Project found: Provision of Engineering Infrastructure to Mbora District
+2025-11-03 06:41:59,120 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:41:59] "GET /admin/projects/5/reports HTTP/1.1" 200 -
+2025-11-03 06:42:15,461 - app - INFO - Project route: User 1 (super_hq) accessing project 5
+2025-11-03 06:42:15,501 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:42:15] "GET /project/5 HTTP/1.1" 200 -
+2025-11-03 06:42:19,179 - app - INFO - Accessing budget analysis for project_id: 5
+2025-11-03 06:42:19,324 - app - ERROR - Error loading budget analysis for project 5: Could not build url for endpoint 'project_reports' with values ['project_id']. Did you mean 'admin.project_reports' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 14220, in budget_analysis
+    return render_template('admin/budget_analysis.html', **budget_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\budget_analysis.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\budget_analysis.html", line 73, in block 'content'
+    <a href="{{ url_for('project_reports', project_id=project.id) }}" class="bg-blue-500/10 border border-blue-400/40 text-blue-400 px-6 py-3 rounded-xl font-semibold hover:bg-blue-500/20 hover:text-white transition-all duration-300 flex items-center gap-2 glow-blue">
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'project_reports' with values ['project_id']. Did you mean 'admin.project_reports' instead?
+2025-11-03 06:42:19,354 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:42:19] "[32mGET /admin/projects/5/budget-analysis HTTP/1.1[0m" 302 -
+2025-11-03 06:42:19,364 - app - INFO - User 1 accessing project 5
+2025-11-03 06:42:19,366 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 06:42:19,394 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:42:19] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 06:42:33,662 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:42:33] "[33mGET /admin/projects/5/settings HTTP/1.1[0m" 404 -
+2025-11-03 06:45:21,299 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.119.128:5000
+2025-11-03 06:45:21,300 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-03 06:45:21,305 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:45:24,419 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 06:45:24,431 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 06:46:00,588 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\final_system_test.py', reloading
+2025-11-03 06:46:03,531 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:46:06,808 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 06:46:06,813 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 06:49:37,957 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\final_system_test.py', reloading
+2025-11-03 06:49:38,632 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\final_system_test.py', reloading
+2025-11-03 06:49:38,736 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:49:39,183 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:49:43,465 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 06:49:43,472 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 06:50:16,820 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\final_system_test.py', reloading
+2025-11-03 06:50:17,348 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:50:21,409 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 06:50:21,416 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 06:50:25,313 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\final_system_test.py', reloading
+2025-11-03 06:50:25,693 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:50:28,749 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 06:50:28,755 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 06:50:42,927 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:50:42] "GET / HTTP/1.1" 200 -
+2025-11-03 06:50:42,938 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:50:42] "[32mGET /admin HTTP/1.1[0m" 302 -
+2025-11-03 06:50:42,970 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:50:42] "GET /login HTTP/1.1" 200 -
+2025-11-03 06:50:42,983 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:50:42] "[32mGET /admin/projects HTTP/1.1[0m" 302 -
+2025-11-03 06:50:43,001 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:50:43] "GET /login HTTP/1.1" 200 -
+2025-11-03 06:50:43,232 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\final_system_test.py', reloading
+2025-11-03 06:50:43,774 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:50:46,429 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 06:50:46,436 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 06:52:02,256 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.119.128:5000
+2025-11-03 06:52:02,256 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-03 06:52:02,258 - werkzeug - INFO -  * Restarting with stat
+2025-11-03 06:52:05,141 - werkzeug - WARNING -  * Debugger is active!
+2025-11-03 06:52:05,148 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-03 06:53:23,080 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:53:23] "[32mGET /admin/projects?id=f6a9725c-c69a-4fa2-a2d9-b5c38d4375be&vscodeBrowserReqId=1762149202900 HTTP/1.1[0m" 302 -
+2025-11-03 06:53:23,772 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:53:23] "GET /login HTTP/1.1" 200 -
+2025-11-03 06:53:34,740 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:53:34] "[33mGET /admin/projects/5/settings HTTP/1.1[0m" 404 -
+2025-11-03 06:53:36,833 - app - INFO - User 1 accessing project 5
+2025-11-03 06:53:36,849 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 06:53:37,829 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:53:37] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 06:53:43,158 - app - INFO - User 1 accessing project 5
+2025-11-03 06:53:43,162 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 06:53:43,188 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:53:43] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 06:53:46,859 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:53:46] "GET /admin/milestones/5 HTTP/1.1" 200 -
+2025-11-03 06:53:52,806 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:53:52] "GET /admin/projects HTTP/1.1" 200 -
+2025-11-03 06:53:55,630 - app - INFO - User 1 accessing project 5
+2025-11-03 06:53:55,634 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 06:53:55,654 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:53:55] "GET /admin/projects/5 HTTP/1.1" 200 -
+2025-11-03 06:54:04,134 - app - INFO - Accessing project reports for project_id: 5
+2025-11-03 06:54:04,134 - app - INFO - Project found: Provision of Engineering Infrastructure to Mbora District
+2025-11-03 06:54:04,302 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:54:04] "GET /admin/projects/5/reports HTTP/1.1" 200 -
+2025-11-03 06:54:06,234 - app - INFO - Project route: User 1 (super_hq) accessing project 5
+2025-11-03 06:54:06,267 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:54:06] "GET /project/5 HTTP/1.1" 200 -
+2025-11-03 06:54:10,129 - app - INFO - Accessing budget analysis for project_id: 5
+2025-11-03 06:54:10,258 - app - ERROR - Error loading budget analysis for project 5: Object of type Row is not JSON serializable
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 14220, in budget_analysis
+    return render_template('admin/budget_analysis.html', **budget_data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\budget_analysis.html", line 1, in top-level template code
+    {% extends "admin/base_simple.html" %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\base_simple.html", line 537, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\admin\budget_analysis.html", line 476, in block 'content'
+    const monthlyData = {{ monthly_expenses | tojson }};
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\filters.py", line 1688, in do_tojson
+    return htmlsafe_json_dumps(value, dumps=dumps, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\utils.py", line 658, in htmlsafe_json_dumps
+    dumps(obj, **kwargs)
+  File "C:\Python312\Lib\site-packages\flask\json\provider.py", line 180, in dumps
+    return json.dumps(obj, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\json\__init__.py", line 238, in dumps
+    **kw).encode(obj)
+          ^^^^^^^^^^^
+  File "C:\Python312\Lib\json\encoder.py", line 200, in encode
+    chunks = self.iterencode(o, _one_shot=True)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\json\encoder.py", line 258, in iterencode
+    return _iterencode(o, 0)
+           ^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\json\provider.py", line 120, in _default
+    raise TypeError(f"Object of type {type(o).__name__} is not JSON serializable")
+TypeError: Object of type Row is not JSON serializable
+2025-11-03 06:54:10,993 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:54:10] "[32mGET /admin/projects/5/budget-analysis HTTP/1.1[0m" 302 -
+2025-11-03 06:54:11,091 - app - INFO - User 1 accessing project 5
+2025-11-03 06:54:11,094 - app - INFO - Access check - assignment: False, manager: False, super_hq: True
+2025-11-03 06:54:11,116 - werkzeug - INFO - 127.0.0.1 - - [03/Nov/2025 06:54:11] "GET /admin/projects/5 HTTP/1.1" 200 -

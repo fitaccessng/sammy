@@ -208,20 +208,20 @@
                     
                     <!-- Action buttons -->
                     <div class="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
-                        <a href="{{ url_for('project.download_document', doc_id=doc.id) }}" 
+                        <a href="{{ url_for('download_document', doc_id=doc.id) }}" 
                            class="flex-1 inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-indigo-600 bg-indigo-50 rounded-md hover:bg-indigo-100 transition-colors">
                             <i class="bx bx-download mr-1"></i>Download
                         </a>
                         
                         {% if can_upload and doc.status == 'pending' %}
-                            <form method="POST" action="{{ url_for('project.approve_document', doc_id=doc.id) }}" style="display: inline;">
+                            <form method="POST" action="{{ url_for('approve_document', doc_id=doc.id) }}" style="display: inline;">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <button type="submit" 
                                         class="inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-green-600 bg-green-50 rounded-md hover:bg-green-100 transition-colors">
                                     <i class="bx bx-check mr-1"></i>Approve
                                 </button>
                             </form>
-                            <form method="POST" action="{{ url_for('project.reject_document', doc_id=doc.id) }}" style="display: inline;">
+                            <form method="POST" action="{{ url_for('reject_document', doc_id=doc.id) }}" style="display: inline;">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <button type="submit" 
                                         class="inline-flex items-center justify-center px-3 py-2 text-xs font-medium text-orange-600 bg-orange-50 rounded-md hover:bg-orange-100 transition-colors">
@@ -231,7 +231,7 @@
                         {% endif %}
                         
                         {% if can_upload %}
-                            <form method="POST" action="{{ url_for('project.delete_document', doc_id=doc.id) }}" style="display: inline;" 
+                            <form method="POST" action="{{ url_for('delete_document', doc_id=doc.id) }}" style="display: inline;" 
                                   onsubmit="return confirm('Are you sure you want to delete this document?')">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                                 <button type="submit" 
