@@ -1,0 +1,209 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ project.name }} - Daily Reports{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Daily Production Reports</h1>
+                    <p class="mt-1 text-sm text-gray-500">{{ project.name }}</p>
+                </div>
+                <div class="flex gap-3">
+                    <input type="date" id="filter-date" value="{{ filter_date.strftime('%Y-%m-%d') if filter_date else '' }}" 
+                           onchange="filterByDate()" 
+                           class="border border-gray-300 rounded-lg px-4 py-2">
+                    <a href="{{ url_for('office_pm.project_details', project_id=project.id) }}" 
+                       class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                        <i class='bx bx-arrow-back mr-2'></i>
+                        <span>Back</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Total Reports</h3>
+                <p class="text-2xl font-bold text-blue-600 mt-1">{{ total_reports }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Today's Reports</h3>
+                <p class="text-2xl font-bold text-green-600 mt-1">{{ dprs|length }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Avg Productivity</h3>
+                <p class="text-2xl font-bold text-purple-600 mt-1">{{ avg_productivity }}%</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Avg Labor</h3>
+                <p class="text-2xl font-bold text-yellow-600 mt-1">{{ avg_labor|round(0)|int }}</p>
+                <p class="text-xs text-gray-500 mt-1">Workers per day</p>
+            </div>
+        </div>
+
+        <!-- Productivity Trend -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">📈 7-Day Productivity Trend</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    {% for day in trend_data %}
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">{{ day.date }}</span>
+                            <span class="font-medium text-gray-900">{{ day.productivity }}%</span>
+                        </div>
+                        <div class="h-6 bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-full transition-all {% if day.productivity >= 80 %}bg-green-500{% elif day.productivity >= 60 %}bg-yellow-500{% else %}bg-red-500{% endif %}" 
+                                 style="width: {{ day.productivity }}%"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Reports List -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">📋 Reports for {{ filter_date.strftime('%B %d, %Y') if filter_date else 'All Time' }}</h2>
+            </div>
+            <div class="p-6">
+                {% if dprs %}
+                <div class="space-y-4">
+                    {% for dpr in dprs %}
+                    <div class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900">{{ dpr.report_date.strftime('%A, %B %d, %Y') }}</h3>
+                                <p class="text-sm text-gray-600 mt-1">Submitted by Site Manager</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-3 py-1 bg-green-100 text-green-800 text-sm rounded-full">
+                                    {{ dpr.weather|capitalize if dpr.weather else 'Clear' }}
+                                </span>
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full font-medium">
+                                    {{ dpr.daily_progress or 0 }}% Progress
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Metrics Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="text-xs text-gray-600 mb-1">Labor Count</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ dpr.labor_count or 0 }} workers</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-600 mb-1">Equipment Used</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ dpr.equipment_used or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-600 mb-1">Materials Used</p>
+                                <p class="text-lg font-semibold text-gray-900">{{ dpr.materials_used or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-600 mb-1">Productivity</p>
+                                <p class="text-lg font-semibold {% if dpr.daily_progress >= 80 %}text-green-600{% elif dpr.daily_progress >= 60 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                                    {{ dpr.daily_progress or 0 }}%
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Work Completed -->
+                        <div class="mb-4">
+                            <h4 class="text-sm font-medium text-gray-900 mb-2">Work Completed</h4>
+                            <p class="text-gray-700 bg-white border border-gray-200 rounded-lg p-3">{{ dpr.work_completed or 'No description provided' }}</p>
+                        </div>
+
+                        <!-- Issues -->
+                        {% if dpr.issues %}
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-medium text-red-900 mb-2 flex items-center">
+                                <i class='bx bx-error-circle mr-2'></i>
+                                Issues Reported
+                            </h4>
+                            <p class="text-sm text-red-800">{{ dpr.issues }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Safety Notes -->
+                        {% if dpr.safety_notes %}
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                            <h4 class="text-sm font-medium text-yellow-900 mb-2 flex items-center">
+                                <i class='bx bx-shield mr-2'></i>
+                                Safety Notes
+                            </h4>
+                            <p class="text-sm text-yellow-800">{{ dpr.safety_notes }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Actions -->
+                        <div class="flex gap-3 pt-4 border-t border-gray-200">
+                            <button onclick="viewFullReport({{ dpr.id }})" 
+                                    class="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                                <i class='bx bx-show mr-1'></i>
+                                View Full Report
+                            </button>
+                            {% if dpr.photos %}
+                            <button onclick="viewPhotos({{ dpr.id }})" 
+                                    class="px-4 py-2 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700">
+                                <i class='bx bx-image mr-1'></i>
+                                View Photos
+                            </button>
+                            {% endif %}
+                            <button onclick="exportReport({{ dpr.id }})" 
+                                    class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700">
+                                <i class='bx bx-download mr-1'></i>
+                                Export
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-12">
+                    <i class='bx bx-calendar-x text-gray-300 text-6xl mb-3'></i>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">No Reports Found</h3>
+                    <p class="text-gray-600">No daily production reports for the selected date</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterByDate() {
+    const date = document.getElementById('filter-date').value;
+    if (date) {
+        window.location.href = `{{ url_for('office_pm.project_daily_reports', project_id=project.id) }}?date=${date}`;
+    }
+}
+
+function viewFullReport(dprId) {
+    window.location.href = `/quarry/dpr/${dprId}`;
+}
+
+function viewPhotos(dprId) {
+    alert('Photo viewer - DPR ID: ' + dprId);
+}
+
+function exportReport(dprId) {
+    alert('Exporting report - DPR ID: ' + dprId);
+}
+
+// Set today's date as default if no date is set
+if (!document.getElementById('filter-date').value) {
+    document.getElementById('filter-date').valueAsDate = new Date();
+}
+</script>
+{% endblock %}

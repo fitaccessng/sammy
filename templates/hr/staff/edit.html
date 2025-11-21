@@ -1,0 +1,202 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Edit {{ staff.name }} | Staff Management{% endblock %}
+{% block header %}Edit Staff Profile{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Back Button -->
+    <div class="mb-6">
+        <a href="{{ url_for('hr.staff_details', staff_id=staff.id) }}" class="text-blue-600 hover:text-blue-800 flex items-center">
+            <i class='bx bx-arrow-back mr-2'></i>
+            Back to Staff Details
+        </a>
+    </div>
+
+    <!-- Edit Form -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <div class="flex items-center space-x-4">
+                <img class="h-16 w-16 rounded-full" 
+                     src="{{ staff.avatar_url }}" 
+                     alt="{{ staff.name }}">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-900">Edit Profile</h2>
+                    <p class="text-gray-600">Update information for {{ staff.name }}</p>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" action="{{ url_for('hr.edit_staff', staff_id=staff.id) }}" class="p-6 space-y-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            
+            <!-- Basic Information Section -->
+            <div class="border-b pb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class='bx bx-id-card mr-2 text-blue-600'></i>
+                    Basic Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Staff ID</label>
+                        <input type="text" name="staff_code" value="{{ staff.staff_code or '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="e.g. FA001">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Full Name *</label>
+                        <input type="text" name="name" value="{{ staff.name }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               required>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Personal Information Section -->
+            <div class="border-b pb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class='bx bx-user mr-2 text-green-600'></i>
+                    Personal Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Email Address</label>
+                        <input type="email" name="email" value="{{ staff.email or '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="example@company.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                        <input type="tel" name="phone" value="{{ staff.phone or '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="+234 XXX XXX XXXX">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Date of Birth</label>
+                        <input type="date" name="dob" value="{{ staff.dob.strftime('%Y-%m-%d') if staff.dob else '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Gender</label>
+                        <select name="gender" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Select Gender</option>
+                            <option value="Male" {% if staff.gender == 'Male' %}selected{% endif %}>Male</option>
+                            <option value="Female" {% if staff.gender == 'Female' %}selected{% endif %}>Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Home Address</label>
+                    <textarea name="address" rows="3" 
+                              class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                              placeholder="Enter full address">{{ staff.current_address or '' }}</textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Name</label>
+                        <input type="text" name="emergency_contact_name" value="{{ staff.next_of_kin or '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="Full name">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Emergency Contact Phone</label>
+                        <input type="tel" name="emergency_contact_phone" value="{{ staff.next_of_kin_phone or '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="+234 XXX XXX XXXX">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Employment Information Section -->
+            <div class="border-b pb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class='bx bx-briefcase mr-2 text-purple-600'></i>
+                    Employment Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Employment Date</label>
+                        <input type="date" name="employment_date" 
+                               value="{{ staff.date_of_employment.strftime('%Y-%m-%d') if staff.date_of_employment else '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Employment Type</label>
+                        <select name="employment_type" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="">Select Type</option>
+                            <option value="Full-time" {% if staff.employment_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                            <option value="Part-time" {% if staff.employment_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                            <option value="Contract" {% if staff.employment_type == 'Contract' %}selected{% endif %}>Contract</option>
+                            <option value="Intern" {% if staff.employment_type == 'Intern' %}selected{% endif %}>Intern</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Designation/Position</label>
+                        <input type="text" name="designation" value="{{ staff.position or '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="e.g. Project Manager">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Department/Site</label>
+                        <input type="text" name="site_department" value="{{ staff.department or '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="e.g. Engineering">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                        <select name="status" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            <option value="Active" {% if staff.status == 'Active' %}selected{% endif %}>Active</option>
+                            <option value="On Leave" {% if staff.status == 'On Leave' %}selected{% endif %}>On Leave</option>
+                            <option value="Suspended" {% if staff.status == 'Suspended' %}selected{% endif %}>Suspended</option>
+                            <option value="Resigned" {% if staff.status == 'Resigned' %}selected{% endif %}>Resigned</option>
+                            <option value="Terminated" {% if staff.status == 'Terminated' %}selected{% endif %}>Terminated</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Information Section -->
+            <div class="pb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <i class='bx bx-book mr-2 text-yellow-600'></i>
+                    Additional Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Academic Qualification</label>
+                        <input type="text" name="academic_qualification" 
+                               value="{{ staff.academic_qualification_at_employment or '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="e.g. BSc Computer Science">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Institution</label>
+                        <input type="text" name="institution" value="{{ staff.institution or '' }}" 
+                               class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                               placeholder="e.g. University of Lagos">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Additional Notes</label>
+                    <textarea name="notes" rows="4" 
+                              class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                              placeholder="Any additional information about the employee...">{{ staff.notes or '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-end space-x-4 pt-6 border-t">
+                <a href="{{ url_for('hr.staff_details', staff_id=staff.id) }}" 
+                   class="px-6 py-3 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
+                    Cancel
+                </a>
+                <button type="submit" 
+                        class="px-6 py-3 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center">
+                    <i class='bx bx-save mr-2'></i>
+                    Update Staff Profile
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

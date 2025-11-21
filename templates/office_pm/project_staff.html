@@ -1,0 +1,158 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ project.name }} - Staff{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Project Staff</h1>
+                    <p class="mt-1 text-sm text-gray-500">{{ project.name }} - {{ project.location }}</p>
+                </div>
+                <a href="{{ url_for('office_pm.project_details', project_id=project.id) }}" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    <i class='bx bx-arrow-back mr-2'></i>
+                    <span>Back to Project</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Total Staff</h3>
+                <p class="text-3xl font-bold text-blue-600 mt-1">{{ total_staff }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Currently On-site</h3>
+                <p class="text-3xl font-bold text-green-600 mt-1">{{ current_onsite }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Active Assignments</h3>
+                <p class="text-3xl font-bold text-purple-600 mt-1">{{ staff_list|length }}</p>
+            </div>
+        </div>
+
+        <!-- Staff List -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-900">👥 Staff Members</h2>
+                <input type="text" id="search-staff" placeholder="Search staff..." 
+                       class="border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Staff Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Name</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Position</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Department</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Contact</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Assigned Since</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100">
+                        {% for staff in staff_list %}
+                        <tr class="hover:bg-gray-50 staff-row">
+                            <td class="px-6 py-4 text-sm text-gray-900 font-medium">{{ staff.staff_code }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-900">{{ staff.name }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ staff.position }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">{{ staff.department }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                {% if staff.contact %}
+                                <a href="tel:{{ staff.contact }}" class="text-blue-600 hover:text-blue-800">{{ staff.contact }}</a>
+                                {% else %}N/A{% endif %}
+                            </td>
+                            <td class="px-6 py-4 text-sm text-gray-700">
+                                {{ staff.assignment_date.strftime('%b %d, %Y') if staff.assignment_date else 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                <span class="px-2 py-1 text-xs rounded-full 
+                                    {% if staff.status == 'Active' %}bg-green-100 text-green-800
+                                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                    {{ staff.status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 text-sm">
+                                <button onclick="viewStaff({{ staff.id }})" 
+                                        class="text-blue-600 hover:text-blue-800 mr-3">
+                                    <i class='bx bx-show'></i>
+                                </button>
+                                {% if staff.email %}
+                                <a href="mailto:{{ staff.email }}" class="text-green-600 hover:text-green-800">
+                                    <i class='bx bx-envelope'></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                
+                {% if not staff_list %}
+                <div class="text-center py-12">
+                    <i class='bx bx-user text-gray-300 text-6xl mb-3'></i>
+                    <p class="text-gray-500">No staff assigned to this project</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Staff by Department -->
+        {% if staff_list %}
+        <div class="mt-6 bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">📊 Staff by Department</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {% set departments = {} %}
+                    {% for staff in staff_list %}
+                        {% if staff.department %}
+                            {% if staff.department not in departments %}
+                                {% set _ = departments.update({staff.department: 1}) %}
+                            {% else %}
+                                {% set _ = departments.update({staff.department: departments[staff.department] + 1}) %}
+                            {% endif %}
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% for dept, count in departments.items() %}
+                    <div class="border border-gray-200 rounded-lg p-4">
+                        <h4 class="text-sm font-medium text-gray-900">{{ dept }}</h4>
+                        <p class="text-2xl font-bold text-blue-600 mt-2">{{ count }}</p>
+                        <p class="text-xs text-gray-500 mt-1">Staff members</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+// Search functionality
+document.getElementById('search-staff').addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const rows = document.querySelectorAll('.staff-row');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+    });
+});
+
+function viewStaff(staffId) {
+    window.location.href = `/hr/employee/${staffId}`;
+}
+</script>
+{% endblock %}

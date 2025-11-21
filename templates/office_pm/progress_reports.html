@@ -1,0 +1,189 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Progress Reports - Office PM{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Progress Reports</h1>
+                    <p class="mt-1 text-sm text-gray-500">Monitor daily progress and site reports</p>
+                </div>
+                <a href="{{ url_for('office_pm.dashboard') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    <i class='bx bx-arrow-back mr-2'></i>
+                    <span>Back to Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">DPRs Today</h3>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ dprs_today|length }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Avg Productivity</h3>
+                <p class="text-2xl font-bold text-green-600 mt-1">{{ "%.1f"|format(avg_productivity) }}%</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Milestones Updated</h3>
+                <p class="text-2xl font-bold text-blue-600 mt-1">{{ milestones_updated|length }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4">
+                <h3 class="text-sm font-medium text-gray-600">Issues Reported</h3>
+                <p class="text-2xl font-bold text-red-600 mt-1">{{ issues_count }}</p>
+            </div>
+        </div>
+
+        <!-- Daily Production Reports -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                <h2 class="text-lg font-semibold text-gray-900">📋 Daily Production Reports</h2>
+                <div class="flex gap-2">
+                    <input type="date" id="dpr-date" class="border border-gray-300 rounded-lg px-3 py-1 text-sm">
+                    <button onclick="filterReports()" class="px-4 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                        Filter
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                {% if dprs_today %}
+                <div class="space-y-4">
+                    {% for dpr in dprs_today %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 class="font-semibold text-gray-900">{{ dpr.project.name }}</h4>
+                                <p class="text-sm text-gray-600">{{ dpr.date.strftime('%B %d, %Y') }}</p>
+                            </div>
+                            <span class="px-3 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                                {{ dpr.weather|capitalize }}
+                            </span>
+                        </div>
+                        
+                        <!-- Progress Metrics -->
+                        <div class="grid grid-cols-3 gap-4 mb-3">
+                            <div>
+                                <p class="text-xs text-gray-500">Labor</p>
+                                <p class="text-sm font-medium text-gray-900">{{ dpr.labor_count }} workers</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Equipment</p>
+                                <p class="text-sm font-medium text-gray-900">{{ dpr.equipment_used or 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Productivity</p>
+                                <p class="text-sm font-medium text-green-600">{{ dpr.productivity_percentage }}%</p>
+                            </div>
+                        </div>
+
+                        <!-- Work Description -->
+                        <div class="mb-3">
+                            <p class="text-xs text-gray-500 mb-1">Work Completed</p>
+                            <p class="text-sm text-gray-700">{{ dpr.work_completed }}</p>
+                        </div>
+
+                        <!-- Issues -->
+                        {% if dpr.issues %}
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                            <p class="text-xs font-medium text-red-900 mb-1">⚠️ Issues Reported</p>
+                            <p class="text-sm text-red-800">{{ dpr.issues }}</p>
+                        </div>
+                        {% endif %}
+
+                        <!-- Actions -->
+                        <div class="flex gap-2 pt-3 border-t border-gray-200">
+                            <button onclick="viewDPRDetails({{ dpr.id }})" 
+                                    class="text-sm text-blue-600 hover:text-blue-800">
+                                View Full Report
+                            </button>
+                            {% if dpr.photos %}
+                            <button onclick="viewPhotos({{ dpr.id }})" 
+                                    class="text-sm text-purple-600 hover:text-purple-800">
+                                View Photos ({{ dpr.photos|length }})
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-12">
+                    <i class='bx bx-file text-gray-300 text-6xl mb-3'></i>
+                    <p class="text-gray-500">No DPRs submitted today</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Milestone Updates -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">🎯 Recent Milestone Updates</h2>
+            </div>
+            <div class="p-6">
+                {% if milestones_updated %}
+                <div class="space-y-3">
+                    {% for milestone in milestones_updated %}
+                    <div class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div class="flex-1">
+                            <h4 class="text-sm font-medium text-gray-900">{{ milestone.name }}</h4>
+                            <p class="text-xs text-gray-500">{{ milestone.project.name }}</p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <p class="text-xs text-gray-500">Progress</p>
+                                <p class="text-sm font-semibold text-gray-900">{{ milestone.completion_percentage }}%</p>
+                            </div>
+                            <div class="w-32">
+                                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-600 transition-all" style="width: {{ milestone.completion_percentage }}%"></div>
+                                </div>
+                            </div>
+                            {% if milestone.status == 'completed' %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Completed</span>
+                            {% elif milestone.status == 'in_progress' %}
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">In Progress</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">{{ milestone.status|title }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <p class="text-gray-500">No recent milestone updates</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterReports() {
+    const date = document.getElementById('dpr-date').value;
+    if (date) {
+        window.location.href = `{{ url_for('office_pm.progress_reports') }}?date=${date}`;
+    }
+}
+
+function viewDPRDetails(dprId) {
+    window.location.href = `/quarry/dpr/${dprId}`;
+}
+
+function viewPhotos(dprId) {
+    alert('Photo viewer coming soon - DPR ID: ' + dprId);
+}
+
+// Set today's date as default
+document.getElementById('dpr-date').valueAsDate = new Date();
+</script>
+{% endblock %}

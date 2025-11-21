@@ -1,0 +1,218 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Recruitment Management{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Breadcrumb -->
+  
+
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Recruitment Management</h1>
+        <button onclick="document.getElementById('createModal').classList.remove('hidden')" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <i class="fas fa-plus mr-2"></i>Create Job Posting
+        </button>
+    </div>
+
+    <!-- Status Filter -->
+    <div class="mb-6 flex gap-2">
+        <a href="?status=open" class="px-4 py-2 rounded-lg {% if request.args.get('status', 'open') == 'open' %}bg-blue-600 text-white{% else %}bg-gray-200{% endif %}">
+            Open
+        </a>
+        <a href="?status=in_progress" class="px-4 py-2 rounded-lg {% if request.args.get('status') == 'in_progress' %}bg-blue-600 text-white{% else %}bg-gray-200{% endif %}">
+            In Progress
+        </a>
+        <a href="?status=filled" class="px-4 py-2 rounded-lg {% if request.args.get('status') == 'filled' %}bg-blue-600 text-white{% else %}bg-gray-200{% endif %}">
+            Filled
+        </a>
+        <a href="?status=closed" class="px-4 py-2 rounded-lg {% if request.args.get('status') == 'closed' %}bg-blue-600 text-white{% else %}bg-gray-200{% endif %}">
+            Closed
+        </a>
+        <a href="?status=all" class="px-4 py-2 rounded-lg {% if request.args.get('status') == 'all' %}bg-blue-600 text-white{% else %}bg-gray-200{% endif %}">
+            All
+        </a>
+    </div>
+
+    <!-- Recruitment Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for recruitment in recruitments %}
+        <div class="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-semibold text-gray-800">{{ recruitment.job_title }}</h3>
+                <span class="px-2 py-1 text-xs font-semibold rounded-full
+                    {% if recruitment.status == 'open' %}bg-green-100 text-green-800
+                    {% elif recruitment.status == 'in_progress' %}bg-blue-100 text-blue-800
+                    {% elif recruitment.status == 'filled' %}bg-purple-100 text-purple-800
+                    {% else %}bg-gray-100 text-gray-800{% endif %}">
+                    {{ recruitment.status }}
+                </span>
+            </div>
+            
+            <div class="space-y-2 mb-4">
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-building w-5"></i>
+                    <span>{{ recruitment.department }}</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-map-marker-alt w-5"></i>
+                    <span>{{ recruitment.work_location }}</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-briefcase w-5"></i>
+                    <span>{{ recruitment.employment_type }} - {{ recruitment.vacancies }} position(s)</span>
+                </div>
+                <div class="flex items-center text-sm text-gray-600">
+                    <i class="fas fa-money-bill-wave w-5"></i>
+                    <span>₦{{ "{:,.0f}".format(recruitment.salary_range_min) }} - ₦{{ "{:,.0f}".format(recruitment.salary_range_max) }}</span>
+                </div>
+            </div>
+
+            <div class="border-t pt-4">
+                <div class="grid grid-cols-3 gap-2 text-center mb-3">
+                    <div>
+                        <p class="text-2xl font-bold text-blue-600">{{ recruitment.applications_received }}</p>
+                        <p class="text-xs text-gray-500">Applications</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-purple-600">{{ recruitment.interviews_scheduled }}</p>
+                        <p class="text-xs text-gray-500">Interviews</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-green-600">{{ recruitment.offers_made }}</p>
+                        <p class="text-xs text-gray-500">Offers</p>
+                    </div>
+                </div>
+
+                <div class="text-xs text-gray-500 mb-3">
+                    Posted: {{ recruitment.posted_date.strftime('%b %d, %Y') }}
+                    {% if recruitment.closing_date %}
+                    | Closes: {{ recruitment.closing_date.strftime('%b %d, %Y') }}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not recruitments %}
+    <div class="text-center py-12 bg-white rounded-lg shadow-md">
+        <i class="fas fa-briefcase text-gray-400 text-5xl mb-4"></i>
+        <p class="text-gray-500">No recruitment postings found</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Create Modal -->
+<div id="createModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-3xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-2xl font-bold">Create Job Posting</h3>
+            <button onclick="document.getElementById('createModal').classList.add('hidden')" 
+                    class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Job Title *</label>
+                    <input type="text" name="job_title" required
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Department *</label>
+                    <input type="text" name="department" required
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Position Level *</label>
+                    <select name="position_level" required
+                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="Entry Level">Entry Level</option>
+                        <option value="Mid Level">Mid Level</option>
+                        <option value="Senior Level">Senior Level</option>
+                        <option value="Management">Management</option>
+                        <option value="Executive">Executive</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
+                    <select name="employment_type"
+                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="Full-time">Full-time</option>
+                        <option value="Part-time">Part-time</option>
+                        <option value="Contract">Contract</option>
+                        <option value="Temporary">Temporary</option>
+                        <option value="Internship">Internship</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Vacancies *</label>
+                    <input type="number" name="vacancies" min="1" value="1" required
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Work Location *</label>
+                    <input type="text" name="work_location" required
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Salary Min (₦)</label>
+                    <input type="number" name="salary_range_min" step="0.01"
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Salary Max (₦)</label>
+                    <input type="number" name="salary_range_max" step="0.01"
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Closing Date</label>
+                    <input type="date" name="closing_date"
+                           class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                    <select name="priority"
+                            class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="normal">Normal</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Job Description *</label>
+                <textarea name="job_description" rows="4" required
+                          class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Required Qualifications</label>
+                <textarea name="required_qualifications" rows="3"
+                          class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Required Experience</label>
+                <textarea name="required_experience" rows="2"
+                          class="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4">
+                <button type="button" 
+                        onclick="document.getElementById('createModal').classList.add('hidden')"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Create Job Posting
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

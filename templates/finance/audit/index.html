@@ -6,7 +6,7 @@
 {% block content %}
 <div class="p-6 space-y-6">
     <!-- Audit Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
@@ -22,11 +22,11 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Critical Events</p>
-                    <h3 class="text-2xl font-bold text-red-600">{{ stats.critical_events }}</h3>
+                    <p class="text-gray-500 text-sm">Expenses</p>
+                    <h3 class="text-2xl font-bold text-red-600">{{ stats.expense_audits }}</h3>
                 </div>
                 <div class="bg-red-100 p-3 rounded-full">
-                    <i class='bx bx-error-circle text-2xl text-red-600'></i>
+                    <i class='bx bx-money-withdraw text-2xl text-red-600'></i>
                 </div>
             </div>
         </div>
@@ -34,11 +34,23 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Today's Activities</p>
-                    <h3 class="text-2xl font-bold text-gray-800">{{ stats.todays_activities }}</h3>
+                    <p class="text-gray-500 text-sm">Invoices</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ stats.invoice_audits }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-file-blank text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Payments</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ stats.payment_audits }}</h3>
                 </div>
                 <div class="bg-green-100 p-3 rounded-full">
-                    <i class='bx bx-calendar-check text-2xl text-green-600'></i>
+                    <i class='bx bx-dollar-circle text-2xl text-green-600'></i>
                 </div>
             </div>
         </div>
@@ -46,11 +58,35 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-gray-500 text-sm">Pending Reviews</p>
-                    <h3 class="text-2xl font-bold text-yellow-600">{{ stats.pending_reviews }}</h3>
+                    <p class="text-gray-500 text-sm">Payroll</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ stats.payroll_audits }}</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-group text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Budgets</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ stats.budget_audits }}</h3>
                 </div>
                 <div class="bg-yellow-100 p-3 rounded-full">
-                    <i class='bx bx-time text-2xl text-yellow-600'></i>
+                    <i class='bx bx-wallet text-2xl text-yellow-600'></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-sm">Today's Activity</p>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ stats.todays_activities }}</h3>
+                </div>
+                <div class="bg-gray-100 p-3 rounded-full">
+                    <i class='bx bx-calendar-check text-2xl text-gray-600'></i>
                 </div>
             </div>
         </div>
@@ -58,184 +94,159 @@
 
     <!-- Audit Filters and Controls -->
     <div class="bg-white rounded-lg shadow p-6">
-        <form id="auditFilterForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <select name="eventType" class="rounded-lg p-2 border border-gray-300">
-                <option value="all">All Events</option>
-                <option value="financial">Financial</option>
-                <option value="system">System</option>
-                <option value="user">User</option>
+        <form method="GET" action="{{ url_for('finance.audit') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <select name="status" class="rounded-lg p-2 border border-gray-300">
+                <option value="all" {{ 'selected' if filters.get('status') == 'all' else '' }}>All Status</option>
+                <option value="Pending" {{ 'selected' if filters.get('status') == 'Pending' else '' }}>Pending</option>
+                <option value="Completed" {{ 'selected' if filters.get('status') == 'Completed' else '' }}>Completed</option>
+                <option value="Approved" {{ 'selected' if filters.get('status') == 'Approved' else '' }}>Approved</option>
             </select>
-            <select name="severity" class="rounded-lg p-2 border border-gray-300">
-                <option value="all">All Severity</option>
-                <option value="critical">Critical</option>
-                <option value="warning">Warning</option>
-                <option value="info">Info</option>
+            <select name="category" id="categoryFilter" class="rounded-lg p-2 border border-gray-300">
+                <option value="all" {{ 'selected' if filters.get('category') == 'all' else '' }}>All Categories</option>
+                <option value="Expense" {{ 'selected' if filters.get('category') == 'Expense' else '' }}>Expenses</option>
+                <option value="Invoice" {{ 'selected' if filters.get('category') == 'Invoice' else '' }}>Invoices</option>
+                <option value="Payment" {{ 'selected' if filters.get('category') == 'Payment' else '' }}>Payments</option>
+                <option value="Payroll" {{ 'selected' if filters.get('category') == 'Payroll' else '' }}>Payroll</option>
+                <option value="Budget" {{ 'selected' if filters.get('category') == 'Budget' else '' }}>Budgets</option>
+                <option value="Receipt" {{ 'selected' if filters.get('category') == 'Receipt' else '' }}>Receipts</option>
             </select>
-            <input type="date" name="startDate" class="rounded-lg p-2 border border-gray-300" placeholder="Start Date">
+            <input type="date" name="date_from" value="{{ filters.get('date_from', '') }}" class="rounded-lg p-2 border border-gray-300" placeholder="Start Date">
+            <input type="date" name="date_to" value="{{ filters.get('date_to', '') }}" class="rounded-lg p-2 border border-gray-300" placeholder="End Date">
             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
-                Generate Report
+                <i class="fas fa-filter mr-2"></i>Apply Filters
             </button>
         </form>
     </div>
 
     <!-- Audit Log Table -->
     <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-800">Audit Log Entries</h3>
+            <span class="text-sm text-gray-500">Total: {{ audits.total }} entries</span>
+        </div>
+        {% if audits.items %}
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Timestamp</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Event Type</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Severity</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Activity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Approved By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Created</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
-                    {% for audit in audits %}
-                    <tr>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ audit.timestamp }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-900">{{ audit.event_type }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ audit.user }}</td>
-                        <td class="px-6 py-4 text-sm text-gray-500">{{ audit.description }}</td>
+                    {% for audit in audits.items %}
+                    {% set category = audit.name.split(':')[0].split(' ')[0] if ':' in audit.name else audit.name.split(' ')[0] %}
+                    {% set activity = audit.name.split(':', 1)[1].strip() if ':' in audit.name else audit.name %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">#{{ audit.id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ audit.date.strftime('%Y-%m-%d') }}</td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                {% if audit.severity == 'Info' %}bg-green-100 text-green-800
-                                {% elif audit.severity == 'Warning' %}bg-yellow-100 text-yellow-800
-                                {% else %}bg-red-100 text-red-800{% endif %}">
-                                {{ audit.severity }}
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                {{ 'bg-red-100 text-red-800' if 'Expense' in audit.name else
+                                   'bg-blue-100 text-blue-800' if 'Invoice' in audit.name else
+                                   'bg-green-100 text-green-800' if 'Payment' in audit.name else
+                                   'bg-purple-100 text-purple-800' if 'Payroll' in audit.name else
+                                   'bg-yellow-100 text-yellow-800' if 'Budget' in audit.name else
+                                   'bg-indigo-100 text-indigo-800' if 'Receipt' in audit.name else
+                                   'bg-gray-100 text-gray-800' }}">
+                                {{ category }}
                             </span>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="text-blue-600 hover:text-blue-900" 
-                                    data-action="view-details" 
-                                    data-id="{{ audit.id }}">
-                                View Details
-                            </button>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ activity }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-500">{{ audit.approved_by or 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                {{ 'bg-green-100 text-green-800' if audit.status == 'Completed' else
+                                   'bg-blue-100 text-blue-800' if audit.status == 'Approved' else
+                                   'bg-yellow-100 text-yellow-800' }}">
+                                {{ audit.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ audit.created_at.strftime('%Y-%m-%d %H:%M') if audit.created_at else 'N/A' }}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
         </div>
+
+        <!-- Pagination -->
+        {% if audits.pages > 1 %}
+        <div class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+            <div class="flex-1 flex justify-between sm:hidden">
+                {% if audits.has_prev %}
+                    <a href="{{ url_for('finance.audit', page=audits.prev_num, **filters) }}" 
+                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Previous
+                    </a>
+                {% endif %}
+                {% if audits.has_next %}
+                    <a href="{{ url_for('finance.audit', page=audits.next_num, **filters) }}" 
+                       class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Next
+                    </a>
+                {% endif %}
+            </div>
+            <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                    <p class="text-sm text-gray-700">
+                        Showing <span class="font-medium">{{ audits.per_page * (audits.page - 1) + 1 }}</span> to 
+                        <span class="font-medium">{{ audits.per_page * (audits.page - 1) + audits.items|length }}</span> of 
+                        <span class="font-medium">{{ audits.total }}</span> results
+                    </p>
+                </div>
+                <div>
+                    <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                        {% if audits.has_prev %}
+                            <a href="{{ url_for('finance.audit', page=audits.prev_num, **filters) }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i class="fas fa-chevron-left"></i>
+                            </a>
+                        {% endif %}
+                        
+                        {% for page_num in audits.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != audits.page %}
+                                    <a href="{{ url_for('finance.audit', page=page_num, **filters) }}" 
+                                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                        {{ page_num }}
+                                    </a>
+                                {% else %}
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-indigo-50 text-sm font-medium text-indigo-600">
+                                        {{ page_num }}
+                                    </span>
+                                {% endif %}
+                            {% else %}
+                                <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                                    …
+                                </span>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if audits.has_next %}
+                            <a href="{{ url_for('finance.audit', page=audits.next_num, **filters) }}" 
+                               class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
+                                <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="text-center py-8">
+            <i class="fas fa-clipboard-list text-4xl text-gray-300 mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No audit entries found</h3>
+            <p class="text-gray-500">No audit records match your current filters.</p>
+        </div>
+        {% endif %}
     </div>
 </div>
-
-<!-- Details Modal -->
-<div id="detailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
-    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="flex justify-between items-center mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Audit Event Details</h3>
-            <button id="closeModal" class="text-gray-400 hover:text-gray-500">
-                <i class='bx bx-x text-2xl'></i>
-            </button>
-        </div>
-        <div id="modalContent" class="space-y-4">
-            <!-- Content will be populated dynamically -->
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const filterForm = document.getElementById('auditFilterForm');
-    const detailsModal = document.getElementById('detailsModal');
-    const closeModal = document.getElementById('closeModal');
-    const modalContent = document.getElementById('modalContent');
-    
-    // Get CSRF token from meta tag
-    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-
-    // Handle Generate Report
-    filterForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const formData = new FormData(filterForm);
-        
-        try {
-            const response = await fetch('/finance/audit/generate-report', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-CSRFToken': csrfToken
-                }
-            });
-            
-            const data = await response.json();
-            if (data.status === 'success') {
-                window.location.href = data.report_url;
-            } else {
-                showAlert('Error generating report', 'error');
-            }
-        } catch (error) {
-            showAlert('Failed to generate report', 'error');
-        }
-    });
-
-    // Handle View Details buttons
-    document.querySelectorAll('[data-action="view-details"]').forEach(button => {
-        button.addEventListener('click', async function() {
-            const auditId = this.dataset.id;
-            try {
-                const response = await fetch(`/finance/audit/details/${auditId}`);
-                const data = await response.json();
-                
-                modalContent.innerHTML = `
-                    <div class="space-y-3">
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Timestamp:</span>
-                            <span class="font-medium">${data.timestamp}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Event Type:</span>
-                            <span class="font-medium">${data.eventType}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">User:</span>
-                            <span class="font-medium">${data.user}</span>
-                        </div>
-                        <div class="flex justify-between">
-                            <span class="text-gray-500">Severity:</span>
-                            <span class="font-medium">${data.severity}</span>
-                        </div>
-                        <div class="space-y-1">
-                            <span class="text-gray-500">Description:</span>
-                            <p class="text-sm text-gray-700">${data.description}</p>
-                        </div>
-                    </div>
-                `;
-                
-                detailsModal.classList.remove('hidden');
-            } catch (error) {
-                showAlert('Failed to load details', 'error');
-            }
-        });
-    });
-
-    // Close modal
-    closeModal.addEventListener('click', () => {
-        detailsModal.classList.add('hidden');
-    });
-
-    // Close modal on outside click
-    detailsModal.addEventListener('click', function(e) {
-        if (e.target === this) {
-            this.classList.add('hidden');
-        }
-    });
-
-    // Show alerts
-    function showAlert(message, type) {
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `fixed top-4 right-4 p-4 rounded-lg ${
-            type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-        }`;
-        alertDiv.textContent = message;
-        document.body.appendChild(alertDiv);
-        setTimeout(() => alertDiv.remove(), 3000);
-    }
-});
-</script>
 {% endblock %}

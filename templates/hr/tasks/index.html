@@ -416,16 +416,16 @@ document.addEventListener('DOMContentLoaded', function() {
 // Move task function
 async function moveTask(taskId, newStatus) {
     try {
+        const formData = new FormData();
+        formData.append('status', newStatus);
+        formData.append('csrf_token', '{{ csrf_token() }}');
+        
         const response = await fetch(`/hr/tasks/${taskId}/update`, {
             method: 'POST',
+            body: formData,
             headers: {
-                'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                status: newStatus,
-                csrf_token: '{{ csrf_token }}'
-            })
+            }
         });
         
         if (response.ok) {

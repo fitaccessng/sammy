@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Valuations - {{ project.name }} - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Valuations & Payment Certificates</h1>
+            <p class="text-gray-600 mt-1">{{ project.name }}</p>
+        </div>
+        <div class="flex space-x-3">
+            <button onclick="openCreateValuationModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Create Valuation
+            </button>
+            <a href="{{ url_for('qs.dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-gray-600">Total Valuations</p>
+            <p class="text-2xl font-bold text-gray-900 mt-2">{{ total_valuations }}</p>
+        </div>
+        <div class="bg-green-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-green-900">Approved Value</p>
+            <p class="text-2xl font-bold text-green-900 mt-2">₦{{ "{:,.0f}".format(total_approved_value) }}</p>
+            <p class="text-xs text-green-700 mt-1">{{ approved_valuations|length }} valuations</p>
+        </div>
+        <div class="bg-yellow-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-yellow-900">Pending Value</p>
+            <p class="text-2xl font-bold text-yellow-900 mt-2">₦{{ "{:,.0f}".format(total_pending_value) }}</p>
+            <p class="text-xs text-yellow-700 mt-1">{{ pending_valuations|length }} pending</p>
+        </div>
+        <div class="bg-blue-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-blue-900">Work Done (%)</p>
+            <p class="text-2xl font-bold text-blue-900 mt-2">{{ work_done_percentage }}%</p>
+            <p class="text-xs text-blue-700 mt-1">Against BOQ value</p>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <div class="flex justify-between items-center mb-2">
+            <span class="text-sm font-medium text-gray-700">Work Completion</span>
+            <span class="text-sm font-medium text-gray-700">₦{{ "{:,.0f}".format(total_approved_value) }} / ₦{{ "{:,.0f}".format(total_boq_value) }}</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-4">
+            <div class="bg-gradient-to-r from-green-500 to-blue-600 h-4 rounded-full flex items-center justify-end pr-2" 
+                 style="width: {{ work_done_percentage if work_done_percentage <= 100 else 100 }}%">
+                <span class="text-xs font-semibold text-white">{{ "{:.1f}".format(work_done_percentage) }}%</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8">
+                <button onclick="showTab('all')" id="tab-all" class="tab-button active border-b-2 border-blue-500 py-4 px-1 text-sm font-medium text-blue-600">
+                    All Valuations ({{ total_valuations }})
+                </button>
+                <button onclick="showTab('pending')" id="tab-pending" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Pending ({{ pending_valuations|length }})
+                </button>
+                <button onclick="showTab('approved')" id="tab-approved" class="tab-button border-b-2 border-transparent py-4 px-1 text-sm font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300">
+                    Approved ({{ approved_valuations|length }})
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Valuations Table -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valuation No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for valuation in valuations %}
+                    <tr class="hover:bg-gray-50 valuation-row" data-status="{{ valuation.status }}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#VAL-{{ valuation.id }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ valuation.item_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ "{:,.2f}".format(valuation.qty) }} {{ valuation.unit }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">₦{{ "{:,.2f}".format(valuation.price) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₦{{ "{:,.2f}".format(valuation.price * valuation.qty) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ valuation.created_at.strftime('%b %d, %Y') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if valuation.status == 'approved' %}bg-green-100 text-green-800
+                                {% elif valuation.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% elif valuation.status == 'rejected' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ valuation.status|title }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if valuation.status == 'pending' %}
+                            <button onclick="approveValuation({{ valuation.id }})" class="text-green-600 hover:text-green-900 mr-2">Approve</button>
+                            <button onclick="rejectValuation({{ valuation.id }})" class="text-red-600 hover:text-red-900">Reject</button>
+                            {% else %}
+                            <button onclick="viewValuationDetails({{ valuation.id }})" class="text-blue-600 hover:text-blue-900">View Details</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Valuation Modal -->
+<div id="createValuationModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900">Create Valuation / Payment Certificate</h3>
+            <button onclick="closeCreateValuationModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="createValuationForm" onsubmit="submitValuation(event)">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description / Work Item</label>
+                    <textarea name="item_name" required rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500" placeholder="E.g., Interim Payment Certificate No. 3 - Substructure Works"></textarea>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                        <input type="number" step="0.01" name="qty" required value="1" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Unit</label>
+                        <select name="unit" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500">
+                            <option value="LS">Lump Sum (LS)</option>
+                            <option value="m²">Square Meter (m²)</option>
+                            <option value="m³">Cubic Meter (m³)</option>
+                            <option value="m">Meter (m)</option>
+                            <option value="kg">Kilogram (kg)</option>
+                            <option value="nos">Number (nos)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Amount (₦)</label>
+                    <input type="number" step="0.01" name="price" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500" placeholder="Enter total valuation amount">
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="closeCreateValuationModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Create Valuation</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCreateValuationModal() {
+    document.getElementById('createValuationModal').classList.remove('hidden');
+}
+
+function closeCreateValuationModal() {
+    document.getElementById('createValuationModal').classList.add('hidden');
+    document.getElementById('createValuationForm').reset();
+}
+
+function submitValuation(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+
+    fetch("{{ url_for('qs.create_valuation', project_id=project.id) }}", {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Valuation created successfully');
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred');
+    });
+}
+
+function approveValuation(id) {
+    if (confirm('Approve this valuation?')) {
+        fetch(`{{ url_for('qs.approve_valuation', valuation_id=0) }}`.replace('/0', `/${id}`), {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'approve', comments: 'Approved by QS Manager'})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Valuation approved');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        });
+    }
+}
+
+function rejectValuation(id) {
+    const comments = prompt('Enter reason for rejection:');
+    if (comments) {
+        fetch(`{{ url_for('qs.approve_valuation', valuation_id=0) }}`.replace('/0', `/${id}`), {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'reject', comments: comments})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Valuation rejected');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        });
+    }
+}
+
+function showTab(status) {
+    // Update tab styling
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active', 'border-blue-500', 'text-blue-600');
+        btn.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    const activeTab = document.getElementById(`tab-${status}`);
+    activeTab.classList.add('active', 'border-blue-500', 'text-blue-600');
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+
+    // Filter rows
+    document.querySelectorAll('.valuation-row').forEach(row => {
+        if (status === 'all') {
+            row.style.display = '';
+        } else {
+            row.style.display = row.dataset.status === status ? '' : 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

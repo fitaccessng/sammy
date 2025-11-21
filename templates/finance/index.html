@@ -81,49 +81,83 @@
         </div>
     </div>
 
-    <!-- Financial Overview and Document Management -->
+    <!-- Financial Management Modules & Quick Access -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Financial Overview -->
+        <!-- Financial Management Modules -->
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-semibold text-gray-800 mb-4">Financial Overview</h3>
-            <div class="space-y-4">
-                <!-- Revenue vs Expenses -->
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium text-gray-700">Revenue</span>
-                        <span class="text-sm text-green-500">₦{{ "%.1f"|format(summary.total_income/1000000) }}M</span>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Financial Management</h3>
+            <div class="grid grid-cols-2 gap-3">
+                <!-- Budget Management -->
+                <a href="{{ url_for('finance_mgr.budgets') }}" class="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class='bx bx-calculator text-xl text-blue-600'></i>
+                        <span class="text-sm font-semibold text-blue-800">Budgets</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        {% set revenue_percentage = (summary.total_income / (summary.total_income + summary.monthly_expenses) * 100) if (summary.total_income + summary.monthly_expenses) > 0 else 0 %}
-                        <div class="bg-green-500 h-2 rounded-full" style="width: {{ revenue_percentage }}%"></div>
-                    </div>
-                </div>
-
-                <!-- Expenses Breakdown -->
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium text-gray-700">Expenses</span>
-                        <span class="text-sm text-red-500">₦{{ "%.1f"|format(summary.monthly_expenses/1000000) }}M</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        {% set expense_percentage = (summary.monthly_expenses / (summary.total_income + summary.monthly_expenses) * 100) if (summary.total_income + summary.monthly_expenses) > 0 else 0 %}
-                        <div class="bg-red-500 h-2 rounded-full" style="width: {{ expense_percentage }}%"></div>
-                    </div>
-                </div>
-
+                    <p class="text-xs text-gray-600">Manage & track budgets</p>
+                </a>
+                
                 <!-- Cash Flow -->
-                <div class="space-y-2">
-                    <div class="flex justify-between">
-                        <span class="text-sm font-medium text-gray-700">Cash Flow</span>
-                        <span class="text-sm text-{{ 'green' if summary.cash_flow >= 0 else 'red' }}-500">
-                            ₦{{ "%.1f"|format(summary.cash_flow/1000000) }}M
-                        </span>
+                <a href="{{ url_for('finance_mgr.cashflow') }}" class="p-4 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class='bx bx-line-chart text-xl text-indigo-600'></i>
+                        <span class="text-sm font-semibold text-indigo-800">Cash Flow</span>
                     </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2">
-                        {% set cash_flow_percentage = ((summary.cash_flow|abs) / (summary.total_income + summary.monthly_expenses) * 100) if (summary.total_income + summary.monthly_expenses) > 0 else 0 %}
-                        <div class="bg-{{ 'green' if summary.cash_flow >= 0 else 'red' }}-500 h-2 rounded-full" style="width: {{ cash_flow_percentage if cash_flow_percentage <= 100 else 100 }}%"></div>
+                    <p class="text-xs text-gray-600">Forecast & analyze</p>
+                </a>
+                
+                <!-- Invoices -->
+                <a href="{{ url_for('finance_mgr.invoices') }}" class="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class='bx bx-file-invoice text-xl text-green-600'></i>
+                        <span class="text-sm font-semibold text-green-800">Invoices</span>
                     </div>
-                </div>
+                    <p class="text-xs text-gray-600">Create & manage</p>
+                </a>
+                
+                <!-- Payments -->
+                <a href="{{ url_for('finance_mgr.payments') }}" class="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class='bx bx-credit-card text-xl text-purple-600'></i>
+                        <span class="text-sm font-semibold text-purple-800">Payments</span>
+                    </div>
+                    <p class="text-xs text-gray-600">Record payments</p>
+                </a>
+                
+                <!-- Receivables -->
+                <a href="{{ url_for('finance_mgr.receivables') }}" class="p-4 bg-yellow-50 rounded-lg hover:bg-yellow-100 transition">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class='bx bx-receipt text-xl text-yellow-600'></i>
+                        <span class="text-sm font-semibold text-yellow-800">Receivables</span>
+                    </div>
+                    <p class="text-xs text-gray-600">Track outstanding</p>
+                </a>
+                
+                <!-- Payables -->
+                <a href="{{ url_for('finance_mgr.payables') }}" class="p-4 bg-red-50 rounded-lg hover:bg-red-100 transition">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class='bx bx-file-invoice-dollar text-xl text-red-600'></i>
+                        <span class="text-sm font-semibold text-red-800">Payables</span>
+                    </div>
+                    <p class="text-xs text-gray-600">Manage bills</p>
+                </a>
+                
+                <!-- Transactions -->
+                <a href="{{ url_for('finance_mgr.transactions') }}" class="p-4 bg-teal-50 rounded-lg hover:bg-teal-100 transition">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class='bx bx-exchange-alt text-xl text-teal-600'></i>
+                        <span class="text-sm font-semibold text-teal-800">Transactions</span>
+                    </div>
+                    <p class="text-xs text-gray-600">General ledger</p>
+                </a>
+                
+                <!-- Bank Reconciliation -->
+                <a href="{{ url_for('finance.bank_reconciliation') }}" class="p-4 bg-cyan-50 rounded-lg hover:bg-cyan-100 transition">
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class='bx bx-bank text-xl text-cyan-600'></i>
+                        <span class="text-sm font-semibold text-cyan-800">Bank Recon</span>
+                    </div>
+                    <p class="text-xs text-gray-600">Reconcile accounts</p>
+                </a>
             </div>
         </div>
 
@@ -186,16 +220,20 @@
                 <a href="{{ url_for('finance.expenses') }}" class="text-sm text-blue-600 hover:text-blue-800">View All</a>
             </div>
             <div class="space-y-3">
-                {% if transactions %}
+                {% if transactions and transactions|length > 0 %}
                     {% for transaction in transactions[:5] %}
-                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
                             <div class="flex items-center space-x-3">
                                 <div class="w-8 h-8 bg-{{ 'green' if transaction.type == 'income' else 'red' }}-100 rounded-full flex items-center justify-center">
                                     <i class='bx bx-{{ 'plus' if transaction.type == 'income' else 'minus' }} text-{{ 'green' if transaction.type == 'income' else 'red' }}-600'></i>
                                 </div>
                                 <div>
-                                    <p class="text-sm font-medium text-gray-800">{{ transaction.description[:30] }}{{ '...' if transaction.description|length > 30 else '' }}</p>
-                                    <p class="text-xs text-gray-500">{{ transaction.date.strftime('%b %d, %Y') if transaction.date else 'No date' }}</p>
+                                    <p class="text-sm font-medium text-gray-800">
+                                        {{ (transaction.description[:30] + '...') if transaction.description and transaction.description|length > 30 else (transaction.description or 'Transaction') }}
+                                    </p>
+                                    <p class="text-xs text-gray-500">
+                                        {{ transaction.date.strftime('%b %d, %Y') if transaction.date else 'No date' }}
+                                    </p>
                                 </div>
                             </div>
                             <span class="text-sm font-semibold text-{{ 'green' if transaction.type == 'income' else 'red' }}-600">
@@ -206,7 +244,8 @@
                 {% else %}
                     <div class="text-center py-8">
                         <i class='bx bx-receipt text-4xl text-gray-400 mb-2'></i>
-                        <p class="text-gray-500">No recent transactions</p>
+                        <p class="text-gray-500 mb-3">No recent transactions</p>
+                        <a href="{{ url_for('finance_mgr.transactions') }}" class="text-sm text-blue-600 hover:text-blue-800 hover:underline">Add your first transaction →</a>
                     </div>
                 {% endif %}
             </div>
@@ -216,8 +255,8 @@
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">Expense Categories (This Month)</h3>
             <div class="space-y-3">
-                {% if expense_categories %}
-                    {% for category, total in expense_categories %}
+                {% if expense_categories and expense_categories|length > 0 %}
+                    {% for category, total in expense_categories[:5] %}
                         {% set percentage = (total / summary.monthly_expenses * 100) if summary.monthly_expenses > 0 else 0 %}
                         <div class="space-y-2">
                             <div class="flex justify-between items-center">
@@ -230,10 +269,16 @@
                             <p class="text-xs text-gray-500">{{ "%.1f"|format(percentage) }}% of total expenses</p>
                         </div>
                     {% endfor %}
+                    {% if expense_categories|length > 5 %}
+                    <div class="pt-2 border-t">
+                        <a href="{{ url_for('finance.expenses') }}" class="text-sm text-blue-600 hover:text-blue-800 hover:underline">View all categories →</a>
+                    </div>
+                    {% endif %}
                 {% else %}
                     <div class="text-center py-8">
-                        <i class='bx bx-pie-chart text-4xl text-gray-400 mb-2'></i>
-                        <p class="text-gray-500">No expense data available</p>
+                        <i class='bx bx-pie-chart-alt text-4xl text-gray-400 mb-2'></i>
+                        <p class="text-gray-500 mb-3">No expense data available</p>
+                        <a href="{{ url_for('finance.expenses') }}" class="text-sm text-blue-600 hover:text-blue-800 hover:underline">Add your first expense →</a>
                     </div>
                 {% endif %}
             </div>
@@ -250,17 +295,17 @@
                     <i class='bx bx-plus-circle mb-1 text-xl'></i>
                     <span class="block text-sm">Add Expense</span>
                 </a>
-                <a href="{{ url_for('project.documents') }}" class="p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors text-center">
-                    <i class='bx bx-upload mb-1 text-xl'></i>
-                    <span class="block text-sm">Upload Document</span>
+                <a href="{{ url_for('finance_mgr.budgets') }}" class="p-3 bg-green-50 rounded-lg text-green-700 hover:bg-green-100 transition-colors text-center">
+                    <i class='bx bx-calculator mb-1 text-xl'></i>
+                    <span class="block text-sm">Create Budget</span>
                 </a>
-                <a href="{{ url_for('hr.payroll') }}" class="p-3 bg-yellow-50 rounded-lg text-yellow-700 hover:bg-yellow-100 transition-colors text-center">
-                    <i class='bx bx-dollar mb-1 text-xl'></i>
-                    <span class="block text-sm">Process Payroll</span>
+                <a href="{{ url_for('finance_mgr.invoices') }}" class="p-3 bg-yellow-50 rounded-lg text-yellow-700 hover:bg-yellow-100 transition-colors text-center">
+                    <i class='bx bx-file-invoice mb-1 text-xl'></i>
+                    <span class="block text-sm">New Invoice</span>
                 </a>
-                <a href="{{ url_for('finance.audit') }}" class="p-3 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors text-center">
-                    <i class='bx bx-file mb-1 text-xl'></i>
-                    <span class="block text-sm">Audit Reports</span>
+                <a href="{{ url_for('finance_mgr.reports') }}" class="p-3 bg-purple-50 rounded-lg text-purple-700 hover:bg-purple-100 transition-colors text-center">
+                    <i class='bx bx-chart-bar mb-1 text-xl'></i>
+                    <span class="block text-sm">View Reports</span>
                 </a>
             </div>
         </div>

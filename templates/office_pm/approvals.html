@@ -1,0 +1,251 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Approval Center - Office PM{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Approval Center</h1>
+                    <p class="mt-1 text-sm text-gray-500">Review and approve project submissions</p>
+                </div>
+                <a href="{{ url_for('office_pm.dashboard') }}" class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+                    <i class='bx bx-arrow-back mr-2'></i>
+                    <span>Back to Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-red-500">
+                <h3 class="text-sm font-medium text-gray-600">High Priority</h3>
+                <p class="text-2xl font-bold text-red-600 mt-1">{{ high_priority|length }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-yellow-500">
+                <h3 class="text-sm font-medium text-gray-600">Medium Priority</h3>
+                <p class="text-2xl font-bold text-yellow-600 mt-1">{{ medium_priority|length }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-blue-500">
+                <h3 class="text-sm font-medium text-gray-600">Low Priority</h3>
+                <p class="text-2xl font-bold text-blue-600 mt-1">{{ low_priority|length }}</p>
+            </div>
+            <div class="bg-white rounded-lg shadow-sm p-4 border-l-4 border-green-500">
+                <h3 class="text-sm font-medium text-gray-600">Total Pending</h3>
+                <p class="text-2xl font-bold text-gray-900 mt-1">{{ total_pending }}</p>
+            </div>
+        </div>
+
+        <!-- High Priority Approvals -->
+        {% if high_priority %}
+        <div class="bg-white rounded-xl shadow-sm border border-red-200 mb-6">
+            <div class="px-6 py-4 bg-red-50 border-b border-red-200">
+                <h2 class="text-lg font-semibold text-red-900">🔥 High Priority Approvals</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for item in high_priority %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">{{ item.type }}</span>
+                                    <span class="text-xs text-gray-500">{{ item.project }}</span>
+                                </div>
+                                <h4 class="text-sm font-medium text-gray-900 mb-1">{{ item.description }}</h4>
+                                {% if item.amount %}
+                                <p class="text-sm text-gray-600">Amount: <span class="font-semibold">₦{{ "{:,.2f}".format(item.amount) }}</span></p>
+                                {% endif %}
+                                <p class="text-xs text-gray-500 mt-1">{{ item.date.strftime('%b %d, %Y') }}</p>
+                            </div>
+                            <div class="flex gap-2 ml-4">
+                                <button onclick="approveItem('{{ item.type.lower().replace(' ', '_') }}', {{ item.id }}, true)" 
+                                        class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                                    <i class='bx bx-check'></i> Approve
+                                </button>
+                                <button onclick="approveItem('{{ item.type.lower().replace(' ', '_') }}', {{ item.id }}, false)" 
+                                        class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                    <i class='bx bx-x'></i> Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Medium Priority Approvals -->
+        {% if medium_priority %}
+        <div class="bg-white rounded-xl shadow-sm border border-yellow-200 mb-6">
+            <div class="px-6 py-4 bg-yellow-50 border-b border-yellow-200">
+                <h2 class="text-lg font-semibold text-yellow-900">⚠️ Medium Priority Approvals</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for item in medium_priority %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full font-medium">{{ item.type }}</span>
+                                    <span class="text-xs text-gray-500">{{ item.project }}</span>
+                                </div>
+                                <h4 class="text-sm font-medium text-gray-900 mb-1">{{ item.description }}</h4>
+                                {% if item.amount %}
+                                <p class="text-sm text-gray-600">Amount: <span class="font-semibold">₦{{ "{:,.2f}".format(item.amount) }}</span></p>
+                                {% endif %}
+                                <p class="text-xs text-gray-500 mt-1">{{ item.date.strftime('%b %d, %Y') }}</p>
+                            </div>
+                            <div class="flex gap-2 ml-4">
+                                <button onclick="approveItem('{{ item.type.lower().replace(' ', '_') }}', {{ item.id }}, true)" 
+                                        class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                                    <i class='bx bx-check'></i> Approve
+                                </button>
+                                <button onclick="approveItem('{{ item.type.lower().replace(' ', '_') }}', {{ item.id }}, false)" 
+                                        class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                    <i class='bx bx-x'></i> Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Low Priority Approvals -->
+        {% if low_priority %}
+        <div class="bg-white rounded-xl shadow-sm border border-blue-200 mb-6">
+            <div class="px-6 py-4 bg-blue-50 border-b border-blue-200">
+                <h2 class="text-lg font-semibold text-blue-900">ℹ️ Low Priority Approvals</h2>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    {% for item in low_priority %}
+                    <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-2">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">{{ item.type }}</span>
+                                    <span class="text-xs text-gray-500">{{ item.project }}</span>
+                                </div>
+                                <h4 class="text-sm font-medium text-gray-900 mb-1">{{ item.description }}</h4>
+                                {% if item.amount %}
+                                <p class="text-sm text-gray-600">Amount: <span class="font-semibold">₦{{ "{:,.2f}".format(item.amount) }}</span></p>
+                                {% endif %}
+                                <p class="text-xs text-gray-500 mt-1">{{ item.date.strftime('%b %d, %Y') }}</p>
+                            </div>
+                            <div class="flex gap-2 ml-4">
+                                <button onclick="approveItem('{{ item.type.lower().replace(' ', '_') }}', {{ item.id }}, true)" 
+                                        class="px-4 py-2 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors">
+                                    <i class='bx bx-check'></i> Approve
+                                </button>
+                                <button onclick="approveItem('{{ item.type.lower().replace(' ', '_') }}', {{ item.id }}, false)" 
+                                        class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+                                    <i class='bx bx-x'></i> Reject
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if total_pending == 0 %}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
+            <i class='bx bx-check-circle text-6xl text-green-500 mb-4'></i>
+            <h3 class="text-xl font-semibold text-gray-900 mb-2">All Caught Up!</h3>
+            <p class="text-gray-600">No pending approvals at the moment.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Approval Modal -->
+<div id="approval-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
+        <div class="p-6">
+            <h3 id="modal-title" class="text-lg font-semibold text-gray-900 mb-4">Confirm Action</h3>
+            <textarea id="approval-comments" rows="3" 
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Add comments (optional)..."></textarea>
+            <div class="flex gap-3 mt-4">
+                <button onclick="closeModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    Cancel
+                </button>
+                <button id="confirm-button" onclick="confirmApproval()" class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentItemType, currentItemId, currentApproved;
+
+function approveItem(type, id, approved) {
+    currentItemType = type;
+    currentItemId = id;
+    currentApproved = approved;
+    
+    const modal = document.getElementById('approval-modal');
+    const title = document.getElementById('modal-title');
+    const button = document.getElementById('confirm-button');
+    
+    title.textContent = approved ? 'Approve Item' : 'Reject Item';
+    button.textContent = approved ? 'Approve' : 'Reject';
+    button.className = approved ? 
+        'flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700' :
+        'flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700';
+    
+    modal.classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('approval-modal').classList.add('hidden');
+    document.getElementById('approval-comments').value = '';
+}
+
+function confirmApproval() {
+    const comments = document.getElementById('approval-comments').value;
+    
+    fetch(`/office-pm/approve/${currentItemType}/${currentItemId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            approved: currentApproved,
+            comments: comments
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred');
+    });
+    
+    closeModal();
+}
+</script>
+{% endblock %}

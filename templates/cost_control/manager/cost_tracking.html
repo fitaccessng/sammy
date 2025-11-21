@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Cost Tracking{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm text-gray-600">
+        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Home</a>
+        <span class="mx-2">/</span>
+        <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="hover:text-blue-600">Cost Control</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">Cost Tracking</span>
+    </nav>
+
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Cost Tracking</h1>
+        <p class="text-gray-600">Track and manage project costs by category</p>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('cost_control_mgr.cost_tracking') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                <i class="fas fa-clipboard-list mr-2"></i>Cost Tracking
+            </a>
+            <a href="{{ url_for('cost_control_mgr.variance_analysis') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-chart-line mr-2"></i>Variance Analysis
+            </a>
+            <a href="{{ url_for('cost_control_mgr.budget_adjustments') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-adjust mr-2"></i>Budget Adjustments
+            </a>
+            <a href="{{ url_for('cost_control_mgr.cash_flow') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-money-bill-wave mr-2"></i>Cash Flow
+            </a>
+            <a href="{{ url_for('cost_control_mgr.approvals') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-check-circle mr-2"></i>Approvals
+            </a>
+            <a href="{{ url_for('cost_control_mgr.reports') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-file-alt mr-2"></i>Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- Add Cost Entry Form -->
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Add Cost Entry</h2>
+        </div>
+        <div class="p-6">
+            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                    <select name="project_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Project</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
+                    <select name="category_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cost Type</label>
+                    <select name="cost_type" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="Material">Material</option>
+                        <option value="Labor">Labor</option>
+                        <option value="Equipment">Equipment</option>
+                        <option value="Subcontractor">Subcontractor</option>
+                        <option value="Overhead">Overhead</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Entry Date</label>
+                    <input type="date" name="entry_date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                    <input type="text" name="description" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Planned Cost (₦)</label>
+                    <input type="number" name="planned_cost" step="0.01" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Actual Cost (₦)</label>
+                    <input type="number" name="actual_cost" step="0.01" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
+                    <input type="number" name="quantity" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Unit</label>
+                    <input type="text" name="unit" placeholder="e.g., kg, m³, hrs" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="md:col-span-2">
+                    <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-plus mr-2"></i>Add Cost Entry
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="bg-white rounded-lg shadow mb-6 p-6">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                <select name="project_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="">All Projects</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Cost Type</label>
+                <select name="cost_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="">All Types</option>
+                    <option value="Material">Material</option>
+                    <option value="Labor">Labor</option>
+                    <option value="Equipment">Equipment</option>
+                    <option value="Subcontractor">Subcontractor</option>
+                    <option value="Overhead">Overhead</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date From</label>
+                <input type="date" name="date_from" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Date To</label>
+                <input type="date" name="date_to" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+            </div>
+            <div class="md:col-span-4">
+                <button type="submit" class="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900">
+                    <i class="fas fa-filter mr-2"></i>Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Cost Entries Table -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-bold text-gray-900">Cost Entries</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Planned</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actual</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Variance</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for entry in entries %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ entry.entry_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-6 py-4 text-sm">{{ entry.description }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <span class="px-2 py-1 bg-gray-100 rounded text-xs">{{ entry.cost_type }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right">₦{{ "{:,.2f}".format(entry.planned_cost) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right">₦{{ "{:,.2f}".format(entry.actual_cost) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                            <span class="{% if entry.variance < 0 %}text-green-600{% else %}text-red-600{% endif %} font-semibold">
+                                {{ "%.1f"|format(entry.variance_percentage) }}%
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            {% if entry.approval_status == 'approved' %}
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Approved</span>
+                            {% elif entry.approval_status == 'pending' %}
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Pending</span>
+                            {% else %}
+                            <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">{{ entry.approval_status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

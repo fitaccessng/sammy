@@ -1,0 +1,224 @@
+{% extends "base.html" %}
+
+{% block title %}Cost Control Report - {{ project.name }} - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Cost Control Report</h1>
+        <p class="text-gray-600 mt-1">{{ project.name }} - Management Summary</p>
+    </div>
+
+    <!-- Risk Alert -->
+    <div class="mb-6 bg-{{ risk_color }}-50 border-l-4 border-{{ risk_color }}-500 p-4">
+        <div class="flex items-center">
+            <svg class="w-6 h-6 text-{{ risk_color }}-500 mr-3" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h3 class="text-lg font-bold text-{{ risk_color }}-900">Risk Level: {{ risk_level }}</h3>
+                <p class="text-sm text-{{ risk_color }}-800">Budget variance: {{ variance_percentage }}%</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-blue-500">
+            <h3 class="text-sm font-medium text-gray-600 mb-2">Contract Value</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-600">Original</span>
+                    <span class="text-sm font-semibold">₦{{ "{:,.0f}".format(original_contract) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-600">Variations</span>
+                    <span class="text-sm font-semibold text-purple-600">+₦{{ "{:,.0f}".format(total_variations) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-600">Claims</span>
+                    <span class="text-sm font-semibold text-orange-600">+₦{{ "{:,.0f}".format(total_claims) }}</span>
+                </div>
+                <div class="flex justify-between border-t pt-2">
+                    <span class="text-sm font-bold">Revised Total</span>
+                    <span class="text-lg font-bold text-blue-600">₦{{ "{:,.0f}".format(revised_contract) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-orange-500">
+            <h3 class="text-sm font-medium text-gray-600 mb-2">Cost Position</h3>
+            <div class="space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-600">Expenditure</span>
+                    <span class="text-sm font-semibold">₦{{ "{:,.0f}".format(total_expenditure) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-600">Commitments</span>
+                    <span class="text-sm font-semibold text-yellow-600">₦{{ "{:,.0f}".format(total_commitments) }}</span>
+                </div>
+                <div class="flex justify-between border-t pt-2">
+                    <span class="text-sm font-bold">Projected Final</span>
+                    <span class="text-lg font-bold text-orange-600">₦{{ "{:,.0f}".format(projected_final_cost) }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-xs text-gray-500">Utilization</span>
+                    <span class="text-xs font-medium">{{ "{:.1f}".format((projected_final_cost/revised_contract*100) if revised_contract > 0 else 0) }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-6 border-l-4 border-{% if budget_variance >= 0 %}green{% else %}red{% endif %}-500">
+            <h3 class="text-sm font-medium text-gray-600 mb-2">Budget Variance</h3>
+            <div class="text-center py-4">
+                <p class="text-4xl font-bold {% if budget_variance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                    ₦{{ "{:,.0f}".format(budget_variance) }}
+                </p>
+                <p class="text-sm text-gray-600 mt-2">{{ variance_percentage }}%</p>
+                <p class="text-xs font-medium mt-1 {% if budget_variance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                    {% if budget_variance >= 0 %}Under Budget ✓{% else %}Over Budget ✗{% endif %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cost Breakdown Chart -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Expenditure vs Budget -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Cost Analysis</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-gray-700">Revised Contract Value</span>
+                            <span class="text-sm font-bold text-gray-900">₦{{ "{:,.0f}".format(revised_contract) }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-blue-600 h-3 rounded-full" style="width: 100%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-gray-700">Actual Expenditure</span>
+                            <span class="text-sm font-bold text-orange-600">₦{{ "{:,.0f}".format(total_expenditure) }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-orange-600 h-3 rounded-full" style="width: {{ (total_expenditure/revised_contract*100) if revised_contract > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-gray-700">Commitments (Pending)</span>
+                            <span class="text-sm font-bold text-yellow-600">₦{{ "{:,.0f}".format(total_commitments) }}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-yellow-600 h-3 rounded-full" style="width: {{ (total_commitments/revised_contract*100) if revised_contract > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium text-gray-700">Projected Final Cost</span>
+                            <span class="text-sm font-bold {% if projected_final_cost <= revised_contract %}text-green-600{% else %}text-red-600{% endif %}">
+                                ₦{{ "{:,.0f}".format(projected_final_cost) }}
+                            </span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="{% if projected_final_cost <= revised_contract %}bg-green-600{% else %}bg-red-600{% endif %} h-3 rounded-full" 
+                                 style="width: {{ (projected_final_cost/revised_contract*100) if revised_contract > 0 else 0 }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Trend -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Monthly Expenditure Trend</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    {% for month_data in monthly_trend %}
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-gray-600 w-24">{{ month_data.month }}</span>
+                        <div class="flex-1 mx-4">
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full" style="width: {{ (month_data.expenditure/(revised_contract/6)*100) if revised_contract > 0 else 0 }}%"></div>
+                            </div>
+                        </div>
+                        <span class="text-sm font-medium text-gray-900 w-32 text-right">₦{{ "{:,.0f}".format(month_data.expenditure) }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Recommendations & Actions</h3>
+        </div>
+        <div class="p-6">
+            <ul class="space-y-3">
+                {% if variance_percentage < -10 %}
+                <li class="flex items-start">
+                    <svg class="w-5 h-5 text-red-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm text-gray-700"><strong>Critical:</strong> Immediate cost reduction measures required. Review all pending commitments and defer non-essential work.</span>
+                </li>
+                {% elif variance_percentage < 0 %}
+                <li class="flex items-start">
+                    <svg class="w-5 h-5 text-orange-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm text-gray-700"><strong>Warning:</strong> Monitor expenditure closely. Implement cost control measures and optimize resource allocation.</span>
+                </li>
+                {% else %}
+                <li class="flex items-start">
+                    <svg class="w-5 h-5 text-green-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm text-gray-700"><strong>Good:</strong> Project is on track financially. Continue monitoring and maintain current cost control practices.</span>
+                </li>
+                {% endif %}
+                
+                <li class="flex items-start">
+                    <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm text-gray-700">Review and update budget forecasts monthly based on actual expenditure patterns.</span>
+                </li>
+                
+                <li class="flex items-start">
+                    <svg class="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="text-sm text-gray-700">Expedite approval of pending payment applications to improve cash flow visibility.</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex justify-between">
+        <a href="{{ url_for('qs.dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">
+            Back to Dashboard
+        </a>
+        <button onclick="window.print()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+            </svg>
+            Print Report
+        </button>
+    </div>
+</div>
+{% endblock %}

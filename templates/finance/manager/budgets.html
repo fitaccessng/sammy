@@ -1,0 +1,216 @@
+{% extends "finance/base.html" %}
+{% block title %}Budget Management{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+     {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }} p-4 rounded-lg mb-4
+                    {{ 'bg-green-50 border border-green-200 text-green-800' if category == 'success' else 'bg-red-50 border border-red-200 text-red-800' }}">
+                    <div class="flex items-center">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} mr-2"></i>
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <!-- Header with Actions -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-wallet text-blue-600 mr-3"></i>Budget Management
+            </h1>
+            <p class="text-gray-600">Create and track organizational budgets</p>
+        </div>
+        <button onclick="openCreateModal()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center">
+            <i class="fas fa-plus mr-2"></i>Create Budget
+        </button>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <form method="get" class="flex gap-4">
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Fiscal Year</label>
+                <select name="fiscal_year" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    {% for year in range(2020, 2031) %}
+                    <option value="{{ year }}" {% if year == fiscal_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-1">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <select name="status" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <option value="">All Statuses</option>
+                    <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
+                    <option value="completed" {% if request.args.get('status') == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if request.args.get('status') == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="bg-gray-700 text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition">
+                    <i class="fas fa-filter mr-2"></i>Filter
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Budgets List -->
+    <div class="grid grid-cols-1 gap-6">
+        {% for budget in budgets %}
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition">
+            <div class="p-6">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-xl font-bold text-gray-900">{{ budget.category }} Budget</h3>
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full
+                                {% if budget.status == 'active' %}bg-green-100 text-green-800
+                                {% elif budget.status == 'completed' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ budget.status }}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-2">
+                            {% if budget.project %}
+                            Project: {{ budget.project.project_name }} • 
+                            {% endif %}
+                            FY {{ budget.fiscal_year or 'N/A' }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Budget Metrics -->
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div class="text-center p-3 bg-blue-50 rounded-lg">
+                        <p class="text-xs text-gray-600 mb-1">Allocated</p>
+                        <p class="text-lg font-bold text-blue-700">₦{{ "{:,.0f}".format(budget.allocated_amount) }}</p>
+                    </div>
+                    <div class="text-center p-3 bg-yellow-50 rounded-lg">
+                        <p class="text-xs text-gray-600 mb-1">Spent</p>
+                        <p class="text-lg font-bold text-yellow-700">₦{{ "{:,.0f}".format(budget.spent_amount) }}</p>
+                    </div>
+                    <div class="text-center p-3 bg-green-50 rounded-lg">
+                        <p class="text-xs text-gray-600 mb-1">Remaining</p>
+                        <p class="text-lg font-bold text-green-700">₦{{ "{:,.0f}".format(budget.remaining_amount) }}</p>
+                    </div>
+                </div>
+
+                <!-- Utilization Bar -->
+                <div class="mb-4">
+                    <div class="flex justify-between text-sm text-gray-600 mb-2">
+                        <span>Budget Utilization</span>
+                        <span class="font-semibold">{{ "{:.1f}".format(budget.usage_percentage) }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-full h-3 transition-all" 
+                             style="width: {{ budget.usage_percentage }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Metadata -->
+                <div class="flex justify-between items-center text-sm text-gray-600 pt-4 border-t">
+                    <div>
+                        <i class="fas fa-clock mr-1"></i>Created: {{ budget.created_at.strftime('%b %d, %Y') }}
+                    </div>
+                    <div class="flex gap-2">
+                        {% if budget.status == 'active' %}
+                        <form action="{{ url_for('finance_mgr.delete_budget', budget_id=budget.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this budget?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                            <button type="submit" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash mr-1"></i>Delete
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="bg-white rounded-lg shadow p-12 text-center">
+            <i class="fas fa-wallet text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">No Budgets Found</h3>
+            <p class="text-gray-500 mb-6">Create your first budget to start tracking expenses</p>
+            <button onclick="openCreateModal()" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition">
+                <i class="fas fa-plus mr-2"></i>Create Budget
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Create Budget Modal -->
+<div id="createModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-gray-900">Create New Budget</h3>
+            <button onclick="closeCreateModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form method="post" class="p-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Budget Category *</label>
+                <select name="budget_type" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <option value="">Select Category</option>
+                    <option value="Payroll">Payroll</option>
+                    <option value="Procurement">Procurement</option>
+                    <option value="Operations">Operations</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Infrastructure">Infrastructure</option>
+                    <option value="Maintenance">Maintenance</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Project *</label>
+                <select name="project_id" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <option value="">Select a Project</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}">{{ project.project_name }}</option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Project is required for budget creation</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Fiscal Year *</label>
+                    <input type="number" name="fiscal_year" value="{{ fiscal_year }}" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Allocated Amount *</label>
+                    <input type="number" name="total_budget" step="0.01" required class="w-full border border-gray-300 rounded-lg px-4 py-2" placeholder="0.00">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeCreateModal()" class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-save mr-2"></i>Create Budget
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Scripts -->
+<script>
+    function openCreateModal() {
+        document.getElementById('createModal').classList.remove('hidden');
+    }
+
+    function closeCreateModal() {
+        document.getElementById('createModal').classList.add('hidden');
+    }
+</script>
+{% endblock %}

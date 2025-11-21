@@ -12,13 +12,15 @@ from extensions import db, migrate, mail
 from flask_login import LoginManager, login_user, login_required, current_user, logout_user
 import os
 import secrets
-from datetime import timedelta, datetime, date
+import calendar
+from datetime import timedelta, datetime, date, timezone
 import logging
 import traceback
 from werkzeug.utils import secure_filename
 from utils.decorators import role_required
 from utils.constants import Roles
 from utils.email import send_verification_email, send_email
+from utils.payroll_calculator import PayrollCalculator, PayrollBatch
 from models import *
 import pandas as pd
 from io import BytesIO
@@ -133,7 +135,7 @@ def create_app():
     def get_dashboard_route(role):
         """Get dashboard route based on user role"""
         dashboard_routes = {
-            Roles.SUPER_HQ: 'dashboard',
+            Roles.SUPER_HQ: 'admin.dashboard',
             Roles.HQ_FINANCE: 'finance_home',
             Roles.HQ_HR: 'hr_home',
             Roles.HQ_PROCUREMENT: 'procurement_home',
@@ -198,6 +200,38 @@ Construction Management Team
     # Configure logger for this module
     logger = logging.getLogger(__name__)
 
+    # Test email route
+    @app.route('/test-email')
+    def test_email():
+        """Test route to verify email configuration"""
+        try:
+            from flask_mail import Message
+            msg = Message('Test Email from SammyA',
+                         sender=app.config['MAIL_DEFAULT_SENDER'],
+                         recipients=['test@example.com'])
+            msg.body = 'This is a test email to verify email configuration.'
+            mail.send(msg)
+            return jsonify({
+                'success': True,
+                'message': 'Test email sent successfully!',
+                'config': {
+                    'MAIL_SERVER': app.config.get('MAIL_SERVER'),
+                    'MAIL_PORT': app.config.get('MAIL_PORT'),
+                    'MAIL_USERNAME': app.config.get('MAIL_USERNAME'),
+                    'MAIL_DEFAULT_SENDER': app.config.get('MAIL_DEFAULT_SENDER')
+                }
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'error': str(e),
+                'config': {
+                    'MAIL_SERVER': app.config.get('MAIL_SERVER'),
+                    'MAIL_PORT': app.config.get('MAIL_PORT'),
+                    'MAIL_USERNAME': app.config.get('MAIL_USERNAME'),
+                    'MAIL_DEFAULT_SENDER': app.config.get('MAIL_DEFAULT_SENDER')
+                }
+            }), 500
 
     @app.route("/", endpoint='main_home')
     def main_home():
@@ -215,38 +249,55 @@ Construction Management Team
             # Input validation
                 if not all([name, email, role, password]):
                     flash("All fields are required", "error")
-                    return redirect(url_for("main.signup"))
+                    return redirect(url_for("signup"))
 
             # Role validation
                 if role not in vars(Roles).values():
                     flash("Invalid role selected", "error")
-                    return redirect(url_for("main.signup"))
+                    return redirect(url_for("signup"))
 
             # Check existing user
                 if User.query.filter_by(email=email).first():
                     flash("Email already registered", "error")
-                    return redirect(url_for("main.signup"))
+                    return redirect(url_for("signup"))
 
             # Always set SUPER_HQ for admin/super admin/super_hq
                 if str(role).strip().lower() in ["super_hq", "super admin", "admin"]:
                     db_role = Roles.SUPER_HQ
                 else:
                     db_role = role
-                new_user = User(name=name, email=email, role=db_role)
+                
+                # Generate verification code
+                import random
+                verification_code = str(random.randint(100000, 999999))
+                
+                new_user = User(name=name, email=email, role=db_role, verification_code=verification_code)
                 new_user.set_password(password)
                 db.session.add(new_user)
                 db.session.commit()
+                
+                # Send verification email
+                try:
+                    send_verification_email(email, verification_code)
+                    print(f"Verification email sent to {email} with code {verification_code}")  # Debug
+                except Exception as email_error:
+                    print(f"Failed to send verification email: {str(email_error)}")  # Debug
+                    # Don't fail signup if email fails
+                
             # Only store user_id in session
                 session["user_id"] = new_user.id
                 print("Signed up with role:", db_role)  # Debug
                 session.permanent = True
-                flash("Account created! Please verify your email.", "success")
-                return redirect(url_for("main.login"))
+                flash("Account created! Please check your email for the verification code.", "success")
+                return redirect(url_for("verify_email_page"))
 
         except Exception as e:
+            db.session.rollback()  # Rollback failed transaction
+            import traceback
             print(f"Signup error: {str(e)}")  # Debug print
-            flash("An error occurred during signup.", "error")
-            return redirect(url_for("main.signup"))
+            print(f"Full traceback:\n{traceback.format_exc()}")  # Full error details
+            flash(f"An error occurred during signup: {str(e)}", "error")
+            return redirect(url_for("signup"))
         
         return render_template("auth/signup.html")
 
@@ -335,7 +386,7 @@ Construction Management Team
             db.session.commit()
         
             flash("Email verified successfully! You can now login.", "success")
-            return redirect(url_for("main.login"))
+            return redirect(url_for("login"))
         
         return render_template("auth/verification.html")
 
@@ -363,7 +414,7 @@ Construction Management Team
         user = User.query.filter_by(reset_token=token).first()
         if not user:
             flash("Invalid or expired token", "error")
-            return redirect(url_for("main.login"))
+            return redirect(url_for("login"))
 
         if request.method == "POST":
             new_password = request.form["password"]
@@ -371,7 +422,7 @@ Construction Management Team
             user.reset_token = None
             db.session.commit()
             flash("Password reset successful! You can now log in.", "success")
-            return redirect(url_for("main.login"))
+            return redirect(url_for("login"))
 
         return render_template("auth/reset_password.html", token=token)
 
@@ -728,6 +779,2944 @@ Construction Management Team
         }
         return render_template('cost_control/dashboard.html', summary=summary)
 
+    # ===================================================================
+    # COST CONTROL MANAGER - COMPREHENSIVE ENDPOINTS
+    # ===================================================================
+    
+    @app.route('/cost-control/manager/dashboard', endpoint='cost_control_mgr.dashboard')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+    def cost_control_manager_dashboard():
+        """Cost Control Manager dashboard with KPIs and alerts"""
+        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        
+        # Get active projects
+        active_projects = Project.query.filter_by(status='In Progress').all()
+        project_count = len(active_projects)
+        
+        # Budget summary across all projects
+        total_allocated = db.session.query(func.sum(Budget.allocated_amount)).scalar() or 0
+        total_spent = db.session.query(func.sum(Budget.spent_amount)).scalar() or 0
+        total_remaining = total_allocated - total_spent
+        overall_usage = (total_spent / total_allocated * 100) if total_allocated > 0 else 0
+        
+        # Get budget alerts (projects over 80% budget usage)
+        budget_alerts = []
+        for project in active_projects:
+            project_budgets = Budget.query.filter_by(project_id=project.id).all()
+            for budget in project_budgets:
+                if budget.usage_percentage > 80:
+                    budget_alerts.append({
+                        'project_name': project.name,
+                        'category': budget.category,
+                        'usage_percentage': budget.usage_percentage,
+                        'remaining': budget.remaining_amount,
+                        'severity': 'critical' if budget.usage_percentage > 95 else 'warning'
+                    })
+        
+        # Recent cost tracking entries (last 10)
+        recent_entries = CostTrackingEntry.query.order_by(
+            CostTrackingEntry.created_at.desc()
+        ).limit(10).all()
+        
+        # Pending approvals count
+        pending_approvals = CostApproval.query.filter_by(
+            status='pending',
+            required_role=Roles.HQ_COST_CONTROL
+        ).count()
+        
+        # Pending budget adjustments
+        pending_adjustments = BudgetAdjustment.query.filter_by(status='pending').count()
+        
+        # Variance summary (positive vs negative)
+        variance_data = db.session.query(
+            func.sum(CostTrackingEntry.variance).label('total_variance'),
+            func.count(CostTrackingEntry.id).label('entry_count')
+        ).filter(
+            CostTrackingEntry.variance != 0
+        ).first()
+        
+        # Calculate monthly burn rate (last 30 days)
+        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        monthly_spend = db.session.query(
+            func.sum(CostTrackingEntry.actual_cost)
+        ).filter(
+            CostTrackingEntry.entry_date >= thirty_days_ago
+        ).scalar() or 0
+        
+        # Top 5 projects by spending
+        top_spending_projects = db.session.query(
+            Project.name,
+            func.sum(CostTrackingEntry.actual_cost).label('total_spend')
+        ).join(
+            CostTrackingEntry, Project.id == CostTrackingEntry.project_id
+        ).group_by(
+            Project.name
+        ).order_by(
+            func.sum(CostTrackingEntry.actual_cost).desc()
+        ).limit(5).all()
+        
+        # Prepare chart data for spending by category
+        spending_by_category = db.session.query(
+            CostTrackingEntry.cost_type,
+            func.sum(CostTrackingEntry.actual_cost).label('amount')
+        ).group_by(
+            CostTrackingEntry.cost_type
+        ).all()
+        
+        dashboard_data = {
+            'kpis': {
+                'project_count': project_count,
+                'total_allocated': total_allocated,
+                'total_spent': total_spent,
+                'total_remaining': total_remaining,
+                'overall_usage': round(overall_usage, 2),
+                'monthly_burn_rate': monthly_spend,
+                'pending_approvals': pending_approvals,
+                'pending_adjustments': pending_adjustments,
+                'total_variance': variance_data.total_variance if variance_data else 0,
+                'variance_entries': variance_data.entry_count if variance_data else 0
+            },
+            'budget_alerts': budget_alerts[:10],  # Top 10 alerts
+            'recent_entries': recent_entries,
+            'top_spending_projects': [
+                {'name': p[0], 'amount': p[1]} for p in top_spending_projects
+            ],
+            'spending_by_category': {
+                cat: float(amt) for cat, amt in spending_by_category
+            }
+        }
+        
+        return render_template('cost_control/manager/dashboard.html', **dashboard_data)
+    
+    
+    @app.route('/cost-control/manager/cost-tracking', methods=['GET', 'POST'], endpoint='cost_control_mgr.cost_tracking')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
+    def cost_tracking():
+        """Add and view cost tracking entries"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                # Create new cost tracking entry
+                entry = CostTrackingEntry(
+                    project_id=data.get('project_id'),
+                    category_id=data.get('category_id'),
+                    entry_date=datetime.strptime(data.get('entry_date'), '%Y-%m-%d').date(),
+                    description=data.get('description'),
+                    planned_cost=float(data.get('planned_cost', 0)),
+                    actual_cost=float(data.get('actual_cost', 0)),
+                    cost_type=data.get('cost_type'),
+                    quantity=float(data.get('quantity', 0)) if data.get('quantity') else None,
+                    unit=data.get('unit'),
+                    unit_cost=float(data.get('unit_cost', 0)) if data.get('unit_cost') else None,
+                    created_by=current_user.id
+                )
+                
+                # Calculate variance
+                entry.calculate_variance()
+                
+                # Check if approval required (variance > 10%)
+                if abs(entry.variance_percentage) > 10:
+                    entry.requires_approval = True
+                    entry.approval_status = 'pending'
+                    
+                    # Create approval request
+                    approval = CostApproval(
+                        reference_type='cost_entry',
+                        reference_id=entry.id,
+                        project_id=entry.project_id,
+                        required_role=Roles.HQ_COST_CONTROL,
+                        amount=entry.actual_cost,
+                        description=f"Cost variance: {entry.variance_percentage:.1f}% - {entry.description}",
+                        created_by=current_user.id
+                    )
+                    db.session.add(approval)
+                
+                db.session.add(entry)
+                db.session.commit()
+                
+                flash('Cost entry added successfully', 'success')
+                return redirect(url_for('cost_control_mgr.cost_tracking'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error adding cost entry: {str(e)}', 'error')
+        
+        # GET request - show all entries with filters
+        project_id = request.args.get('project_id', type=int)
+        cost_type = request.args.get('cost_type')
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        
+        query = CostTrackingEntry.query
+        
+        if project_id:
+            query = query.filter_by(project_id=project_id)
+        if cost_type:
+            query = query.filter_by(cost_type=cost_type)
+        if date_from:
+            query = query.filter(CostTrackingEntry.entry_date >= date_from)
+        if date_to:
+            query = query.filter(CostTrackingEntry.entry_date <= date_to)
+        
+        entries = query.order_by(CostTrackingEntry.entry_date.desc()).all()
+        
+        # Get projects and categories for dropdowns
+        projects = Project.query.filter_by(status='In Progress').all()
+        categories = CostCategory.query.all()
+        
+        return render_template('cost_control/manager/cost_tracking.html',
+                             entries=entries,
+                             projects=projects,
+                             categories=categories)
+    
+    
+    @app.route('/cost-control/manager/variance-analysis', endpoint='cost_control_mgr.variance_analysis')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+    def variance_analysis():
+        """Detailed variance analysis - planned vs actual"""
+        from sqlalchemy import func
+        
+        project_id = request.args.get('project_id', type=int)
+        period = request.args.get('period', 'month')  # week, month, quarter, year
+        
+        # Calculate date range based on period
+        today = datetime.now(timezone.utc)
+        if period == 'week':
+            date_from = today - timedelta(days=7)
+        elif period == 'month':
+            date_from = today - timedelta(days=30)
+        elif period == 'quarter':
+            date_from = today - timedelta(days=90)
+        else:  # year
+            date_from = today - timedelta(days=365)
+        
+        # Build query
+        query = db.session.query(
+            CostTrackingEntry.cost_type,
+            func.sum(CostTrackingEntry.planned_cost).label('total_planned'),
+            func.sum(CostTrackingEntry.actual_cost).label('total_actual'),
+            func.sum(CostTrackingEntry.variance).label('total_variance'),
+            func.count(CostTrackingEntry.id).label('entry_count')
+        ).filter(
+            CostTrackingEntry.entry_date >= date_from
+        )
+        
+        if project_id:
+            query = query.filter(CostTrackingEntry.project_id == project_id)
+        
+        variance_by_type = query.group_by(CostTrackingEntry.cost_type).all()
+        
+        # Project-wise variance summary
+        project_variance = db.session.query(
+            Project.name,
+            Project.id,
+            func.sum(CostTrackingEntry.planned_cost).label('planned'),
+            func.sum(CostTrackingEntry.actual_cost).label('actual'),
+            func.sum(CostTrackingEntry.variance).label('variance')
+        ).join(
+            CostTrackingEntry, Project.id == CostTrackingEntry.project_id
+        ).filter(
+            CostTrackingEntry.entry_date >= date_from
+        ).group_by(
+            Project.name, Project.id
+        ).all()
+        
+        # Worst performing categories (highest negative variance)
+        worst_categories = db.session.query(
+            CostCategory.name,
+            CostTrackingEntry.cost_type,
+            func.sum(CostTrackingEntry.variance).label('total_variance')
+        ).join(
+            CostTrackingEntry, CostCategory.id == CostTrackingEntry.category_id
+        ).filter(
+            CostTrackingEntry.entry_date >= date_from
+        ).group_by(
+            CostCategory.name, CostTrackingEntry.cost_type
+        ).order_by(
+            func.sum(CostTrackingEntry.variance).asc()
+        ).limit(10).all()
+        
+        # Prepare chart data
+        chart_data = {
+            'labels': [v[0] for v in variance_by_type],
+            'planned': [float(v[1]) for v in variance_by_type],
+            'actual': [float(v[2]) for v in variance_by_type],
+            'variance': [float(v[3]) for v in variance_by_type]
+        }
+        
+        projects = Project.query.filter_by(status='In Progress').all()
+        
+        return render_template('cost_control/manager/variance_analysis.html',
+                             variance_by_type=variance_by_type,
+                             project_variance=project_variance,
+                             worst_categories=worst_categories,
+                             chart_data=chart_data,
+                             projects=projects,
+                             selected_project=project_id,
+                             selected_period=period)
+    
+    
+    @app.route('/cost-control/manager/budget-adjustments', methods=['GET', 'POST'], endpoint='cost_control_mgr.budget_adjustments')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+    def budget_adjustments():
+        """Request and manage budget adjustments"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                budget_id = data.get('budget_id')
+                budget = Budget.query.get(budget_id)
+                
+                if not budget:
+                    flash('Budget not found', 'error')
+                    return redirect(url_for('cost_control_mgr.budget_adjustments'))
+                
+                new_amount = float(data.get('new_amount'))
+                adjustment_amount = new_amount - budget.allocated_amount
+                
+                # Create budget adjustment request
+                adjustment = BudgetAdjustment(
+                    project_id=budget.project_id,
+                    budget_id=budget_id,
+                    category=budget.category,
+                    old_amount=budget.allocated_amount,
+                    new_amount=new_amount,
+                    adjustment_amount=adjustment_amount,
+                    adjustment_type='increase' if adjustment_amount > 0 else 'decrease',
+                    reason=data.get('reason'),
+                    impact_analysis=data.get('impact_analysis'),
+                    requested_by=current_user.id
+                )
+                
+                db.session.add(adjustment)
+                
+                # Create approval workflow
+                approval = CostApproval(
+                    reference_type='budget_adjustment',
+                    reference_id=adjustment.id,
+                    project_id=budget.project_id,
+                    required_role=Roles.HQ_FINANCE,
+                    amount=abs(adjustment_amount),
+                    description=f"Budget adjustment: {budget.category} - {adjustment.adjustment_type}",
+                    created_by=current_user.id
+                )
+                db.session.add(approval)
+                
+                db.session.commit()
+                flash('Budget adjustment request submitted successfully', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error submitting adjustment request: {str(e)}', 'error')
+        
+        # GET request - show all adjustments
+        status_filter = request.args.get('status', 'all')
+        project_id = request.args.get('project_id', type=int)
+        
+        query = BudgetAdjustment.query
+        
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        if project_id:
+            query = query.filter_by(project_id=project_id)
+        
+        adjustments = query.order_by(BudgetAdjustment.requested_at.desc()).all()
+        
+        # Get projects and budgets for forms
+        projects = Project.query.filter_by(status='In Progress').all()
+        budgets = Budget.query.all()
+        
+        return render_template('cost_control/manager/budget_adjustments.html',
+                             adjustments=adjustments,
+                             projects=projects,
+                             budgets=budgets)
+    
+    
+    @app.route('/cost-control/manager/budget-adjustment/<int:adjustment_id>/approve', methods=['POST'], endpoint='cost_control_mgr.approve_adjustment')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def approve_budget_adjustment(adjustment_id):
+        """Approve budget adjustment request"""
+        adjustment = BudgetAdjustment.query.get_or_404(adjustment_id)
+        
+        action = request.form.get('action')  # approve or reject
+        comments = request.form.get('comments')
+        
+        if action == 'approve':
+            adjustment.status = 'approved'
+            adjustment.approved_by = current_user.id
+            adjustment.approved_at = datetime.now(timezone.utc)
+            adjustment.approval_comments = comments
+            
+            # Update the actual budget
+            budget = Budget.query.get(adjustment.budget_id)
+            budget.allocated_amount = adjustment.new_amount
+            
+            flash('Budget adjustment approved successfully', 'success')
+        else:
+            adjustment.status = 'rejected'
+            adjustment.reviewed_by = current_user.id
+            adjustment.reviewed_at = datetime.now(timezone.utc)
+            adjustment.review_comments = comments
+            
+            flash('Budget adjustment rejected', 'info')
+        
+        db.session.commit()
+        return redirect(url_for('cost_control_mgr.budget_adjustments'))
+    
+    
+    @app.route('/cost-control/manager/cash-flow', methods=['GET', 'POST'], endpoint='cost_control_mgr.cash_flow')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+    def cash_flow_forecast():
+        """Cash flow forecasting and monitoring"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                forecast = CashFlowForecast(
+                    project_id=data.get('project_id'),
+                    forecast_period=data.get('forecast_period'),
+                    period_start=datetime.strptime(data.get('period_start'), '%Y-%m-%d').date(),
+                    period_end=datetime.strptime(data.get('period_end'), '%Y-%m-%d').date(),
+                    expected_inflow=float(data.get('expected_inflow', 0)),
+                    actual_inflow=float(data.get('actual_inflow', 0)),
+                    expected_outflow=float(data.get('expected_outflow', 0)),
+                    actual_outflow=float(data.get('actual_outflow', 0)),
+                    opening_balance=float(data.get('opening_balance', 0)),
+                    labor_cost=float(data.get('labor_cost', 0)),
+                    material_cost=float(data.get('material_cost', 0)),
+                    equipment_cost=float(data.get('equipment_cost', 0)),
+                    subcontractor_cost=float(data.get('subcontractor_cost', 0)),
+                    overhead_cost=float(data.get('overhead_cost', 0)),
+                    notes=data.get('notes'),
+                    created_by=current_user.id
+                )
+                
+                forecast.calculate_net_flow()
+                
+                db.session.add(forecast)
+                db.session.commit()
+                
+                flash('Cash flow forecast added successfully', 'success')
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error adding cash flow forecast: {str(e)}', 'error')
+        
+        # GET request
+        project_id = request.args.get('project_id', type=int)
+        period = request.args.get('period', 'monthly')
+        
+        query = CashFlowForecast.query
+        
+        if project_id:
+            query = query.filter_by(project_id=project_id)
+        if period:
+            query = query.filter_by(forecast_period=period)
+        
+        forecasts = query.order_by(CashFlowForecast.period_start.desc()).all()
+        
+        # Calculate aggregated cash flow
+        total_expected_in = sum(f.expected_inflow for f in forecasts)
+        total_actual_in = sum(f.actual_inflow for f in forecasts)
+        total_expected_out = sum(f.expected_outflow for f in forecasts)
+        total_actual_out = sum(f.actual_outflow for f in forecasts)
+        
+        # Prepare chart data
+        chart_data = {
+            'labels': [f"{f.period_start.strftime('%b %Y')}" for f in forecasts[:12]],
+            'expected_inflow': [float(f.expected_inflow) for f in forecasts[:12]],
+            'actual_inflow': [float(f.actual_inflow) for f in forecasts[:12]],
+            'expected_outflow': [float(f.expected_outflow) for f in forecasts[:12]],
+            'actual_outflow': [float(f.actual_outflow) for f in forecasts[:12]],
+            'net_flow': [float(f.net_cash_flow) for f in forecasts[:12]]
+        }
+        
+        projects = Project.query.filter_by(status='In Progress').all()
+        
+        return render_template('cost_control/manager/cash_flow.html',
+                             forecasts=forecasts,
+                             projects=projects,
+                             chart_data=chart_data,
+                             summary={
+                                 'total_expected_in': total_expected_in,
+                                 'total_actual_in': total_actual_in,
+                                 'total_expected_out': total_expected_out,
+                                 'total_actual_out': total_actual_out
+                             })
+    
+    
+    @app.route('/cost-control/manager/approvals', methods=['GET', 'POST'], endpoint='cost_control_mgr.approvals')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+    def cost_approvals():
+        """Cost approval queue and processing"""
+        if request.method == 'POST':
+            approval_id = request.form.get('approval_id')
+            action = request.form.get('action')
+            comments = request.form.get('comments')
+            
+            approval = CostApproval.query.get_or_404(approval_id)
+            
+            if action == 'approve':
+                approval.status = 'approved'
+                approval.approver_id = current_user.id
+                approval.approved_at = datetime.now(timezone.utc)
+                approval.comments = comments
+                approval.action_taken = 'approved'
+                
+                # Update referenced entry if it's a cost entry
+                if approval.reference_type == 'cost_entry':
+                    entry = CostTrackingEntry.query.get(approval.reference_id)
+                    if entry:
+                        entry.approval_status = 'approved'
+                        entry.approved_by = current_user.id
+                        entry.approved_at = datetime.now(timezone.utc)
+                
+                flash('Approval processed successfully', 'success')
+                
+            elif action == 'reject':
+                approval.status = 'rejected'
+                approval.approver_id = current_user.id
+                approval.approved_at = datetime.now(timezone.utc)
+                approval.comments = comments
+                approval.action_taken = 'rejected'
+                
+                # Update referenced entry
+                if approval.reference_type == 'cost_entry':
+                    entry = CostTrackingEntry.query.get(approval.reference_id)
+                    if entry:
+                        entry.approval_status = 'rejected'
+                        entry.rejection_reason = comments
+                
+                flash('Approval rejected', 'info')
+                
+            elif action == 'escalate':
+                approval.escalate_to_next_level()
+                approval.comments = comments
+                flash('Approval escalated to next level', 'info')
+            
+            db.session.commit()
+            return redirect(url_for('cost_control_mgr.approvals'))
+        
+        # GET request - show pending approvals
+        status_filter = request.args.get('status', 'pending')
+        
+        query = CostApproval.query
+        
+        if current_user.role != Roles.SUPER_HQ:
+            query = query.filter_by(required_role=current_user.role)
+        
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        
+        approvals = query.order_by(CostApproval.created_at.desc()).all()
+        
+        # Enrich approval data with project and reference info
+        enriched_approvals = []
+        for approval in approvals:
+            project = Project.query.get(approval.project_id)
+            
+            ref_details = {}
+            if approval.reference_type == 'cost_entry':
+                entry = CostTrackingEntry.query.get(approval.reference_id)
+                if entry:
+                    ref_details = {
+                        'description': entry.description,
+                        'actual_cost': entry.actual_cost,
+                        'variance_percentage': entry.variance_percentage
+                    }
+            elif approval.reference_type == 'budget_adjustment':
+                adjustment = BudgetAdjustment.query.get(approval.reference_id)
+                if adjustment:
+                    ref_details = {
+                        'category': adjustment.category,
+                        'old_amount': adjustment.old_amount,
+                        'new_amount': adjustment.new_amount,
+                        'reason': adjustment.reason
+                    }
+            
+            enriched_approvals.append({
+                'approval': approval,
+                'project': project,
+                'reference_details': ref_details
+            })
+        
+        return render_template('cost_control/manager/approvals.html',
+                             approvals=enriched_approvals)
+    
+    
+    @app.route('/cost-control/manager/expenditure-reports', endpoint='cost_control_mgr.expenditure_reports')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+    def expenditure_reports():
+        """Detailed expenditure reports by category"""
+        from sqlalchemy import func
+        
+        project_id = request.args.get('project_id', type=int)
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        category = request.args.get('category')
+        
+        query = ExpenditureLog.query
+        
+        if project_id:
+            query = query.filter_by(project_id=project_id)
+        if category:
+            query = query.filter_by(category=category)
+        if date_from:
+            query = query.filter(ExpenditureLog.transaction_date >= date_from)
+        if date_to:
+            query = query.filter(ExpenditureLog.transaction_date <= date_to)
+        
+        expenditures = query.order_by(ExpenditureLog.transaction_date.desc()).all()
+        
+        # Summary by category
+        category_summary = db.session.query(
+            ExpenditureLog.category,
+            func.sum(ExpenditureLog.amount).label('total'),
+            func.count(ExpenditureLog.id).label('count')
+        )
+        
+        if project_id:
+            category_summary = category_summary.filter_by(project_id=project_id)
+        
+        category_summary = category_summary.group_by(ExpenditureLog.category).all()
+        
+        # Summary by vendor
+        vendor_summary = db.session.query(
+            Vendor.name,
+            func.sum(ExpenditureLog.amount).label('total'),
+            func.count(ExpenditureLog.id).label('count')
+        ).join(
+            ExpenditureLog, Vendor.id == ExpenditureLog.vendor_id
+        )
+        
+        if project_id:
+            vendor_summary = vendor_summary.filter(ExpenditureLog.project_id == project_id)
+        
+        vendor_summary = vendor_summary.group_by(Vendor.name).order_by(
+            func.sum(ExpenditureLog.amount).desc()
+        ).limit(10).all()
+        
+        projects = Project.query.filter_by(status='In Progress').all()
+        
+        return render_template('cost_control/manager/expenditure_reports.html',
+                             expenditures=expenditures,
+                             category_summary=category_summary,
+                             vendor_summary=vendor_summary,
+                             projects=projects)
+    
+    
+    @app.route('/cost-control/manager/reports', endpoint='cost_control_mgr.reports')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+    def cost_control_reports():
+        """Comprehensive cost performance reports"""
+        from sqlalchemy import func
+        
+        # Overall project performance
+        project_performance = db.session.query(
+            Project.name,
+            Project.id,
+            Project.budget,
+            func.sum(Budget.allocated_amount).label('budgeted'),
+            func.sum(Budget.spent_amount).label('spent'),
+            func.sum(CostTrackingEntry.variance).label('variance')
+        ).outerjoin(
+            Budget, Project.id == Budget.project_id
+        ).outerjoin(
+            CostTrackingEntry, Project.id == CostTrackingEntry.project_id
+        ).group_by(
+            Project.name, Project.id, Project.budget
+        ).all()
+        
+        # Cost trend analysis (last 6 months)
+        six_months_ago = datetime.now(timezone.utc) - timedelta(days=180)
+        monthly_trends = db.session.query(
+            func.strftime('%Y-%m', CostTrackingEntry.entry_date).label('month'),
+            func.sum(CostTrackingEntry.actual_cost).label('total_cost')
+        ).filter(
+            CostTrackingEntry.entry_date >= six_months_ago
+        ).group_by(
+            'month'
+        ).order_by(
+            'month'
+        ).all()
+        
+        # Top variance items (highest cost overruns)
+        top_variances = db.session.query(
+            CostTrackingEntry.description,
+            Project.name,
+            CostTrackingEntry.variance,
+            CostTrackingEntry.variance_percentage,
+            CostTrackingEntry.actual_cost
+        ).join(
+            Project, CostTrackingEntry.project_id == Project.id
+        ).filter(
+            CostTrackingEntry.variance > 0
+        ).order_by(
+            CostTrackingEntry.variance.desc()
+        ).limit(20).all()
+        
+        # Efficiency metrics
+        total_entries = CostTrackingEntry.query.count()
+        approved_count = CostTrackingEntry.query.filter_by(approval_status='approved').count()
+        pending_count = CostTrackingEntry.query.filter_by(approval_status='pending').count()
+        
+        return render_template('cost_control/manager/reports.html',
+                             project_performance=project_performance,
+                             monthly_trends=monthly_trends,
+                             top_variances=top_variances,
+                             metrics={
+                                 'total_entries': total_entries,
+                                 'approved_count': approved_count,
+                                 'pending_count': pending_count,
+                                 'approval_rate': (approved_count / total_entries * 100) if total_entries > 0 else 0
+                             })
+
+    # ===================================================================
+    # HR MANAGER - COMPREHENSIVE ENDPOINTS
+    # ===================================================================
+    
+    @app.route('/hr/manager/dashboard', endpoint='hr_mgr.dashboard')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def hr_manager_dashboard():
+        """HR Manager dashboard with employee metrics and pending requests"""
+        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        
+        # Employee statistics
+        total_employees = Employee.query.filter_by(status='Active').count()
+        total_departments = db.session.query(func.count(func.distinct(Employee.department))).scalar()
+        
+        # Recent hires (last 30 days)
+        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        recent_hires = Employee.query.filter(
+            Employee.date_of_employment >= thirty_days_ago.date()
+        ).count()
+        
+        # Pending requests
+        pending_leave_requests = Leave.query.filter_by(status='Pending').count()
+        open_positions = 0  # RecruitmentRequest model not yet implemented
+        pending_interviews = 0  # Interview model not yet implemented
+        pending_appraisals = 0  # PerformanceAppraisal model not yet implemented
+        
+        # Attendance summary (today)
+        today = datetime.now(timezone.utc).date()
+        today_attendance = Attendance.query.filter_by(date=today).count()
+        today_present = Attendance.query.filter_by(date=today, status='Present').count()
+        today_late = Attendance.query.filter_by(date=today, status='Late').count()
+        today_absent = Attendance.query.filter_by(date=today, status='Absent').count()
+        
+        # Department breakdown
+        dept_breakdown = db.session.query(
+            Employee.department,
+            func.count(Employee.id).label('count')
+        ).filter(
+            Employee.status == 'Active'
+        ).group_by(
+            Employee.department
+        ).all()
+        
+        # Upcoming leave (next 7 days)
+        next_week = datetime.now(timezone.utc).date() + timedelta(days=7)
+        upcoming_leaves = Leave.query.filter(
+            Leave.status == 'Approved',
+            Leave.start <= next_week,
+            Leave.end >= datetime.now(timezone.utc).date()
+        ).all()
+        
+        # Recent recruitment activities
+        recent_interviews = []  # Interview model not yet implemented
+        
+        # Training completion rate
+        total_trainings = 0  # TrainingRecord model not yet implemented
+        completed_trainings = 0
+        training_completion_rate = 0
+        
+        # Chart data: Employees by department
+        chart_dept_labels = [d[0] or 'Unassigned' for d in dept_breakdown]
+        chart_dept_data = [d[1] for d in dept_breakdown]
+        
+        dashboard_data = {
+            'kpis': {
+                'total_employees': total_employees,
+                'total_departments': total_departments,
+                'recent_hires': recent_hires,
+                'pending_leaves': pending_leave_requests,
+                'open_positions': open_positions,
+                'pending_interviews': pending_interviews,
+                'pending_appraisals': pending_appraisals,
+                'today_present': today_present,
+                'today_late': today_late,
+                'today_absent': today_absent,
+                'attendance_percentage': (today_present / total_employees * 100) if total_employees > 0 else 0,
+                'training_completion_rate': training_completion_rate
+            },
+            'upcoming_leaves': upcoming_leaves,
+            'recent_interviews': recent_interviews,
+            'chart_data': {
+                'dept_labels': chart_dept_labels,
+                'dept_data': chart_dept_data
+            }
+        }
+        
+        return render_template('hr/manager/dashboard.html', **dashboard_data)
+    
+    
+    @app.route('/hr/manager/employees', methods=['GET'], endpoint='hr_mgr.employees')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def manage_employees():
+        """View and manage all employees"""
+        # Filters
+        department = request.args.get('department')
+        status = request.args.get('status', 'Active')
+        search = request.args.get('search')
+        
+        query = Employee.query
+        
+        if department:
+            query = query.filter_by(department=department)
+        if status:
+            query = query.filter_by(status=status)
+        if search:
+            query = query.filter(
+                (Employee.name.ilike(f'%{search}%')) |
+                (Employee.staff_code.ilike(f'%{search}%')) |
+                (Employee.email.ilike(f'%{search}%'))
+            )
+        
+        employees = query.order_by(Employee.name).all()
+        
+        # Get unique departments for filter
+        departments = db.session.query(func.distinct(Employee.department)).filter(
+            Employee.department.isnot(None)
+        ).all()
+        departments = [d[0] for d in departments]
+        
+        return render_template('hr/manager/employees.html',
+                             employees=employees,
+                             departments=departments)
+    
+    
+    @app.route('/hr/manager/recruitment', methods=['GET', 'POST'], endpoint='hr_mgr.recruitment')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def manage_recruitment():
+        """Manage job postings and recruitment"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                # RecruitmentRequest model not yet implemented
+                flash('Recruitment posting feature is not yet available', 'warning')
+                return redirect(url_for('hr_mgr.recruitment'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating job posting: {str(e)}', 'error')
+        
+        # GET request
+        status_filter = request.args.get('status', 'open')
+        
+        # RecruitmentRequest model not yet implemented
+        recruitments = []
+        
+        return render_template('hr/manager/recruitment.html',
+                             recruitments=recruitments)
+    
+    
+    @app.route('/hr/manager/interviews', methods=['GET', 'POST'], endpoint='hr_mgr.interviews')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def manage_interviews():
+        """Schedule and manage interviews"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                interview = Interview(
+                    recruitment_id=data.get('recruitment_id'),
+                    candidate_name=data.get('candidate_name'),
+                    candidate_email=data.get('candidate_email'),
+                    candidate_phone=data.get('candidate_phone'),
+                    interview_type=data.get('interview_type'),
+                    interview_round=int(data.get('interview_round', 1)),
+                    scheduled_date=datetime.strptime(data.get('scheduled_date'), '%Y-%m-%d').date(),
+                    scheduled_time=datetime.strptime(data.get('scheduled_time'), '%H:%M').time(),
+                    duration_minutes=int(data.get('duration_minutes', 60)),
+                    location=data.get('location'),
+                    interviewer_names=data.get('interviewer_names'),
+                    created_by=current_user.id
+                )
+                
+                db.session.add(interview)
+                
+                # Interview model not yet implemented
+                flash('Interview scheduling feature is not yet available', 'warning')
+                return redirect(url_for('hr_mgr.interviews'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error scheduling interview: {str(e)}', 'error')
+        
+        # GET request - Interview and RecruitmentRequest models not yet implemented
+        interviews = []
+        open_positions = []
+        
+        return render_template('hr/manager/interviews.html',
+                             interviews=interviews,
+                             open_positions=open_positions)
+    
+    
+    @app.route('/hr/manager/attendance', methods=['GET', 'POST'], endpoint='hr_mgr.attendance')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def manage_attendance():
+        """Track and manage employee attendance"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                attendance = AttendanceLog(
+                    employee_id=data.get('employee_id'),
+                    date=datetime.strptime(data.get('date'), '%Y-%m-%d').date(),
+                    check_in_time=datetime.strptime(data.get('check_in_time'), '%Y-%m-%d %H:%M') if data.get('check_in_time') else None,
+                    check_out_time=datetime.strptime(data.get('check_out_time'), '%Y-%m-%d %H:%M') if data.get('check_out_time') else None,
+                    status=data.get('status', 'present'),
+                    work_location=data.get('work_location'),
+                    verification_method=data.get('verification_method', 'manual'),
+                    verified_by=current_user.id,
+                    notes=data.get('notes')
+                )
+                
+                attendance.calculate_hours()
+                
+                db.session.add(attendance)
+                db.session.commit()
+                
+                flash('Attendance recorded successfully', 'success')
+                return redirect(url_for('hr_mgr.attendance'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error recording attendance: {str(e)}', 'error')
+        
+        # GET request
+        date_filter = request.args.get('date', datetime.now(timezone.utc).strftime('%Y-%m-%d'))
+        employee_id = request.args.get('employee_id', type=int)
+        
+        query = Attendance.query
+        
+        if date_filter:
+            query = query.filter_by(date=datetime.strptime(date_filter, '%Y-%m-%d').date())
+        if employee_id:
+            query = query.filter_by(employee_id=employee_id)
+        
+        attendances = query.order_by(Attendance.date.desc()).all()
+        
+        # Attendance summary
+        total_records = len(attendances)
+        present_count = len([a for a in attendances if a.status == 'Present'])
+        late_count = len([a for a in attendances if a.status == 'Late'])
+        absent_count = len([a for a in attendances if a.status == 'Absent'])
+        
+        employees = Employee.query.filter_by(status='Active').all()
+        
+        return render_template('hr/manager/attendance.html',
+                             attendances=attendances,
+                             employees=employees,
+                             summary={
+                                 'total': total_records,
+                                 'present': present_count,
+                                 'late': late_count,
+                                 'absent': absent_count
+                             })
+    
+    
+    @app.route('/hr/manager/leave', methods=['GET', 'POST'], endpoint='hr_mgr.leave')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def manage_leave():
+        """Manage leave requests and approvals"""
+        if request.method == 'POST':
+            action = request.form.get('action')
+            
+            if action == 'approve' or action == 'reject':
+                leave_id = request.form.get('leave_id')
+                comments = request.form.get('comments')
+                
+                leave_request = Leave.query.get_or_404(leave_id)
+                
+                if action == 'approve':
+                    leave_request.status = 'approved'
+                    leave_request.approved_by = current_user.id
+                    leave_request.approved_at = datetime.now(timezone.utc)
+                    leave_request.approval_comments = comments
+                    flash('Leave request approved', 'success')
+                else:
+                    leave_request.status = 'rejected'
+                    leave_request.reviewed_by = current_user.id
+                    leave_request.reviewed_at = datetime.now(timezone.utc)
+                    leave_request.review_comments = comments
+                    flash('Leave request rejected', 'info')
+                
+                db.session.commit()
+                return redirect(url_for('hr_mgr.leave'))
+        
+        # GET request
+        status_filter = request.args.get('status', 'pending')
+        
+        query = Leave.query
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        
+        leave_requests = query.order_by(Leave.created_at.desc()).all()
+        
+        # Enrich with employee data
+        enriched_requests = []
+        for lr in leave_requests:
+            employee = Employee.query.get(lr.employee_id)
+            enriched_requests.append({
+                'leave': lr,
+                'employee': employee
+            })
+        
+        return render_template('hr/manager/leave.html',
+                             leave_requests=enriched_requests)
+    
+    
+    @app.route('/hr/manager/performance', methods=['GET', 'POST'], endpoint='hr_mgr.performance')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def manage_performance():
+        """Manage performance appraisals"""
+        if request.method == 'POST':
+            try:
+                # PerformanceAppraisal model doesn't exist yet
+                flash('Performance appraisal feature is under development', 'info')
+                return redirect(url_for('hr_mgr.performance'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating appraisal: {str(e)}', 'error')
+        
+        # GET request
+        period_filter = request.args.get('period')
+        year_filter = request.args.get('year', type=int)
+        
+        # Since PerformanceAppraisal model doesn't exist, return empty list
+        appraisals = []
+        
+        employees = Employee.query.filter_by(status='Active').all()
+        
+        return render_template('hr/manager/performance.html',
+                             appraisals=appraisals,
+                             employees=employees)
+    
+    
+    @app.route('/hr/manager/training', methods=['GET', 'POST'], endpoint='hr_mgr.training')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def manage_training():
+        """Manage training programs and certifications"""
+        if request.method == 'POST':
+            try:
+                # TrainingRecord model doesn't exist yet
+                flash('Training management feature is under development', 'info')
+                return redirect(url_for('hr_mgr.training'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating training record: {str(e)}', 'error')
+        
+        # GET request
+        status_filter = request.args.get('status')
+        category_filter = request.args.get('category')
+        
+        # TrainingRecord model doesn't exist, return empty list
+        trainings = []
+        
+        employees = Employee.query.filter_by(status='Active').all()
+        
+        return render_template('hr/manager/training.html',
+                             trainings=trainings,
+                             employees=employees)
+    
+    
+    @app.route('/hr/manager/manpower', endpoint='hr_mgr.manpower')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def manpower_reports():
+        """Manpower allocation and utilization reports"""
+        from sqlalchemy import func
+        
+        # Active allocations
+        active_allocations = ManpowerAllocation.query.filter_by(status='active').all()
+        
+        # Project-wise manpower
+        project_manpower = db.session.query(
+            Project.name,
+            func.count(ManpowerAllocation.id).label('staff_count'),
+            func.avg(ManpowerAllocation.allocation_percentage).label('avg_allocation')
+        ).join(
+            ManpowerAllocation, Project.id == ManpowerAllocation.project_id
+        ).filter(
+            ManpowerAllocation.status == 'active'
+        ).group_by(
+            Project.name
+        ).all()
+        
+        # Department utilization
+        dept_utilization = db.session.query(
+            Employee.department,
+            func.count(ManpowerAllocation.id).label('allocated_count'),
+            func.count(Employee.id).label('total_count')
+        ).outerjoin(
+            ManpowerAllocation, 
+            (Employee.id == ManpowerAllocation.employee_id) & 
+            (ManpowerAllocation.status == 'active')
+        ).filter(
+            Employee.status == 'Active'
+        ).group_by(
+            Employee.department
+        ).all()
+        
+        return render_template('hr/manager/manpower.html',
+                             active_allocations=active_allocations,
+                             project_manpower=project_manpower,
+                             dept_utilization=dept_utilization)
+    
+    
+    @app.route('/hr/manager/reports', endpoint='hr_mgr.reports')
+    @role_required([Roles.HQ_HR, Roles.SUPER_HQ])
+    def hr_reports():
+        """Comprehensive HR reports and analytics"""
+        from sqlalchemy import func
+        
+        # Employee demographics
+        total_employees = Employee.query.filter_by(status='Active').count()
+        
+        # Headcount by department
+        dept_headcount = db.session.query(
+            Employee.department,
+            func.count(Employee.id).label('count')
+        ).filter(
+            Employee.status == 'Active'
+        ).group_by(
+            Employee.department
+        ).all()
+        
+        # Turnover analysis (last 12 months)
+        one_year_ago = datetime.now(timezone.utc) - timedelta(days=365)
+        new_hires = Employee.query.filter(
+            Employee.date_of_employment >= one_year_ago.date()
+        ).count()
+        
+        # Leave statistics
+        leave_stats = db.session.query(
+            Leave.type,
+            func.count(Leave.id).label('count'),
+            func.sum(func.julianday(Leave.end) - func.julianday(Leave.start) + 1).label('total_days')
+        ).filter(
+            Leave.status == 'Approved'
+        ).group_by(
+            Leave.type
+        ).all() if hasattr(Leave, 'type') else []
+        
+        # Training completion - placeholder since TrainingRecord model doesn't exist
+        training_stats = []
+        
+        # Attendance trends (last 30 days) - using Attendance model instead
+        thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
+        attendance_trend = []
+        try:
+            if hasattr(Attendance, 'date'):
+                attendance_trend = db.session.query(
+                    Attendance.date,
+                    func.count(Attendance.id).label('total'),
+                    func.sum(db.case((Attendance.status == 'Present', 1), else_=0)).label('present'),
+                    func.sum(db.case((Attendance.status == 'Late', 1), else_=0)).label('late')
+                ).filter(
+                    Attendance.date >= thirty_days_ago.date()
+                ).group_by(
+                    Attendance.date
+                ).order_by(
+                    Attendance.date
+                ).all()
+        except Exception as e:
+            current_app.logger.warning(f"Error loading attendance trends: {e}")
+            attendance_trend = []
+        
+        return render_template('hr/manager/reports.html',
+                             total_employees=total_employees,
+                             dept_headcount=dept_headcount,
+                             new_hires=new_hires,
+                             leave_stats=leave_stats,
+                             training_stats=training_stats,
+                             attendance_trend=attendance_trend)
+
+
+    # ===================================================================
+    # FINANCE MANAGER - COMPREHENSIVE ENDPOINTS
+    # ===================================================================
+    
+    @app.route('/finance/manager/dashboard', endpoint='finance_mgr.dashboard')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def finance_manager_dashboard():
+        """Finance Manager dashboard with financial KPIs and metrics"""
+        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        
+        # Current period
+        today = datetime.now(timezone.utc).date()
+        current_month_start = today.replace(day=1)
+        current_year = today.year
+        
+        # Revenue metrics
+        total_invoices = Invoice.query.filter_by(status='sent').count()
+        total_revenue = db.session.query(func.sum(Invoice.total_amount)).filter(
+            Invoice.status.in_(['sent', 'partially_paid', 'paid'])
+        ).scalar() or 0
+        
+        collected_revenue = db.session.query(func.sum(Invoice.paid_amount)).filter(
+            Invoice.status.in_(['partially_paid', 'paid'])
+        ).scalar() or 0
+        
+        outstanding_receivables = db.session.query(func.sum(AccountsReceivable.balance)).filter(
+            AccountsReceivable.status.in_(['outstanding', 'partially_paid'])
+        ).scalar() or 0
+        
+        # Expense metrics
+        total_payables = db.session.query(func.sum(AccountsPayable.balance)).filter(
+            AccountsPayable.status.in_(['unpaid', 'partially_paid'])
+        ).scalar() or 0
+        
+        overdue_payables = db.session.query(func.sum(AccountsPayable.balance)).filter(
+            AccountsPayable.status == 'overdue'
+        ).scalar() or 0
+        
+        # Budget metrics
+        active_budgets = Budget.query.filter_by(status='active', fiscal_year=current_year).count()
+        total_budget = db.session.query(func.sum(Budget.allocated_amount)).filter_by(
+            status='active', fiscal_year=current_year
+        ).scalar() or 0
+        
+        spent_budget = db.session.query(func.sum(Budget.spent_amount)).filter_by(
+            status='active', fiscal_year=current_year
+        ).scalar() or 0
+        
+        budget_utilization = (spent_budget / total_budget * 100) if total_budget > 0 else 0
+        
+        # Cash flow
+        latest_forecast = CashFlowForecast.query.order_by(
+            CashFlowForecast.forecast_date.desc()
+        ).first()
+        
+        current_cash_balance = latest_forecast.closing_balance if latest_forecast else 0
+        
+        # Pending items
+        pending_invoice_approvals = Invoice.query.filter_by(status='draft').count()
+        pending_payment_approvals = Payment.query.filter_by(status='pending').count()
+        overdue_invoices = Invoice.query.filter(
+            Invoice.due_date < today,
+            Invoice.payment_status != 'paid'
+        ).count()
+        
+        # Recent transactions
+        recent_payments = Payment.query.order_by(Payment.created_at.desc()).limit(5).all()
+        recent_invoices = Invoice.query.order_by(Invoice.created_at.desc()).limit(5).all()
+        
+        # Monthly revenue trend (last 6 months)
+        six_months_ago = today - timedelta(days=180)
+        monthly_revenue = db.session.query(
+            func.strftime('%Y-%m', Invoice.invoice_date).label('month'),
+            func.sum(Invoice.total_amount).label('revenue')
+        ).filter(
+            Invoice.invoice_date >= six_months_ago,
+            Invoice.status != 'cancelled'
+        ).group_by('month').order_by('month').all()
+        
+        # Top customers by revenue
+        top_customers = db.session.query(
+            Invoice.customer_name,
+            func.sum(Invoice.total_amount).label('total')
+        ).filter(
+            Invoice.status != 'cancelled'
+        ).group_by(Invoice.customer_name).order_by(func.sum(Invoice.total_amount).desc()).limit(5).all()
+        
+        dashboard_data = {
+            'kpis': {
+                'total_revenue': float(total_revenue),
+                'collected_revenue': float(collected_revenue),
+                'outstanding_receivables': float(outstanding_receivables),
+                'total_payables': float(total_payables),
+                'overdue_payables': float(overdue_payables),
+                'current_cash_balance': float(current_cash_balance),
+                'active_budgets': active_budgets,
+                'budget_utilization': budget_utilization,
+                'pending_invoice_approvals': pending_invoice_approvals,
+                'pending_payment_approvals': pending_payment_approvals,
+                'overdue_invoices': overdue_invoices,
+                'collection_rate': (collected_revenue / total_revenue * 100) if total_revenue > 0 else 0
+            },
+            'recent_payments': recent_payments,
+            'recent_invoices': recent_invoices,
+            'monthly_revenue': monthly_revenue,
+            'top_customers': top_customers
+        }
+        
+        return render_template('finance/manager/dashboard.html', **dashboard_data)
+    
+    
+    @app.route('/finance/manager/budgets', methods=['GET', 'POST'], endpoint='finance_mgr.budgets')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def manage_budgets():
+        """Budget management and tracking"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                print(f"DEBUG: Received form data: {dict(data)}")  # Debug log
+                
+                # Validate project_id is provided (required field)
+                project_id = data.get('project_id')
+                if not project_id:
+                    flash('Project is required for budget creation', 'error')
+                    return redirect(url_for('finance_mgr.budgets'))
+                
+                budget = Budget(
+                    project_id=int(project_id),
+                    category=data.get('budget_type'),  # Map budget_type to category
+                    allocated_amount=float(data.get('total_budget', 0)),
+                    fiscal_year=int(data.get('fiscal_year')),
+                    status='active'
+                )
+                
+                db.session.add(budget)
+                db.session.commit()
+                
+                print(f"DEBUG: Budget created successfully with ID: {budget.id}")  # Debug log
+                flash('Budget created successfully', 'success')
+                return redirect(url_for('finance_mgr.budgets'))
+                
+            except Exception as e:
+                db.session.rollback()
+                print(f"DEBUG: Error creating budget: {str(e)}")  # Debug log
+                import traceback
+                traceback.print_exc()
+                flash(f'Error creating budget: {str(e)}', 'error')
+                return redirect(url_for('finance_mgr.budgets'))
+        
+        # GET request
+        fiscal_year = request.args.get('fiscal_year', datetime.now(timezone.utc).year, type=int)
+        status_filter = request.args.get('status')
+        
+        query = Budget.query.filter_by(fiscal_year=fiscal_year)
+        if status_filter:
+            query = query.filter_by(status=status_filter)
+        
+        budgets = query.order_by(Budget.created_at.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('finance/manager/budgets.html',
+                             budgets=budgets,
+                             projects=projects,
+                             fiscal_year=fiscal_year)
+    
+    # Budget CRUD Operations
+    @app.route('/finance/manager/budgets/<int:budget_id>/delete', methods=['POST'], endpoint='finance_mgr.delete_budget')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def delete_budget(budget_id):
+        try:
+            budget = Budget.query.get_or_404(budget_id)
+            db.session.delete(budget)
+            db.session.commit()
+            flash('Budget deleted successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting budget: {str(e)}', 'error')
+        return redirect(url_for('finance_mgr.budgets'))
+    
+    @app.route('/finance/manager/invoices', methods=['GET', 'POST'], endpoint='finance_mgr.invoices')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def manage_invoices():
+        """Invoice management and generation"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                # Calculate totals
+                subtotal = float(data.get('subtotal', 0))
+                tax_amount = float(data.get('tax_amount', 0))
+                discount_amount = float(data.get('discount_amount', 0))
+                total_amount = subtotal + tax_amount - discount_amount
+                
+                invoice = Invoice(
+                    invoice_number=data.get('invoice_number'),
+                    customer_name=data.get('customer_name'),
+                    customer_email=data.get('customer_email'),
+                    customer_address=data.get('customer_address'),
+                    project_id=data.get('project_id') or None,
+                    invoice_date=datetime.strptime(data.get('invoice_date'), '%Y-%m-%d').date(),
+                    due_date=datetime.strptime(data.get('due_date'), '%Y-%m-%d').date(),
+                    subtotal=subtotal,
+                    tax_amount=tax_amount,
+                    discount_amount=discount_amount,
+                    total_amount=total_amount,
+                    notes=data.get('notes'),
+                    terms=data.get('terms'),
+                    status='draft',
+                    created_by=current_user.id
+                )
+                
+                db.session.add(invoice)
+                db.session.commit()
+                
+                flash('Invoice created successfully', 'success')
+                return redirect(url_for('finance_mgr.invoices'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating invoice: {str(e)}', 'error')
+        
+        # GET request
+        status_filter = request.args.get('status', 'all')
+        
+        # Update overdue invoices before displaying
+        from datetime import datetime, timezone
+        overdue_invoices = Invoice.query.filter(
+            Invoice.due_date < datetime.now(timezone.utc).date(),
+            Invoice.status.in_(['sent', 'partially_paid'])
+        ).all()
+        for inv in overdue_invoices:
+            inv.status = 'overdue'
+        if overdue_invoices:
+            db.session.commit()
+        
+        query = Invoice.query
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        
+        invoices = query.order_by(Invoice.invoice_date.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('finance/manager/invoices.html',
+                             invoices=invoices,
+                             projects=projects)
+    
+    
+    @app.route('/finance/manager/invoice/<int:invoice_id>', methods=['GET'], endpoint='finance_mgr.view_invoice')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def view_invoice(invoice_id):
+        """View invoice details"""
+        invoice = Invoice.query.get_or_404(invoice_id)
+        return render_template('finance/manager/invoice_details.html', invoice=invoice)
+    
+    
+    @app.route('/finance/manager/invoice/<int:invoice_id>/send', methods=['GET'], endpoint='finance_mgr.send_invoice')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def send_invoice(invoice_id):
+        """Send invoice via email"""
+        try:
+            invoice = Invoice.query.get_or_404(invoice_id)
+            
+            if not invoice.customer_email:
+                flash('Customer email is required to send invoice', 'error')
+                return redirect(url_for('finance_mgr.invoices'))
+            
+            # Prepare email content
+            subject = f'Invoice {invoice.invoice_number} from FitAccess'
+            body = f"""
+Dear {invoice.customer_name},
+
+Please find below your invoice details:
+
+Invoice Number: {invoice.invoice_number}
+Invoice Date: {invoice.invoice_date.strftime('%B %d, %Y')}
+Due Date: {invoice.due_date.strftime('%B %d, %Y')}
+
+Subtotal: ₦{invoice.subtotal:,.2f}
+Tax: ₦{invoice.tax_amount:,.2f}
+Discount: ₦{invoice.discount_amount:,.2f}
+Total Amount: ₦{invoice.total_amount:,.2f}
+
+{f"Notes: {invoice.notes}" if invoice.notes else ""}
+{f"Payment Terms: {invoice.terms}" if invoice.terms else ""}
+
+Thank you for your business.
+
+Best regards,
+FitAccess Finance Team
+            """
+            
+            # Send email
+            send_email(invoice.customer_email, subject, body)
+            
+            # Update invoice status
+            if invoice.status == 'draft':
+                invoice.status = 'sent'
+                db.session.commit()
+            
+            flash(f'Invoice sent successfully to {invoice.customer_email}', 'success')
+        except Exception as e:
+            flash(f'Error sending invoice: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.invoices'))
+    
+    
+    @app.route('/finance/manager/invoice/<int:invoice_id>/download', methods=['GET'], endpoint='finance_mgr.download_invoice')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def download_invoice(invoice_id):
+        """Download invoice as HTML (PDF generation can be added later)"""
+        invoice = Invoice.query.get_or_404(invoice_id)
+        
+        # Render invoice template
+        html_content = render_template('finance/manager/invoice_download.html', invoice=invoice)
+        
+        # For now, return HTML. TODO: Add PDF generation with reportlab or weasyprint
+        from flask import make_response
+        response = make_response(html_content)
+        response.headers['Content-Type'] = 'text/html'
+        response.headers['Content-Disposition'] = f'attachment; filename=invoice_{invoice.invoice_number}.html'
+        
+        return response
+    
+    
+    @app.route('/finance/manager/invoice/<int:invoice_id>/payment', methods=['POST'], endpoint='finance_mgr.record_invoice_payment')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def record_invoice_payment(invoice_id):
+        """Record a payment for an invoice"""
+        try:
+            invoice = Invoice.query.get_or_404(invoice_id)
+            amount = float(request.form.get('payment_amount', 0))
+            
+            if amount <= 0:
+                flash('Payment amount must be greater than zero', 'error')
+                return redirect(url_for('finance_mgr.view_invoice', invoice_id=invoice_id))
+            
+            if amount > invoice.balance_due:
+                flash(f'Payment amount cannot exceed balance due of ₦{invoice.balance_due:,.2f}', 'error')
+                return redirect(url_for('finance_mgr.view_invoice', invoice_id=invoice_id))
+            
+            # Record the payment
+            invoice.record_payment(amount)
+            db.session.commit()
+            
+            flash(f'Payment of ₦{amount:,.2f} recorded successfully. Invoice status: {invoice.status}', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error recording payment: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.view_invoice', invoice_id=invoice_id))
+    
+    
+    @app.route('/finance/manager/invoice/<int:invoice_id>/status', methods=['POST'], endpoint='finance_mgr.update_invoice_status')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def update_invoice_status_route(invoice_id):
+        """Manually update invoice status"""
+        try:
+            invoice = Invoice.query.get_or_404(invoice_id)
+            new_status = request.form.get('status')
+            
+            if new_status not in ['draft', 'sent', 'partially_paid', 'paid', 'cancelled', 'overdue']:
+                flash('Invalid status', 'error')
+                return redirect(url_for('finance_mgr.view_invoice', invoice_id=invoice_id))
+            
+            invoice.status = new_status
+            db.session.commit()
+            
+            flash(f'Invoice status updated to {new_status}', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating status: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.view_invoice', invoice_id=invoice_id))
+    
+    
+    @app.route('/finance/manager/invoices/<int:invoice_id>/delete', methods=['POST'], endpoint='finance_mgr.delete_invoice')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def delete_invoice(invoice_id):
+        """Delete an invoice"""
+        try:
+            invoice = Invoice.query.get_or_404(invoice_id)
+            db.session.delete(invoice)
+            db.session.commit()
+            flash('Invoice deleted successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting invoice: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.invoices'))
+    
+    
+    @app.route('/finance/manager/payments', methods=['GET', 'POST'], endpoint='finance_mgr.payments')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def manage_payments():
+        """Payment recording and tracking"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                payment = Payment(
+                    payment_number=data.get('payment_number'),
+                    payment_type=data.get('payment_type'),
+                    payment_method=data.get('payment_method'),
+                    invoice_id=data.get('invoice_id') or None,
+                    project_id=data.get('project_id') or None,
+                    payment_date=datetime.strptime(data.get('payment_date'), '%Y-%m-%d').date(),
+                    amount=float(data.get('amount')),
+                    reference_number=data.get('reference_number'),
+                    description=data.get('description'),
+                    notes=data.get('notes'),
+                    status='completed',
+                    created_by=current_user.id
+                )
+                
+                db.session.add(payment)
+                
+                # Update invoice if linked
+                if payment.invoice_id:
+                    invoice = Invoice.query.get(payment.invoice_id)
+                    if invoice and payment.payment_type == 'receipt':
+                        invoice.record_payment(payment.amount)
+                
+                db.session.commit()
+                
+                flash('Payment recorded successfully', 'success')
+                return redirect(url_for('finance_mgr.payments'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error recording payment: {str(e)}', 'error')
+        
+        # GET request
+        status_filter = request.args.get('status')
+        payment_type = request.args.get('type')
+        
+        query = Payment.query
+        if status_filter:
+            query = query.filter_by(status=status_filter)
+        if payment_type:
+            query = query.filter_by(payment_type=payment_type)
+        
+        payments = query.order_by(Payment.payment_date.desc()).all()
+        unpaid_invoices = Invoice.query.filter(
+            Invoice.status.in_(['sent', 'partially_paid', 'overdue'])
+        ).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('finance/manager/payments.html',
+                             payments=payments,
+                             unpaid_invoices=unpaid_invoices,
+                             projects=projects)
+    
+    
+    @app.route('/finance/manager/payments/<int:payment_id>', methods=['GET'], endpoint='finance_mgr.view_payment')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def view_payment(payment_id):
+        """View payment details"""
+        payment = Payment.query.get_or_404(payment_id)
+        return render_template('finance/manager/payment_details.html', payment=payment)
+    
+    
+    @app.route('/finance/manager/payments/<int:payment_id>/delete', methods=['POST'], endpoint='finance_mgr.delete_payment')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def delete_payment(payment_id):
+        """Delete a payment"""
+        try:
+            payment = Payment.query.get_or_404(payment_id)
+            
+            # Update invoice if linked (reverse the payment)
+            if payment.invoice_id and payment.payment_type == 'receipt':
+                invoice = Invoice.query.get(payment.invoice_id)
+                if invoice:
+                    invoice.paid_amount = max(0, (invoice.paid_amount or 0) - payment.amount)
+                    invoice.update_status()
+            
+            db.session.delete(payment)
+            db.session.commit()
+            flash('Payment deleted successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting payment: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.payments'))
+    
+    
+    @app.route('/finance/manager/receivables', methods=['GET', 'POST'], endpoint='finance_mgr.receivables')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def accounts_receivable():
+        """Accounts receivable tracking and aging - automatically synced from invoices"""
+        from sqlalchemy import func
+        from datetime import datetime, timezone
+        
+        # Sync receivables from unpaid invoices
+        unpaid_invoices = Invoice.query.filter(
+            Invoice.status.in_(['sent', 'partially_paid', 'overdue'])
+        ).all()
+        
+        for invoice in unpaid_invoices:
+            # Check if receivable already exists for this invoice
+            existing = AccountsReceivable.query.filter_by(invoice_id=invoice.id).first()
+            
+            if existing:
+                # Update existing receivable
+                existing.customer_name = invoice.customer_name
+                existing.invoice_number = invoice.invoice_number
+                existing.balance = invoice.balance_due
+                existing.due_date = invoice.due_date
+                existing.calculate_aging()
+                
+                # Update status
+                if existing.balance <= 0:
+                    existing.status = 'paid'
+                elif invoice.paid_amount > 0:
+                    existing.status = 'partially_paid'
+                else:
+                    existing.status = 'outstanding'
+            else:
+                # Create new receivable
+                receivable = AccountsReceivable(
+                    invoice_id=invoice.id,
+                    project_id=invoice.project_id,
+                    customer_name=invoice.customer_name,
+                    invoice_number=invoice.invoice_number,
+                    balance=invoice.balance_due,
+                    due_date=invoice.due_date,
+                    status='outstanding' if invoice.paid_amount == 0 else 'partially_paid'
+                )
+                receivable.calculate_aging()
+                db.session.add(receivable)
+        
+        # Remove receivables for paid invoices
+        paid_invoices = Invoice.query.filter_by(status='paid').all()
+        for invoice in paid_invoices:
+            receivable = AccountsReceivable.query.filter_by(invoice_id=invoice.id).first()
+            if receivable:
+                receivable.status = 'paid'
+        
+        db.session.commit()
+        
+        # Aging buckets summary
+        aging_summary = db.session.query(
+            AccountsReceivable.aging_bucket,
+            func.count(AccountsReceivable.id).label('count'),
+            func.sum(AccountsReceivable.balance).label('total')
+        ).filter(
+            AccountsReceivable.status.in_(['outstanding', 'partially_paid'])
+        ).group_by(AccountsReceivable.aging_bucket).all()
+        
+        # Format aging summary with proper order
+        aging_order = ['current', '1-30', '31-60', '61-90', '90+']
+        aging_dict = {item.aging_bucket: item for item in aging_summary}
+        formatted_aging = []
+        for bucket in aging_order:
+            if bucket in aging_dict:
+                formatted_aging.append(aging_dict[bucket])
+            else:
+                # Create empty bucket
+                from collections import namedtuple
+                EmptyBucket = namedtuple('AgingBucket', ['aging_bucket', 'count', 'total'])
+                formatted_aging.append(EmptyBucket(bucket, 0, 0))
+        
+        # Outstanding receivables
+        receivables = AccountsReceivable.query.filter(
+            AccountsReceivable.status.in_(['outstanding', 'partially_paid'])
+        ).order_by(AccountsReceivable.days_outstanding.desc()).all()
+        
+        # Top customers by outstanding
+        top_debtors = db.session.query(
+            AccountsReceivable.customer_name,
+            func.sum(AccountsReceivable.balance).label('total_outstanding')
+        ).filter(
+            AccountsReceivable.status.in_(['outstanding', 'partially_paid'])
+        ).group_by(AccountsReceivable.customer_name).order_by(
+            func.sum(AccountsReceivable.balance).desc()
+        ).limit(10).all()
+        
+        return render_template('finance/manager/receivables.html',
+                             receivables=receivables,
+                             aging_summary=formatted_aging,
+                             top_debtors=top_debtors)
+    
+    
+    @app.route('/finance/manager/receivables/<int:receivable_id>/delete', methods=['POST'], endpoint='finance_mgr.delete_receivable')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def delete_receivable(receivable_id):
+        """Delete an accounts receivable record (not recommended - should sync from invoice)"""
+        try:
+            receivable = AccountsReceivable.query.get_or_404(receivable_id)
+            db.session.delete(receivable)
+            db.session.commit()
+            flash('Receivable deleted successfully. It will be recreated on next sync if invoice is still unpaid.', 'warning')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting receivable: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.receivables'))
+    
+    
+    @app.route('/finance/manager/payables', methods=['GET', 'POST'], endpoint='finance_mgr.payables')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def accounts_payable():
+        """Accounts payable tracking and scheduling"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                payable = AccountsPayable(
+                    vendor_name=data.get('vendor_name'),
+                    vendor_email=data.get('vendor_email'),
+                    bill_number=data.get('bill_number'),
+                    bill_date=datetime.strptime(data.get('bill_date'), '%Y-%m-%d').date(),
+                    due_date=datetime.strptime(data.get('due_date'), '%Y-%m-%d').date(),
+                    amount_due=float(data.get('amount_due')),
+                    balance=float(data.get('amount_due')),
+                    payment_terms=data.get('payment_terms'),
+                    description=data.get('description'),
+                    category=data.get('category'),
+                    project_id=data.get('project_id') or None,
+                    created_by=current_user.id
+                )
+                
+                db.session.add(payable)
+                db.session.commit()
+                
+                flash('Payable added successfully', 'success')
+                return redirect(url_for('finance_mgr.payables'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error adding payable: {str(e)}', 'error')
+        
+        # GET request
+        status_filter = request.args.get('status', 'unpaid')
+        
+        query = AccountsPayable.query
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        
+        payables = query.order_by(AccountsPayable.due_date).all()
+        
+        # Update overdue status
+        today = datetime.now(timezone.utc).date()
+        for ap in payables:
+            if ap.due_date < today and ap.status != 'paid':
+                ap.status = 'overdue'
+        db.session.commit()
+        
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('finance/manager/payables.html',
+                             payables=payables,
+                             projects=projects)
+    
+    
+    @app.route('/finance/manager/payables/<int:payable_id>', methods=['GET'], endpoint='finance_mgr.view_payable')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def view_payable(payable_id):
+        """View payable details"""
+        payable = AccountsPayable.query.get_or_404(payable_id)
+        return render_template('finance/manager/payable_details.html', payable=payable)
+    
+    
+    @app.route('/finance/manager/payables/<int:payable_id>/payment', methods=['POST'], endpoint='finance_mgr.record_payable_payment')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def record_payable_payment(payable_id):
+        """Record a payment for a payable"""
+        try:
+            payable = AccountsPayable.query.get_or_404(payable_id)
+            amount = float(request.form.get('payment_amount', 0))
+            
+            if amount <= 0:
+                flash('Payment amount must be greater than zero', 'error')
+                return redirect(url_for('finance_mgr.payables'))
+            
+            if amount > payable.balance:
+                flash(f'Payment amount cannot exceed balance of ₦{payable.balance:,.2f}', 'error')
+                return redirect(url_for('finance_mgr.payables'))
+            
+            # Update payable
+            payable.paid_amount = (payable.paid_amount or 0) + amount
+            payable.balance = payable.amount_due - payable.paid_amount
+            
+            # Update status
+            if payable.balance <= 0:
+                payable.status = 'paid'
+            elif payable.paid_amount > 0:
+                payable.status = 'partially_paid'
+            
+            db.session.commit()
+            
+            flash(f'Payment of ₦{amount:,.2f} recorded successfully. Payable status: {payable.status}', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error recording payment: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.payables'))
+    
+    
+    @app.route('/finance/manager/payables/<int:payable_id>/delete', methods=['POST'], endpoint='finance_mgr.delete_payable')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def delete_payable(payable_id):
+        """Delete an accounts payable record"""
+        try:
+            payable = AccountsPayable.query.get_or_404(payable_id)
+            db.session.delete(payable)
+            db.session.commit()
+            flash('Payable deleted successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting payable: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.payables'))
+    
+    
+    @app.route('/finance/manager/cashflow', methods=['GET', 'POST'], endpoint='finance_mgr.cashflow')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def cash_flow_forecast():
+        """Cash flow forecasting and projection"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                # Parse dates
+                forecast_date = datetime.strptime(data.get('forecast_date'), '%Y-%m-%d').date()
+                period_type = data.get('period_type', 'monthly')
+                
+                # Calculate period_start and period_end based on forecast_date and period_type
+                from dateutil.relativedelta import relativedelta
+                period_start = forecast_date
+                if period_type == 'weekly':
+                    period_end = period_start + relativedelta(weeks=1)
+                    forecast_period = f"Week of {period_start.strftime('%b %d, %Y')}"
+                elif period_type == 'quarterly':
+                    period_end = period_start + relativedelta(months=3)
+                    forecast_period = f"Q{(period_start.month-1)//3 + 1} {period_start.year}"
+                elif period_type == 'annual':
+                    period_end = period_start + relativedelta(years=1)
+                    forecast_period = f"FY {period_start.year}"
+                else:  # monthly
+                    period_end = period_start + relativedelta(months=1)
+                    forecast_period = f"{period_start.strftime('%B %Y')}"
+                
+                forecast = CashFlowForecast(
+                    project_id=int(data.get('project_id')) if data.get('project_id') else None,
+                    forecast_period=forecast_period,
+                    period_start=period_start,
+                    period_end=period_end,
+                    forecast_date=forecast_date,
+                    opening_balance=float(data.get('opening_balance', 0)),
+                    expected_inflow=float(data.get('expected_collections', 0)) + float(data.get('expected_sales', 0)) + float(data.get('other_income', 0)),
+                    expected_outflow=float(data.get('expected_payments', 0)) + float(data.get('payroll_amount', 0)) + float(data.get('operational_expenses', 0)),
+                    labor_cost=float(data.get('payroll_amount', 0)),
+                    material_cost=float(data.get('operational_expenses', 0)),
+                    equipment_cost=float(data.get('capital_expenditure', 0)),
+                    overhead_cost=float(data.get('other_expenses', 0)),
+                    notes=data.get('notes'),
+                    status='draft',
+                    created_by=current_user.id
+                )
+                
+                db.session.add(forecast)
+                db.session.commit()
+                
+                flash('Cash flow forecast created successfully', 'success')
+                return redirect(url_for('finance_mgr.cashflow'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating forecast: {str(e)}', 'error')
+        
+        # GET request
+        forecasts = CashFlowForecast.query.order_by(CashFlowForecast.forecast_date.desc()).limit(12).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('finance/manager/cashflow.html',
+                             forecasts=forecasts,
+                             projects=projects)
+    
+    
+    @app.route('/finance/manager/cashflow/<int:forecast_id>/delete', methods=['POST'], endpoint='finance_mgr.delete_cashflow')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def delete_cashflow(forecast_id):
+        """Delete a cash flow forecast"""
+        try:
+            forecast = CashFlowForecast.query.get_or_404(forecast_id)
+            db.session.delete(forecast)
+            db.session.commit()
+            flash('Cash flow forecast deleted successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting forecast: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.cashflow'))
+    
+    
+    @app.route('/finance/manager/reports', endpoint='finance_mgr.reports')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def financial_reports():
+        """Comprehensive financial reports and statements"""
+        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        
+        today = datetime.now(timezone.utc).date()
+        current_year = today.year
+        year_start = datetime(current_year, 1, 1).date()
+        
+        # Income Statement (P&L)
+        total_revenue = db.session.query(func.sum(Invoice.total_amount)).filter(
+            Invoice.invoice_date >= year_start,
+            Invoice.status != 'cancelled'
+        ).scalar() or 0
+        
+        total_expenses = db.session.query(func.sum(Expense.amount)).filter(
+            Expense.date >= year_start
+        ).scalar() or 0
+        
+        gross_profit = total_revenue - total_expenses
+        net_profit_margin = (gross_profit / total_revenue * 100) if total_revenue > 0 else 0
+        
+        # Balance Sheet items
+        total_assets = db.session.query(func.sum(Asset.purchase_cost)).scalar() or 0
+        total_receivables = db.session.query(func.sum(AccountsReceivable.balance)).filter(
+            AccountsReceivable.status != 'paid'
+        ).scalar() or 0
+        total_payables = db.session.query(func.sum(AccountsPayable.balance)).filter(
+            AccountsPayable.status != 'paid'
+        ).scalar() or 0
+        
+        # Cash flow summary
+        cash_inflows = db.session.query(func.sum(Payment.amount)).filter(
+            Payment.payment_type == 'receipt',
+            Payment.payment_date >= year_start
+        ).scalar() or 0
+        
+        cash_outflows = db.session.query(func.sum(Payment.amount)).filter(
+            Payment.payment_type == 'disbursement',
+            Payment.payment_date >= year_start
+        ).scalar() or 0
+        
+        net_cash_flow = cash_inflows - cash_outflows
+        
+        # Revenue by month
+        monthly_revenue = db.session.query(
+            func.strftime('%m', Invoice.invoice_date).label('month'),
+            func.sum(Invoice.total_amount).label('revenue')
+        ).filter(
+            Invoice.invoice_date >= year_start,
+            Invoice.status != 'cancelled'
+        ).group_by('month').order_by('month').all()
+        
+        # Expenses by category
+        expenses_by_category = db.session.query(
+            Expense.category,
+            func.sum(Expense.amount).label('total')
+        ).filter(
+            Expense.date >= year_start
+        ).group_by(Expense.category).all()
+        
+        # Financial ratios
+        current_ratio = (total_receivables / total_payables) if total_payables > 0 else 0
+        
+        report_data = {
+            'income_statement': {
+                'total_revenue': float(total_revenue),
+                'total_expenses': float(total_expenses),
+                'gross_profit': float(gross_profit),
+                'net_profit_margin': net_profit_margin
+            },
+            'balance_sheet': {
+                'total_assets': float(total_assets),
+                'total_receivables': float(total_receivables),
+                'total_payables': float(total_payables),
+                'net_working_capital': float(total_receivables - total_payables)
+            },
+            'cash_flow': {
+                'cash_inflows': float(cash_inflows),
+                'cash_outflows': float(cash_outflows),
+                'net_cash_flow': float(net_cash_flow)
+            },
+            'ratios': {
+                'current_ratio': current_ratio,
+                'profit_margin': net_profit_margin
+            },
+            'monthly_revenue': monthly_revenue,
+            'expenses_by_category': expenses_by_category,
+            'fiscal_year': current_year
+        }
+        
+        return render_template('finance/manager/reports.html', **report_data)
+    
+    
+    @app.route('/finance/manager/transactions', methods=['GET', 'POST'], endpoint='finance_mgr.transactions')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def financial_transactions():
+        """General ledger and transaction management"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                transaction = FinancialTransaction(
+                    transaction_number=data.get('transaction_number'),
+                    transaction_type=data.get('transaction_type'),
+                    transaction_date=datetime.strptime(data.get('transaction_date'), '%Y-%m-%d').date(),
+                    account_code=data.get('account_code'),
+                    account_name=data.get('account_name'),
+                    debit_amount=float(data.get('debit_amount', 0)),
+                    credit_amount=float(data.get('credit_amount', 0)),
+                    category=data.get('category'),
+                    description=data.get('description'),
+                    created_by=current_user.id
+                )
+                
+                db.session.add(transaction)
+                db.session.commit()
+                
+                flash('Transaction recorded successfully', 'success')
+                return redirect(url_for('finance_mgr.transactions'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error recording transaction: {str(e)}', 'error')
+        
+        # GET request
+        transaction_type = request.args.get('type')
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        query = FinancialTransaction.query
+        if transaction_type:
+            query = query.filter_by(transaction_type=transaction_type)
+        if start_date:
+            query = query.filter(FinancialTransaction.transaction_date >= datetime.strptime(start_date, '%Y-%m-%d').date())
+        if end_date:
+            query = query.filter(FinancialTransaction.transaction_date <= datetime.strptime(end_date, '%Y-%m-%d').date())
+        
+        transactions = query.order_by(FinancialTransaction.transaction_date.desc()).all()
+        
+        return render_template('finance/manager/transactions.html',
+                             transactions=transactions)
+
+
+    @app.route('/finance/manager/transactions/<int:transaction_id>', methods=['GET'], endpoint='finance_mgr.view_transaction')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def view_transaction(transaction_id):
+        """View transaction details"""
+        transaction = FinancialTransaction.query.get_or_404(transaction_id)
+        return render_template('finance/manager/transaction_details.html', transaction=transaction)
+    
+    
+    @app.route('/finance/manager/transactions/<int:transaction_id>/delete', methods=['POST'], endpoint='finance_mgr.delete_transaction')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def delete_transaction(transaction_id):
+        """Delete a financial transaction"""
+        try:
+            transaction = FinancialTransaction.query.get_or_404(transaction_id)
+            db.session.delete(transaction)
+            db.session.commit()
+            flash('Transaction deleted successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting transaction: {str(e)}', 'error')
+        
+        return redirect(url_for('finance_mgr.transactions'))
+
+
+    # ===================================================================
+    # SITE PROJECT MANAGER - COMPREHENSIVE ENDPOINTS
+    # ===================================================================
+    
+    @app.route('/site/manager/dashboard', endpoint='site_mgr.dashboard')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def site_manager_dashboard():
+        """Site Project Manager dashboard with key metrics"""
+        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        
+        # Get user's assigned projects
+        user_projects = Project.query.filter(
+            (Project.project_manager == current_user.name) | 
+            (Project.status == 'Active')
+        ).all()
+        
+        project_ids = [p.id for p in user_projects]
+        
+        today = datetime.now(timezone.utc).date()
+        week_ago = today - timedelta(days=7)
+        
+        # Daily Progress Reports metrics
+        total_dprs = DailyProgressReport.query.filter(
+            DailyProgressReport.project_id.in_(project_ids) if project_ids else False
+        ).count()
+        
+        pending_dprs = DailyProgressReport.query.filter(
+            DailyProgressReport.project_id.in_(project_ids) if project_ids else False,
+            DailyProgressReport.status == 'draft'
+        ).count()
+        
+        recent_dprs = DailyProgressReport.query.filter(
+            DailyProgressReport.project_id.in_(project_ids) if project_ids else False
+        ).order_by(DailyProgressReport.report_date.desc()).limit(5).all()
+        
+        # Safety metrics
+        total_incidents = SafetyIncident.query.filter(
+            SafetyIncident.project_id.in_(project_ids) if project_ids else False
+        ).count()
+        
+        open_incidents = SafetyIncident.query.filter(
+            SafetyIncident.project_id.in_(project_ids) if project_ids else False,
+            SafetyIncident.status.in_(['open', 'under_investigation'])
+        ).count()
+        
+        recent_incidents = SafetyIncident.query.filter(
+            SafetyIncident.project_id.in_(project_ids) if project_ids else False
+        ).order_by(SafetyIncident.incident_date.desc()).limit(5).all()
+        
+        # Material requests
+        pending_material_requests = MaterialRequest.query.filter(
+            MaterialRequest.project_id.in_(project_ids) if project_ids else False,
+            MaterialRequest.status == 'pending'
+        ).count()
+        
+        # Inspections
+        pending_inspections = SiteInspection.query.filter(
+            SiteInspection.project_id.in_(project_ids) if project_ids else False,
+            SiteInspection.status.in_(['scheduled', 'follow_up'])
+        ).count()
+        
+        # Work orders
+        active_work_orders = WorkOrder.query.filter(
+            WorkOrder.project_id.in_(project_ids) if project_ids else False,
+            WorkOrder.status.in_(['assigned', 'in_progress'])
+        ).count()
+        
+        # Quality control tests
+        pending_qc_tests = QualityControl.query.filter(
+            QualityControl.project_id.in_(project_ids) if project_ids else False,
+            QualityControl.status == 'pending'
+        ).count()
+        
+        # Change orders
+        pending_change_orders = ChangeOrder.query.filter(
+            ChangeOrder.project_id.in_(project_ids) if project_ids else False,
+            ChangeOrder.status.in_(['pending', 'under_review'])
+        ).count()
+        
+        # Project progress (from latest DPRs)
+        project_progress = []
+        for project in user_projects[:5]:  # Top 5 projects
+            latest_dpr = DailyProgressReport.query.filter_by(
+                project_id=project.id
+            ).order_by(DailyProgressReport.report_date.desc()).first()
+            
+            project_progress.append({
+                'project_name': project.project_name,
+                'progress': float(latest_dpr.overall_progress) if latest_dpr else 0,
+                'last_updated': latest_dpr.report_date if latest_dpr else None
+            })
+        
+        dashboard_data = {
+            'projects': user_projects,
+            'kpis': {
+                'total_dprs': total_dprs,
+                'pending_dprs': pending_dprs,
+                'total_incidents': total_incidents,
+                'open_incidents': open_incidents,
+                'pending_material_requests': pending_material_requests,
+                'pending_inspections': pending_inspections,
+                'active_work_orders': active_work_orders,
+                'pending_qc_tests': pending_qc_tests,
+                'pending_change_orders': pending_change_orders
+            },
+            'recent_dprs': recent_dprs,
+            'recent_incidents': recent_incidents,
+            'project_progress': project_progress
+        }
+        
+        return render_template('site/manager/dashboard.html', **dashboard_data)
+    
+    
+    @app.route('/site/manager/progress-reports', methods=['GET', 'POST'], endpoint='site_mgr.progress_reports')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def daily_progress_reports():
+        """Daily Progress Report management"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                dpr = DailyProgressReport(
+                    project_id=int(data.get('project_id')),
+                    report_date=datetime.strptime(data.get('report_date'), '%Y-%m-%d').date(),
+                    shift=data.get('shift', 'day'),
+                    weather_condition=data.get('weather_condition'),
+                    temperature=data.get('temperature'),
+                    weather_impact=data.get('weather_impact'),
+                    total_workers=int(data.get('total_workers', 0)),
+                    skilled_workers=int(data.get('skilled_workers', 0)),
+                    unskilled_workers=int(data.get('unskilled_workers', 0)),
+                    supervisors=int(data.get('supervisors', 0)),
+                    contractors=int(data.get('contractors', 0)),
+                    work_completed=data.get('work_completed'),
+                    work_in_progress=data.get('work_in_progress'),
+                    planned_for_tomorrow=data.get('planned_for_tomorrow'),
+                    overall_progress=float(data.get('overall_progress', 0)),
+                    today_progress=float(data.get('today_progress', 0)),
+                    safety_incidents=data.get('safety_incidents'),
+                    delays_encountered=data.get('delays_encountered'),
+                    quality_issues=data.get('quality_issues'),
+                    challenges=data.get('challenges'),
+                    site_visitors=data.get('site_visitors'),
+                    meetings_held=data.get('meetings_held'),
+                    created_by=current_user.id
+                )
+                
+                db.session.add(dpr)
+                db.session.commit()
+                
+                flash('Daily Progress Report created successfully', 'success')
+                return redirect(url_for('site_mgr.progress_reports'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating DPR: {str(e)}', 'error')
+        
+        # GET request
+        project_filter = request.args.get('project_id', type=int)
+        status_filter = request.args.get('status')
+        
+        query = DailyProgressReport.query
+        if project_filter:
+            query = query.filter_by(project_id=project_filter)
+        if status_filter:
+            query = query.filter_by(status=status_filter)
+        
+        dprs = query.order_by(DailyProgressReport.report_date.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('site/manager/progress_reports.html',
+                             dprs=dprs,
+                             projects=projects)
+    
+    
+    @app.route('/site/manager/inspections', methods=['GET', 'POST'], endpoint='site_mgr.inspections')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def site_inspections():
+        """Site inspection management"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                inspection = SiteInspection(
+                    project_id=int(data.get('project_id')),
+                    inspection_number=data.get('inspection_number'),
+                    inspection_type=data.get('inspection_type'),
+                    inspection_date=datetime.strptime(data.get('inspection_date'), '%Y-%m-%d').date(),
+                    area_inspected=data.get('area_inspected'),
+                    work_stage=data.get('work_stage'),
+                    specification_reference=data.get('specification_reference'),
+                    inspector_name=data.get('inspector_name'),
+                    inspector_organization=data.get('inspector_organization'),
+                    inspector_designation=data.get('inspector_designation'),
+                    observations=data.get('observations'),
+                    non_conformances=data.get('non_conformances'),
+                    recommendations=data.get('recommendations'),
+                    corrective_actions=data.get('corrective_actions'),
+                    overall_rating=data.get('overall_rating'),
+                    defects_found=int(data.get('defects_found', 0)),
+                    follow_up_required=data.get('follow_up_required') == 'on',
+                    created_by=current_user.id
+                )
+                
+                db.session.add(inspection)
+                db.session.commit()
+                
+                flash('Site inspection created successfully', 'success')
+                return redirect(url_for('site_mgr.inspections'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating inspection: {str(e)}', 'error')
+        
+        # GET request
+        project_filter = request.args.get('project_id', type=int)
+        type_filter = request.args.get('type')
+        
+        query = SiteInspection.query
+        if project_filter:
+            query = query.filter_by(project_id=project_filter)
+        if type_filter:
+            query = query.filter_by(inspection_type=type_filter)
+        
+        inspections = query.order_by(SiteInspection.inspection_date.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('site/manager/inspections.html',
+                             inspections=inspections,
+                             projects=projects)
+    
+    
+    @app.route('/site/manager/material-requests', methods=['GET', 'POST'], endpoint='site_mgr.material_requests')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def material_requests():
+        """Material requisition management"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                import json
+                
+                material_request = MaterialRequest(
+                    request_number=data.get('request_number'),
+                    project_id=int(data.get('project_id')),
+                    request_type=data.get('request_type', 'site'),
+                    request_date=datetime.strptime(data.get('request_date'), '%Y-%m-%d').date(),
+                    required_date=datetime.strptime(data.get('required_date'), '%Y-%m-%d').date(),
+                    priority=data.get('priority', 'normal'),
+                    purpose=data.get('purpose'),
+                    work_location=data.get('work_location'),
+                    items=json.loads(data.get('items_json', '[]')),
+                    justification=data.get('justification'),
+                    estimated_cost=float(data.get('estimated_cost', 0)) if data.get('estimated_cost') else None,
+                    budget_code=data.get('budget_code'),
+                    requested_by=current_user.id
+                )
+                
+                db.session.add(material_request)
+                db.session.commit()
+                
+                flash('Material request created successfully', 'success')
+                return redirect(url_for('site_mgr.material_requests'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating material request: {str(e)}', 'error')
+        
+        # GET request
+        status_filter = request.args.get('status', 'pending')
+        
+        query = MaterialRequest.query
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        
+        requests = query.order_by(MaterialRequest.request_date.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('site/manager/material_requests.html',
+                             requests=requests,
+                             projects=projects)
+    
+    
+    @app.route('/site/manager/equipment', methods=['GET', 'POST'], endpoint='site_mgr.equipment')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def equipment_logs():
+        """Equipment usage and maintenance logging"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                equipment_log = EquipmentLog(
+                    equipment_id=int(data.get('equipment_id')),
+                    project_id=int(data.get('project_id')),
+                    log_date=datetime.strptime(data.get('log_date'), '%Y-%m-%d').date(),
+                    operator_name=data.get('operator_name'),
+                    operator_id=int(data.get('operator_id')) if data.get('operator_id') else None,
+                    location=data.get('location'),
+                    task_description=data.get('task_description'),
+                    hours_used=float(data.get('hours_used', 0)),
+                    start_reading=float(data.get('start_reading', 0)) if data.get('start_reading') else None,
+                    end_reading=float(data.get('end_reading', 0)) if data.get('end_reading') else None,
+                    fuel_consumed=float(data.get('fuel_consumed', 0)) if data.get('fuel_consumed') else None,
+                    condition_before=data.get('condition_before'),
+                    condition_after=data.get('condition_after'),
+                    issues_reported=data.get('issues_reported'),
+                    damages=data.get('damages'),
+                    maintenance_required=data.get('maintenance_required') == 'on',
+                    maintenance_type=data.get('maintenance_type'),
+                    maintenance_description=data.get('maintenance_description'),
+                    safety_check_completed=data.get('safety_check_completed') == 'on',
+                    safety_issues=data.get('safety_issues'),
+                    logged_by=current_user.id
+                )
+                
+                db.session.add(equipment_log)
+                db.session.commit()
+                
+                flash('Equipment log created successfully', 'success')
+                return redirect(url_for('site_mgr.equipment'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating equipment log: {str(e)}', 'error')
+        
+        # GET request
+        logs = EquipmentLog.query.order_by(EquipmentLog.log_date.desc()).all()
+        equipment = Asset.query.filter_by(asset_category='Equipment').all()
+        projects = Project.query.filter_by(status='Active').all()
+        employees = Employee.query.all()
+        
+        return render_template('site/manager/equipment.html',
+                             logs=logs,
+                             equipment=equipment,
+                             projects=projects,
+                             employees=employees)
+    
+    
+    @app.route('/site/manager/safety', methods=['GET', 'POST'], endpoint='site_mgr.safety')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def safety_incidents():
+        """Safety incident reporting and tracking"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                incident = SafetyIncident(
+                    incident_number=data.get('incident_number'),
+                    project_id=int(data.get('project_id')),
+                    incident_date=datetime.strptime(data.get('incident_date'), '%Y-%m-%d').date(),
+                    incident_time=datetime.strptime(data.get('incident_time'), '%H:%M').time() if data.get('incident_time') else None,
+                    location=data.get('location'),
+                    incident_type=data.get('incident_type'),
+                    severity=data.get('severity'),
+                    category=data.get('category'),
+                    injured_person_name=data.get('injured_person_name'),
+                    injured_person_type=data.get('injured_person_type'),
+                    injured_person_id=int(data.get('injured_person_id')) if data.get('injured_person_id') else None,
+                    number_of_injured=int(data.get('number_of_injured', 1)),
+                    description=data.get('description'),
+                    immediate_cause=data.get('immediate_cause'),
+                    root_cause=data.get('root_cause'),
+                    contributing_factors=data.get('contributing_factors'),
+                    injury_type=data.get('injury_type'),
+                    body_part=data.get('body_part'),
+                    first_aid_given=data.get('first_aid_given') == 'on',
+                    medical_treatment=data.get('medical_treatment'),
+                    hospital_name=data.get('hospital_name'),
+                    days_lost=int(data.get('days_lost', 0)),
+                    immediate_actions_taken=data.get('immediate_actions_taken'),
+                    site_evacuated=data.get('site_evacuated') == 'on',
+                    work_stopped=data.get('work_stopped') == 'on',
+                    emergency_services_called=data.get('emergency_services_called') == 'on',
+                    witnesses=data.get('witnesses'),
+                    corrective_actions=data.get('corrective_actions'),
+                    preventive_measures=data.get('preventive_measures'),
+                    reportable_to_authority=data.get('reportable_to_authority') == 'on',
+                    reported_by=current_user.id
+                )
+                
+                db.session.add(incident)
+                db.session.commit()
+                
+                flash('Safety incident reported successfully', 'success')
+                return redirect(url_for('site_mgr.safety'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error reporting incident: {str(e)}', 'error')
+        
+        # GET request
+        severity_filter = request.args.get('severity')
+        status_filter = request.args.get('status', 'open')
+        
+        query = SafetyIncident.query
+        if severity_filter:
+            query = query.filter_by(severity=severity_filter)
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        
+        incidents = query.order_by(SafetyIncident.incident_date.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        employees = Employee.query.all()
+        
+        return render_template('site/manager/safety.html',
+                             incidents=incidents,
+                             projects=projects,
+                             employees=employees)
+    
+    
+    @app.route('/site/manager/quality-control', methods=['GET', 'POST'], endpoint='site_mgr.quality_control')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def quality_control():
+        """Quality control testing and inspections"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                import json
+                
+                qc = QualityControl(
+                    test_number=data.get('test_number'),
+                    project_id=int(data.get('project_id')),
+                    test_type=data.get('test_type'),
+                    test_name=data.get('test_name'),
+                    test_standard=data.get('test_standard'),
+                    test_date=datetime.strptime(data.get('test_date'), '%Y-%m-%d').date(),
+                    sample_id=data.get('sample_id'),
+                    sample_location=data.get('sample_location'),
+                    sample_date=datetime.strptime(data.get('sample_date'), '%Y-%m-%d').date() if data.get('sample_date') else None,
+                    sample_description=data.get('sample_description'),
+                    sample_size=data.get('sample_size'),
+                    parameters_tested=json.loads(data.get('parameters_json', '[]')) if data.get('parameters_json') else None,
+                    tested_by=data.get('tested_by'),
+                    lab_name=data.get('lab_name'),
+                    lab_certificate_number=data.get('lab_certificate_number'),
+                    pass_fail_status=data.get('pass_fail_status'),
+                    remarks=data.get('remarks'),
+                    required_value=data.get('required_value'),
+                    actual_value=data.get('actual_value'),
+                    tolerance=data.get('tolerance'),
+                    compliance_status=data.get('compliance_status'),
+                    non_conformance=data.get('non_conformance'),
+                    corrective_action=data.get('corrective_action'),
+                    retest_required=data.get('retest_required') == 'on',
+                    created_by=current_user.id
+                )
+                
+                db.session.add(qc)
+                db.session.commit()
+                
+                flash('Quality control test created successfully', 'success')
+                return redirect(url_for('site_mgr.quality_control'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating QC test: {str(e)}', 'error')
+        
+        # GET request
+        status_filter = request.args.get('status')
+        
+        query = QualityControl.query
+        if status_filter:
+            query = query.filter_by(pass_fail_status=status_filter)
+        
+        tests = query.order_by(QualityControl.test_date.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('site/manager/quality_control.html',
+                             tests=tests,
+                             projects=projects)
+    
+    
+    @app.route('/site/manager/attendance', methods=['GET', 'POST'], endpoint='site_mgr.attendance')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def site_attendance():
+        """Site worker attendance tracking"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                attendance = SiteAttendance(
+                    project_id=int(data.get('project_id')),
+                    attendance_date=datetime.strptime(data.get('attendance_date'), '%Y-%m-%d').date(),
+                    shift=data.get('shift', 'day'),
+                    worker_name=data.get('worker_name'),
+                    employee_id=int(data.get('employee_id')) if data.get('employee_id') else None,
+                    worker_type=data.get('worker_type'),
+                    trade=data.get('trade'),
+                    check_in_time=datetime.strptime(data.get('check_in_time'), '%H:%M').time() if data.get('check_in_time') else None,
+                    check_out_time=datetime.strptime(data.get('check_out_time'), '%H:%M').time() if data.get('check_out_time') else None,
+                    hours_worked=float(data.get('hours_worked', 0)),
+                    overtime_hours=float(data.get('overtime_hours', 0)),
+                    status=data.get('status', 'present'),
+                    absence_reason=data.get('absence_reason'),
+                    work_area=data.get('work_area'),
+                    task_assigned=data.get('task_assigned'),
+                    productivity_rating=int(data.get('productivity_rating')) if data.get('productivity_rating') else None,
+                    ppe_issued=data.get('ppe_issued') == 'on',
+                    safety_briefing=data.get('safety_briefing') == 'on',
+                    safety_violation=data.get('safety_violation'),
+                    daily_rate=float(data.get('daily_rate', 0)) if data.get('daily_rate') else None,
+                    allowances=float(data.get('allowances', 0)) if data.get('allowances') else None,
+                    deductions=float(data.get('deductions', 0)) if data.get('deductions') else None,
+                    remarks=data.get('remarks'),
+                    recorded_by=current_user.id
+                )
+                
+                attendance.calculate_payment()
+                
+                db.session.add(attendance)
+                db.session.commit()
+                
+                flash('Attendance recorded successfully', 'success')
+                return redirect(url_for('site_mgr.attendance'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error recording attendance: {str(e)}', 'error')
+        
+        # GET request
+        project_filter = request.args.get('project_id', type=int)
+        date_filter = request.args.get('date')
+        
+        query = SiteAttendance.query
+        if project_filter:
+            query = query.filter_by(project_id=project_filter)
+        if date_filter:
+            query = query.filter_by(attendance_date=datetime.strptime(date_filter, '%Y-%m-%d').date())
+        
+        attendance_records = query.order_by(SiteAttendance.attendance_date.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        employees = Employee.query.all()
+        
+        return render_template('site/manager/attendance.html',
+                             attendance_records=attendance_records,
+                             projects=projects,
+                             employees=employees)
+    
+    
+    @app.route('/site/manager/work-orders', methods=['GET', 'POST'], endpoint='site_mgr.work_orders')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def work_orders():
+        """Work order management"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                import json
+                
+                work_order = WorkOrder(
+                    work_order_number=data.get('work_order_number'),
+                    project_id=int(data.get('project_id')),
+                    title=data.get('title'),
+                    description=data.get('description'),
+                    work_type=data.get('work_type'),
+                    category=data.get('category'),
+                    location=data.get('location'),
+                    building_block=data.get('building_block'),
+                    floor_level=data.get('floor_level'),
+                    start_date=datetime.strptime(data.get('start_date'), '%Y-%m-%d').date(),
+                    end_date=datetime.strptime(data.get('end_date'), '%Y-%m-%d').date(),
+                    estimated_duration=int(data.get('estimated_duration', 0)) if data.get('estimated_duration') else None,
+                    priority=data.get('priority', 'normal'),
+                    assigned_to=int(data.get('assigned_to')) if data.get('assigned_to') else None,
+                    contractor_name=data.get('contractor_name'),
+                    team_size=int(data.get('team_size', 0)) if data.get('team_size') else None,
+                    materials_required=json.loads(data.get('materials_json', '[]')) if data.get('materials_json') else None,
+                    equipment_required=json.loads(data.get('equipment_json', '[]')) if data.get('equipment_json') else None,
+                    estimated_cost=float(data.get('estimated_cost', 0)) if data.get('estimated_cost') else None,
+                    budget_code=data.get('budget_code'),
+                    quality_standards=data.get('quality_standards'),
+                    safety_requirements=data.get('safety_requirements'),
+                    special_instructions=data.get('special_instructions'),
+                    created_by=current_user.id
+                )
+                
+                db.session.add(work_order)
+                db.session.commit()
+                
+                flash('Work order created successfully', 'success')
+                return redirect(url_for('site_mgr.work_orders'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating work order: {str(e)}', 'error')
+        
+        # GET request
+        status_filter = request.args.get('status')
+        
+        query = WorkOrder.query
+        if status_filter:
+            query = query.filter_by(status=status_filter)
+        
+        orders = query.order_by(WorkOrder.created_at.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        users = User.query.all()
+        
+        return render_template('site/manager/work_orders.html',
+                             orders=orders,
+                             projects=projects,
+                             users=users)
+    
+    
+    @app.route('/site/manager/meetings', methods=['GET', 'POST'], endpoint='site_mgr.meetings')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def site_meetings():
+        """Site meeting management"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                import json
+                
+                meeting = SiteMeeting(
+                    meeting_number=data.get('meeting_number'),
+                    project_id=int(data.get('project_id')),
+                    meeting_type=data.get('meeting_type'),
+                    meeting_date=datetime.strptime(data.get('meeting_date'), '%Y-%m-%d').date(),
+                    start_time=datetime.strptime(data.get('start_time'), '%H:%M').time() if data.get('start_time') else None,
+                    end_time=datetime.strptime(data.get('end_time'), '%H:%M').time() if data.get('end_time') else None,
+                    venue=data.get('venue'),
+                    attendees=json.loads(data.get('attendees_json', '[]')) if data.get('attendees_json') else None,
+                    chairperson=data.get('chairperson'),
+                    secretary=data.get('secretary'),
+                    agenda=data.get('agenda'),
+                    minutes=data.get('minutes'),
+                    decisions_made=data.get('decisions_made'),
+                    action_items=json.loads(data.get('action_items_json', '[]')) if data.get('action_items_json') else None,
+                    progress_review=data.get('progress_review'),
+                    issues_raised=data.get('issues_raised'),
+                    resolutions=data.get('resolutions'),
+                    next_steps=data.get('next_steps'),
+                    next_meeting_date=datetime.strptime(data.get('next_meeting_date'), '%Y-%m-%d').date() if data.get('next_meeting_date') else None,
+                    next_meeting_agenda=data.get('next_meeting_agenda'),
+                    organized_by=current_user.id
+                )
+                
+                db.session.add(meeting)
+                db.session.commit()
+                
+                flash('Site meeting created successfully', 'success')
+                return redirect(url_for('site_mgr.meetings'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating meeting: {str(e)}', 'error')
+        
+        # GET request
+        meetings = SiteMeeting.query.order_by(SiteMeeting.meeting_date.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('site/manager/meetings.html',
+                             meetings=meetings,
+                             projects=projects)
+    
+    
+    @app.route('/site/manager/change-orders', methods=['GET', 'POST'], endpoint='site_mgr.change_orders')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def change_orders():
+        """Change order management"""
+        if request.method == 'POST':
+            try:
+                data = request.form
+                
+                change_order = ChangeOrder(
+                    change_order_number=data.get('change_order_number'),
+                    project_id=int(data.get('project_id')),
+                    title=data.get('title'),
+                    description=data.get('description'),
+                    change_type=data.get('change_type'),
+                    category=data.get('category'),
+                    reason=data.get('reason'),
+                    justification=data.get('justification'),
+                    requested_by=data.get('requested_by'),
+                    scope_impact=data.get('scope_impact'),
+                    cost_impact=float(data.get('cost_impact', 0)) if data.get('cost_impact') else None,
+                    time_impact=int(data.get('time_impact', 0)) if data.get('time_impact') else None,
+                    quality_impact=data.get('quality_impact'),
+                    original_specification=data.get('original_specification'),
+                    revised_specification=data.get('revised_specification'),
+                    original_cost=float(data.get('original_cost', 0)) if data.get('original_cost') else None,
+                    revised_cost=float(data.get('revised_cost', 0)) if data.get('revised_cost') else None,
+                    original_completion_date=datetime.strptime(data.get('original_completion_date'), '%Y-%m-%d').date() if data.get('original_completion_date') else None,
+                    revised_completion_date=datetime.strptime(data.get('revised_completion_date'), '%Y-%m-%d').date() if data.get('revised_completion_date') else None,
+                    submitted_by=current_user.id
+                )
+                
+                change_order.calculate_cost_difference()
+                change_order.calculate_time_extension()
+                
+                db.session.add(change_order)
+                db.session.commit()
+                
+                flash('Change order created successfully', 'success')
+                return redirect(url_for('site_mgr.change_orders'))
+                
+            except Exception as e:
+                db.session.rollback()
+                flash(f'Error creating change order: {str(e)}', 'error')
+        
+        # GET request
+        status_filter = request.args.get('status')
+        
+        query = ChangeOrder.query
+        if status_filter:
+            query = query.filter_by(status=status_filter)
+        
+        orders = query.order_by(ChangeOrder.submitted_at.desc()).all()
+        projects = Project.query.filter_by(status='Active').all()
+        
+        return render_template('site/manager/change_orders.html',
+                             orders=orders,
+                             projects=projects)
+    
+    
+    @app.route('/site/manager/reports', endpoint='site_mgr.reports')
+    @role_required([Roles.PROJECT_MANAGER, Roles.SUPER_HQ])
+    def site_reports():
+        """Comprehensive site reports and analytics"""
+        from sqlalchemy import func
+        from datetime import datetime, timedelta
+        
+        today = datetime.now(timezone.utc).date()
+        month_start = today.replace(day=1)
+        year_start = datetime(today.year, 1, 1).date()
+        
+        # Get user's projects
+        user_projects = Project.query.filter(
+            (Project.project_manager == current_user.name) | 
+            (Project.status == 'Active')
+        ).all()
+        
+        project_ids = [p.id for p in user_projects]
+        
+        # DPR Statistics
+        total_dprs_month = DailyProgressReport.query.filter(
+            DailyProgressReport.project_id.in_(project_ids) if project_ids else False,
+            DailyProgressReport.report_date >= month_start
+        ).count()
+        
+        # Safety Statistics
+        total_incidents_year = SafetyIncident.query.filter(
+            SafetyIncident.project_id.in_(project_ids) if project_ids else False,
+            SafetyIncident.incident_date >= year_start
+        ).count()
+        
+        incidents_by_severity = db.session.query(
+            SafetyIncident.severity,
+            func.count(SafetyIncident.id).label('count')
+        ).filter(
+            SafetyIncident.project_id.in_(project_ids) if project_ids else False,
+            SafetyIncident.incident_date >= year_start
+        ).group_by(SafetyIncident.severity).all()
+        
+        # Equipment Utilization
+        equipment_hours = db.session.query(
+            func.sum(EquipmentLog.hours_used).label('total_hours')
+        ).filter(
+            EquipmentLog.project_id.in_(project_ids) if project_ids else False,
+            EquipmentLog.log_date >= month_start
+        ).scalar() or 0
+        
+        # Quality Control Statistics
+        qc_pass_rate = db.session.query(
+            func.count(QualityControl.id).label('total'),
+            func.sum(db.case([(QualityControl.pass_fail_status == 'pass', 1)], else_=0)).label('passed')
+        ).filter(
+            QualityControl.project_id.in_(project_ids) if project_ids else False,
+            QualityControl.test_date >= month_start
+        ).first()
+        
+        pass_percentage = (qc_pass_rate.passed / qc_pass_rate.total * 100) if qc_pass_rate.total > 0 else 0
+        
+        # Material Request Statistics
+        material_request_stats = db.session.query(
+            MaterialRequest.status,
+            func.count(MaterialRequest.id).label('count')
+        ).filter(
+            MaterialRequest.project_id.in_(project_ids) if project_ids else False
+        ).group_by(MaterialRequest.status).all()
+        
+        # Work Order Completion
+        work_order_completion = db.session.query(
+            WorkOrder.status,
+            func.count(WorkOrder.id).label('count')
+        ).filter(
+            WorkOrder.project_id.in_(project_ids) if project_ids else False
+        ).group_by(WorkOrder.status).all()
+        
+        report_data = {
+            'projects': user_projects,
+            'summary': {
+                'total_dprs_month': total_dprs_month,
+                'total_incidents_year': total_incidents_year,
+                'equipment_hours_month': float(equipment_hours),
+                'qc_pass_percentage': pass_percentage
+            },
+            'incidents_by_severity': incidents_by_severity,
+            'material_request_stats': material_request_stats,
+            'work_order_completion': work_order_completion
+        }
+        
+        return render_template('site/manager/reports.html', **report_data)
+
 
     # ============================================================================
     # ROUTES FROM HQ.PY
@@ -838,7 +3827,7 @@ Construction Management Team
     def maintenance():
         try:
         # Assets due for maintenance (maintenance_due in next 30 days)
-            today = datetime.utcnow().date()
+            today = datetime.now(timezone.utc).date()
             soon = today + timedelta(days=30)
             due_soon = InventoryItem.query.filter(
                 InventoryItem.maintenance_due != None,
@@ -1410,8 +4399,8 @@ Construction Management Team
             unit=data.get('unit'),
             status='pending',
             current_approver='Procurement Manager',
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
         db.session.add(req)
         db.session.commit()
@@ -1685,7 +4674,7 @@ Construction Management Team
         # Enhanced financial summary
             try:
                 summary = {
-                    'bank_balance': db.session.execute(db.text("SELECT COALESCE(SUM(balance), 0) FROM bank_reconciliations")).scalar() or 0,
+                    'bank_balance': db.session.execute(db.text("SELECT COALESCE(SUM(current_balance), 0) FROM bank_accounts")).scalar() or 0,
                     'monthly_expenses': db.session.query(func.sum(Expense.amount)).filter(
                         func.extract('month', Expense.date) == current_month,
                         func.extract('year', Expense.date) == current_year
@@ -1759,7 +4748,7 @@ Construction Management Team
             if status_filter != 'all':
                 query = query.filter(Payroll.status == status_filter)
             
-            payrolls = query.order_by(desc(Payroll.date)).paginate(
+            payrolls = query.order_by(desc(Payroll.created_at)).paginate(
                 page=page, per_page=per_page, error_out=False
             )
         
@@ -2028,18 +5017,20 @@ Construction Management Team
         try:
             page = request.args.get('page', 1, type=int)
             per_page = request.args.get('per_page', 50, type=int)
-            event_type = request.args.get('event_type', 'all')
-            user_id = request.args.get('user_id', type=int)
+            status_filter = request.args.get('status', 'all')
+            category_filter = request.args.get('category', 'all')
             date_from = request.args.get('date_from')
             date_to = request.args.get('date_to')
         
             query = Audit.query
         
-            if event_type != 'all':
-                query = query.filter(Audit.event_type == event_type)
+            # Filter by status using actual Audit model field
+            if status_filter != 'all':
+                query = query.filter(Audit.status == status_filter)
             
-            if user_id:
-                query = query.filter(Audit.user_id == user_id)
+            # Filter by category (based on audit name)
+            if category_filter != 'all':
+                query = query.filter(Audit.name.like(f'{category_filter}%'))
             
             if date_from:
                 try:
@@ -2059,10 +5050,30 @@ Construction Management Team
                 page=page, per_page=per_page, error_out=False
             )
         
+            # Calculate stats using actual Audit model fields
+            total_audits = Audit.query.count()
+            pending_audits = Audit.query.filter(Audit.status == 'Pending').count()
+            completed_audits = Audit.query.filter(Audit.status == 'Completed').count()
+            today = datetime.now().date()
+            todays_audits = Audit.query.filter(func.date(Audit.date) == today).count()
+            
+            # Calculate category stats
+            expense_audits = Audit.query.filter(Audit.name.like('Expense%')).count()
+            invoice_audits = Audit.query.filter(Audit.name.like('Invoice%')).count()
+            payment_audits = Audit.query.filter(Audit.name.like('Payment%')).count()
+            payroll_audits = Audit.query.filter(Audit.name.like('Payroll%')).count()
+            budget_audits = Audit.query.filter(Audit.name.like('Budget%')).count()
+            
             stats = {
-                'total_audits': Audit.query.count(),
-                'last_audit': Audit.query.order_by(desc(Audit.date)).first(),
-                'users': User.query.filter(User.role.in_([Roles.SUPER_HQ, Roles.HQ_FINANCE])).all()
+                'total_audits': total_audits,
+                'critical_events': 0,  # Placeholder since we don't have severity field
+                'todays_activities': todays_audits,
+                'pending_reviews': pending_audits,
+                'expense_audits': expense_audits,
+                'invoice_audits': invoice_audits,
+                'payment_audits': payment_audits,
+                'payroll_audits': payroll_audits,
+                'budget_audits': budget_audits
             }
         
             return render_template('finance/audit/index.html', 
@@ -2072,6 +5083,7 @@ Construction Management Team
         except Exception as e:
             current_app.logger.error(f"Audit loading error: {str(e)}")
             flash('Error loading audit logs', 'error')
+            return redirect(url_for('finance.finance_home'))
             return render_template('error.html'), 500
 
     @app.route('/finance/audit/log', methods=['POST'], endpoint='finance.log_audit')
@@ -2082,12 +5094,12 @@ Construction Management Team
             if not data:
                 return jsonify({'status': 'error', 'message': 'No data provided'})
             
+            # Create audit using actual Audit model fields
             audit = Audit(
-                event_type=data.get('event_type'),
-                description=data.get('description'),
-                user_id=current_user.id,
-                ip_address=request.remote_addr,
-                details=json.dumps(data.get('details', {})) if data.get('details') else None
+                name=data.get('name', 'Audit Entry'),
+                date=datetime.now().date(),
+                status=data.get('status', 'Pending'),
+                approved_by=data.get('approved_by')
             )
             db.session.add(audit)
             db.session.commit()
@@ -2106,11 +5118,9 @@ Construction Management Team
             filters = request.get_json() or {}
             query = Audit.query
         
-            if filters.get('event_type') and filters['event_type'] != 'all':
-                query = query.filter(Audit.event_type == filters['event_type'])
-            
-            if filters.get('user_id'):
-                query = query.filter(Audit.user_id == filters['user_id'])
+            # Filter by status using actual Audit model field
+            if filters.get('status') and filters['status'] != 'all':
+                query = query.filter(Audit.status == filters['status'])
             
             if filters.get('date_from'):
                 try:
@@ -2132,21 +5142,18 @@ Construction Management Team
             output = BytesIO()
             writer = csv.writer(output)
         
-        # Write header
-            writer.writerow(['ID', 'Date', 'Event Type', 'Description', 'User', 'IP Address', 'Details'])
+        # Write header using actual Audit model fields
+            writer.writerow(['ID', 'Name', 'Date', 'Status', 'Approved By', 'Created At'])
         
         # Write data
             for audit in audits:
-                user = User.query.get(audit.user_id)
-                username = user.username if user else 'Unknown'
                 writer.writerow([
                     audit.id,
-                    audit.date.strftime('%Y-%m-%d %H:%M:%S'),
-                    audit.event_type,
-                    audit.description,
-                    username,
-                    audit.ip_address,
-                    audit.details or ''
+                    audit.name,
+                    audit.date.strftime('%Y-%m-%d') if audit.date else '',
+                    audit.status,
+                    audit.approved_by or '',
+                    audit.created_at.strftime('%Y-%m-%d %H:%M:%S') if audit.created_at else ''
                 ])
         
             output.seek(0)
@@ -2187,32 +5194,34 @@ Construction Management Team
                 except ValueError:
                     pass
         
-        # Generate comprehensive stats
+        # Generate comprehensive stats using actual Audit model fields
             total_audits = query.count()
-            open_issues = query.filter(Audit.status == 'open').count()
-            resolved_issues = query.filter(Audit.status == 'resolved').count()
+            pending_audits = query.filter(Audit.status == 'Pending').count()
+            completed_audits = query.filter(Audit.status == 'Completed').count()
+            approved_audits = query.filter(Audit.status == 'Approved').count()
         
-        # Event type breakdown
-            event_types = db.session.query(
-                Audit.event_type,
+        # Status breakdown
+            status_breakdown = db.session.query(
+                Audit.status,
                 func.count(Audit.id).label('count')
-            ).filter(Audit.id.in_([a.id for a in query.all()])).group_by(Audit.event_type).all()
+            ).filter(Audit.id.in_([a.id for a in query.all()])).group_by(Audit.status).all()
         
-        # User activity
-            user_activity = db.session.query(
-                Audit.user_id,
-                User.username,
-                func.count(Audit.id).label('activity_count')
-            ).join(User, Audit.user_id == User.id).filter(
-                Audit.id.in_([a.id for a in query.all()])
-            ).group_by(Audit.user_id, User.username).order_by(desc('activity_count')).all()
+        # Approved by breakdown
+            approved_by_breakdown = db.session.query(
+                Audit.approved_by,
+                func.count(Audit.id).label('count')
+            ).filter(
+                Audit.id.in_([a.id for a in query.all()]),
+                Audit.approved_by.isnot(None)
+            ).group_by(Audit.approved_by).order_by(desc('count')).all()
         
             stats = {
                 'total_audits': total_audits,
-                'open_issues': open_issues,
-                'resolved_issues': resolved_issues,
-                'event_types': [{'type': et[0], 'count': et[1]} for et in event_types],
-                'user_activity': [{'user_id': ua[0], 'username': ua[1], 'count': ua[2]} for ua in user_activity],
+                'pending_audits': pending_audits,
+                'completed_audits': completed_audits,
+                'approved_audits': approved_audits,
+                'status_breakdown': [{'status': sb[0], 'count': sb[1]} for sb in status_breakdown],
+                'approved_by': [{'approver': ab[0], 'count': ab[1]} for ab in approved_by_breakdown],
                 'date_range': {
                     'from': date_from or 'Beginning',
                     'to': date_to
@@ -2229,10 +5238,16 @@ Construction Management Team
     def get_audit_details(audit_id):
         try:
             audit = Audit.query.get_or_404(audit_id)
-            user = User.query.get(audit.user_id)
         
-            response = audit.to_dict()
-            response['username'] = user.username if user else 'Unknown'
+            # Build response using actual Audit model fields
+            response = {
+                'id': audit.id,
+                'name': audit.name,
+                'date': audit.date.strftime('%Y-%m-%d') if audit.date else None,
+                'status': audit.status,
+                'approved_by': audit.approved_by,
+                'created_at': audit.created_at.strftime('%Y-%m-%d %H:%M:%S') if audit.created_at else None
+            }
         
             return jsonify(response)
         except Exception as e:
@@ -2374,12 +5389,12 @@ Construction Management Team
             db.session.add(expense)
             db.session.commit()
         
-        # Log audit event
+        # Log audit event - using correct Audit model fields
             audit = Audit(
-                event_type='expense_added',
-                description=f'Added expense: {expense.description} - ₦{expense.amount:,.2f}',
-                user_id=current_user.id,
-                ip_address=request.remote_addr or '127.0.0.1'
+                name=f'Expense Added: {expense.description}',
+                date=datetime.now(timezone.utc).date(),
+                status='Completed',
+                approved_by=current_user.name
             )
             db.session.add(audit)
             db.session.commit()
@@ -2415,12 +5430,12 @@ Construction Management Team
         
             db.session.commit()
         
-        # Log audit event
+        # Log audit event - using correct Audit model fields
             audit = Audit(
-                event_type='expense_status_updated',
-                description=f'Updated expense status from {old_status} to {new_status} for: {expense.description}',
-                user_id=current_user.id,
-                ip_address=request.remote_addr or '127.0.0.1'
+                name=f'Expense Status Updated: {expense.description}',
+                date=datetime.now(timezone.utc).date(),
+                status='Completed',
+                approved_by=current_user.name
             )
             db.session.add(audit)
             db.session.commit()
@@ -2445,6 +5460,21 @@ Construction Management Team
         except Exception as e:
             current_app.logger.error(f"Expense categories error: {str(e)}")
             return jsonify({'status': 'error', 'message': str(e)})
+
+    @app.route('/finance/expenses/<int:expense_id>/delete', methods=['POST'], endpoint='finance.delete_expense')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def delete_expense(expense_id):
+        """Delete an expense"""
+        try:
+            expense = Expense.query.get_or_404(expense_id)
+            db.session.delete(expense)
+            db.session.commit()
+            flash('Expense deleted successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting expense: {str(e)}', 'error')
+        
+        return redirect(url_for('finance.expenses'))
 
     @app.route('/finance/expenses/receipt/<int:expense_id>', methods=['GET', 'POST'], endpoint='finance.expense_receipt')
     @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
@@ -2472,12 +5502,12 @@ Construction Management Team
                     expense.receipt_path = save_path
                     db.session.commit()
                 
-                # Log audit event
+                # Log audit event - using correct Audit model fields
                     audit = Audit(
-                        event_type='expense_receipt_uploaded',
-                        description=f'Uploaded receipt for expense: {expense.description}',
-                        user_id=current_user.id,
-                        ip_address=request.remote_addr
+                        name=f'Receipt Uploaded: {expense.description}',
+                        date=datetime.now(timezone.utc).date(),
+                        status='Completed',
+                        approved_by=current_user.name
                     )
                     db.session.add(audit)
                     db.session.commit()
@@ -2838,15 +5868,15 @@ Construction Management Team
                     'message': 'Missing required fields: account_id, transaction_type, amount'
                 }), 400
             
-        # Get the bank account
-            account = BankAccount.query.get(account_id)
+            # Get the bank account
+            account = BankAccount.query.filter_by(id=account_id).first()
             if not account:
                 return jsonify({
                     'status': 'error',
                     'message': 'Bank account not found'
                 }), 404
             
-        # Check if debit transaction would overdraw account
+            # Check if debit transaction would overdraw account
             if transaction_type.lower() == 'debit' and account.current_balance < amount:
                 return jsonify({
                     'status': 'error',
@@ -2872,7 +5902,7 @@ Construction Management Team
                 account.current_balance -= amount
                 account.book_balance -= amount
             
-            account.updated_at = datetime.utcnow()
+            account.updated_at = datetime.now(timezone.utc)
         
         # Save to database
             db.session.add(new_transaction)
@@ -3063,6 +6093,55 @@ Construction Management Team
             current_app.logger.error(f"Add transaction error: {str(e)}")
             flash("Error adding transaction", "error")
             return jsonify({'status': 'error', 'message': str(e)}), 500
+
+    @app.route('/finance/bank-accounts/<int:account_id>/delete', methods=['POST'], endpoint='finance.delete_bank_account')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def delete_bank_account(account_id):
+        """Delete a bank account"""
+        try:
+            account = BankAccount.query.get_or_404(account_id)
+            
+            # Check if there are transactions
+            transaction_count = BankTransaction.query.filter_by(account_id=account_id).count()
+            if transaction_count > 0:
+                flash(f'Cannot delete account with {transaction_count} transactions. Please delete transactions first.', 'error')
+                return redirect(url_for('finance.bank_reconciliation'))
+            
+            db.session.delete(account)
+            db.session.commit()
+            flash('Bank account deleted successfully', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting bank account: {str(e)}', 'error')
+        
+        return redirect(url_for('finance.bank_reconciliation'))
+
+    @app.route('/finance/bank-transactions/<int:transaction_id>/delete', methods=['POST'], endpoint='finance.delete_bank_transaction')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def delete_bank_transaction(transaction_id):
+        """Delete a bank transaction and update account balance"""
+        try:
+            transaction = BankTransaction.query.get_or_404(transaction_id)
+            account = BankAccount.query.get(transaction.account_id)
+            
+            # Reverse the transaction effect on balance
+            if account:
+                if transaction.transaction_type == 'Credit':
+                    account.current_balance -= transaction.amount
+                    account.book_balance -= transaction.amount
+                else:  # Debit
+                    account.current_balance += transaction.amount
+                    account.book_balance += transaction.amount
+                account.updated_at = datetime.now(timezone.utc)
+            
+            db.session.delete(transaction)
+            db.session.commit()
+            flash('Transaction deleted successfully and account balance updated', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error deleting transaction: {str(e)}', 'error')
+        
+        return redirect(url_for('finance.bank_reconciliation'))
 
     @app.route('/finance/bank-reconciliation/<int:reconciliation_id>/reconcile', methods=['POST'], endpoint='finance.reconcile_transactions')
     @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
@@ -3307,7 +6386,7 @@ Construction Management Team
             return jsonify({'error': 'Payroll not approved by management'}), 400
         payroll.status = 'disbursed'
         payroll.disbursed_by = current_user.id
-        payroll.disbursed_at = datetime.utcnow()
+        payroll.disbursed_at = datetime.now(timezone.utc)
         db.session.commit()
     # TODO: Send email to HR/employee
         return jsonify({'message': 'Payroll disbursed'})
@@ -3496,6 +6575,368 @@ Construction Management Team
             current_app.logger.error(f"Error processing payroll: {str(e)}")
             flash("Error processing payroll", "error")
             return redirect(url_for('finance.pending_payroll_approvals'))
+
+    @app.route('/finance/payroll/approvals', endpoint='finance.payroll_approvals')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def payroll_approvals():
+        """View all payroll approvals with filtering"""
+        try:
+            page = request.args.get('page', 1, type=int)
+            status_filter = request.args.get('status', 'all')
+            
+            # Build query with joins to get submitter info
+            query = db.session.query(PayrollApproval, User).join(
+                User, PayrollApproval.submitted_by == User.id
+            )
+            
+            if status_filter != 'all':
+                query = query.filter(PayrollApproval.status == status_filter)
+            
+            approvals = query.order_by(PayrollApproval.submitted_at.desc()).paginate(
+                page=page, per_page=20, error_out=False
+            )
+            
+            # Calculate statistics
+            pending_count = PayrollApproval.query.filter_by(status='pending_finance').count()
+            approved_count = PayrollApproval.query.filter_by(status='approved').count()
+            paid_count = PayrollApproval.query.filter_by(status='paid').count()
+            total_amount = db.session.query(db.func.sum(PayrollApproval.total_amount)).filter(
+                PayrollApproval.status.in_(['approved', 'paid'])
+            ).scalar() or 0
+            
+            return render_template('finance/payroll/approvals.html',
+                                 approvals=approvals,
+                                 pending_count=pending_count,
+                                 approved_count=approved_count,
+                                 paid_count=paid_count,
+                                 total_amount=total_amount,
+                                 status_filter=status_filter)
+        
+        except Exception as e:
+            current_app.logger.error(f"Error loading payroll approvals: {str(e)}")
+            flash("Error loading payroll approvals", "error")
+            return redirect(url_for('finance.finance_home'))
+
+    @app.route('/finance/payroll/<int:approval_id>/process', methods=['POST'], endpoint='finance.process_payroll_approval')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def process_payroll_approval(approval_id):
+        """Process payroll approval (approve or reject)"""
+        try:
+            approval = db.session.get(PayrollApproval, approval_id)
+            if not approval:
+                return jsonify({'status': 'error', 'message': 'Payroll approval not found'}), 404
+            
+            if approval.status != 'pending_finance':
+                return jsonify({'status': 'error', 'message': 'This payroll is not pending approval'}), 400
+            
+            action = request.form.get('action')
+            comments = request.form.get('comments', '')
+            
+            if action == 'approve':
+                approval.status = 'approved'
+                approval.finance_processed_by = session.get('user_id')
+                approval.finance_processed_at = datetime.now()
+                approval.finance_comments = comments
+                
+                # Create audit log
+                audit = Audit(
+                    name='Payroll Approved',
+                    date=datetime.now(),
+                    status='approved',
+                    approved_by=current_user.name
+                )
+                db.session.add(audit)
+                
+                db.session.commit()
+                flash(f"Payroll for {approval.period_month}/{approval.period_year} approved", "success")
+                return jsonify({'status': 'success', 'message': 'Payroll approved'})
+                
+            elif action == 'reject':
+                approval.status = 'rejected'
+                approval.finance_processed_by = session.get('user_id')
+                approval.finance_processed_at = datetime.now()
+                approval.finance_comments = comments
+                
+                # Create audit log
+                audit = Audit(
+                    name='Payroll Rejected',
+                    date=datetime.now(),
+                    status='rejected',
+                    approved_by=current_user.name
+                )
+                db.session.add(audit)
+                
+                db.session.commit()
+                flash(f"Payroll for {approval.period_month}/{approval.period_year} rejected", "warning")
+                return jsonify({'status': 'success', 'message': 'Payroll rejected'})
+            
+            return jsonify({'status': 'error', 'message': 'Invalid action'}), 400
+        
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error processing payroll: {str(e)}")
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+
+    @app.route('/finance/payroll/<int:approval_id>/mark-paid', methods=['POST'], endpoint='finance.mark_payroll_paid')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def mark_payroll_paid(approval_id):
+        """Mark payroll as paid"""
+        try:
+            approval = db.session.get(PayrollApproval, approval_id)
+            if not approval:
+                return jsonify({'status': 'error', 'message': 'Payroll approval not found'}), 404
+            
+            if approval.status != 'approved':
+                return jsonify({'status': 'error', 'message': 'Only approved payrolls can be marked as paid'}), 400
+            
+            payment_date = request.form.get('payment_date')
+            payment_reference = request.form.get('payment_reference', '')
+            payment_notes = request.form.get('payment_notes', '')
+            
+            approval.status = 'paid'
+            approval.paid_by = session.get('user_id')
+            approval.paid_at = datetime.strptime(payment_date, '%Y-%m-%d') if payment_date else datetime.now()
+            approval.payment_reference = payment_reference
+            approval.payment_notes = payment_notes
+            
+            # Create audit log
+            audit = Audit(
+                name=f'Payroll Payment: {approval.period_month}/{approval.period_year}',
+                date=datetime.now(),
+                status='paid',
+                approved_by=current_user.name
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            flash(f"Payroll for {approval.period_month}/{approval.period_year} marked as paid", "success")
+            return jsonify({'status': 'success', 'message': 'Payroll marked as paid'})
+        
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error marking payroll as paid: {str(e)}")
+            return jsonify({'status': 'error', 'message': str(e)}), 500
+
+    @app.route('/finance/payroll/<int:approval_id>/detail', endpoint='finance.payroll_approval_detail')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def payroll_approval_detail(approval_id):
+        """View detailed payroll information"""
+        try:
+            approval = db.session.get(PayrollApproval, approval_id)
+            if not approval:
+                flash("Payroll approval not found", "error")
+                return redirect(url_for('finance.payroll_approvals'))
+            
+            # Get staff payrolls for this period
+            staff_payrolls = StaffPayroll.query.filter_by(
+                period_year=approval.period_year,
+                period_month=approval.period_month
+            ).all()
+            
+            return render_template('finance/payroll/detail.html',
+                                 approval=approval,
+                                 staff_payrolls=staff_payrolls)
+        
+        except Exception as e:
+            current_app.logger.error(f"Error loading payroll detail: {str(e)}")
+            flash("Error loading payroll detail", "error")
+            return redirect(url_for('finance.payroll_approvals'))
+
+# ===== DOCUMENT MANAGEMENT ROUTES =====
+
+    @app.route('/finance/financial-documents', endpoint='finance.financial_documents')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def financial_documents():
+        """List all financial documents with filtering"""
+        try:
+            page = request.args.get('page', 1, type=int)
+            project_filter = request.args.get('project', 'all')
+            category_filter = request.args.get('category', 'all')
+            
+            query = Document.query
+            
+            # Apply filters
+            if project_filter != 'all':
+                if project_filter == 'general':
+                    query = query.filter(Document.project_id.is_(None))
+                else:
+                    query = query.filter(Document.project_id == int(project_filter))
+            
+            if category_filter != 'all':
+                query = query.filter(Document.category == category_filter)
+            
+            documents = query.order_by(Document.uploaded_at.desc()).paginate(
+                page=page, per_page=15, error_out=False
+            )
+            
+            # Get all projects for filter dropdown
+            projects = Project.query.order_by(Project.name).all()
+            
+            return render_template('finance/documents/index.html',
+                                 documents=documents,
+                                 projects=projects,
+                                 filter_project=project_filter,
+                                 filter_category=category_filter)
+        
+        except Exception as e:
+            current_app.logger.error(f"Error loading documents: {str(e)}")
+            flash("Error loading documents", "error")
+            return redirect(url_for('finance.finance_home'))
+
+    @app.route('/finance/documents/upload', methods=['POST'], endpoint='finance.upload_finance_document')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def upload_document():
+        """Upload a new financial document"""
+        try:
+            if 'file' not in request.files:
+                flash("No file selected", "error")
+                return redirect(url_for('finance.financial_documents'))
+            
+            file = request.files['file']
+            if file.filename == '':
+                flash("No file selected", "error")
+                return redirect(url_for('finance.financial_documents'))
+            
+            # Get form data
+            name = request.form.get('name')
+            category = request.form.get('category')
+            description = request.form.get('description', '')
+            project_id = request.form.get('project_id')
+            
+            if not name or not category:
+                flash("Name and category are required", "error")
+                return redirect(url_for('finance.financial_documents'))
+            
+            # Save file
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            unique_filename = f"{timestamp}_{filename}"
+            
+            upload_folder = os.path.join(current_app.root_path, 'uploads', 'finance_documents')
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            file_path = os.path.join(upload_folder, unique_filename)
+            file.save(file_path)
+            
+            # Get file size and type
+            file_size = os.path.getsize(file_path)
+            file_ext = filename.rsplit('.', 1)[1].lower() if '.' in filename else 'unknown'
+            
+            # Create document record
+            document = Document(
+                filename=unique_filename,
+                category=category,
+                project_id=int(project_id) if project_id else None,
+                uploaded_at=datetime.now(),
+                uploader_id=session.get('user_id'),
+                status='active',
+                size=file_size
+            )
+            
+            # Store additional metadata
+            document.original_name = name
+            document.description = description
+            document.file_type = file_ext
+            
+            db.session.add(document)
+            
+            # Create audit log
+            audit = Audit(
+                name=f'Receipt Added: {name}' if category == 'receipt' else f'{category.title()} Added: {name}',
+                date=datetime.now(),
+                status='uploaded',
+                approved_by=current_user.name
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            flash(f"Document '{name}' uploaded successfully", "success")
+            return redirect(url_for('finance.financial_documents'))
+        
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error uploading document: {str(e)}")
+            flash("Error uploading document", "error")
+            return redirect(url_for('finance.financial_documents'))
+
+    @app.route('/finance/documents/<int:doc_id>/download', endpoint='finance.download_finance_document')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def download_document(doc_id):
+        """Download a document"""
+        try:
+            document = db.session.get(Document, doc_id)
+            if not document:
+                flash("Document not found", "error")
+                return redirect(url_for('finance.financial_documents'))
+            
+            upload_folder = os.path.join(current_app.root_path, 'uploads', 'finance_documents')
+            file_path = os.path.join(upload_folder, document.filename)
+            
+            if not os.path.exists(file_path):
+                flash("File not found on server", "error")
+                return redirect(url_for('finance.financial_documents'))
+            
+            return send_file(file_path, as_attachment=True, download_name=document.original_name or document.filename)
+        
+        except Exception as e:
+            current_app.logger.error(f"Error downloading document: {str(e)}")
+            flash("Error downloading document", "error")
+            return redirect(url_for('finance.financial_documents'))
+
+    @app.route('/finance/documents/<int:doc_id>/view', endpoint='finance.view_finance_document')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def view_document(doc_id):
+        """View a document in browser"""
+        try:
+            document = db.session.get(Document, doc_id)
+            if not document:
+                return "Document not found", 404
+            
+            upload_folder = os.path.join(current_app.root_path, 'uploads', 'finance_documents')
+            file_path = os.path.join(upload_folder, document.filename)
+            
+            if not os.path.exists(file_path):
+                return "File not found on server", 404
+            
+            return send_file(file_path, as_attachment=False)
+        
+        except Exception as e:
+            current_app.logger.error(f"Error viewing document: {str(e)}")
+            return "Error viewing document", 500
+
+    @app.route('/finance/documents/<int:doc_id>/delete', methods=['DELETE'], endpoint='finance.delete_finance_document')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
+    def delete_document(doc_id):
+        """Delete a document"""
+        try:
+            document = db.session.get(Document, doc_id)
+            if not document:
+                return jsonify({'status': 'error', 'message': 'Document not found'}), 404
+            
+            # Delete physical file
+            upload_folder = os.path.join(current_app.root_path, 'uploads', 'finance_documents')
+            file_path = os.path.join(upload_folder, document.filename)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            
+            # Create audit log
+            audit = Audit(
+                name=f'Receipt Deleted: {document.original_name}' if document.category == 'receipt' else f'{document.category.title()} Deleted: {document.original_name}',
+                date=datetime.now(),
+                status='deleted',
+                approved_by=current_user.name
+            )
+            db.session.add(audit)
+            
+            db.session.delete(document)
+            db.session.commit()
+            
+            return jsonify({'status': 'success', 'message': 'Document deleted successfully'})
+        
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error deleting document: {str(e)}")
+            return jsonify({'status': 'error', 'message': str(e)}), 500
 
 # ===== DATA EXPORT ROUTES =====
 
@@ -3802,27 +7243,27 @@ Construction Management Team
         """View transactions for a specific account"""
         try:
             account = BankAccount.query.get_or_404(account_id)
-        
-        # Get page parameter for pagination
+            
+            # Get page parameter for pagination
             page = request.args.get('page', 1, type=int)
             per_page = 20
-        
-        # Get transactions with pagination
+            
+            # Get transactions with pagination
             transactions = BankTransaction.query.filter_by(account_id=account_id)\
                 .order_by(BankTransaction.transaction_date.desc())\
                 .paginate(page=page, per_page=per_page, error_out=False)
-        
-        # Calculate summary statistics
+            
+            # Calculate summary statistics
             total_credits = db.session.query(func.sum(BankTransaction.amount)).filter(
                 BankTransaction.account_id == account_id,
                 BankTransaction.transaction_type == 'Credit'
             ).scalar() or 0
-        
+            
             total_debits = db.session.query(func.sum(BankTransaction.amount)).filter(
                 BankTransaction.account_id == account_id,
                 BankTransaction.transaction_type == 'Debit'
             ).scalar() or 0
-        
+            
             return render_template('finance/account_transactions.html',
                                  account=account,
                                  transactions=transactions,
@@ -4194,11 +7635,60 @@ Construction Management Team
                         'department': staff.department if staff and hasattr(staff, 'department') else ''
                     }
                 })
-            return render_template('hr/leave/index.html', leaves=leaves, leave_events=leave_events)
+            # Get active employees for dropdown
+            employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+            return render_template('hr/leave/index.html', leaves=leaves, leave_events=leave_events, employees=employees)
         except Exception as e:
             current_app.logger.error(f"Leave management error: {str(e)}")
             flash("Error loading leave management", "error")
             return render_template('error.html'), 500
+
+    @app.route('/hr/leave/create', methods=['POST'], endpoint='hr.create_leave')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
+    def create_leave():
+        try:
+            employee_id = request.form.get('employee_id')
+            leave_type = request.form.get('leave_type')
+            start_date = request.form.get('start_date')
+            end_date = request.form.get('end_date')
+            reason = request.form.get('reason', '')
+            
+            # Validate required fields
+            if not all([employee_id, leave_type, start_date, end_date]):
+                flash("All required fields must be filled", "error")
+                return redirect(url_for('hr.leave_management'))
+            
+            # Convert dates
+            start = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end = datetime.strptime(end_date, '%Y-%m-%d').date()
+            
+            # Validate dates
+            if end < start:
+                flash("End date cannot be before start date", "error")
+                return redirect(url_for('hr.leave_management'))
+            
+            # Create leave request
+            new_leave = Leave(
+                employee_id=employee_id,
+                type=leave_type,
+                start=start,
+                end=end,
+                status='Pending',
+                created_at=datetime.now()
+            )
+            
+            db.session.add(new_leave)
+            db.session.commit()
+            
+            flash(f"Leave request created successfully for {leave_type}", "success")
+            current_app.logger.info(f"Leave request created: {new_leave.id} for employee {employee_id}")
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating leave: {str(e)}")
+            flash("Error creating leave request", "error")
+        
+        return redirect(url_for('hr.leave_management'))
 
 # Staff Query Routes
     @app.route('/hr/queries', methods=['GET', 'POST'], endpoint='hr.staff_queries')
@@ -4480,8 +7970,8 @@ Construction Management Team
                             'staff_name': employee.name,
                             'staff_id': employee.staff_code or f"EMP{employee.id:04d}",
                             'department': employee.department or 'Not assigned',
-                            'check_in': attendance_record.check_in.strftime('%H:%M') if hasattr(attendance_record, 'check_in') and attendance_record.check_in else '--',
-                            'check_out': attendance_record.check_out.strftime('%H:%M') if hasattr(attendance_record, 'check_out') and attendance_record.check_out else '--',
+                            'check_in': attendance_record.checkin_time.strftime('%H:%M') if hasattr(attendance_record, 'checkin_time') and attendance_record.checkin_time else '--',
+                            'check_out': attendance_record.checkout_time.strftime('%H:%M') if hasattr(attendance_record, 'checkout_time') and attendance_record.checkout_time else '--',
                             'status': attendance_record.status,
                             'employee_id': employee.id
                         })
@@ -4578,12 +8068,12 @@ Construction Management Team
             if existing_attendance:
             # Update existing record
                 existing_attendance.status = status
-                if hasattr(existing_attendance, 'check_in'):
-                    existing_attendance.check_in = check_in_time
-                if hasattr(existing_attendance, 'check_out'):
-                    existing_attendance.check_out = check_out_time
+                if hasattr(existing_attendance, 'checkin_time'):
+                    existing_attendance.checkin_time = check_in_time
+                if hasattr(existing_attendance, 'checkout_time'):
+                    existing_attendance.checkout_time = check_out_time
                 if hasattr(existing_attendance, 'updated_at'):
-                    existing_attendance.updated_at = datetime.utcnow()
+                    existing_attendance.updated_at = datetime.now(timezone.utc)
             
                 action = "updated"
             else:
@@ -4595,14 +8085,14 @@ Construction Management Team
                 }
             
             # Add optional fields if they exist in the model
-                if hasattr(Attendance, 'check_in'):
-                    attendance_data['check_in'] = check_in_time
-                if hasattr(Attendance, 'check_out'):
-                    attendance_data['check_out'] = check_out_time
+                if hasattr(Attendance, 'checkin_time'):
+                    attendance_data['checkin_time'] = check_in_time
+                if hasattr(Attendance, 'checkout_time'):
+                    attendance_data['checkout_time'] = check_out_time
                 if hasattr(Attendance, 'recorded_by'):
                     attendance_data['recorded_by'] = session.get('user_id')
                 if hasattr(Attendance, 'created_at'):
-                    attendance_data['created_at'] = datetime.utcnow()
+                    attendance_data['created_at'] = datetime.now(timezone.utc)
             
                 new_attendance = Attendance(**attendance_data)
                 db.session.add(new_attendance)
@@ -4862,29 +8352,28 @@ Construction Management Team
     def update_task_status(task_id):
         """Update the status of a task"""
         try:
-        
             task = Task.query.get_or_404(task_id)
             data = request.get_json() if request.is_json else request.form
-        
+            
             new_status = data.get('status')
             new_progress = data.get('progress', type=float)
-        
-            if new_status and new_status in ['Pending', 'In Progress', 'Completed']:
+            
+            if new_status and new_status in ['Pending', 'In Progress', 'Completed', 'pending', 'in progress', 'completed']:
                 task.status = new_status
-            
-            # Update progress based on status
-                if new_status == 'Completed':
+                
+                # Update progress based on status
+                if new_status in ['Completed', 'completed']:
                     task.percent_complete = 100.0
-                elif new_status == 'In Progress' and new_progress is not None:
+                elif new_status in ['In Progress', 'in progress'] and new_progress is not None:
                     task.percent_complete = min(max(new_progress, 0), 100)
-                elif new_status == 'Pending':
+                elif new_status in ['Pending', 'pending']:
                     task.percent_complete = 0.0
-            
-                task.updated_at = datetime.utcnow()
+                
+                task.updated_at = datetime.now(timezone.utc)
                 db.session.commit()
-            
+                
                 current_app.logger.info(f"Task {task_id} status updated to {new_status}")
-            
+                
                 if request.is_json:
                     return jsonify({
                         'success': True, 
@@ -5483,6 +8972,13 @@ Construction Management Team
             for employee_payroll in batch_result['employees']:
                 breakdown = employee_payroll['breakdown']
                 employee = Employee.query.get(employee_payroll['employee_id'])
+                
+                # Calculate salary components
+                gross = employee_payroll['gross_salary']
+                basic_salary = gross * 0.6  # 60% basic salary
+                housing_allowance = gross * 0.25  # 25% housing
+                transport_allowance = gross * 0.10  # 10% transport
+                meal_allowance = gross * 0.05  # 5% meal
             
             # Create StaffPayroll record with detailed breakdown
                 staff_payroll = StaffPayroll(
@@ -5496,8 +8992,15 @@ Construction Management Team
                     days_worked=30,  # Assume full attendance (can be modified later)
                     overtime_hours=breakdown.get('overtime_hours', 0),
                 
-                # Salary components
-                    gross=employee_payroll['gross_salary'],
+                # Salary components breakdown
+                    basic_salary=basic_salary,
+                    housing_allowance=housing_allowance,
+                    transport_allowance=transport_allowance,
+                    meal_allowance=meal_allowance,
+                    other_allowances=0,
+                    
+                # Total salary
+                    gross=gross,
                     arrears=0,  # No arrears in standard calculation
                     rice_contribution=0,  # Not applicable
                 
@@ -5802,7 +9305,8 @@ Construction Management Team
             return render_template('hr/payroll/payslip.html', 
                                  employee=employee, 
                                  payroll=staff_payroll,
-                                 period=current_date.strftime('%B %Y'))
+                                 period=current_date.strftime('%B %Y'),
+                                 generated_date=current_date.strftime('%B %d, %Y'))
         
         except Exception as e:
             current_app.logger.error(f"Payslip generation error: {str(e)}", exc_info=True)
@@ -6059,7 +9563,7 @@ Construction Management Team
         except Exception as e:
             current_app.logger.error(f"Staff details JSON error: {e}")
             return jsonify({'error': 'internal_error'}), 500
-    @app.route('/hr/staff/<int:staff_id>/edit', methods=["POST"], endpoint='hr.edit_staff')
+    @app.route('/hr/staff/<int:staff_id>/edit', methods=["GET", "POST"], endpoint='hr.edit_staff')
     @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
     def edit_staff(staff_id):
         try:
@@ -6067,6 +9571,39 @@ Construction Management Team
             if not emp:
                 flash("Staff not found", "error")
                 return redirect(url_for('hr.staff_list'))
+            
+            # GET request - show edit form
+            if request.method == 'GET':
+                # Prepare staff data
+                staff_data = {
+                    'id': emp.id,
+                    'staff_code': getattr(emp, 'staff_code', ''),
+                    'name': emp.name,
+                    'email': emp.email,
+                    'phone': emp.phone,
+                    'dob': emp.dob,
+                    'gender': getattr(emp, 'gender', ''),
+                    'current_address': emp.current_address,
+                    'next_of_kin': emp.next_of_kin,
+                    'next_of_kin_phone': emp.next_of_kin_phone,
+                    'date_of_employment': emp.date_of_employment,
+                    'employment_type': emp.employment_type,
+                    'position': emp.position,
+                    'department': emp.department,
+                    'status': emp.status,
+                    'academic_qualification_at_employment': emp.academic_qualification_at_employment,
+                    'institution': getattr(emp, 'institution', ''),
+                    'notes': getattr(emp, 'notes', ''),
+                    'avatar_url': f"https://ui-avatars.com/api/?name={emp.name.replace(' ', '+')}&background=random"
+                }
+                
+                # Create a simple object to pass to template
+                class StaffObj:
+                    def __init__(self, data):
+                        for key, value in data.items():
+                            setattr(self, key, value)
+                
+                return render_template('hr/staff/edit.html', staff=StaffObj(staff_data))
 
         # Get form data
             name = (request.form.get('name') or '').strip()
@@ -6140,7 +9677,7 @@ Construction Management Team
             emp.academic_qualification_at_employment = academic_qualification
             emp.institution = institution
             emp.notes = notes
-            emp.updated_at = datetime.utcnow()
+            emp.updated_at = datetime.now(timezone.utc)
 
             db.session.commit()
             flash("Staff information updated successfully", "success")
@@ -6374,24 +9911,23 @@ Construction Management Team
             recent_downloads = []
         
             try:
-            # Attendance Report
+            # Attendance Report - Always show
                 attendance_count = Attendance.query.filter(
                     extract('month', Attendance.date) == current_month,
                     extract('year', Attendance.date) == current_year
                 ).count() if hasattr(Attendance, 'date') else 0
             
-                if attendance_count > 0:
-                    available_reports.append({
-                        'id': 1,
-                        'title': f'Attendance Report - {current_date.strftime("%B %Y")}',
-                        'type': 'attendance',
-                        'description': f'{attendance_count} attendance records',
-                        'last_generated': current_date.strftime('%Y-%m-%d'),
-                        'format': 'PDF',
-                        'record_count': attendance_count
-                    })
+                available_reports.append({
+                    'id': 1,
+                    'title': f'Attendance Report - {current_date.strftime("%B %Y")}',
+                    'type': 'attendance',
+                    'description': f'{attendance_count} attendance records' if attendance_count > 0 else 'No records for this period',
+                    'last_generated': current_date.strftime('%Y-%m-%d'),
+                    'format': 'PDF',
+                    'record_count': attendance_count
+                })
             
-            # Leave Statistics Report
+            # Leave Statistics Report - Always show
                 leave_count = Leave.query.filter(
                     extract('month', Leave.start_date) == current_month,
                     extract('year', Leave.start_date) == current_year
@@ -6401,13 +9937,13 @@ Construction Management Team
                     'id': 2,
                     'title': f'Leave Statistics - {current_date.strftime("%B %Y")}',
                     'type': 'leave',
-                    'description': f'{leave_count} leave applications',
+                    'description': f'{leave_count} leave applications' if leave_count > 0 else 'No applications for this period',
                     'last_generated': current_date.strftime('%Y-%m-%d'),
                     'format': 'Excel',
                     'record_count': leave_count
                 })
             
-            # Payroll Report
+            # Payroll Report - Always show
                 payroll_count = StaffPayroll.query.filter(
                     StaffPayroll.period_month == current_month,
                     StaffPayroll.period_year == current_year
@@ -6422,133 +9958,77 @@ Construction Management Team
                     'id': 3,
                     'title': f'Payroll Summary - {current_date.strftime("%B %Y")}',
                     'type': 'payroll',
-                    'description': f'{payroll_count} employees, ₦{total_payroll:,.2f} total',
+                    'description': f'{payroll_count} employees, ₦{total_payroll:,.2f} total' if payroll_count > 0 else 'No payroll data for this period',
                     'last_generated': current_date.strftime('%Y-%m-%d'),
                     'format': 'Excel',
                     'record_count': payroll_count,
                     'total_amount': total_payroll
                 })
             
-            # Employee Report
+            # Employee Report - Always show
                 active_employees = Employee.query.filter_by(status='Active').count() if hasattr(Employee, 'status') else Employee.query.count()
             
                 available_reports.append({
                     'id': 4,
                     'title': 'Employee Directory Report',
                     'type': 'employee',
-                    'description': f'{active_employees} active employees',
+                    'description': f'{active_employees} active employees' if active_employees > 0 else 'No employees found',
                     'last_generated': current_date.strftime('%Y-%m-%d'),
                     'format': 'PDF',
                     'record_count': active_employees
                 })
             
-            # Performance Report (if tasks exist)
+            # Performance Report - Always show
                 completed_tasks = Task.query.filter_by(status='Completed').count() if hasattr(Task, 'status') else 0
+                total_tasks = Task.query.count() if hasattr(Task, 'id') else 0
             
-                if completed_tasks > 0:
-                    available_reports.append({
-                        'id': 5,
-                        'title': 'Performance Review Report',
-                        'type': 'performance',
-                        'description': f'{completed_tasks} completed tasks analyzed',
-                        'last_generated': current_date.strftime('%Y-%m-%d'),
-                        'format': 'PDF',
-                        'record_count': completed_tasks
-                    })
+                available_reports.append({
+                    'id': 5,
+                    'title': 'Performance Review Report',
+                    'type': 'performance',
+                    'description': f'{completed_tasks} completed tasks analyzed' if completed_tasks > 0 else f'{total_tasks} tasks available',
+                    'last_generated': current_date.strftime('%Y-%m-%d'),
+                    'format': 'PDF',
+                    'record_count': completed_tasks if completed_tasks > 0 else total_tasks
+                })
             
             except Exception as report_error:
-                current_app.logger.warning(f"Error generating report data: {report_error}")
-            # Fallback to sample data
-                available_reports = [
-                    {
-                        'id': 1,
-                        'title': f'Attendance Report - {current_date.strftime("%B %Y")}',
-                        'type': 'attendance',
-                        'description': '150 attendance records',
-                        'last_generated': current_date.strftime('%Y-%m-%d'),
-                        'format': 'PDF',
-                        'record_count': 150
-                    },
-                    {
-                        'id': 2,
-                        'title': f'Leave Statistics - {current_date.strftime("%B %Y")}',
-                        'type': 'leave',
-                        'description': '25 leave applications',
-                        'last_generated': current_date.strftime('%Y-%m-%d'),
-                        'format': 'Excel',
-                        'record_count': 25
-                    },
-                    {
-                        'id': 3,
-                        'title': f'Payroll Summary - {current_date.strftime("%B %Y")}',
-                        'type': 'payroll',
-                        'description': '45 employees, ₦12,500,000.00 total',
-                        'last_generated': current_date.strftime('%Y-%m-%d'),
-                        'format': 'Excel',
-                        'record_count': 45,
-                        'total_amount': 12500000.00
-                    },
-                    {
-                        'id': 4,
-                        'title': 'Employee Directory Report',
-                        'type': 'employee',
-                        'description': '48 active employees',
-                        'last_generated': current_date.strftime('%Y-%m-%d'),
-                        'format': 'PDF',
-                        'record_count': 48
-                    }
-                ]
+                current_app.logger.error(f"Error generating report data: {report_error}", exc_info=True)
+                # If there's an error, show empty list or minimal data
+                if not available_reports:
+                    available_reports = []
         
-        # Generate recent downloads from session or user activity
+        # Get recent downloads from session
+            recent_downloads = []
             try:
-                user_id = session.get('user_id')
-                user_name = session.get('user_name', 'HR Manager')
-            
-                recent_downloads = [
-                    {
-                        'report_name': f'Attendance Report - {(current_date - timedelta(days=30)).strftime("%B %Y")}',
-                        'downloaded_at': (current_date - timedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S'),
-                        'downloaded_by': user_name,
-                        'file_size': '2.3 MB'
-                    },
-                    {
-                        'report_name': f'Payroll Summary - {(current_date - timedelta(days=30)).strftime("%B %Y")}',
-                        'downloaded_at': (current_date - timedelta(days=3)).strftime('%Y-%m-%d %H:%M:%S'),
-                        'downloaded_by': user_name,
-                        'file_size': '1.8 MB'
-                    },
-                    {
-                        'report_name': f'Leave Statistics - {(current_date - timedelta(days=60)).strftime("%B %Y")}',
-                        'downloaded_at': (current_date - timedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S'),
-                        'downloaded_by': user_name,
-                        'file_size': '856 KB'
-                    }
-                ]
-            except Exception:
+                if 'report_downloads' in session:
+                    recent_downloads = session.get('report_downloads', [])[-10:]  # Last 10 downloads
+            except Exception as e:
+                current_app.logger.warning(f"Error loading download history: {e}")
                 recent_downloads = []
         
-        # Calculate report statistics
+        # Calculate actual report statistics from database
             total_reports = len(available_reports)
             total_downloads = len(recent_downloads)
+            
+            # Calculate pending reports (reports requested but not yet generated)
+            pending_reports = session.get('pending_reports_count', 0)
+            
+            # Calculate storage used from actual report files
+            storage_used = calculate_reports_storage()
         
             report_stats = {
                 'total_reports': total_reports,
-                'pending_reports': 0,  # Would be calculated from a reports queue
+                'pending_reports': pending_reports,
                 'total_downloads': total_downloads,
-                'storage_used': '15.2 MB'  # Would be calculated from actual file storage
+                'storage_used': storage_used
             }
         
             report_data = {
                 'available_reports': available_reports,
                 'recent_downloads': recent_downloads,
                 'stats': report_stats,
-                'departments': [
-                    {'id': 1, 'name': 'All Departments'},
-                    {'id': 2, 'name': 'HR'},
-                    {'id': 3, 'name': 'Finance'},
-                    {'id': 4, 'name': 'Operations'},
-                    {'id': 5, 'name': 'Engineering'}
-                ]
+                'departments': get_departments_list()
             }
         
             return render_template('hr/reports/index.html', reports=report_data)
@@ -6557,6 +10037,58 @@ Construction Management Team
             current_app.logger.error(f"Reports error: {str(e)}", exc_info=True)
             flash("Error loading reports", "error")
             return render_template('error.html'), 500
+
+    def get_departments_list():
+        """Get list of unique departments from employees"""
+        try:
+            departments = db.session.query(Employee.department).distinct().filter(
+                Employee.department.isnot(None),
+                Employee.department != ''
+            ).all()
+            
+            dept_list = [{'id': '1', 'name': 'All Departments'}]
+            dept_list.extend([
+                {'id': str(idx + 2), 'name': dept[0]} 
+                for idx, dept in enumerate(departments)
+            ])
+            return dept_list
+        except Exception:
+            return [
+                {'id': '1', 'name': 'All Departments'},
+                {'id': '2', 'name': 'HR'},
+                {'id': '3', 'name': 'Finance'},
+                {'id': '4', 'name': 'Operations'},
+                {'id': '5', 'name': 'Engineering'}
+            ]
+
+    def calculate_reports_storage():
+        """Calculate storage used by generated reports"""
+        try:
+            import os
+            reports_dir = os.path.join(current_app.root_path, 'instance', 'reports')
+            
+            if not os.path.exists(reports_dir):
+                return '0 KB'
+            
+            total_size = 0
+            for dirpath, dirnames, filenames in os.walk(reports_dir):
+                for filename in filenames:
+                    filepath = os.path.join(dirpath, filename)
+                    if os.path.exists(filepath):
+                        total_size += os.path.getsize(filepath)
+            
+            # Convert to human-readable format
+            if total_size < 1024:
+                return f'{total_size} B'
+            elif total_size < 1024 * 1024:
+                return f'{total_size / 1024:.1f} KB'
+            elif total_size < 1024 * 1024 * 1024:
+                return f'{total_size / (1024 * 1024):.1f} MB'
+            else:
+                return f'{total_size / (1024 * 1024 * 1024):.1f} GB'
+        except Exception as e:
+            current_app.logger.warning(f"Error calculating storage: {e}")
+            return '0 KB'
 
     @app.route('/hr/analytics', endpoint='hr.analytics')
     @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
@@ -6606,10 +10138,10 @@ Construction Management Team
                         Attendance.status == 'Late'
                     ).count()
                 else:
-                # Fallback values if Attendance model doesn't have required fields
-                    present_count = 95 - i * 2
-                    absent_count = 5 + i
-                    late_count = 2 + i
+                    # No data available - use zeros
+                    present_count = 0
+                    absent_count = 0
+                    late_count = 0
             
                 attendance_trends['present'].append(present_count)
                 attendance_trends['absent'].append(absent_count)
@@ -6652,12 +10184,12 @@ Construction Management Team
                     'study': study_leaves
                 }
             else:
-            # Fallback values
+            # Fallback values - return empty if Employee or Leave models don't have required fields
                 leave_distribution = {
-                    'annual': 45,
-                    'sick': 15,
-                    'maternity': 2,
-                    'study': 3
+                    'annual': 0,
+                    'sick': 0,
+                    'maternity': 0,
+                    'study': 0
                 }
         
         # Calculate department statistics
@@ -6718,32 +10250,7 @@ Construction Management Team
         
         # Fallback department stats if no real data
             if not department_stats:
-                department_stats = [
-                    {
-                        'name': 'Engineering',
-                        'staff_count': 85,
-                        'attendance_rate': 96,
-                        'leave_usage': 12
-                    },
-                    {
-                        'name': 'Finance',
-                        'staff_count': 45,
-                        'attendance_rate': 98,
-                        'leave_usage': 8
-                    },
-                    {
-                        'name': 'HR',
-                        'staff_count': 12,
-                        'attendance_rate': 97,
-                        'leave_usage': 10
-                    },
-                    {
-                        'name': 'Operations',
-                        'staff_count': 65,
-                        'attendance_rate': 95,
-                        'leave_usage': 14
-                    }
-                ]
+                department_stats = []
         
         # Calculate performance metrics
             performance_metrics = {
@@ -6922,16 +10429,17 @@ Construction Management Team
             return report_data, total_records
         
         except Exception as e:
-            current_app.logger.warning(f"Attendance report generation error: {e}")
-        # Return sample data
+            current_app.logger.error(f"Attendance report generation error: {e}", exc_info=True)
+            # Return empty data on error
             return {
-                'total_records': 150,
-                'present_count': 140,
-                'absent_count': 8,
-                'late_count': 2,
-                'attendance_rate': 93.3,
-                'period': f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
-            }, 150
+                'total_records': 0,
+                'present_count': 0,
+                'absent_count': 0,
+                'late_count': 0,
+                'attendance_rate': 0,
+                'period': f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+                'error': str(e)
+            }, 0
 
     def generate_leave_report(start_date, end_date, department_id=None):
         """Generate leave report data"""
@@ -6964,13 +10472,14 @@ Construction Management Team
         except Exception as e:
             current_app.logger.warning(f"Leave report generation error: {e}")
             return {
-                'total_applications': 25,
-                'approved_count': 20,
-                'pending_count': 3,
-                'rejected_count': 2,
-                'approval_rate': 80.0,
-                'period': f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
-            }, 25
+                'total_applications': 0,
+                'approved_count': 0,
+                'pending_count': 0,
+                'rejected_count': 0,
+                'approval_rate': 0.0,
+                'period': f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+                'error': str(e)
+            }, 0
 
     def generate_payroll_report(start_date, end_date, department_id=None):
         """Generate payroll report data"""
@@ -7019,13 +10528,14 @@ Construction Management Team
         except Exception as e:
             current_app.logger.warning(f"Payroll report generation error: {e}")
             return {
-                'total_employees': 45,
-                'total_gross_pay': 15000000.00,
-                'total_deductions': 2500000.00,
-                'total_net_pay': 12500000.00,
-                'average_salary': 277777.78,
-                'period': f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
-            }, 45
+                'total_employees': 0,
+                'total_gross_pay': 0.00,
+                'total_deductions': 0.00,
+                'total_net_pay': 0.00,
+                'average_salary': 0.00,
+                'period': f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+                'error': str(e)
+            }, 0
 
     def generate_employee_report(department_id=None):
         """Generate employee report data"""
@@ -7065,12 +10575,13 @@ Construction Management Team
         except Exception as e:
             current_app.logger.warning(f"Employee report generation error: {e}")
             return {
-                'total_employees': 48,
-                'active_employees': 45,
-                'inactive_employees': 3,
-                'department_breakdown': {'HR': 8, 'Finance': 12, 'Operations': 15, 'Engineering': 13},
-                'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            }, 48
+                'total_employees': 0,
+                'active_employees': 0,
+                'inactive_employees': 0,
+                'department_breakdown': {},
+                'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'error': str(e)
+            }, 0
 
     def generate_performance_report(start_date, end_date, department_id=None):
         """Generate performance report data"""
@@ -7109,13 +10620,14 @@ Construction Management Team
         except Exception as e:
             current_app.logger.warning(f"Performance report generation error: {e}")
             return {
-                'total_tasks': 35,
-                'completed_tasks': 25,
-                'in_progress_tasks': 7,
-                'pending_tasks': 3,
-                'completion_rate': 71.4,
-                'period': f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}"
-            }, 35
+                'total_tasks': 0,
+                'completed_tasks': 0,
+                'in_progress_tasks': 0,
+                'pending_tasks': 0,
+                'completion_rate': 0.0,
+                'period': f"{start_date.strftime('%Y-%m-%d')} to {end_date.strftime('%Y-%m-%d')}",
+                'error': str(e)
+            }, 0
 
     def get_department_name(department_id):
         """Get department name by ID"""
@@ -7218,13 +10730,13 @@ Construction Management Team
                     total_records = Attendance.query.filter(
                         extract('month', Attendance.date) == current_month,
                         extract('year', Attendance.date) == current_year
-                    ).count() if hasattr(Attendance, 'date') else 150
+                    ).count() if hasattr(Attendance, 'date') else 0
                 
                     present_count = Attendance.query.filter(
                         extract('month', Attendance.date) == current_month,
                         extract('year', Attendance.date) == current_year,
                         Attendance.status == 'Present'
-                    ).count() if hasattr(Attendance, 'status') else 140
+                    ).count() if hasattr(Attendance, 'status') else 0
                 
                     absent_count = total_records - present_count
                     attendance_rate = (present_count / total_records * 100) if total_records > 0 else 0
@@ -7246,17 +10758,17 @@ Construction Management Team
                     }
                 
                 except Exception:
-                # Fallback data
+                # Fallback data - return empty report on error
                     report_details = {
                         'id': report_id,
                         'title': f'Attendance Report - {current_date.strftime("%B %Y")}',
                         'type': 'attendance',
                         'period': f'{current_date.strftime("%B %Y")}',
                         'summary': {
-                            'total_records': 150,
-                            'present_count': 140,
-                            'absent_count': 10,
-                            'attendance_rate': 93.3
+                            'total_records': 0,
+                            'present_count': 0,
+                            'absent_count': 0,
+                            'attendance_rate': 0.0
                         },
                         'details': 'Comprehensive attendance analysis showing daily attendance patterns, late arrivals, and overall presence statistics.',
                         'generated_at': current_date.strftime('%Y-%m-%d %H:%M:%S'),
@@ -7270,7 +10782,7 @@ Construction Management Team
                     leave_applications = Leave.query.filter(
                         extract('month', Leave.start_date) == current_date.month,
                         extract('year', Leave.start_date) == current_date.year
-                    ).count() if hasattr(Leave, 'start_date') else 25
+                    ).count() if hasattr(Leave, 'start_date') else 0
                 
                     report_details = {
                         'id': report_id,
@@ -7294,10 +10806,10 @@ Construction Management Team
                         'type': 'leave',
                         'period': f'{current_date.strftime("%B %Y")}',
                         'summary': {
-                            'total_applications': 25,
-                            'approved_count': 20,
-                            'pending_count': 3,
-                            'rejected_count': 2
+                            'total_applications': 0,
+                            'approved_count': 0,
+                            'pending_count': 0,
+                            'rejected_count': 0
                         },
                         'details': 'Detailed leave analysis including leave types, approval rates, and department-wise distribution.',
                         'generated_at': current_date.strftime('%Y-%m-%d %H:%M:%S'),
@@ -7311,12 +10823,12 @@ Construction Management Team
                     total_employees = StaffPayroll.query.filter(
                         StaffPayroll.period_month == current_date.month,
                         StaffPayroll.period_year == current_date.year
-                    ).count() if hasattr(StaffPayroll, 'period_month') else 45
+                    ).count() if hasattr(StaffPayroll, 'period_month') else 0
                 
                     total_payroll = db.session.query(func.sum(StaffPayroll.balance_salary)).filter(
                         StaffPayroll.period_month == current_date.month,
                         StaffPayroll.period_year == current_date.year
-                    ).scalar() or 12500000.00
+                    ).scalar() or 0.00
                 
                     report_details = {
                         'id': report_id,
@@ -7341,11 +10853,11 @@ Construction Management Team
                         'type': 'payroll',
                         'period': f'{current_date.strftime("%B %Y")}',
                         'summary': {
-                            'total_employees': 45,
-                            'total_gross_pay': 15000000.00,
-                            'total_deductions': 2500000.00,
-                            'total_net_pay': 12500000.00,
-                            'average_salary': 277777.78
+                            'total_employees': 0,
+                            'total_gross_pay': 0.00,
+                            'total_deductions': 0.00,
+                            'total_net_pay': 0.00,
+                            'average_salary': 0.00
                         },
                         'details': 'Complete payroll breakdown including gross salaries, deductions, taxes, and net pay distribution across all departments.',
                         'generated_at': current_date.strftime('%Y-%m-%d %H:%M:%S'),
@@ -7354,8 +10866,8 @@ Construction Management Team
                 
             elif report_id == 4:  # Employee Report
                 try:
-                    active_employees = Employee.query.filter_by(status='Active').count() if hasattr(Employee, 'status') else 48
-                    total_employees = Employee.query.count() if hasattr(Employee, 'status') else 51
+                    active_employees = Employee.query.filter_by(status='Active').count() if hasattr(Employee, 'status') else 0
+                    total_employees = Employee.query.count() if hasattr(Employee, 'status') else 0
                 
                     report_details = {
                         'id': report_id,
@@ -7379,10 +10891,10 @@ Construction Management Team
                         'type': 'employee',
                         'period': 'Current',
                         'summary': {
-                            'total_employees': 51,
-                            'active_employees': 48,
-                            'inactive_employees': 3,
-                            'departments': 4
+                            'total_employees': 0,
+                            'active_employees': 0,
+                            'inactive_employees': 0,
+                            'departments': 0
                         },
                         'details': 'Comprehensive employee directory with contact information, department assignments, roles, and employment status.',
                         'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
@@ -7411,10 +10923,18 @@ Construction Management Team
         
         # Get report details
             report_response = view_report_details(report_id)
-            if report_response[1] != 200:  # If error getting report details
-                return jsonify({'error': 'Report not found'}), 404
-        
-            report_data = report_response[0].get_json()['report']
+            
+            # Handle both tuple and direct response formats
+            if isinstance(report_response, tuple):
+                response_obj, status_code = report_response
+                if status_code != 200:
+                    return jsonify({'error': 'Report not found'}), 404
+                report_data = response_obj.get_json()['report']
+            else:
+                response_data = report_response.get_json()
+                if response_data.get('status') != 'success':
+                    return jsonify({'error': 'Report not found'}), 404
+                report_data = response_data['report']
         
         # Get sender information
             sender_name = session.get('user_name', 'HR Staff')
@@ -7675,7 +11195,7 @@ Construction Management Team
         # Update user record
             user.name = name
             user.email = email
-            user.updated_at = datetime.utcnow()
+            user.updated_at = datetime.now(timezone.utc)
         
         # Update corresponding employee record if exists
             employee = Employee.query.filter_by(email=user.email).first()
@@ -7686,7 +11206,7 @@ Construction Management Team
                 employee.name = name
                 employee.email = email
                 employee.phone = phone
-                employee.updated_at = datetime.utcnow()
+                employee.updated_at = datetime.now(timezone.utc)
         
             db.session.commit()
         
@@ -7704,11 +11224,95 @@ Construction Management Team
     @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
     def settings():
         try:
-            return render_template('hr/settings/index.html')
+            user_id = session.get('user_id')
+            if not user_id:
+                flash("Please log in to access settings", "error")
+                return redirect(url_for('login'))
+            
+            user = User.query.get_or_404(user_id)
+            return render_template('hr/settings/index.html', user=user)
         except Exception as e:
             current_app.logger.error(f"Settings error: {str(e)}")
             flash("Error loading settings", "error")
             return render_template('error.html'), 500
+
+    @app.route('/hr/settings/password', methods=['POST'], endpoint='hr.change_password')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
+    def change_password():
+        """Change user password"""
+        try:
+            user_id = session.get('user_id')
+            if not user_id:
+                return jsonify({'success': False, 'message': 'Please log in'}), 401
+            
+            user = User.query.get_or_404(user_id)
+            
+            current_password = request.form.get('current_password')
+            new_password = request.form.get('new_password')
+            confirm_password = request.form.get('confirm_password')
+            
+            # Validate inputs
+            if not all([current_password, new_password, confirm_password]):
+                flash("All password fields are required", "error")
+                return redirect(url_for('hr.settings'))
+            
+            # Verify current password
+            if not user.check_password(current_password):
+                flash("Current password is incorrect", "error")
+                return redirect(url_for('hr.settings'))
+            
+            # Check if new passwords match
+            if new_password != confirm_password:
+                flash("New passwords do not match", "error")
+                return redirect(url_for('hr.settings'))
+            
+            # Check password strength (minimum 8 characters)
+            if len(new_password) < 8:
+                flash("Password must be at least 8 characters long", "error")
+                return redirect(url_for('hr.settings'))
+            
+            # Update password
+            user.set_password(new_password)
+            user.updated_at = datetime.now(timezone.utc)
+            db.session.commit()
+            
+            current_app.logger.info(f"Password changed for user {user.name} (ID: {user.id})")
+            flash("Password changed successfully", "success")
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Password change error: {str(e)}", exc_info=True)
+            flash("Error changing password", "error")
+        
+        return redirect(url_for('hr.settings'))
+
+    @app.route('/hr/settings/preferences', methods=['POST'], endpoint='hr.update_preferences')
+    @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
+    def update_preferences():
+        """Update user preferences"""
+        try:
+            user_id = session.get('user_id')
+            if not user_id:
+                return jsonify({'success': False, 'message': 'Please log in'}), 401
+            
+            user = User.query.get_or_404(user_id)
+            
+            # Get form data
+            language = request.form.get('language', 'English')
+            timezone_pref = request.form.get('timezone', 'UTC (GMT+0)')
+            date_format = request.form.get('date_format', 'DD/MM/YYYY')
+            
+            # Note: These would typically be stored in a UserPreferences table
+            # For now, we'll just acknowledge the update
+            
+            current_app.logger.info(f"Preferences updated for user {user.name} (ID: {user.id})")
+            flash("Preferences updated successfully", "success")
+            
+        except Exception as e:
+            current_app.logger.error(f"Preference update error: {str(e)}", exc_info=True)
+            flash("Error updating preferences", "error")
+        
+        return redirect(url_for('hr.settings'))
 
 # Bulk import employees from payroll table (expects JSON list of dicts)
     @app.route('/hr/employee/import', methods=["POST"], endpoint='hr.import_employees')
@@ -7818,7 +11422,7 @@ Construction Management Team
                 amount=salary,
                 deductions=deductions,
                 status='Pending Approval',
-                created_at=datetime.utcnow()
+                created_at=datetime.now(timezone.utc)
             )
             db.session.add(payroll)
             payroll_records.append({
@@ -9140,7 +12744,7 @@ Construction Management Team
                     'type': 'expense',
                     'title': f"Expense: {expense.description[:50]}",
                     'department': 'Finance',
-                    'date': expense.expense_date.strftime('%Y-%m-%d') if expense.expense_date else 'N/A',
+                    'date': expense.date.strftime('%Y-%m-%d') if expense.date else 'N/A',
                     'status': 'Pending',
                     'details': {
                         'description': expense.description,
@@ -9216,7 +12820,7 @@ Construction Management Team
                     'type': 'expense',
                     'description': f'Expense claim: {expense.description[:40]}...',
                     'department': f'Finance - {employee_name}',
-                    'timestamp': expense.expense_date.strftime('%Y-%m-%d') if expense.expense_date else 'N/A',
+                    'timestamp': expense.date.strftime('%Y-%m-%d') if expense.date else 'N/A',
                     'priority': priority,
                     'details': {
                         'description': expense.description,
@@ -9764,8 +13368,8 @@ Construction Management Team
                     status=data.get('status', 'Planning'),
                     project_manager=data.get('project_manager', '').strip(),
                     budget=budget,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow(),
+                    created_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc),
                 # Enhanced fields
                     project_type=data.get('project_type', '').strip(),
                     priority=data.get('priority', 'Medium'),
@@ -9788,7 +13392,7 @@ Construction Management Team
                         category='Total Project Budget',
                         allocated_amount=budget,
                         spent_amount=0.0,
-                        created_at=datetime.utcnow()
+                        created_at=datetime.now(timezone.utc)
                     )
                     db.session.add(budget_entry)
                 
@@ -9799,7 +13403,7 @@ Construction Management Team
                             category='Contingency Fund',
                             allocated_amount=contingency_budget,
                             spent_amount=0.0,
-                            created_at=datetime.utcnow()
+                            created_at=datetime.now(timezone.utc)
                         )
                         db.session.add(contingency_entry)
                 
@@ -10126,7 +13730,7 @@ Construction Management Team
             asset_name = asset.name
         
             asset.status = 'Retired'
-            asset.retired_date = datetime.utcnow().date()
+            asset.retired_date = datetime.now(timezone.utc).date()
         
             db.session.commit()
         
@@ -11323,7 +14927,7 @@ Construction Management Team
         
             purchase_order.status = 'Approved'
             purchase_order.approved_by = session.get('user_id')
-            purchase_order.approval_date = datetime.utcnow()
+            purchase_order.approval_date = datetime.now(timezone.utc)
         
             db.session.commit()
         
@@ -12227,7 +15831,7 @@ Construction Management Team
                     project_id=project_id,
                     employee_id=employee_id,
                     role=role,
-                    assigned_at=datetime.utcnow(),
+                    assigned_at=datetime.now(timezone.utc),
                     assigned_by=current_user.id,
                     status='Active'
                 )
@@ -12272,7 +15876,7 @@ Construction Management Team
                     project_id=project_id,
                     staff_id=staff_id,
                     role=role,
-                    assigned_at=datetime.utcnow()
+                    assigned_at=datetime.now(timezone.utc)
                 )
             
                 db.session.add(assignment)
@@ -12909,7 +16513,7 @@ Construction Management Team
                     project.regulatory_requirements = data['regulatory_requirements']
             
             # Update the updated_at timestamp
-                project.updated_at = datetime.utcnow()
+                project.updated_at = datetime.now(timezone.utc)
             
             # Log activities for changes
                 if changes:
@@ -13548,7 +17152,7 @@ Construction Management Team
             else:
                 return jsonify({'success': False, 'message': f'Invalid field: {field}'}), 400
             
-            material_item.updated_at = datetime.utcnow()
+            material_item.updated_at = datetime.now(timezone.utc)
             
             # Log activity
             activity = ProjectActivity(
@@ -13856,7 +17460,7 @@ Construction Management Team
             activity_stats = {action_type: count for action_type, count in activity_types}
         
         # Recent activity summary (last 7 days)
-            week_ago = datetime.utcnow() - timedelta(days=7)
+            week_ago = datetime.now(timezone.utc) - timedelta(days=7)
             recent_count = ProjectActivity.query.filter(
                 ProjectActivity.project_id == project_id,
                 ProjectActivity.created_at >= week_ago
@@ -14655,7 +18259,7 @@ Construction Management Team
                 employee_id=employee_id,
                 project_id=project_id,
                 role=role,
-                assigned_at=datetime.utcnow(),
+                assigned_at=datetime.now(timezone.utc),
                 assigned_by=current_user.id
             )
         
@@ -14772,7 +18376,7 @@ Construction Management Team
             user = User.query.get_or_404(user_id)
             old_role = user.role
             user.role = new_role
-            user.updated_at = datetime.utcnow()
+            user.updated_at = datetime.now(timezone.utc)
         
             db.session.commit()
         
@@ -14810,7 +18414,7 @@ Construction Management Team
                 staff_id=user_id,
                 project_id=project_id,
                 role=role,
-                assigned_at=datetime.utcnow()
+                assigned_at=datetime.now(timezone.utc)
             )
         
             db.session.add(assignment)
@@ -14855,6 +18459,3052 @@ Construction Management Team
             flash('Error removing user from project', 'error')
     
         return redirect(url_for('admin.comprehensive_user_management'))
+
+
+    # ============================================================================
+    # OFFICE PROJECT MANAGER ENDPOINTS
+    # ============================================================================
+    # Role: Oversees overall execution of multiple construction projects from HQ
+    # Responsibilities: Approve plans/budgets, monitor progress, review submissions,
+    #                   coordinate departments, generate performance dashboards
+    # ============================================================================
+
+    @app.route('/office-pm/dashboard', endpoint='office_pm.dashboard')
+    @role_required([Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
+    def office_pm_dashboard():
+        """
+        Office Project Manager Dashboard - Comprehensive KPI and project overview
+        Shows all projects under management with key performance indicators
+        """
+        try:
+            from sqlalchemy import extract, func
+            from datetime import datetime, timedelta
+            
+            # Get all projects managed by this user or all projects if SUPER_HQ
+            if current_user.role == Roles.SUPER_HQ:
+                projects = Project.query.filter_by(status='Active').all()
+            else:
+                projects = Project.query.filter(
+                    (Project.project_manager == current_user.name) | 
+                    (Project.status == 'Active')
+                ).all()
+            
+            # Calculate KPIs for each project
+            project_kpis = []
+            for project in projects:
+                # Budget analysis
+                total_budget = project.budget or 0
+                # Get budget spent from Budget model
+                budgets = Budget.query.filter_by(project_id=project.id).all()
+                total_spent = sum(b.spent_amount or 0 for b in budgets)
+                budget_utilization = (total_spent / total_budget * 100) if total_budget > 0 else 0
+                
+                # Schedule performance
+                start_date = project.start_date
+                end_date = project.end_date
+                today = datetime.now().date()
+                
+                if start_date and end_date:
+                    total_days = (end_date - start_date).days
+                    elapsed_days = (today - start_date).days
+                    time_progress = (elapsed_days / total_days * 100) if total_days > 0 else 0
+                else:
+                    time_progress = 0
+                
+                # Task completion
+                milestones = Milestone.query.filter_by(project_id=project.id).all()
+                total_milestones = len(milestones)
+                completed_milestones = sum(1 for m in milestones if m.status == 'Completed')
+                milestone_completion = (completed_milestones / total_milestones * 100) if total_milestones > 0 else 0
+                
+                # Issues and risks - using DPR issues as open issues count
+                recent_dprs_with_issues = DailyProductionReport.query.filter(
+                    DailyProductionReport.project_id == project.id,
+                    DailyProductionReport.issues.isnot(None),
+                    DailyProductionReport.issues != ''
+                ).count()
+                open_issues = recent_dprs_with_issues
+                
+                # Count pending procurement requests as pending approvals
+                pending_approvals = ProcurementRequest.query.filter_by(
+                    project_id=project.id, 
+                    status='pending'
+                ).count()
+                
+                # Recent activity
+                recent_dprs = DailyProductionReport.query.filter_by(
+                    project_id=project.id
+                ).order_by(DailyProductionReport.report_date.desc()).limit(7).all()
+                
+                avg_daily_progress = 0
+                if recent_dprs:
+                    total_progress = sum(dpr.daily_progress or 0 for dpr in recent_dprs)
+                    avg_daily_progress = total_progress / len(recent_dprs)
+                
+                # Health status calculation
+                if budget_utilization > 100 or time_progress - milestone_completion > 20:
+                    health_status = 'critical'
+                    health_color = 'red'
+                elif budget_utilization > 85 or time_progress - milestone_completion > 10:
+                    health_status = 'warning'
+                    health_color = 'yellow'
+                else:
+                    health_status = 'good'
+                    health_color = 'green'
+                
+                project_kpis.append({
+                    'project': project,
+                    'budget_total': total_budget,
+                    'budget_spent': total_spent,
+                    'budget_remaining': total_budget - total_spent,
+                    'budget_utilization': round(budget_utilization, 1),
+                    'time_progress': round(time_progress, 1),
+                    'milestone_completion': round(milestone_completion, 1),
+                    'total_milestones': total_milestones,
+                    'completed_milestones': completed_milestones,
+                    'open_issues': open_issues,
+                    'pending_approvals': pending_approvals,
+                    'avg_daily_progress': round(avg_daily_progress, 1),
+                    'health_status': health_status,
+                    'health_color': health_color
+                })
+            
+            # Overall portfolio metrics
+            total_portfolio_budget = sum(p['budget_total'] for p in project_kpis)
+            total_portfolio_spent = sum(p['budget_spent'] for p in project_kpis)
+            avg_completion = sum(p['milestone_completion'] for p in project_kpis) / len(project_kpis) if project_kpis else 0
+            total_issues = sum(p['open_issues'] for p in project_kpis)
+            total_pending_approvals = sum(p['pending_approvals'] for p in project_kpis)
+            
+            # Pending submissions requiring approval
+            pending_budgets = Project.query.filter_by(
+                budget_status='Pending Approval'
+            ).count() if hasattr(Project, 'budget_status') else 0
+            
+            # Count pending procurement as variations
+            pending_variations = ProcurementRequest.query.filter_by(status='pending').count()
+            
+            # Recent communications
+            recent_communications = Audit.query.filter(
+                Audit.action.like('%communication%') | 
+                Audit.action.like('%message%')
+            ).order_by(Audit.timestamp.desc()).limit(10).all()
+            
+            return render_template('office_pm/dashboard.html',
+                project_kpis=project_kpis,
+                total_projects=len(projects),
+                total_portfolio_budget=total_portfolio_budget,
+                total_portfolio_spent=total_portfolio_spent,
+                avg_completion=round(avg_completion, 1),
+                total_issues=total_issues,
+                total_pending_approvals=total_pending_approvals,
+                pending_budgets=pending_budgets,
+                pending_variations=pending_variations,
+                recent_communications=recent_communications
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading Office PM dashboard: {str(e)}", exc_info=True)
+            flash('Error loading dashboard', 'error')
+            return redirect(url_for('main_home'))
+
+    @app.route('/office-pm/approvals', endpoint='office_pm.approvals')
+    @role_required([Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
+    def office_pm_approvals():
+        """
+        Centralized approval center for Office Project Manager
+        Includes budgets, schedules, variations, claims, change orders
+        """
+        try:
+            # Pending budget approvals
+            pending_budgets = Project.query.filter_by(
+                budget_status='Pending Approval'
+            ).all()
+            
+            # Pending payment requests
+            pending_payments = PaymentRequest.query.filter_by(
+                status='Pending'
+            ).order_by(PaymentRequest.request_date.desc()).all()
+            
+            # Pending variations - using procurement requests as proxy
+            pending_variations = []
+            
+            # Pending procurement requests
+            pending_procurement = ProcurementRequest.query.filter_by(
+                status='pending'
+            ).order_by(ProcurementRequest.created_at.desc()).all()
+            
+            # Pending project documents
+            pending_documents = Document.query.filter_by(
+                status='Pending Approval'
+            ).order_by(Document.uploaded_at.desc()).all()
+            
+            # Pending milestone approvals
+            pending_milestones = Milestone.query.filter_by(
+                status='Pending Approval'
+            ).order_by(Milestone.due_date).all()
+            
+            # Group by priority
+            high_priority = []
+            medium_priority = []
+            low_priority = []
+            
+            # Categorize by urgency
+            today = datetime.now().date()
+            
+            for payment in pending_payments:
+                days_pending = (today - payment.request_date.date()).days if payment.request_date else 0
+                priority = 'high' if days_pending > 7 or payment.amount > 1000000 else 'medium'
+                item = {
+                    'type': 'Payment Request',
+                    'id': payment.id,
+                    'description': f"Payment request for ₦{payment.amount:,.2f}",
+                    'project': payment.project.name if payment.project else 'N/A',
+                    'date': payment.request_date,
+                    'priority': priority,
+                    'amount': payment.amount
+                }
+                if priority == 'high':
+                    high_priority.append(item)
+                else:
+                    medium_priority.append(item)
+            
+            for variation in pending_variations:
+                days_pending = (today - variation.created_at.date()).days
+                priority = 'high' if days_pending > 5 else 'medium'
+                item = {
+                    'type': variation.query_type,
+                    'id': variation.id,
+                    'description': variation.subject,
+                    'project': variation.project.name if variation.project else 'N/A',
+                    'date': variation.created_at,
+                    'priority': priority
+                }
+                if priority == 'high':
+                    high_priority.append(item)
+                else:
+                    medium_priority.append(item)
+            
+            for procurement in pending_procurement:
+                days_pending = (today - procurement.request_date.date()).days if procurement.request_date else 0
+                priority = 'high' if days_pending > 3 or procurement.estimated_cost > 500000 else 'low'
+                item = {
+                    'type': 'Procurement',
+                    'id': procurement.id,
+                    'description': f"{procurement.item_description}",
+                    'project': procurement.project.name if procurement.project else 'N/A',
+                    'date': procurement.request_date,
+                    'priority': priority,
+                    'amount': procurement.estimated_cost
+                }
+                if priority == 'high':
+                    high_priority.append(item)
+                else:
+                    low_priority.append(item)
+            
+            return render_template('office_pm/approvals.html',
+                high_priority=sorted(high_priority, key=lambda x: x['date'], reverse=True),
+                medium_priority=sorted(medium_priority, key=lambda x: x['date'], reverse=True),
+                low_priority=sorted(low_priority, key=lambda x: x['date'], reverse=True),
+                pending_budgets=pending_budgets,
+                pending_documents=pending_documents,
+                pending_milestones=pending_milestones,
+                total_pending=len(high_priority) + len(medium_priority) + len(low_priority)
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading approvals: {str(e)}", exc_info=True)
+            flash('Error loading approvals', 'error')
+            return redirect(url_for('office_pm.dashboard'))
+
+    @app.route('/office-pm/approve/<string:item_type>/<int:item_id>', methods=['POST'], endpoint='office_pm.approve_item')
+    @role_required([Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
+    def office_pm_approve_item(item_type, item_id):
+        """
+        Approve various types of submissions
+        Types: budget, payment, variation, procurement, document, milestone
+        """
+        try:
+            data = request.get_json() or {}
+            comments = data.get('comments', '').strip()
+            approved = data.get('approved', True)
+            
+            # Process based on item type
+            if item_type == 'payment':
+                payment = PaymentRequest.query.get_or_404(item_id)
+                payment.status = 'Approved' if approved else 'Rejected'
+                payment.approved_by = current_user.username
+                payment.approval_date = datetime.now()
+                
+                # Create audit log
+                Audit.log_action(
+                    user_id=current_user.id,
+                    action=f"{'Approved' if approved else 'Rejected'} payment request #{payment.id}",
+                    details=f"Amount: ₦{payment.amount:,.2f}. Comments: {comments}"
+                )
+                
+                message = f"Payment request {'approved' if approved else 'rejected'} successfully"
+                
+            elif item_type == 'variation':
+                variation = Query.query.get_or_404(item_id)
+                variation.status = 'Approved' if approved else 'Rejected'
+                variation.resolved_by = current_user.username
+                variation.resolved_at = datetime.now()
+                variation.resolution = comments
+                
+                Audit.log_action(
+                    user_id=current_user.id,
+                    action=f"{'Approved' if approved else 'Rejected'} {variation.query_type} #{variation.id}",
+                    details=f"Subject: {variation.subject}. Comments: {comments}"
+                )
+                
+                message = f"{variation.query_type} {'approved' if approved else 'rejected'} successfully"
+                
+            elif item_type == 'procurement':
+                procurement = ProcurementRequest.query.get_or_404(item_id)
+                procurement.approval_status = 'Approved' if approved else 'Rejected'
+                procurement.approved_by = current_user.username
+                procurement.approval_date = datetime.now()
+                procurement.approval_notes = comments
+                
+                Audit.log_action(
+                    user_id=current_user.id,
+                    action=f"{'Approved' if approved else 'Rejected'} procurement request #{procurement.id}",
+                    details=f"Item: {procurement.item_description}. Cost: ₦{procurement.estimated_cost:,.2f}"
+                )
+                
+                message = f"Procurement request {'approved' if approved else 'rejected'} successfully"
+                
+            elif item_type == 'document':
+                document = Document.query.get_or_404(item_id)
+                document.status = 'Approved' if approved else 'Rejected'
+                document.reviewed_by = current_user.username
+                document.review_date = datetime.now()
+                document.review_comments = comments
+                
+                Audit.log_action(
+                    user_id=current_user.id,
+                    action=f"{'Approved' if approved else 'Rejected'} document #{document.id}",
+                    details=f"Document: {document.name}. Comments: {comments}"
+                )
+                
+                message = f"Document {'approved' if approved else 'rejected'} successfully"
+                
+            elif item_type == 'milestone':
+                milestone = Milestone.query.get_or_404(item_id)
+                milestone.status = 'Approved' if approved else 'Rejected'
+                milestone.approved_by = current_user.username
+                milestone.approval_date = datetime.now()
+                
+                Audit.log_action(
+                    user_id=current_user.id,
+                    action=f"{'Approved' if approved else 'Rejected'} milestone #{milestone.id}",
+                    details=f"Milestone: {milestone.name}. Comments: {comments}"
+                )
+                
+                message = f"Milestone {'approved' if approved else 'rejected'} successfully"
+                
+            elif item_type == 'budget':
+                project = Project.query.get_or_404(item_id)
+                project.budget_status = 'Approved' if approved else 'Rejected'
+                project.budget_approved_by = current_user.username
+                project.budget_approval_date = datetime.now()
+                
+                Audit.log_action(
+                    user_id=current_user.id,
+                    action=f"{'Approved' if approved else 'Rejected'} budget for project {project.name}",
+                    details=f"Budget: ₦{project.budget:,.2f}. Comments: {comments}"
+                )
+                
+                message = f"Project budget {'approved' if approved else 'rejected'} successfully"
+            
+            else:
+                return jsonify({'success': False, 'message': 'Invalid item type'}), 400
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': message,
+                'approved': approved
+            })
+            
+        except Exception as e:
+            current_app.logger.error(f"Error approving {item_type}: {str(e)}", exc_info=True)
+            db.session.rollback()
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/office-pm/progress-reports', endpoint='office_pm.progress_reports')
+    @role_required([Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
+    def office_pm_progress_reports():
+        """
+        View and monitor progress reports from all site project managers
+        Includes DPRs, weekly reports, and milestone updates
+        """
+        try:
+            from sqlalchemy import extract
+            
+            # Get filter parameters
+            project_id = request.args.get('project_id', type=int)
+            report_type = request.args.get('type', 'all')
+            date_range = request.args.get('range', '30')  # days
+            
+            # Calculate date range
+            end_date = datetime.now()
+            start_date = end_date - timedelta(days=int(date_range))
+            
+            # Get projects
+            if project_id:
+                projects = [Project.query.get_or_404(project_id)]
+            else:
+                if current_user.role == Roles.SUPER_HQ:
+                    projects = Project.query.filter_by(status='Active').all()
+                else:
+                    projects = Project.query.filter(
+                        (Project.project_manager == current_user.name) |
+                        (Project.status == 'Active')
+                    ).all()
+            
+            # Get daily production reports
+            dprs = DailyProductionReport.query.filter(
+                DailyProductionReport.report_date.between(start_date, end_date)
+            ).order_by(DailyProductionReport.report_date.desc()).all()
+            
+            # Filter by project if needed
+            if project_id:
+                dprs = [dpr for dpr in dprs if dpr.project_id == project_id]
+            
+            # Get weekly/monthly reports
+            reports = Report.query.filter(
+                Report.report_date.between(start_date, end_date)
+            ).order_by(Report.report_date.desc()).all()
+            
+            if project_id:
+                reports = [r for r in reports if r.project_id == project_id]
+            
+            # Get milestone updates
+            milestone_updates = Milestone.query.filter(
+                Milestone.updated_at.between(start_date, end_date)
+            ).order_by(Milestone.updated_at.desc()).all()
+            
+            if project_id:
+                milestone_updates = [m for m in milestone_updates if m.project_id == project_id]
+            
+            # Analyze progress trends
+            progress_data = {}
+            for project in projects:
+                project_dprs = [dpr for dpr in dprs if dpr.project_id == project.id]
+                
+                if project_dprs:
+                    dates = [dpr.report_date.strftime('%Y-%m-%d') for dpr in project_dprs]
+                    progress = [dpr.daily_progress or 0 for dpr in project_dprs]
+                    
+                    progress_data[project.id] = {
+                        'project_name': project.name,
+                        'dates': dates[::-1],  # Reverse for chronological order
+                        'progress': progress[::-1],
+                        'avg_progress': sum(progress) / len(progress) if progress else 0
+                    }
+            
+            return render_template('office_pm/progress_reports.html',
+                dprs=dprs,
+                reports=reports,
+                milestone_updates=milestone_updates,
+                projects=projects,
+                selected_project=project_id,
+                progress_data=progress_data,
+                date_range=date_range
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading progress reports: {str(e)}", exc_info=True)
+            flash('Error loading progress reports', 'error')
+            return redirect(url_for('office_pm.dashboard'))
+
+    @app.route('/office-pm/communications', endpoint='office_pm.communications')
+    @role_required([Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
+    def office_pm_communications():
+        """
+        Communication center for Office PM
+        View and manage communications with field teams, departments, and stakeholders
+        """
+        try:
+            # Get communication logs
+            project_id = request.args.get('project_id', type=int)
+            comm_type = request.args.get('type', 'all')
+            
+            # Base query for audit logs related to communications
+            query = Audit.query.filter(
+                Audit.action.like('%message%') |
+                Audit.action.like('%communication%') |
+                Audit.action.like('%email%') |
+                Audit.action.like('%notification%')
+            ).order_by(Audit.timestamp.desc())
+            
+            communications = query.limit(100).all()
+            
+            # Get issues from DPRs instead of Query model
+            if project_id:
+                dprs_with_issues = DailyProductionReport.query.filter(
+                    DailyProductionReport.project_id == project_id,
+                    DailyProductionReport.issues.isnot(None),
+                    DailyProductionReport.issues != ''
+                ).order_by(DailyProductionReport.report_date.desc()).limit(50).all()
+            else:
+                dprs_with_issues = DailyProductionReport.query.filter(
+                    DailyProductionReport.issues.isnot(None),
+                    DailyProductionReport.issues != ''
+                ).order_by(DailyProductionReport.report_date.desc()).limit(50).all()
+            
+            # Convert DPRs to issue format
+            issues = [{
+                'id': dpr.id,
+                'subject': f"Issue - {dpr.project.name if dpr.project else 'Unknown'}",
+                'description': dpr.issues,
+                'status': 'Open',
+                'project': dpr.project.name if dpr.project else 'Unknown',
+                'date': dpr.report_date
+            } for dpr in dprs_with_issues]
+            
+            # Get queries for actual queries (employee queries not project-specific)
+            queries = Query.query.order_by(Query.submitted_at.desc()).limit(20).all() if hasattr(Query, 'submitted_at') else []
+            
+            # Get projects for filtering
+            projects = Project.query.filter_by(status='Active').all()
+            
+            # Count by type
+            comm_stats = {
+                'total': len(communications),
+                'today': sum(1 for c in communications if c.timestamp.date() == datetime.now().date()),
+                'open_issues': sum(1 for i in issues if i.status == 'Open'),
+                'pending_responses': sum(1 for i in issues if i.status == 'Pending')
+            }
+            
+            return render_template('office_pm/communications.html',
+                communications=communications,
+                issues=issues,
+                projects=projects,
+                selected_project=project_id,
+                comm_stats=comm_stats
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading communications: {str(e)}", exc_info=True)
+            flash('Error loading communications', 'error')
+            return redirect(url_for('office_pm.dashboard'))
+
+    @app.route('/office-pm/send-message', methods=['POST'], endpoint='office_pm.send_message')
+    @role_required([Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
+    def office_pm_send_message():
+        """
+        Send message to project team or department
+        """
+        try:
+            data = request.get_json()
+            recipient_type = data.get('recipient_type')  # 'project', 'department', 'user'
+            recipient_id = data.get('recipient_id')
+            subject = data.get('subject', '').strip()
+            message = data.get('message', '').strip()
+            priority = data.get('priority', 'normal')
+            
+            if not message:
+                return jsonify({'success': False, 'message': 'Message cannot be empty'}), 400
+            
+            # Create query/issue for tracking
+            new_query = Query(
+                project_id=recipient_id if recipient_type == 'project' else None,
+                query_type='Communication',
+                subject=subject or 'Message from Office PM',
+                description=message,
+                raised_by=current_user.username,
+                status='Sent',
+                priority=priority
+            )
+            
+            db.session.add(new_query)
+            
+            # Log the communication
+            Audit.log_action(
+                user_id=current_user.id,
+                action=f"Sent message: {subject}",
+                details=f"To: {recipient_type} {recipient_id}. Priority: {priority}"
+            )
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Message sent successfully',
+                'query_id': new_query.id
+            })
+            
+        except Exception as e:
+            current_app.logger.error(f"Error sending message: {str(e)}", exc_info=True)
+            db.session.rollback()
+            return jsonify({'success': False, 'message': str(e)}), 500
+
+    @app.route('/office-pm/performance-analytics', endpoint='office_pm.performance_analytics')
+    @role_required([Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
+    def office_pm_performance_analytics():
+        """
+        Advanced performance analytics and dashboards
+        Portfolio-wide insights, trends, and predictive analytics
+        """
+        try:
+            from sqlalchemy import extract, func
+            
+            # Get all active projects
+            if current_user.role == Roles.SUPER_HQ:
+                projects = Project.query.filter_by(status='Active').all()
+            else:
+                projects = Project.query.filter(
+                    Project.project_manager == current_user.name
+                ).all()
+            
+            # Portfolio financial metrics
+            total_portfolio_value = sum(p.budget or 0 for p in projects)
+            
+            # Get all expenses from Budget model
+            portfolio_budgets = []
+            for project in projects:
+                budgets = Budget.query.filter_by(project_id=project.id).all()
+                portfolio_budgets.extend(budgets)
+            
+            total_spent = sum(b.spent_amount or 0 for b in portfolio_budgets)
+            
+            # Schedule performance metrics
+            on_schedule_count = 0
+            delayed_count = 0
+            ahead_count = 0
+            
+            today = datetime.now().date()
+            
+            for project in projects:
+                if project.start_date and project.end_date:
+                    total_days = (project.end_date - project.start_date).days
+                    elapsed_days = (today - project.start_date).days
+                    time_progress = (elapsed_days / total_days * 100) if total_days > 0 else 0
+                    
+                    # Get completion percentage
+                    milestones = Milestone.query.filter_by(project_id=project.id).all()
+                    if milestones:
+                        completed = sum(1 for m in milestones if m.status == 'Completed')
+                        completion = (completed / len(milestones) * 100)
+                        
+                        variance = completion - time_progress
+                        if variance >= 5:
+                            ahead_count += 1
+                        elif variance <= -5:
+                            delayed_count += 1
+                        else:
+                            on_schedule_count += 1
+            
+            # Quality metrics - count issues from DPRs
+            dprs_with_issues_all = DailyProductionReport.query.filter(
+                DailyProductionReport.project_id.in_([p.id for p in projects]),
+                DailyProductionReport.issues.isnot(None),
+                DailyProductionReport.issues != ''
+            ).all()
+            
+            total_issues = len(dprs_with_issues_all)
+            
+            # All DPR issues are considered "open" unless resolved field exists
+            open_issues = total_issues  # Simplified: all issues are open
+            
+            # Team performance
+            dprs_last_30_days = DailyProductionReport.query.filter(
+                DailyProductionReport.project_id.in_([p.id for p in projects]),
+                DailyProductionReport.report_date >= datetime.now() - timedelta(days=30)
+            ).all()
+            
+            avg_productivity = sum(dpr.daily_progress or 0 for dpr in dprs_last_30_days) / len(dprs_last_30_days) if dprs_last_30_days else 0
+            
+            # Trend data for charts
+            months = []
+            budget_data = []
+            actual_data = []
+            
+            for i in range(6):
+                month_date = datetime.now() - timedelta(days=30*i)
+                month_name = month_date.strftime('%b %Y')
+                months.insert(0, month_name)
+                
+                # Calculate expenses for that month
+                month_start = month_date.replace(day=1)
+                next_month = month_start + timedelta(days=32)
+                month_end = next_month.replace(day=1) - timedelta(days=1)
+                
+                # Calculate spending for that month from budgets
+                month_expenses = sum(
+                    b.spent_amount or 0 for b in portfolio_budgets 
+                    if b.created_at and month_start <= b.created_at.date() <= month_end
+                )
+                
+                actual_data.insert(0, round(month_expenses, 2))
+                
+                # Estimated budget for the month (total budget / project months)
+                estimated_monthly = total_portfolio_value / 12  # Simplified
+                budget_data.insert(0, round(estimated_monthly, 2))
+            
+            return render_template('office_pm/performance_analytics.html',
+                projects=projects,
+                total_projects=len(projects),
+                total_portfolio_value=total_portfolio_value,
+                total_spent=total_spent,
+                budget_remaining=total_portfolio_value - total_spent,
+                utilization_percentage=round((total_spent / total_portfolio_value * 100) if total_portfolio_value > 0 else 0, 1),
+                on_schedule_count=on_schedule_count,
+                delayed_count=delayed_count,
+                ahead_count=ahead_count,
+                total_issues=total_issues,
+                open_issues=open_issues,
+                avg_productivity=round(avg_productivity, 1),
+                chart_months=months,
+                chart_budget_data=budget_data,
+                chart_actual_data=actual_data
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading performance analytics: {str(e)}", exc_info=True)
+            flash('Error loading analytics', 'error')
+            return redirect(url_for('office_pm.dashboard'))
+
+    
+    @app.route('/project/<int:project_id>')
+    @login_required
+    @role_required(['PROJECT_MANAGER', 'SUPER_HQ'])
+    def project_details(project_id):
+        """View detailed information about a specific project"""
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Project metrics
+            milestones = Milestone.query.filter_by(project_id=project.id).all()
+            completed_milestones = [m for m in milestones if m.status == 'Completed']
+            in_progress_milestones = [m for m in milestones if m.status == 'In Progress']
+            pending_milestones = [m for m in milestones if m.status == 'Pending']
+            
+            # Financial data
+            # Financial data - use Budget model
+            budgets = Budget.query.filter_by(project_id=project.id).all()
+            total_spent = sum(b.spent_amount or 0 for b in budgets)
+            budget_remaining = (project.budget or 0) - total_spent
+            
+            # Use procurement requests as "payment requests" for project
+            procurement_requests = ProcurementRequest.query.filter_by(project_id=project.id).all()
+            pending_payments = [pr for pr in procurement_requests if pr.status == 'pending']
+            approved_payments = [pr for pr in procurement_requests if pr.status == 'approved']
+            payment_requests = procurement_requests  # For template compatibility
+            
+            # Procurement
+            pending_procurement = pending_payments  # Same as pending payments
+            
+            # Recent DPRs
+            recent_dprs = DailyProductionReport.query.filter_by(
+                project_id=project.id
+            ).order_by(DailyProductionReport.report_date.desc()).limit(10).all()
+            
+            # Project documents
+            documents = Document.query.filter_by(project_id=project.id).all()
+            
+            # Issues from DPRs
+            dprs_with_issues = DailyProductionReport.query.filter(
+                DailyProductionReport.project_id == project.id,
+                DailyProductionReport.issues.isnot(None),
+                DailyProductionReport.issues != ''
+            ).all()
+            issues = [{'subject': f"DPR Issue - {dpr.report_date.strftime('%Y-%m-%d')}", 
+                      'description': dpr.issues, 
+                      'status': 'Open'} for dpr in dprs_with_issues]
+            open_issues = issues  # All DPR issues are considered open
+            
+            # Schedule analysis
+            if project.start_date and project.end_date:
+                total_days = (project.end_date - project.start_date).days
+                elapsed_days = (datetime.now().date() - project.start_date).days
+                time_progress = (elapsed_days / total_days * 100) if total_days > 0 else 0
+                
+                completion = (len(completed_milestones) / len(milestones) * 100) if milestones else 0
+                schedule_variance = completion - time_progress
+                
+                days_remaining = (project.end_date - datetime.now().date()).days
+            else:
+                time_progress = 0
+                completion = 0
+                schedule_variance = 0
+                days_remaining = 0
+            
+            # Health status
+            if schedule_variance >= 0 and budget_remaining >= 0:
+                health_status = 'good'
+            elif schedule_variance < -10 or budget_remaining < 0:
+                health_status = 'critical'
+            else:
+                health_status = 'warning'
+            
+            return render_template('office_pm/project_details.html',
+                project=project,
+                milestones=milestones,
+                completed_milestones=completed_milestones,
+                in_progress_milestones=in_progress_milestones,
+                pending_milestones=pending_milestones,
+                budgets=budgets,
+                total_spent=total_spent,
+                budget_remaining=budget_remaining,
+                payment_requests=payment_requests,
+                pending_payments=pending_payments,
+                approved_payments=approved_payments,
+                procurement_requests=procurement_requests,
+                pending_procurement=pending_procurement,
+                recent_dprs=recent_dprs,
+                documents=documents,
+                issues=issues,
+                open_issues=open_issues,
+                time_progress=round(time_progress, 1),
+                completion=round(completion, 1),
+                schedule_variance=round(schedule_variance, 1),
+                days_remaining=days_remaining,
+                health_status=health_status
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading project details: {str(e)}", exc_info=True)
+            flash('Error loading project details', 'error')
+            return redirect(url_for('office_pm.dashboard'))
+    
+    
+    @app.route('/project/<int:project_id>/staff')
+    @login_required
+    @role_required(['PROJECT_MANAGER', 'SUPER_HQ'])
+    def project_staff(project_id):
+        """View staff assigned to a project"""
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get staff assignments
+            from models import EmployeeAssignment, Employee
+            
+            assignments = EmployeeAssignment.query.filter_by(
+                project_id=project.id,
+                status='Active'
+            ).all()
+            
+            staff_list = []
+            for assignment in assignments:
+                employee = Employee.query.get(assignment.employee_id)
+                if employee:
+                    staff_list.append({
+                        'id': employee.id,
+                        'name': f"{employee.first_name} {employee.last_name}",
+                        'staff_code': employee.staff_code,
+                        'position': assignment.role or employee.position,
+                        'assignment_date': assignment.start_date,
+                        'department': employee.department,
+                        'contact': employee.phone_number,
+                        'email': employee.email,
+                        'status': assignment.status
+                    })
+            
+            # Get attendance/productivity metrics
+            total_staff = len(staff_list)
+            
+            # Recent DPRs for labor count
+            recent_dpr = DailyProductionReport.query.filter_by(
+                project_id=project.id
+            ).order_by(DailyProductionReport.report_date.desc()).first()
+            
+            current_onsite = recent_dpr.labor_count if recent_dpr else 0
+            
+            return render_template('office_pm/project_staff.html',
+                project=project,
+                staff_list=staff_list,
+                total_staff=total_staff,
+                current_onsite=current_onsite
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading project staff: {str(e)}", exc_info=True)
+            flash('Error loading project staff', 'error')
+            return redirect(url_for('office_pm.project_details', project_id=project_id))
+    
+    
+    @app.route('/project/<int:project_id>/documents')
+    @login_required
+    @role_required(['PROJECT_MANAGER', 'SUPER_HQ'])
+    def project_documents(project_id):
+        """View and manage project documents"""
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get all project documents
+            documents = Document.query.filter_by(project_id=project.id).order_by(
+                Document.upload_date.desc()
+            ).all()
+            
+            # Categorize documents
+            doc_categories = {
+                'contracts': [],
+                'drawings': [],
+                'permits': [],
+                'reports': [],
+                'photos': [],
+                'other': []
+            }
+            
+            for doc in documents:
+                category = doc.document_type.lower() if doc.document_type else 'other'
+                if category in doc_categories:
+                    doc_categories[category].append(doc)
+                else:
+                    doc_categories['other'].append(doc)
+            
+            # Document statistics
+            total_documents = len(documents)
+            recent_uploads = [d for d in documents if d.upload_date and 
+                            (datetime.now() - d.upload_date).days <= 7]
+            
+            return render_template('office_pm/project_documents.html',
+                project=project,
+                documents=documents,
+                doc_categories=doc_categories,
+                total_documents=total_documents,
+                recent_uploads=len(recent_uploads)
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading project documents: {str(e)}", exc_info=True)
+            flash('Error loading project documents', 'error')
+            return redirect(url_for('office_pm.project_details', project_id=project_id))
+    
+    
+    @app.route('/project/<int:project_id>/documents/upload', methods=['POST'])
+    @login_required
+    @role_required(['PROJECT_MANAGER', 'SUPER_HQ'])
+    def upload_project_document(project_id):
+        """Upload a document to a project"""
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            if 'document' not in request.files:
+                return jsonify({'success': False, 'message': 'No file uploaded'})
+            
+            file = request.files['document']
+            if file.filename == '':
+                return jsonify({'success': False, 'message': 'No file selected'})
+            
+            document_type = request.form.get('document_type', 'Other')
+            description = request.form.get('description', '')
+            
+            # Save file
+            import os
+            from werkzeug.utils import secure_filename
+            
+            filename = secure_filename(file.filename)
+            upload_folder = os.path.join('uploads', 'projects', str(project.id), 'documents')
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            # Add timestamp to filename to avoid duplicates
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            name, ext = os.path.splitext(filename)
+            new_filename = f"{name}_{timestamp}{ext}"
+            
+            file_path = os.path.join(upload_folder, new_filename)
+            file.save(file_path)
+            
+            # Create document record
+            document = Document(
+                project_id=project.id,
+                document_type=document_type,
+                file_name=new_filename,
+                file_path=file_path,
+                description=description,
+                uploaded_by=current_user.id,
+                upload_date=datetime.now()
+            )
+            
+            db.session.add(document)
+            
+            # Add audit log
+            audit = Audit(
+                user_id=current_user.id,
+                action='upload_document',
+                table_name='documents',
+                record_id=None,
+                changes=f"Uploaded document: {new_filename} to {project.name}",
+                timestamp=datetime.now()
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            
+            return jsonify({
+                'success': True, 
+                'message': 'Document uploaded successfully',
+                'document_id': document.id
+            })
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error uploading document: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'message': str(e)})
+    
+    
+    @app.route('/project/<int:project_id>/daily-reports')
+    @login_required
+    @role_required(['PROJECT_MANAGER', 'SUPER_HQ'])
+    def project_daily_reports(project_id):
+        """View daily production reports for a project"""
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get date filter
+            filter_date = request.args.get('date')
+            if filter_date:
+                filter_date = datetime.strptime(filter_date, '%Y-%m-%d').date()
+            else:
+                filter_date = datetime.now().date()
+            
+            # Get DPRs
+            dprs = DailyProductionReport.query.filter_by(
+                project_id=project.id
+            ).order_by(DailyProductionReport.report_date.desc()).all()
+            
+            # Filter by date if specified
+            if filter_date:
+                dprs = [dpr for dpr in dprs if dpr.report_date.date() == filter_date]
+            
+            # Calculate metrics
+            total_reports = len(DailyProductionReport.query.filter_by(project_id=project.id).all())
+            
+            if dprs:
+                avg_productivity = sum(dpr.daily_progress or 0 for dpr in dprs) / len(dprs)
+                avg_labor = sum(dpr.labor_count or 0 for dpr in dprs) / len(dprs)
+            else:
+                avg_productivity = 0
+                avg_labor = 0
+            
+            # Recent 7 days productivity trend
+            trend_data = []
+            for i in range(7):
+                day = datetime.now().date() - timedelta(days=i)
+                day_dprs = [dpr for dpr in DailyProductionReport.query.filter_by(
+                    project_id=project.id
+                ).all() if dpr.report_date.date() == day]
+                
+                if day_dprs:
+                    avg = sum(dpr.daily_progress or 0 for dpr in day_dprs) / len(day_dprs)
+                else:
+                    avg = 0
+                
+                trend_data.insert(0, {
+                    'date': day.strftime('%b %d'),
+                    'productivity': round(avg, 1)
+                })
+            
+            return render_template('office_pm/project_daily_reports.html',
+                project=project,
+                dprs=dprs,
+                filter_date=filter_date,
+                total_reports=total_reports,
+                avg_productivity=round(avg_productivity, 1),
+                avg_labor=round(avg_labor, 1),
+                trend_data=trend_data
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading daily reports: {str(e)}", exc_info=True)
+            flash('Error loading daily reports', 'error')
+            return redirect(url_for('office_pm.project_details', project_id=project_id))
+    
+    
+    @app.route('/reports/create')
+    @login_required
+    @role_required(['PROJECT_MANAGER', 'SUPER_HQ'])
+    def create_report():
+        """Create custom reports"""
+        try:
+            projects = Project.query.all()
+            
+            return render_template('office_pm/create_report.html',
+                projects=projects
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading create report page: {str(e)}", exc_info=True)
+            flash('Error loading page', 'error')
+            return redirect(url_for('office_pm.dashboard'))
+    
+    
+    @app.route('/reports/generate', methods=['POST'])
+    @login_required
+    @role_required(['PROJECT_MANAGER', 'SUPER_HQ'])
+    def generate_report():
+        """Generate custom report based on criteria"""
+        try:
+            report_type = request.form.get('report_type')
+            project_ids = request.form.getlist('project_ids')
+            start_date = request.form.get('start_date')
+            end_date = request.form.get('end_date')
+            
+            if start_date:
+                start_date = datetime.strptime(start_date, '%Y-%m-%d')
+            if end_date:
+                end_date = datetime.strptime(end_date, '%Y-%m-%d')
+            
+            report_data = {}
+            
+            if report_type == 'financial':
+                # Financial report - use Budget model for project expenses
+                projects = Project.query.filter(Project.id.in_(project_ids)).all() if project_ids else Project.query.all()
+                
+                report_data['projects'] = []
+                for project in projects:
+                    # Get budgets for this project
+                    budgets = Budget.query.filter_by(project_id=project.id)
+                    if start_date:
+                        budgets = budgets.filter(Budget.created_at >= start_date)
+                    if end_date:
+                        budgets = budgets.filter(Budget.created_at <= end_date)
+                    
+                    budgets = budgets.all()
+                    total_spent = sum(b.spent_amount or 0 for b in budgets)
+                    
+                    report_data['projects'].append({
+                        'name': project.name,
+                        'budget': project.budget or 0,
+                        'spent': total_spent,
+                        'remaining': (project.budget or 0) - total_spent,
+                        'utilization': round((total_spent / project.budget * 100) if project.budget else 0, 1)
+                    })
+            
+            elif report_type == 'progress':
+                # Progress report
+                projects = Project.query.filter(Project.id.in_(project_ids)).all() if project_ids else Project.query.all()
+                
+                report_data['projects'] = []
+                for project in projects:
+                    milestones = Milestone.query.filter_by(project_id=project.id).all()
+                    completed = len([m for m in milestones if m.status == 'Completed'])
+                    
+                    report_data['projects'].append({
+                        'name': project.name,
+                        'total_milestones': len(milestones),
+                        'completed': completed,
+                        'completion': round((completed / len(milestones) * 100) if milestones else 0, 1),
+                        'status': project.status
+                    })
+            
+            elif report_type == 'productivity':
+                # Productivity report
+                projects = Project.query.filter(Project.id.in_(project_ids)).all() if project_ids else Project.query.all()
+                
+                report_data['projects'] = []
+                for project in projects:
+                    dprs = DailyProductionReport.query.filter_by(project_id=project.id)
+                    if start_date:
+                        dprs = dprs.filter(DailyProductionReport.report_date >= start_date)
+                    if end_date:
+                        dprs = dprs.filter(DailyProductionReport.report_date <= end_date)
+                    
+                    dprs = dprs.all()
+                    avg_productivity = sum(dpr.daily_progress or 0 for dpr in dprs) / len(dprs) if dprs else 0
+                    
+                    report_data['projects'].append({
+                        'name': project.name,
+                        'reports_count': len(dprs),
+                        'avg_productivity': round(avg_productivity, 1),
+                        'total_labor_days': sum(dpr.labor_count or 0 for dpr in dprs)
+                    })
+            
+            return render_template('office_pm/generated_report.html',
+                report_type=report_type,
+                report_data=report_data,
+                start_date=start_date,
+                end_date=end_date,
+                generated_at=datetime.now()
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error generating report: {str(e)}", exc_info=True)
+            flash('Error generating report', 'error')
+            return redirect(url_for('office_pm.create_report'))
+
+
+    # ============================================================================
+    # QS (QUANTITY SURVEYING) MANAGER ENDPOINTS
+    # ============================================================================
+    # Role: Responsible for cost estimation, valuation, and financial control
+    # Responsibilities: BOQs, valuations, variations, claims, cost tracking
+    # ============================================================================
+
+    @app.route('/qs/dashboard', endpoint='qs.dashboard')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_dashboard():
+        """
+        QS Manager Dashboard - Overview of all project costs and valuations
+        """
+        try:
+            # Get accessible projects
+            if current_user.has_role(Roles.SUPER_HQ):
+                projects = Project.query.filter_by(status='Active').all()
+            else:
+                # QS can see projects they're assigned to
+                projects = Project.query.filter(
+                    (Project.qs_manager == current_user.name) |
+                    (Project.status == 'Active')
+                ).all()
+            
+            # Calculate portfolio metrics
+            total_contract_value = sum(p.budget or 0 for p in projects)
+            
+            # Total BOQ values across all projects
+            total_boq_value = 0
+            for project in projects:
+                boq_items = BOQItem.query.filter_by(project_id=project.id, is_template=False).all()
+                total_boq_value += sum(item.total_cost or 0 for item in boq_items)
+            
+            # Total spent from budgets
+            total_spent = 0
+            for project in projects:
+                budgets = Budget.query.filter_by(project_id=project.id).all()
+                total_spent += sum(b.spent_amount or 0 for b in budgets)
+            
+            # Pending valuations (using procurement requests as proxy for payment certificates)
+            pending_valuations = ProcurementRequest.query.filter(
+                ProcurementRequest.project_id.in_([p.id for p in projects]),
+                ProcurementRequest.status == 'pending'
+            ).count()
+            
+            # Recent cost variances
+            cost_variances = CostVarianceReport.query.filter(
+                CostVarianceReport.project_id.in_([p.id for p in projects])
+            ).order_by(CostVarianceReport.id.desc()).limit(5).all()
+            
+            # Projects requiring attention (over budget)
+            projects_over_budget = []
+            projects_on_track = []
+            
+            for project in projects:
+                budgets = Budget.query.filter_by(project_id=project.id).all()
+                project_spent = sum(b.spent_amount or 0 for b in budgets)
+                budget_remaining = (project.budget or 0) - project_spent
+                
+                utilization = (project_spent / project.budget * 100) if project.budget else 0
+                
+                project_data = {
+                    'id': project.id,
+                    'name': project.name,
+                    'budget': project.budget or 0,
+                    'spent': project_spent,
+                    'remaining': budget_remaining,
+                    'utilization': round(utilization, 1)
+                }
+                
+                if utilization > 90:
+                    projects_over_budget.append(project_data)
+                else:
+                    projects_on_track.append(project_data)
+            
+            # Recent activities
+            recent_boq_updates = BOQItem.query.filter(
+                BOQItem.project_id.in_([p.id for p in projects])
+            ).order_by(BOQItem.updated_at.desc()).limit(10).all()
+            
+            return render_template('qs/dashboard.html',
+                projects=projects,
+                total_contract_value=total_contract_value,
+                total_boq_value=total_boq_value,
+                total_spent=total_spent,
+                budget_remaining=total_contract_value - total_spent,
+                pending_valuations=pending_valuations,
+                cost_variances=cost_variances,
+                projects_over_budget=projects_over_budget,
+                projects_on_track=projects_on_track,
+                recent_boq_updates=recent_boq_updates
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading QS dashboard: {str(e)}", exc_info=True)
+            flash('Error loading dashboard', 'error')
+            return redirect(url_for('main_home'))
+
+    @app.route('/qs/project/<int:project_id>/boq', endpoint='qs.project_boq')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_project_boq(project_id):
+        """
+        View and manage BOQ (Bill of Quantities) for a specific project
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get BOQ items
+            boq_items = BOQItem.query.filter_by(
+                project_id=project.id,
+                is_template=False
+            ).order_by(BOQItem.bill_no, BOQItem.item_no).all()
+            
+            # Calculate totals by bill category
+            bill_summaries = {}
+            for item in boq_items:
+                bill_no = item.bill_no or 'Uncategorized'
+                if bill_no not in bill_summaries:
+                    bill_summaries[bill_no] = {
+                        'items': [],
+                        'total': 0,
+                        'count': 0
+                    }
+                bill_summaries[bill_no]['items'].append(item)
+                bill_summaries[bill_no]['total'] += item.total_cost or 0
+                bill_summaries[bill_no]['count'] += 1
+            
+            # Overall BOQ statistics
+            total_boq_value = sum(item.total_cost or 0 for item in boq_items)
+            total_items = len(boq_items)
+            
+            # Budget comparison
+            budgets = Budget.query.filter_by(project_id=project.id).all()
+            total_spent = sum(b.spent_amount or 0 for b in budgets)
+            
+            # Material schedules linked to BOQ
+            material_schedules = MaterialSchedule.query.filter_by(
+                project_id=project.id
+            ).all()
+            
+            return render_template('qs/project_boq.html',
+                project=project,
+                boq_items=boq_items,
+                bill_summaries=bill_summaries,
+                total_boq_value=total_boq_value,
+                total_items=total_items,
+                total_spent=total_spent,
+                budget_remaining=total_boq_value - total_spent,
+                material_schedules=material_schedules
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading project BOQ: {str(e)}", exc_info=True)
+            flash('Error loading BOQ', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/boq/add', methods=['POST'], endpoint='qs.add_boq_item')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_add_boq_item(project_id):
+        """
+        Add new BOQ item to project
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            data = request.get_json() if request.is_json else request.form
+            
+            # Create new BOQ item
+            boq_item = BOQItem(
+                project_id=project.id,
+                bill_no=data.get('bill_no', '').strip(),
+                item_no=data.get('item_no', '').strip(),
+                item_description=data.get('item_description', '').strip(),
+                quantity=float(data.get('quantity', 0)),
+                unit=data.get('unit', '').strip(),
+                unit_price=float(data.get('unit_price', 0)),
+                item_type=data.get('item_type', '').strip(),
+                category=data.get('category', '').strip(),
+                is_template=False,
+                status='Pending'
+            )
+            
+            # Calculate total cost
+            boq_item.calculate_total_cost()
+            
+            db.session.add(boq_item)
+            
+            # Log activity
+            audit = Audit(
+                user_id=current_user.id,
+                action='add_boq_item',
+                table_name='boq_items',
+                record_id=None,
+                changes=f"Added BOQ item: {boq_item.item_description} to {project.name}",
+                timestamp=datetime.now(timezone.utc)
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            
+            if request.is_json:
+                return jsonify({
+                    'success': True,
+                    'message': 'BOQ item added successfully',
+                    'boq_item_id': boq_item.id
+                })
+            else:
+                flash('BOQ item added successfully', 'success')
+                return redirect(url_for('qs.project_boq', project_id=project.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error adding BOQ item: {str(e)}", exc_info=True)
+            if request.is_json:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            else:
+                flash(f'Error adding BOQ item: {str(e)}', 'error')
+                return redirect(url_for('qs.project_boq', project_id=project_id))
+
+    @app.route('/qs/project/<int:project_id>/boq/<int:boq_id>/update', methods=['POST'], endpoint='qs.update_boq_item')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_update_boq_item(project_id, boq_id):
+        """
+        Update existing BOQ item
+        """
+        try:
+            boq_item = BOQItem.query.get_or_404(boq_id)
+            
+            if boq_item.project_id != project_id:
+                return jsonify({'success': False, 'message': 'BOQ item does not belong to this project'}), 400
+            
+            data = request.get_json() if request.is_json else request.form
+            
+            # Update fields
+            if 'bill_no' in data:
+                boq_item.bill_no = data['bill_no'].strip()
+            if 'item_no' in data:
+                boq_item.item_no = data['item_no'].strip()
+            if 'item_description' in data:
+                boq_item.item_description = data['item_description'].strip()
+            if 'quantity' in data:
+                boq_item.quantity = float(data['quantity'])
+            if 'unit' in data:
+                boq_item.unit = data['unit'].strip()
+            if 'unit_price' in data:
+                boq_item.unit_price = float(data['unit_price'])
+            if 'status' in data:
+                boq_item.status = data['status']
+            if 'category' in data:
+                boq_item.category = data['category'].strip()
+            
+            # Recalculate total cost
+            boq_item.calculate_total_cost()
+            boq_item.updated_at = datetime.now(timezone.utc)
+            
+            # Log activity
+            audit = Audit(
+                user_id=current_user.id,
+                action='update_boq_item',
+                table_name='boq_items',
+                record_id=boq_item.id,
+                changes=f"Updated BOQ item: {boq_item.item_description}",
+                timestamp=datetime.now(timezone.utc)
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            
+            if request.is_json:
+                return jsonify({
+                    'success': True,
+                    'message': 'BOQ item updated successfully',
+                    'total_cost': boq_item.total_cost
+                })
+            else:
+                flash('BOQ item updated successfully', 'success')
+                return redirect(url_for('qs.project_boq', project_id=project_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating BOQ item: {str(e)}", exc_info=True)
+            if request.is_json:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            else:
+                flash(f'Error updating BOQ item: {str(e)}', 'error')
+                return redirect(url_for('qs.project_boq', project_id=project_id))
+
+    @app.route('/qs/project/<int:project_id>/valuations', endpoint='qs.project_valuations')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_project_valuations(project_id):
+        """
+        Manage valuations and interim payment applications for a project
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get procurement requests as valuation/payment certificates
+            valuations = ProcurementRequest.query.filter_by(
+                project_id=project.id
+            ).order_by(ProcurementRequest.created_at.desc()).all()
+            
+            # Calculate valuation statistics
+            total_valuations = len(valuations)
+            approved_valuations = [v for v in valuations if v.status == 'approved']
+            pending_valuations = [v for v in valuations if v.status == 'pending']
+            
+            total_approved_value = sum(v.price * v.qty for v in approved_valuations)
+            total_pending_value = sum(v.price * v.qty for v in pending_valuations)
+            
+            # Get BOQ for reference
+            boq_items = BOQItem.query.filter_by(
+                project_id=project.id,
+                is_template=False
+            ).all()
+            total_boq_value = sum(item.total_cost or 0 for item in boq_items)
+            
+            # Calculate work done percentage
+            work_done_percentage = (total_approved_value / total_boq_value * 100) if total_boq_value > 0 else 0
+            
+            return render_template('qs/project_valuations.html',
+                project=project,
+                valuations=valuations,
+                total_valuations=total_valuations,
+                approved_valuations=approved_valuations,
+                pending_valuations=pending_valuations,
+                total_approved_value=total_approved_value,
+                total_pending_value=total_pending_value,
+                total_boq_value=total_boq_value,
+                work_done_percentage=round(work_done_percentage, 2)
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading valuations: {str(e)}", exc_info=True)
+            flash('Error loading valuations', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/valuations/create', methods=['POST'], endpoint='qs.create_valuation')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_create_valuation(project_id):
+        """
+        Create new valuation/payment certificate
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            data = request.get_json() if request.is_json else request.form
+            
+            # Create valuation as procurement request
+            valuation = ProcurementRequest(
+                project_id=project.id,
+                item_name=data.get('item_name', '').strip() or f"Valuation - {datetime.now().strftime('%Y-%m-%d')}",
+                price=float(data.get('price', 0)),
+                qty=float(data.get('qty', 1)),
+                unit=data.get('unit', 'LS').strip(),
+                status='pending',
+                current_approver='Finance Manager',
+                created_at=datetime.now(timezone.utc)
+            )
+            
+            db.session.add(valuation)
+            
+            # Log activity
+            audit = Audit(
+                user_id=current_user.id,
+                action='create_valuation',
+                table_name='procurement_requests',
+                record_id=None,
+                changes=f"Created valuation for {project.name}: ₦{valuation.price * valuation.qty:,.2f}",
+                timestamp=datetime.now(timezone.utc)
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            
+            if request.is_json:
+                return jsonify({
+                    'success': True,
+                    'message': 'Valuation created successfully',
+                    'valuation_id': valuation.id
+                })
+            else:
+                flash('Valuation created successfully', 'success')
+                return redirect(url_for('qs.project_valuations', project_id=project.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating valuation: {str(e)}", exc_info=True)
+            if request.is_json:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            else:
+                flash(f'Error creating valuation: {str(e)}', 'error')
+                return redirect(url_for('qs.project_valuations', project_id=project_id))
+
+    @app.route('/qs/project/<int:project_id>/variations', endpoint='qs.project_variations')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_project_variations(project_id):
+        """
+        Track variations and change orders for project
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get variations (using procurement requests with specific naming pattern)
+            variations = ProcurementRequest.query.filter(
+                ProcurementRequest.project_id == project.id,
+                ProcurementRequest.item_name.like('%Variation%')
+            ).order_by(ProcurementRequest.created_at.desc()).all()
+            
+            # Calculate variation statistics
+            total_variations = len(variations)
+            approved_variations = [v for v in variations if v.status == 'approved']
+            pending_variations = [v for v in variations if v.status == 'pending']
+            rejected_variations = [v for v in variations if v.status == 'rejected']
+            
+            total_variation_value = sum(v.price * v.qty for v in variations)
+            approved_variation_value = sum(v.price * v.qty for v in approved_variations)
+            
+            # Original contract value
+            original_value = project.budget or 0
+            revised_value = original_value + approved_variation_value
+            
+            return render_template('qs/project_variations.html',
+                project=project,
+                variations=variations,
+                total_variations=total_variations,
+                approved_variations=approved_variations,
+                pending_variations=pending_variations,
+                rejected_variations=rejected_variations,
+                total_variation_value=total_variation_value,
+                approved_variation_value=approved_variation_value,
+                original_value=original_value,
+                revised_value=revised_value
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading variations: {str(e)}", exc_info=True)
+            flash('Error loading variations', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/cost-summary', endpoint='qs.project_cost_summary')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_project_cost_summary(project_id):
+        """
+        Generate comprehensive cost summary and profitability analysis
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # BOQ Summary
+            boq_items = BOQItem.query.filter_by(
+                project_id=project.id,
+                is_template=False
+            ).all()
+            
+            total_boq_value = sum(item.total_cost or 0 for item in boq_items)
+            
+            # Actual costs from budgets
+            budgets = Budget.query.filter_by(project_id=project.id).all()
+            total_spent = sum(b.spent_amount or 0 for b in budgets)
+            
+            # Break down by category
+            cost_by_category = {}
+            for budget in budgets:
+                category = budget.category or 'Uncategorized'
+                if category not in cost_by_category:
+                    cost_by_category[category] = {
+                        'allocated': 0,
+                        'spent': 0,
+                        'remaining': 0
+                    }
+                cost_by_category[category]['allocated'] += budget.allocated_amount
+                cost_by_category[category]['spent'] += budget.spent_amount
+                cost_by_category[category]['remaining'] += budget.remaining_amount
+            
+            # Material costs
+            material_schedules = MaterialSchedule.query.filter_by(
+                project_id=project.id
+            ).all()
+            total_material_cost = sum(ms.total_cost or 0 for ms in material_schedules)
+            
+            # Variations
+            variations = ProcurementRequest.query.filter(
+                ProcurementRequest.project_id == project.id,
+                ProcurementRequest.item_name.like('%Variation%'),
+                ProcurementRequest.status == 'approved'
+            ).all()
+            total_variations = sum(v.price * v.qty for v in variations)
+            
+            # Financial summary
+            contract_value = project.budget or 0
+            revised_contract = contract_value + total_variations
+            cost_to_date = total_spent
+            projected_final_cost = total_boq_value
+            estimated_profit = revised_contract - projected_final_cost
+            profit_margin = (estimated_profit / revised_contract * 100) if revised_contract > 0 else 0
+            
+            # Cost variance
+            cost_variance = total_boq_value - cost_to_date
+            variance_percentage = (cost_variance / total_boq_value * 100) if total_boq_value > 0 else 0
+            
+            return render_template('qs/project_cost_summary.html',
+                project=project,
+                total_boq_value=total_boq_value,
+                total_spent=total_spent,
+                cost_by_category=cost_by_category,
+                total_material_cost=total_material_cost,
+                total_variations=total_variations,
+                contract_value=contract_value,
+                revised_contract=revised_contract,
+                cost_to_date=cost_to_date,
+                projected_final_cost=projected_final_cost,
+                estimated_profit=estimated_profit,
+                profit_margin=round(profit_margin, 2),
+                cost_variance=cost_variance,
+                variance_percentage=round(variance_percentage, 2)
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error generating cost summary: {str(e)}", exc_info=True)
+            flash('Error generating cost summary', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/material-takeoff', endpoint='qs.material_takeoff')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_material_takeoff(project_id):
+        """
+        Material take-off and cost verification with Procurement
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get material schedules
+            material_schedules = MaterialSchedule.query.filter_by(
+                project_id=project.id
+            ).order_by(MaterialSchedule.material_name).all()
+            
+            # Categorize materials by status
+            materials_by_status = {
+                'Planned': [],
+                'Ordered': [],
+                'Delivered': [],
+                'In Use': [],
+                'Depleted': []
+            }
+            
+            for material in material_schedules:
+                status = material.status or 'Planned'
+                if status in materials_by_status:
+                    materials_by_status[status].append(material)
+            
+            # Calculate costs
+            total_material_cost = sum(ms.total_cost or 0 for ms in material_schedules)
+            ordered_cost = sum(ms.total_cost or 0 for ms in materials_by_status.get('Ordered', []))
+            delivered_cost = sum(ms.total_cost or 0 for ms in materials_by_status.get('Delivered', []))
+            
+            # Link to BOQ items
+            boq_linked_materials = []
+            for material in material_schedules:
+                if material.boq_item_id:
+                    boq_item = BOQItem.query.get(material.boq_item_id)
+                    if boq_item:
+                        boq_linked_materials.append({
+                            'material': material,
+                            'boq_item': boq_item
+                        })
+            
+            return render_template('qs/material_takeoff.html',
+                project=project,
+                material_schedules=material_schedules,
+                materials_by_status=materials_by_status,
+                total_material_cost=total_material_cost,
+                ordered_cost=ordered_cost,
+                delivered_cost=delivered_cost,
+                boq_linked_materials=boq_linked_materials
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading material takeoff: {str(e)}", exc_info=True)
+            flash('Error loading material takeoff', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/approve-valuation/<int:valuation_id>', methods=['POST'], endpoint='qs.approve_valuation')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_approve_valuation(valuation_id):
+        """
+        Approve or reject valuation
+        """
+        try:
+            valuation = ProcurementRequest.query.get_or_404(valuation_id)
+            
+            data = request.get_json() if request.is_json else request.form
+            action = data.get('action', 'approve')  # approve or reject
+            comments = data.get('comments', '').strip()
+            
+            if action == 'approve':
+                valuation.status = 'approved'
+                valuation.approved_by = current_user.name
+                valuation.approval_date = datetime.now(timezone.utc)
+                message = 'Valuation approved successfully'
+            else:
+                valuation.status = 'rejected'
+                message = 'Valuation rejected'
+            
+            valuation.approval_notes = comments
+            valuation.updated_at = datetime.now(timezone.utc)
+            
+            # Log activity
+            audit = Audit(
+                user_id=current_user.id,
+                action=f'{action}_valuation',
+                table_name='procurement_requests',
+                record_id=valuation.id,
+                changes=f"{action.capitalize()}d valuation #{valuation.id}: {comments}",
+                timestamp=datetime.now(timezone.utc)
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            
+            if request.is_json:
+                return jsonify({'success': True, 'message': message})
+            else:
+                flash(message, 'success')
+                return redirect(url_for('qs.project_valuations', project_id=valuation.project_id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error approving valuation: {str(e)}", exc_info=True)
+            if request.is_json:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            else:
+                flash(f'Error: {str(e)}', 'error')
+                return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/claims', endpoint='qs.project_claims')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_project_claims():
+        """
+        Claims management - track contractor claims, variations claims, and additional works
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get all claims (using procurement requests with 'Claim' in name)
+            claims = ProcurementRequest.query.filter(
+                ProcurementRequest.project_id == project.id,
+                ProcurementRequest.item_name.like('%Claim%')
+            ).order_by(ProcurementRequest.created_at.desc()).all()
+            
+            # Categorize claims
+            approved_claims = [c for c in claims if c.status == 'approved']
+            pending_claims = [c for c in claims if c.status == 'pending']
+            rejected_claims = [c for c in claims if c.status == 'rejected']
+            
+            # Calculate claim values
+            total_claims_value = sum(c.price * c.qty for c in claims)
+            approved_claims_value = sum(c.price * c.qty for c in approved_claims)
+            pending_claims_value = sum(c.price * c.qty for c in pending_claims)
+            
+            # Contract impact
+            original_contract = project.budget or 0
+            revised_contract = original_contract + approved_claims_value
+            
+            return render_template('qs/project_claims.html',
+                project=project,
+                claims=claims,
+                approved_claims=approved_claims,
+                pending_claims=pending_claims,
+                rejected_claims=rejected_claims,
+                total_claims_value=total_claims_value,
+                approved_claims_value=approved_claims_value,
+                pending_claims_value=pending_claims_value,
+                original_contract=original_contract,
+                revised_contract=revised_contract
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading claims: {str(e)}", exc_info=True)
+            flash('Error loading claims', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/claims/create', methods=['POST'], endpoint='qs.create_claim')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_create_claim(project_id):
+        """
+        Create new claim for additional works or variations
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            data = request.get_json() if request.is_json else request.form
+            
+            claim = ProcurementRequest(
+                project_id=project.id,
+                item_name=f"Claim - {data.get('claim_description', '').strip()}",
+                price=float(data.get('claim_amount', 0)),
+                qty=1,
+                unit='LS',
+                status='pending',
+                current_approver='Project Manager',
+                created_at=datetime.now(timezone.utc)
+            )
+            
+            db.session.add(claim)
+            
+            # Log activity
+            audit = Audit(
+                user_id=current_user.id,
+                action='create_claim',
+                table_name='procurement_requests',
+                record_id=None,
+                changes=f"Created claim for {project.name}: ₦{claim.price:,.2f}",
+                timestamp=datetime.now(timezone.utc)
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            
+            if request.is_json:
+                return jsonify({'success': True, 'message': 'Claim created successfully', 'claim_id': claim.id})
+            else:
+                flash('Claim created successfully', 'success')
+                return redirect(url_for('qs.project_claims', project_id=project.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating claim: {str(e)}", exc_info=True)
+            if request.is_json:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            else:
+                flash(f'Error: {str(e)}', 'error')
+                return redirect(url_for('qs.project_claims', project_id=project_id))
+
+    @app.route('/qs/project/<int:project_id>/payment-applications', endpoint='qs.payment_applications')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_payment_applications():
+        """
+        Interim Payment Applications (IPAs) - Monthly payment certificates
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get all payment applications (valuations are payment apps)
+            payment_apps = ProcurementRequest.query.filter(
+                ProcurementRequest.project_id == project.id
+            ).order_by(ProcurementRequest.created_at.desc()).all()
+            
+            # Group by month
+            apps_by_month = {}
+            for app in payment_apps:
+                month_key = app.created_at.strftime('%Y-%m') if app.created_at else 'Unknown'
+                if month_key not in apps_by_month:
+                    apps_by_month[month_key] = []
+                apps_by_month[month_key].append(app)
+            
+            # Calculate cumulative values
+            cumulative_approved = 0
+            monthly_summary = []
+            
+            for month_key in sorted(apps_by_month.keys(), reverse=True):
+                apps = apps_by_month[month_key]
+                month_approved = sum(a.price * a.qty for a in apps if a.status == 'approved')
+                cumulative_approved += month_approved
+                
+                monthly_summary.append({
+                    'month': month_key,
+                    'count': len(apps),
+                    'month_value': month_approved,
+                    'cumulative': cumulative_approved,
+                    'apps': apps
+                })
+            
+            # BOQ comparison
+            boq_items = BOQItem.query.filter_by(project_id=project.id, is_template=False).all()
+            total_boq = sum(item.total_cost or 0 for item in boq_items)
+            
+            payment_percentage = (cumulative_approved / total_boq * 100) if total_boq > 0 else 0
+            
+            return render_template('qs/payment_applications.html',
+                project=project,
+                payment_apps=payment_apps,
+                monthly_summary=monthly_summary,
+                total_boq=total_boq,
+                cumulative_approved=cumulative_approved,
+                payment_percentage=round(payment_percentage, 2)
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading payment applications: {str(e)}", exc_info=True)
+            flash('Error loading payment applications', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/subcontractor-payments', endpoint='qs.subcontractor_payments')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_subcontractor_payments():
+        """
+        Certify and track subcontractor payments
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get subcontractor payments (procurement requests)
+            subcon_payments = ProcurementRequest.query.filter(
+                ProcurementRequest.project_id == project.id
+            ).order_by(ProcurementRequest.created_at.desc()).all()
+            
+            # Group by status
+            certified_payments = [p for p in subcon_payments if p.status == 'approved']
+            pending_certification = [p for p in subcon_payments if p.status == 'pending']
+            
+            # Calculate totals
+            total_certified = sum(p.price * p.qty for p in certified_payments)
+            total_pending = sum(p.price * p.qty for p in pending_certification)
+            
+            # Get unique "subcontractors" (item names as proxy)
+            subcontractors = {}
+            for payment in subcon_payments:
+                subcon_name = payment.item_name.split('-')[0].strip() if '-' in payment.item_name else payment.item_name
+                if subcon_name not in subcontractors:
+                    subcontractors[subcon_name] = {
+                        'payments': [],
+                        'total_certified': 0,
+                        'total_pending': 0
+                    }
+                subcontractors[subcon_name]['payments'].append(payment)
+                if payment.status == 'approved':
+                    subcontractors[subcon_name]['total_certified'] += payment.price * payment.qty
+                elif payment.status == 'pending':
+                    subcontractors[subcon_name]['total_pending'] += payment.price * payment.qty
+            
+            return render_template('qs/subcontractor_payments.html',
+                project=project,
+                subcon_payments=subcon_payments,
+                certified_payments=certified_payments,
+                pending_certification=pending_certification,
+                total_certified=total_certified,
+                total_pending=total_pending,
+                subcontractors=subcontractors
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading subcontractor payments: {str(e)}", exc_info=True)
+            flash('Error loading subcontractor payments', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/cost-forecast', endpoint='qs.cost_forecast')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_cost_forecast():
+        """
+        Budget forecasting and projection to completion
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Current position
+            budgets = Budget.query.filter_by(project_id=project.id).all()
+            total_spent = sum(b.spent_amount or 0 for b in budgets)
+            
+            # BOQ analysis
+            boq_items = BOQItem.query.filter_by(project_id=project.id, is_template=False).all()
+            total_boq = sum(item.total_cost or 0 for item in boq_items)
+            
+            # Work done analysis
+            approved_valuations = ProcurementRequest.query.filter_by(
+                project_id=project.id,
+                status='approved'
+            ).all()
+            work_done_value = sum(v.price * v.qty for v in approved_valuations)
+            
+            # Calculate completion percentage
+            if project.start_date and project.end_date:
+                total_days = (project.end_date - project.start_date).days
+                elapsed_days = (datetime.now().date() - project.start_date).days
+                time_elapsed_percentage = (elapsed_days / total_days * 100) if total_days > 0 else 0
+            else:
+                time_elapsed_percentage = 0
+            
+            work_done_percentage = (work_done_value / total_boq * 100) if total_boq > 0 else 0
+            
+            # Cost to Complete (ETC - Estimate to Complete)
+            if work_done_percentage > 0:
+                cost_per_percent = total_spent / work_done_percentage
+                estimated_final_cost = cost_per_percent * 100
+            else:
+                estimated_final_cost = total_boq
+            
+            cost_to_complete = estimated_final_cost - total_spent
+            
+            # Forecast by category
+            forecast_by_category = []
+            for budget in budgets:
+                spent_percentage = (budget.spent_amount / budget.allocated_amount * 100) if budget.allocated_amount > 0 else 0
+                
+                # Project final cost based on current burn rate
+                if spent_percentage > 0:
+                    projected_final = (budget.spent_amount / spent_percentage) * 100
+                else:
+                    projected_final = budget.allocated_amount
+                
+                forecast_by_category.append({
+                    'category': budget.category,
+                    'allocated': budget.allocated_amount,
+                    'spent': budget.spent_amount,
+                    'remaining': budget.remaining_amount,
+                    'spent_percentage': round(spent_percentage, 1),
+                    'projected_final': projected_final,
+                    'variance': projected_final - budget.allocated_amount
+                })
+            
+            # Performance indicators
+            cost_performance_index = (work_done_value / total_spent) if total_spent > 0 else 0
+            schedule_performance_index = (work_done_percentage / time_elapsed_percentage) if time_elapsed_percentage > 0 else 0
+            
+            return render_template('qs/cost_forecast.html',
+                project=project,
+                total_spent=total_spent,
+                total_boq=total_boq,
+                work_done_value=work_done_value,
+                work_done_percentage=round(work_done_percentage, 2),
+                time_elapsed_percentage=round(time_elapsed_percentage, 2),
+                estimated_final_cost=estimated_final_cost,
+                cost_to_complete=cost_to_complete,
+                forecast_by_category=forecast_by_category,
+                cost_performance_index=round(cost_performance_index, 2),
+                schedule_performance_index=round(schedule_performance_index, 2)
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading cost forecast: {str(e)}", exc_info=True)
+            flash('Error loading cost forecast', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/rate-analysis', endpoint='qs.rate_analysis')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_rate_analysis():
+        """
+        Rate analysis and comparison - compare BOQ rates with market rates
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Get BOQ items
+            boq_items = BOQItem.query.filter_by(
+                project_id=project.id,
+                is_template=False
+            ).order_by(BOQItem.category, BOQItem.item_no).all()
+            
+            # Group by category for analysis
+            items_by_category = {}
+            for item in boq_items:
+                category = item.category or 'Uncategorized'
+                if category not in items_by_category:
+                    items_by_category[category] = []
+                items_by_category[category].append(item)
+            
+            # Calculate statistics by category
+            category_stats = []
+            for category, items in items_by_category.items():
+                total_items = len(items)
+                total_value = sum(item.total_cost or 0 for item in items)
+                avg_unit_price = sum(item.unit_price for item in items) / total_items if total_items > 0 else 0
+                
+                category_stats.append({
+                    'category': category,
+                    'item_count': total_items,
+                    'total_value': total_value,
+                    'avg_unit_price': avg_unit_price,
+                    'percentage_of_total': 0  # Will calculate after
+                })
+            
+            # Calculate percentages
+            total_project_value = sum(stat['total_value'] for stat in category_stats)
+            for stat in category_stats:
+                stat['percentage_of_total'] = (stat['total_value'] / total_project_value * 100) if total_project_value > 0 else 0
+            
+            # Sort by value
+            category_stats.sort(key=lambda x: x['total_value'], reverse=True)
+            
+            return render_template('qs/rate_analysis.html',
+                project=project,
+                boq_items=boq_items,
+                items_by_category=items_by_category,
+                category_stats=category_stats,
+                total_project_value=total_project_value
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading rate analysis: {str(e)}", exc_info=True)
+            flash('Error loading rate analysis', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/project/<int:project_id>/cost-control-report', endpoint='qs.cost_control_report')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_cost_control_report():
+        """
+        Comprehensive cost control report for management
+        """
+        try:
+            project = Project.query.get_or_404(project_id)
+            
+            # Financial summary
+            original_contract = project.budget or 0
+            
+            # Variations and claims
+            variations = ProcurementRequest.query.filter(
+                ProcurementRequest.project_id == project.id,
+                ProcurementRequest.item_name.like('%Variation%'),
+                ProcurementRequest.status == 'approved'
+            ).all()
+            total_variations = sum(v.price * v.qty for v in variations)
+            
+            claims = ProcurementRequest.query.filter(
+                ProcurementRequest.project_id == project.id,
+                ProcurementRequest.item_name.like('%Claim%'),
+                ProcurementRequest.status == 'approved'
+            ).all()
+            total_claims = sum(c.price * c.qty for c in claims)
+            
+            revised_contract = original_contract + total_variations + total_claims
+            
+            # Expenditure
+            budgets = Budget.query.filter_by(project_id=project.id).all()
+            total_expenditure = sum(b.spent_amount or 0 for b in budgets)
+            
+            # Commitments (pending payments)
+            pending_payments = ProcurementRequest.query.filter_by(
+                project_id=project.id,
+                status='pending'
+            ).all()
+            total_commitments = sum(p.price * p.qty for p in pending_payments)
+            
+            # Forecast final cost
+            projected_final_cost = total_expenditure + total_commitments
+            
+            # Variance analysis
+            budget_variance = revised_contract - projected_final_cost
+            variance_percentage = (budget_variance / revised_contract * 100) if revised_contract > 0 else 0
+            
+            # Risk assessment
+            if variance_percentage < -10:
+                risk_level = 'Critical'
+                risk_color = 'red'
+            elif variance_percentage < 0:
+                risk_level = 'High'
+                risk_color = 'orange'
+            elif variance_percentage < 5:
+                risk_level = 'Medium'
+                risk_color = 'yellow'
+            else:
+                risk_level = 'Low'
+                risk_color = 'green'
+            
+            # Monthly expenditure trend
+            monthly_trend = []
+            for i in range(6):
+                month_date = datetime.now() - timedelta(days=30*i)
+                month_name = month_date.strftime('%b %Y')
+                
+                # This is simplified - in production, you'd filter by actual date ranges
+                monthly_trend.insert(0, {
+                    'month': month_name,
+                    'expenditure': total_expenditure / 6  # Simplified average
+                })
+            
+            return render_template('qs/cost_control_report.html',
+                project=project,
+                original_contract=original_contract,
+                total_variations=total_variations,
+                total_claims=total_claims,
+                revised_contract=revised_contract,
+                total_expenditure=total_expenditure,
+                total_commitments=total_commitments,
+                projected_final_cost=projected_final_cost,
+                budget_variance=budget_variance,
+                variance_percentage=round(variance_percentage, 2),
+                risk_level=risk_level,
+                risk_color=risk_color,
+                monthly_trend=monthly_trend
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading cost control report: {str(e)}", exc_info=True)
+            flash('Error loading cost control report', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+    @app.route('/qs/reports', endpoint='qs.reports')
+    @login_required
+    @role_required([Roles.SUPER_HQ, 'QS_MANAGER'])
+    def qs_reports():
+        """
+        QS Reports hub - access all QS reports and analytics
+        """
+        try:
+            # Get accessible projects
+            if current_user.has_role(Roles.SUPER_HQ):
+                projects = Project.query.filter_by(status='Active').all()
+            else:
+                projects = Project.query.filter(
+                    (Project.qs_manager == current_user.name) |
+                    (Project.status == 'Active')
+                ).all()
+            
+            # Report types available
+            report_types = [
+                {
+                    'name': 'Cost Summary Report',
+                    'description': 'Comprehensive cost breakdown and profitability analysis',
+                    'icon': 'chart-bar',
+                    'url': 'qs.project_cost_summary'
+                },
+                {
+                    'name': 'Cost Control Report',
+                    'description': 'Budget performance, variance analysis, and risk assessment',
+                    'icon': 'shield-check',
+                    'url': 'qs.cost_control_report'
+                },
+                {
+                    'name': 'Cost Forecast Report',
+                    'description': 'Budget projection and estimate to complete',
+                    'icon': 'trending-up',
+                    'url': 'qs.cost_forecast'
+                },
+                {
+                    'name': 'Payment Applications Report',
+                    'description': 'Interim payment certificates and cumulative values',
+                    'icon': 'receipt',
+                    'url': 'qs.payment_applications'
+                },
+                {
+                    'name': 'Rate Analysis Report',
+                    'description': 'BOQ rate comparison and market analysis',
+                    'icon': 'calculator',
+                    'url': 'qs.rate_analysis'
+                },
+                {
+                    'name': 'Claims Report',
+                    'description': 'Contractor claims and additional works tracking',
+                    'icon': 'file-text',
+                    'url': 'qs.project_claims'
+                }
+            ]
+            
+            return render_template('qs/reports.html',
+                projects=projects,
+                report_types=report_types
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading QS reports: {str(e)}", exc_info=True)
+            flash('Error loading reports', 'error')
+            return redirect(url_for('qs.dashboard'))
+
+
+    # ============================================================================
+    # PROCUREMENT MANAGER ENDPOINTS (ENHANCED)
+    # ============================================================================
+    # Role: Manages all material and equipment purchases
+    # Responsibilities: Source vendors, manage POs, track deliveries, cost control
+    # ============================================================================
+
+    @app.route('/procurement/manager/dashboard', endpoint='procurement_mgr.dashboard')
+    @login_required
+    @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
+    def procurement_manager_dashboard():
+        """
+        Enhanced Procurement Manager Dashboard with comprehensive metrics
+        """
+        try:
+            # Get active projects
+            if current_user.has_role(Roles.SUPER_HQ):
+                projects = Project.query.filter_by(status='Active').all()
+            else:
+                projects = Project.query.filter_by(status='Active').limit(10).all()
+            
+            project_ids = [p.id for p in projects]
+            
+            # Purchase Orders Statistics
+            total_pos = PurchaseOrder.query.filter(
+                PurchaseOrder.project_id.in_(project_ids)
+            ).count() if project_ids else PurchaseOrder.query.count()
+            
+            pending_pos = PurchaseOrder.query.filter(
+                PurchaseOrder.status == 'Pending',
+                PurchaseOrder.project_id.in_(project_ids) if project_ids else True
+            ).count()
+            
+            approved_pos = PurchaseOrder.query.filter(
+                PurchaseOrder.status == 'Approved',
+                PurchaseOrder.project_id.in_(project_ids) if project_ids else True
+            ).count()
+            
+            delivered_pos = PurchaseOrder.query.filter(
+                PurchaseOrder.status == 'Delivered',
+                PurchaseOrder.project_id.in_(project_ids) if project_ids else True
+            ).count()
+            
+            # Financial Metrics
+            total_po_value = db.session.query(
+                db.func.sum(PurchaseOrder.total_amount)
+            ).filter(
+                PurchaseOrder.project_id.in_(project_ids) if project_ids else True
+            ).scalar() or 0
+            
+            pending_po_value = db.session.query(
+                db.func.sum(PurchaseOrder.total_amount)
+            ).filter(
+                PurchaseOrder.status.in_(['Pending', 'Approved']),
+                PurchaseOrder.project_id.in_(project_ids) if project_ids else True
+            ).scalar() or 0
+            
+            delivered_po_value = db.session.query(
+                db.func.sum(PurchaseOrder.total_amount)
+            ).filter(
+                PurchaseOrder.status == 'Delivered',
+                PurchaseOrder.project_id.in_(project_ids) if project_ids else True
+            ).scalar() or 0
+            
+            # Procurement Requests
+            pending_requests = ProcurementRequest.query.filter(
+                ProcurementRequest.status == 'pending',
+                ProcurementRequest.project_id.in_(project_ids) if project_ids else True
+            ).count()
+            
+            # Supplier Statistics
+            total_suppliers = Supplier.query.count()
+            active_suppliers = Supplier.query.filter_by(status='Active').count()
+            
+            # Recent Activity - Purchase Orders
+            recent_pos = PurchaseOrder.query.filter(
+                PurchaseOrder.project_id.in_(project_ids) if project_ids else True
+            ).order_by(PurchaseOrder.created_at.desc()).limit(10).all()
+            
+            # Overdue Deliveries
+            today = datetime.now().date()
+            overdue_deliveries = PurchaseOrder.query.filter(
+                PurchaseOrder.expected_delivery < today,
+                PurchaseOrder.status.in_(['Approved', 'Ordered']),
+                PurchaseOrder.project_id.in_(project_ids) if project_ids else True
+            ).all()
+            
+            # Supplier Performance - Top suppliers by volume
+            top_suppliers = db.session.query(
+                PurchaseOrder.supplier_name,
+                db.func.count(PurchaseOrder.id).label('order_count'),
+                db.func.sum(PurchaseOrder.total_amount).label('total_value')
+            ).filter(
+                PurchaseOrder.project_id.in_(project_ids) if project_ids else True
+            ).group_by(PurchaseOrder.supplier_name).order_by(
+                db.desc('total_value')
+            ).limit(5).all()
+            
+            # Budget vs Spend Analysis per project
+            project_budget_analysis = []
+            for project in projects[:5]:  # Top 5 projects
+                # Get procurement budget
+                proc_budgets = Budget.query.filter_by(
+                    project_id=project.id,
+                    category='procurement'
+                ).all()
+                
+                allocated = sum(b.allocated_amount for b in proc_budgets)
+                
+                # Get PO spend
+                spent = db.session.query(
+                    db.func.sum(PurchaseOrder.total_amount)
+                ).filter(
+                    PurchaseOrder.project_id == project.id,
+                    PurchaseOrder.status.in_(['Approved', 'Ordered', 'Delivered'])
+                ).scalar() or 0
+                
+                if allocated > 0:
+                    project_budget_analysis.append({
+                        'project': project,
+                        'allocated': allocated,
+                        'spent': spent,
+                        'remaining': allocated - spent,
+                        'utilization': round((spent / allocated * 100), 1)
+                    })
+            
+            return render_template('procurement/manager/dashboard.html',
+                total_pos=total_pos,
+                pending_pos=pending_pos,
+                approved_pos=approved_pos,
+                delivered_pos=delivered_pos,
+                total_po_value=total_po_value,
+                pending_po_value=pending_po_value,
+                delivered_po_value=delivered_po_value,
+                pending_requests=pending_requests,
+                total_suppliers=total_suppliers,
+                active_suppliers=active_suppliers,
+                recent_pos=recent_pos,
+                overdue_deliveries=overdue_deliveries,
+                top_suppliers=top_suppliers,
+                project_budget_analysis=project_budget_analysis,
+                projects=projects
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading procurement manager dashboard: {str(e)}", exc_info=True)
+            flash('Error loading dashboard', 'error')
+            return redirect(url_for('main_home'))
+
+    @app.route('/procurement/manager/purchase-orders', endpoint='procurement_mgr.purchase_orders')
+    @login_required
+    @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
+    def procurement_purchase_orders():
+        """
+        Manage all purchase orders with filtering and search
+        """
+        try:
+            # Get filter parameters
+            status_filter = request.args.get('status', 'all')
+            project_filter = request.args.get('project_id', type=int)
+            supplier_filter = request.args.get('supplier')
+            search_query = request.args.get('search', '').strip()
+            
+            # Build query
+            query = PurchaseOrder.query
+            
+            if status_filter != 'all':
+                query = query.filter(PurchaseOrder.status == status_filter)
+            
+            if project_filter:
+                query = query.filter(PurchaseOrder.project_id == project_filter)
+            
+            if supplier_filter:
+                query = query.filter(PurchaseOrder.supplier_name.ilike(f'%{supplier_filter}%'))
+            
+            if search_query:
+                query = query.filter(
+                    db.or_(
+                        PurchaseOrder.order_number.ilike(f'%{search_query}%'),
+                        PurchaseOrder.description.ilike(f'%{search_query}%'),
+                        PurchaseOrder.supplier_name.ilike(f'%{search_query}%')
+                    )
+                )
+            
+            # Order by latest first
+            purchase_orders = query.order_by(PurchaseOrder.created_at.desc()).all()
+            
+            # Get all projects and suppliers for filters
+            projects = Project.query.filter_by(status='Active').all()
+            suppliers = db.session.query(PurchaseOrder.supplier_name).distinct().all()
+            supplier_list = [s[0] for s in suppliers if s[0]]
+            
+            return render_template('procurement/manager/purchase_orders.html',
+                purchase_orders=purchase_orders,
+                projects=projects,
+                suppliers=supplier_list,
+                status_filter=status_filter,
+                project_filter=project_filter,
+                supplier_filter=supplier_filter,
+                search_query=search_query
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading purchase orders: {str(e)}", exc_info=True)
+            flash('Error loading purchase orders', 'error')
+            return redirect(url_for('procurement_mgr.dashboard'))
+
+    @app.route('/procurement/manager/purchase-orders/create', methods=['GET', 'POST'], endpoint='procurement_mgr.create_po')
+    @login_required
+    @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
+    def create_purchase_order():
+        """
+        Create new purchase order
+        """
+        try:
+            if request.method == 'GET':
+                projects = Project.query.filter_by(status='Active').all()
+                suppliers = Supplier.query.filter_by(status='Active').all()
+                
+                # Get material schedules for quick reference
+                materials = MaterialSchedule.query.filter_by(status='Planned').all()
+                
+                return render_template('procurement/manager/create_po.html',
+                    projects=projects,
+                    suppliers=suppliers,
+                    materials=materials
+                )
+            
+            # POST - Create PO
+            data = request.form
+            
+            # Generate PO number
+            last_po = PurchaseOrder.query.order_by(PurchaseOrder.id.desc()).first()
+            po_number = f"PO-{datetime.now().strftime('%Y%m')}-{(last_po.id + 1) if last_po else 1:04d}"
+            
+            # Create PO
+            po = PurchaseOrder(
+                order_number=po_number,
+                project_id=int(data.get('project_id')) if data.get('project_id') else None,
+                supplier_name=data.get('supplier_name', '').strip(),
+                supplier_contact=data.get('supplier_contact', '').strip(),
+                supplier_email=data.get('supplier_email', '').strip(),
+                supplier_phone=data.get('supplier_phone', '').strip(),
+                description=data.get('description', '').strip(),
+                delivery_address=data.get('delivery_address', '').strip(),
+                expected_delivery=datetime.strptime(data.get('expected_delivery'), '%Y-%m-%d').date() if data.get('expected_delivery') else None,
+                priority=data.get('priority', 'Normal'),
+                status='Draft',
+                requested_by=current_user.id if hasattr(current_user, 'id') else None,
+                notes=data.get('notes', '').strip()
+            )
+            
+            db.session.add(po)
+            db.session.flush()  # Get PO ID
+            
+            # Add line items
+            item_names = request.form.getlist('item_name[]')
+            item_descriptions = request.form.getlist('item_description[]')
+            item_quantities = request.form.getlist('item_quantity[]')
+            item_units = request.form.getlist('item_unit[]')
+            item_prices = request.form.getlist('item_unit_price[]')
+            
+            subtotal = 0
+            for i in range(len(item_names)):
+                if item_names[i].strip():
+                    qty = float(item_quantities[i])
+                    unit_price = float(item_prices[i])
+                    line_total = qty * unit_price
+                    
+                    line_item = PurchaseOrderLineItem(
+                        purchase_order_id=po.id,
+                        item_name=item_names[i].strip(),
+                        description=item_descriptions[i].strip() if i < len(item_descriptions) else '',
+                        quantity=qty,
+                        unit=item_units[i].strip() if i < len(item_units) else 'pcs',
+                        unit_price=unit_price,
+                        line_total=line_total
+                    )
+                    db.session.add(line_item)
+                    subtotal += line_total
+            
+            # Calculate totals
+            tax_rate = float(data.get('tax_rate', 0))
+            po.subtotal = subtotal
+            po.tax_rate = tax_rate
+            po.tax_amount = (subtotal * tax_rate / 100)
+            po.total_amount = subtotal + po.tax_amount
+            
+            # Log activity
+            audit = Audit(
+                user_id=current_user.id,
+                action='create_purchase_order',
+                table_name='purchase_order',
+                record_id=po.id,
+                changes=f"Created PO {po.order_number} for {po.supplier_name}",
+                timestamp=datetime.now(timezone.utc)
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            
+            flash(f'Purchase Order {po.order_number} created successfully', 'success')
+            return redirect(url_for('procurement_mgr.view_po', po_id=po.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error creating purchase order: {str(e)}", exc_info=True)
+            flash(f'Error creating purchase order: {str(e)}', 'error')
+            return redirect(url_for('procurement_mgr.purchase_orders'))
+
+    @app.route('/procurement/manager/purchase-orders/<int:po_id>', endpoint='procurement_mgr.view_po')
+    @login_required
+    @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
+    def view_purchase_order(po_id):
+        """
+        View purchase order details
+        """
+        try:
+            po = PurchaseOrder.query.get_or_404(po_id)
+            
+            # Get line items
+            line_items = PurchaseOrderLineItem.query.filter_by(purchase_order_id=po.id).all()
+            
+            # Get related supplier info
+            supplier = Supplier.query.filter_by(name=po.supplier_name).first()
+            
+            # Get project budget info
+            project_budget = None
+            if po.project_id:
+                budgets = Budget.query.filter_by(
+                    project_id=po.project_id,
+                    category='procurement'
+                ).all()
+                
+                if budgets:
+                    allocated = sum(b.allocated_amount for b in budgets)
+                    spent = sum(b.spent_amount for b in budgets)
+                    project_budget = {
+                        'allocated': allocated,
+                        'spent': spent,
+                        'remaining': allocated - spent
+                    }
+            
+            return render_template('procurement/manager/view_po.html',
+                po=po,
+                line_items=line_items,
+                supplier=supplier,
+                project_budget=project_budget
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error viewing purchase order: {str(e)}", exc_info=True)
+            flash('Error loading purchase order', 'error')
+            return redirect(url_for('procurement_mgr.purchase_orders'))
+
+    @app.route('/procurement/manager/purchase-orders/<int:po_id>/approve', methods=['POST'], endpoint='procurement_mgr.approve_po')
+    @login_required
+    @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
+    def approve_purchase_order(po_id):
+        """
+        Approve purchase order
+        """
+        try:
+            po = PurchaseOrder.query.get_or_404(po_id)
+            
+            data = request.get_json() if request.is_json else request.form
+            action = data.get('action', 'approve')
+            comments = data.get('comments', '').strip()
+            
+            if action == 'approve':
+                po.status = 'Approved'
+                po.approved_by = current_user.id if hasattr(current_user, 'id') else None
+                po.approval_date = datetime.now(timezone.utc)
+                message = f'Purchase Order {po.order_number} approved successfully'
+                
+                # Update budget spent if project linked
+                if po.project_id:
+                    budgets = Budget.query.filter_by(
+                        project_id=po.project_id,
+                        category='procurement'
+                    ).first()
+                    
+                    if budgets:
+                        budgets.spent_amount += po.total_amount
+            elif action == 'reject':
+                po.status = 'Rejected'
+                message = f'Purchase Order {po.order_number} rejected'
+            else:
+                po.status = 'Ordered'
+                message = f'Purchase Order {po.order_number} marked as ordered'
+            
+            if comments:
+                po.notes = (po.notes or '') + f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M')}] {comments}"
+            
+            # Log activity
+            audit = Audit(
+                user_id=current_user.id,
+                action=f'{action}_purchase_order',
+                table_name='purchase_order',
+                record_id=po.id,
+                changes=f"{action.capitalize()} PO {po.order_number}: {comments}",
+                timestamp=datetime.now(timezone.utc)
+            )
+            db.session.add(audit)
+            
+            db.session.commit()
+            
+            if request.is_json:
+                return jsonify({'success': True, 'message': message})
+            else:
+                flash(message, 'success')
+                return redirect(url_for('procurement_mgr.view_po', po_id=po.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error approving purchase order: {str(e)}", exc_info=True)
+            if request.is_json:
+                return jsonify({'success': False, 'message': str(e)}), 500
+            else:
+                flash(f'Error: {str(e)}', 'error')
+                return redirect(url_for('procurement_mgr.view_po', po_id=po_id))
+
+    @app.route('/procurement/manager/suppliers', endpoint='procurement_mgr.suppliers')
+    @login_required
+    @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
+    def manage_suppliers():
+        """
+        Supplier management - vetting, performance tracking
+        """
+        try:
+            # Get unique supplier names from POs
+            po_suppliers = db.session.query(
+                PurchaseOrder.supplier_name,
+                func.count(PurchaseOrder.id).label('total_pos'),
+                func.sum(PurchaseOrder.total_amount).label('total_value')
+            ).group_by(PurchaseOrder.supplier_name).all()
+            
+            suppliers = []
+            total_on_time_rate = 0
+            total_po_value = 0
+            
+            for supplier_name, total_pos, total_value in po_suppliers:
+                # Get all POs for this supplier
+                pos = PurchaseOrder.query.filter_by(supplier_name=supplier_name).all()
+                
+                completed_pos = len([p for p in pos if p.status == 'Delivered'])
+                
+                # Calculate on-time delivery
+                delivered = [p for p in pos if p.status == 'Delivered' and p.expected_delivery and hasattr(p, 'delivery_date') and p.delivery_date]
+                on_time = 0
+                avg_delivery_days = None
+                
+                if delivered:
+                    delivery_days = []
+                    for p in delivered:
+                        if p.delivery_date and p.expected_delivery:
+                            days = (p.delivery_date - p.expected_delivery).days
+                            delivery_days.append(days)
+                            if days <= 0:  # On time or early
+                                on_time += 1
+                    
+                    on_time_rate = (on_time / len(delivered) * 100) if delivered else 0
+                    avg_delivery_days = sum(delivery_days) / len(delivery_days) if delivery_days else None
+                else:
+                    on_time_rate = 0
+                
+                # Get supplier contact info (from most recent PO)
+                recent_po = pos[0] if pos else None
+                
+                suppliers.append({
+                    'supplier_name': supplier_name,
+                    'contact': recent_po.supplier_contact if recent_po else None,
+                    'email': recent_po.supplier_email if recent_po else None,
+                    'total_pos': total_pos,
+                    'total_value': float(total_value) if total_value else 0,
+                    'completed_pos': completed_pos,
+                    'on_time_rate': round(on_time_rate, 1),
+                    'avg_delivery_days': round(avg_delivery_days, 1) if avg_delivery_days else None,
+                    'rating': min(5, max(1, int(on_time_rate / 20))) if on_time_rate > 0 else 3,  # Convert to 1-5 rating
+                    'is_active': any(p.status in ['Pending', 'Approved', 'Ordered'] for p in pos)
+                })
+                
+                total_on_time_rate += on_time_rate
+                total_po_value += float(total_value) if total_value else 0
+            
+            # Calculate averages
+            avg_on_time_rate = (total_on_time_rate / len(suppliers)) if suppliers else 0
+            
+            # Sort by total value
+            suppliers.sort(key=lambda x: x['total_value'], reverse=True)
+            
+            return render_template('procurement/manager/suppliers.html',
+                suppliers=suppliers,
+                avg_on_time_rate=round(avg_on_time_rate, 1),
+                total_po_value=total_po_value
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading suppliers: {str(e)}", exc_info=True)
+            flash('Error loading suppliers', 'error')
+            return redirect(url_for('procurement_mgr.dashboard'))
+
+    @app.route('/procurement/manager/rfq', endpoint='procurement_mgr.rfq')
+    @login_required
+    @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
+    def manage_rfq():
+        """
+        Request for Quotations management
+        """
+        try:
+            # Get procurement requests that need RFQs
+            procurement_requests = ProcurementRequest.query.filter_by(
+                status='Pending'
+            ).order_by(ProcurementRequest.created_at.desc()).all()
+            
+            # Get material schedules that need procurement
+            material_needs = MaterialSchedule.query.filter(
+                MaterialSchedule.status.in_(['Pending', 'Planned'])
+            ).all()
+            
+            # Group material needs by project
+            material_needs_by_project = {}
+            projects_with_needs = set()
+            
+            for material in material_needs:
+                if material.project_id:
+                    if material.project_id not in material_needs_by_project:
+                        material_needs_by_project[material.project_id] = []
+                    material_needs_by_project[material.project_id].append(material)
+                    projects_with_needs.add(material.project_id)
+            
+            return render_template('procurement/manager/rfq.html',
+                procurement_requests=procurement_requests,
+                material_needs=material_needs,
+                material_needs_by_project=material_needs_by_project,
+                projects_with_needs=list(projects_with_needs)
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading RFQ page: {str(e)}", exc_info=True)
+            flash('Error loading RFQ management', 'error')
+            return redirect(url_for('procurement_mgr.dashboard'))
+
+    @app.route('/procurement/manager/delivery-tracking', endpoint='procurement_mgr.delivery_tracking')
+    @login_required
+    @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
+    def delivery_tracking():
+        """
+        Track deliveries and verify receipts
+        """
+        try:
+            # Get all ordered/in-transit POs
+            in_transit_pos = PurchaseOrder.query.filter(
+                PurchaseOrder.status.in_(['Approved', 'Ordered'])
+            ).order_by(PurchaseOrder.expected_delivery).all()
+            
+            # Recent deliveries (last 30 days)
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            recent_deliveries = PurchaseOrder.query.filter(
+                PurchaseOrder.status == 'Delivered',
+                PurchaseOrder.updated_at >= thirty_days_ago
+            ).order_by(PurchaseOrder.updated_at.desc()).all()
+            
+            # Overdue deliveries
+            today = datetime.now().date()
+            overdue_pos = [po for po in in_transit_pos if po.expected_delivery and po.expected_delivery < today]
+            
+            # Delivery performance
+            all_delivered = PurchaseOrder.query.filter_by(status='Delivered').all()
+            on_time = 0
+            late = 0
+            
+            for po in all_delivered:
+                if po.expected_delivery and hasattr(po, 'delivery_date') and po.delivery_date:
+                    if po.delivery_date <= po.expected_delivery:
+                        on_time += 1
+                    else:
+                        late += 1
+            
+            on_time_percentage = (on_time / len(all_delivered) * 100) if all_delivered else 0
+            
+            return render_template('procurement/manager/delivery_tracking.html',
+                in_transit_pos=in_transit_pos,
+                recent_deliveries=recent_deliveries,
+                overdue_pos=overdue_pos,
+                on_time_count=on_time,
+                late_count=late,
+                on_time_percentage=round(on_time_percentage, 1)
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error loading delivery tracking: {str(e)}", exc_info=True)
+            flash('Error loading delivery tracking', 'error')
+            return redirect(url_for('procurement_mgr.dashboard'))
+
+    @app.route('/procurement/manager/reports', endpoint='procurement_mgr.reports')
+    @login_required
+    @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
+    def procurement_reports():
+        """
+        Comprehensive procurement reports - cost vs budget, supplier performance
+        """
+        try:
+            # Get date range and filters
+            start_date = request.args.get('start_date')
+            end_date = request.args.get('end_date')
+            project_id = request.args.get('project_id', type=int)
+            
+            if not start_date:
+                start_date = (datetime.now() - timedelta(days=90)).strftime('%Y-%m-%d')
+            if not end_date:
+                end_date = datetime.now().strftime('%Y-%m-%d')
+            
+            start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+            
+            # Build query
+            query = PurchaseOrder.query.filter(
+                PurchaseOrder.created_at.between(start_dt, end_dt)
+            )
+            
+            if project_id:
+                query = query.filter(PurchaseOrder.project_id == project_id)
+            
+            purchase_orders = query.order_by(PurchaseOrder.created_at.desc()).all()
+            
+            # Calculate metrics
+            total_spend = sum(po.total_amount for po in purchase_orders)
+            avg_po_value = total_spend / len(purchase_orders) if purchase_orders else 0
+            
+            # Spend by status (dictionary format)
+            spend_by_status = {}
+            for po in purchase_orders:
+                if po.status not in spend_by_status:
+                    spend_by_status[po.status] = 0
+                spend_by_status[po.status] += po.total_amount
+            
+            # Top suppliers (list of dicts)
+            supplier_totals = {}
+            for po in purchase_orders:
+                if po.supplier_name not in supplier_totals:
+                    supplier_totals[po.supplier_name] = 0
+                supplier_totals[po.supplier_name] += po.total_amount
+            
+            top_suppliers = [
+                {'supplier_name': name, 'total_value': value}
+                for name, value in sorted(supplier_totals.items(), key=lambda x: x[1], reverse=True)
+            ]
+            
+            # Spend by project
+            spend_by_project = []
+            if project_id:
+                projects = [Project.query.get(project_id)]
+            else:
+                projects = Project.query.filter_by(status='Active').all()
+            
+            total_budget = 0
+            total_remaining = 0
+            
+            for project in projects:
+                project_pos = [po for po in purchase_orders if po.project_id == project.id]
+                project_spend = sum(po.total_amount for po in project_pos)
+                
+                budget = project.budget.total_budget if project.budget else 0
+                remaining = budget - project_spend
+                utilization = (project_spend / budget * 100) if budget > 0 else 0
+                
+                spend_by_project.append({
+                    'project_name': project.name,
+                    'total_budget': budget,
+                    'total_spend': project_spend,
+                    'remaining': remaining,
+                    'utilization': utilization,
+                    'po_count': len(project_pos)
+                })
+                
+                total_budget += budget
+                total_remaining += remaining
+            
+            # Calculate budget utilization
+            budget_utilization = (total_spend / total_budget * 100) if total_budget > 0 else 0
+            
+            # Get all projects for filter dropdown
+            projects_list = Project.query.filter_by(status='Active').all()
+            
+            return render_template('procurement/manager/reports.html',
+                start_date=start_date,
+                end_date=end_date,
+                project_id=project_id,
+                projects=projects_list,
+                purchase_orders=purchase_orders,
+                total_spend=total_spend,
+                avg_po_value=avg_po_value,
+                budget_utilization=budget_utilization,
+                spend_by_status=spend_by_status,
+                top_suppliers=top_suppliers,
+                spend_by_project=spend_by_project,
+                total_budget=total_budget,
+                total_remaining=total_remaining
+            )
+            
+        except Exception as e:
+            current_app.logger.error(f"Error generating procurement reports: {str(e)}", exc_info=True)
+            flash('Error generating reports', 'error')
+            return redirect(url_for('procurement_mgr.dashboard'))
 
 
     # ============================================================================
@@ -15359,7 +22009,7 @@ Construction Management Team
                 project.name = request.form.get('name', project.name)
                 project.status = request.form.get('status', project.status)
                 project.description = request.form.get('description', project.description)
-                project.updated_at = datetime.utcnow()
+                project.updated_at = datetime.now(timezone.utc)
                 db.session.commit()
                 current_app.logger.info(f"Project {project_id} updated by user {current_user.id}")
                 flash(f"Project {project_id} updated successfully!", "success")
@@ -16097,10 +22747,10 @@ Construction Management Team
                     if assignment.status == 'Active':
                         utilization['general_labor'] += 1
     
-    # If no assignments found, return default values
+    # If no assignments found, return empty allocation
         if sum(allocation.values()) == 0:
-            allocation = {'engineers': 15, 'supervisors': 8, 'skilled_workers': 45, 'general_labor': 120, 'equipment_operators': 25}
-            utilization = {'engineers': 13, 'supervisors': 7, 'skilled_workers': 35, 'general_labor': 106, 'equipment_operators': 24}
+            allocation = {'engineers': 0, 'supervisors': 0, 'skilled_workers': 0, 'general_labor': 0, 'equipment_operators': 0}
+            utilization = {'engineers': 0, 'supervisors': 0, 'skilled_workers': 0, 'general_labor': 0, 'equipment_operators': 0}
     
         return {'allocation': allocation, 'utilization': utilization}
 
@@ -16538,7 +23188,7 @@ Construction Management Team
 # Calendar Page
     @app.route('/project/calendar', endpoint='project.calendar')
     @login_required
-    def calendar():
+    def project_calendar():
         try:
         # Get user's accessible projects
             accessible_projects = get_user_accessible_projects(current_user)
@@ -17520,7 +24170,7 @@ Construction Management Team
             
             old_status = project.status
             project.status = new_status
-            project.updated_at = datetime.utcnow()
+            project.updated_at = datetime.now(timezone.utc)
         
         # Auto-update progress based on status
             if new_status == 'Completed':
@@ -17568,7 +24218,7 @@ Construction Management Team
             
             old_progress = project.progress
             project.progress = progress
-            project.updated_at = datetime.utcnow()
+            project.updated_at = datetime.now(timezone.utc)
         
         # Auto-update status based on progress
             if progress == 100:
@@ -17859,7 +24509,7 @@ Construction Management Team
                 project_id=project_id,
                 staff_id=staff_id,
                 role=role,
-                assigned_at=datetime.utcnow()
+                assigned_at=datetime.now(timezone.utc)
             )
         
             db.session.add(assignment)
@@ -18716,7 +25366,7 @@ Construction Management Team
                 created_by_id=current_user.id,
                 assigned_to_id=assigned_to_id if assigned_to_id else None,
                 status='sent_to_staff' if action == 'send_to_staff' else 'draft',
-                sent_at=datetime.utcnow() if action == 'send_to_staff' else None
+                sent_at=datetime.now(timezone.utc) if action == 'send_to_staff' else None
             )
         
             db.session.add(dpr)
@@ -18895,7 +25545,7 @@ Construction Management Team
         
             if action == 'submit_completed':
                 dpr.status = 'completed'
-                dpr.completed_at = datetime.utcnow()
+                dpr.completed_at = datetime.now(timezone.utc)
                 dpr.completed_by_id = current_user.id
         
             db.session.commit()
@@ -19318,7 +25968,7 @@ Construction Management Team
         
         # Update DPR status
             dpr.status = 'approved'
-            dpr.reviewed_at = datetime.utcnow()
+            dpr.reviewed_at = datetime.now(timezone.utc)
             db.session.commit()
         
             current_app.logger.info(f"User {current_user.id} approved DPR {dpr_id}")
@@ -19360,7 +26010,7 @@ Construction Management Team
         # Update DPR status and add rejection reason
             dpr.status = 'rejected'
             dpr.issues = f"REJECTED: {reason}\n\n{dpr.issues or ''}"
-            dpr.reviewed_at = datetime.utcnow()
+            dpr.reviewed_at = datetime.now(timezone.utc)
             db.session.commit()
         
             current_app.logger.info(f"User {current_user.id} rejected DPR {dpr_id}: {reason}")
@@ -19552,7 +26202,7 @@ Construction Management Team
         
         # Add approved_at field if it exists
             if hasattr(report, 'approved_at'):
-                report.approved_at = datetime.utcnow()
+                report.approved_at = datetime.now(timezone.utc)
         
             db.session.commit()
         
@@ -19594,7 +26244,7 @@ Construction Management Team
         
         # Add rejected_at field if it exists
             if hasattr(report, 'rejected_at'):
-                report.rejected_at = datetime.utcnow()
+                report.rejected_at = datetime.now(timezone.utc)
         
             db.session.commit()
         
@@ -19962,7 +26612,7 @@ Construction Management Team
             with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
             # Add a summary text file
                 summary = f"Selected Reports Export\n"
-                summary += f"Export Date: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}\n"
+                summary += f"Export Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}\n"
                 summary += f"Total Reports: {len(reports)}\n\n"
             
                 for report in reports:
@@ -19986,7 +26636,7 @@ Construction Management Team
         
             response = make_response(zip_buffer.getvalue())
             response.headers['Content-Type'] = 'application/zip'
-            response.headers['Content-Disposition'] = f'attachment; filename=selected_reports_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.zip'
+            response.headers['Content-Disposition'] = f'attachment; filename=selected_reports_{datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")}.zip'
         
             current_app.logger.info(f"User {current_user.id} exported {len(reports)} selected reports")
         
@@ -20018,7 +26668,7 @@ Construction Management Team
             # Add a summary text file
                 summary = f"Project Reports Summary\n"
                 summary += f"Project: {project.name}\n"
-                summary += f"Export Date: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                summary += f"Export Date: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}\n\n"
             
                 reports = Report.query.order_by(Report.date.desc()).limit(20).all()
                 summary += f"Total Reports: {len(reports)}\n\n"
@@ -20135,7 +26785,7 @@ Construction Management Team
         
             response = make_response(output.getvalue())
             response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            response.headers['Content-Disposition'] = f'attachment; filename=selected_DPRs_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}.xlsx'
+            response.headers['Content-Disposition'] = f'attachment; filename=selected_DPRs_{datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")}.xlsx'
         
             current_app.logger.info(f"User {current_user.id} exported {len(dprs)} selected DPRs")
         
@@ -20240,6 +26890,202 @@ Construction Management Team
             return jsonify({'success': False, 'message': 'Failed to export DPRs'}), 500
 
 
+    # ==================== USER MANAGEMENT ROUTES ====================
+    
+    @app.route('/admin/users', endpoint='admin.users')
+    @role_required([Roles.SUPER_HQ])
+    def admin_users():
+        """Display all users with role management capabilities"""
+        try:
+            # Get filter parameters
+            role_filter = request.args.get('role', None)
+            search_query = request.args.get('search', '')
+            status_filter = request.args.get('status', 'all')
+            
+            # Base query
+            query = User.query
+            
+            # Apply filters
+            if role_filter:
+                query = query.filter(User.role == role_filter)
+            
+            if search_query:
+                query = query.filter(
+                    db.or_(
+                        User.name.ilike(f'%{search_query}%'),
+                        User.email.ilike(f'%{search_query}%')
+                    )
+                )
+            
+            if status_filter == 'verified':
+                query = query.filter(User.is_verified == True)
+            elif status_filter == 'unverified':
+                query = query.filter(User.is_verified == False)
+            
+            # Get users
+            users = query.order_by(User.created_at.desc()).all()
+            
+            # Calculate statistics
+            total_users = User.query.count()
+            verified_users = User.query.filter_by(is_verified=True).count()
+            unverified_users = User.query.filter_by(is_verified=False).count()
+            
+            # Count by role
+            role_counts = {}
+            for role in Roles.get_all_roles():
+                role_counts[role] = User.query.filter_by(role=role).count()
+            
+            stats = {
+                'total': total_users,
+                'verified': verified_users,
+                'unverified': unverified_users,
+                'role_counts': role_counts
+            }
+            
+            current_app.logger.info(f"User {current_user.id} accessed user management")
+            
+            return render_template('admin/users.html', 
+                                 users=users, 
+                                 stats=stats,
+                                 Roles=Roles,
+                                 role_filter=role_filter,
+                                 search_query=search_query,
+                                 status_filter=status_filter)
+        except Exception as e:
+            current_app.logger.error(f"Error loading users: {str(e)}")
+            flash(f'Error loading users: {str(e)}', 'error')
+            return render_template('error.html'), 500
+    
+    @app.route('/admin/users/<int:user_id>', endpoint='admin.user_details')
+    @role_required([Roles.SUPER_HQ])
+    def admin_user_details(user_id):
+        """View detailed information about a specific user"""
+        try:
+            user = User.query.get_or_404(user_id)
+            
+            # Get user activity (you can extend this based on your activity logging)
+            activity_count = 0  # Placeholder for activity tracking
+            
+            return render_template('admin/user_details.html', 
+                                 user=user, 
+                                 Roles=Roles,
+                                 activity_count=activity_count)
+        except Exception as e:
+            current_app.logger.error(f"Error loading user details: {str(e)}")
+            flash(f'Error loading user details: {str(e)}', 'error')
+            return redirect(url_for('admin.users'))
+    
+    @app.route('/admin/users/<int:user_id>/edit-role', methods=['POST'], endpoint='admin.edit_user_role')
+    @role_required([Roles.SUPER_HQ])
+    def edit_user_role(user_id):
+        """Edit a user's role (SUPER_HQ only)"""
+        try:
+            user = User.query.get_or_404(user_id)
+            
+            # Prevent self role modification
+            if user.id == current_user.id:
+                return jsonify({
+                    'success': False,
+                    'message': 'You cannot modify your own role'
+                }), 400
+            
+            new_role = request.form.get('role')
+            
+            # Validate role
+            if new_role not in Roles.get_all_roles():
+                return jsonify({
+                    'success': False,
+                    'message': 'Invalid role selected'
+                }), 400
+            
+            old_role = user.role
+            user.role = new_role
+            db.session.commit()
+            
+            current_app.logger.info(
+                f"User {current_user.id} changed user {user_id} role from {old_role} to {new_role}"
+            )
+            
+            return jsonify({
+                'success': True,
+                'message': f'User role updated to {Roles.ROLE_NAMES.get(new_role, new_role)}'
+            })
+        
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error updating user role: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': f'Error updating role: {str(e)}'
+            }), 500
+    
+    @app.route('/admin/users/<int:user_id>/toggle-status', methods=['POST'], endpoint='admin.toggle_user_status')
+    @role_required([Roles.SUPER_HQ])
+    def toggle_user_status(user_id):
+        """Toggle user verification status (activate/deactivate)"""
+        try:
+            user = User.query.get_or_404(user_id)
+            
+            # Prevent self-deactivation
+            if user.id == current_user.id:
+                return jsonify({
+                    'success': False,
+                    'message': 'You cannot deactivate your own account'
+                }), 400
+            
+            user.is_verified = not user.is_verified
+            db.session.commit()
+            
+            status = 'activated' if user.is_verified else 'deactivated'
+            current_app.logger.info(f"User {current_user.id} {status} user {user_id}")
+            
+            return jsonify({
+                'success': True,
+                'message': f'User {status} successfully',
+                'is_verified': user.is_verified
+            })
+        
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error toggling user status: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': f'Error toggling status: {str(e)}'
+            }), 500
+    
+    @app.route('/admin/users/<int:user_id>/delete', methods=['POST'], endpoint='admin.delete_user')
+    @role_required([Roles.SUPER_HQ])
+    def delete_user(user_id):
+        """Delete a user (SUPER_HQ only)"""
+        try:
+            user = User.query.get_or_404(user_id)
+            
+            # Prevent self-deletion
+            if user.id == current_user.id:
+                return jsonify({
+                    'success': False,
+                    'message': 'You cannot delete your own account'
+                }), 400
+            
+            user_email = user.email
+            db.session.delete(user)
+            db.session.commit()
+            
+            current_app.logger.warning(f"User {current_user.id} deleted user {user_id} ({user_email})")
+            
+            return jsonify({
+                'success': True,
+                'message': f'User {user_email} deleted successfully'
+            })
+        
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error deleting user: {str(e)}")
+            return jsonify({
+                'success': False,
+                'message': f'Error deleting user: {str(e)}'
+            }), 500
+
     
     return app
 
@@ -20257,3 +27103,5 @@ if __name__ == '__main__':
         import traceback
         traceback.print_exc()
         exit(1)
+
+

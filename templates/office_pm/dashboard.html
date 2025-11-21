@@ -1,0 +1,273 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Office Project Manager Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Office Project Manager Dashboard</h1>
+                    <p class="mt-1 text-sm text-gray-500">Portfolio Overview & Key Performance Indicators</p>
+                </div>
+                <div class="flex gap-3">
+                    <a href="{{ url_for('office_pm.create_report') }}" class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+                        <i class='bx bx-file-blank mr-2'></i>
+                        <span>Create Report</span>
+                    </a>
+                    <a href="{{ url_for('office_pm.approvals') }}" class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        <i class='bx bx-bell mr-2'></i>
+                        <span>Approvals ({{ total_pending_approvals }})</span>
+                    </a>
+                    <a href="{{ url_for('office_pm.progress_reports') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <i class='bx bx-chart mr-2'></i>
+                        <span>Progress Reports</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Portfolio Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- Total Projects -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Active Projects</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ total_projects }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <i class='bx bx-briefcase text-2xl text-blue-600'></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <span class="text-sm text-gray-500">Portfolio Value: </span>
+                    <span class="text-sm font-semibold text-gray-900">₦{{ "{:,.0f}".format(total_portfolio_budget) }}</span>
+                </div>
+            </div>
+
+            <!-- Budget Utilization -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Portfolio Spent</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">₦{{ "{:,.0f}".format(total_portfolio_spent / 1000000) }}M</p>
+                    </div>
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                        <i class='bx bx-money text-2xl text-green-600'></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="flex items-center justify-between text-sm">
+                        <span class="text-gray-500">Utilization:</span>
+                        <span class="font-semibold">{{ "{:.1f}".format((total_portfolio_spent / total_portfolio_budget * 100) if total_portfolio_budget > 0 else 0) }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                        <div class="bg-green-600 h-2 rounded-full" style="width: {{ (total_portfolio_spent / total_portfolio_budget * 100) if total_portfolio_budget > 0 else 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Average Completion -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Avg. Completion</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-2">{{ avg_completion }}%</p>
+                    </div>
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                        <i class='bx bx-trending-up text-2xl text-purple-600'></i>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-purple-600 h-2 rounded-full" style="width: {{ avg_completion }}%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Actions -->
+            <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Pending Approvals</p>
+                        <p class="text-3xl font-bold text-red-600 mt-2">{{ total_pending_approvals }}</p>
+                    </div>
+                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                        <i class='bx bx-bell text-2xl text-red-600'></i>
+                    </div>
+                </div>
+                <div class="mt-4 flex gap-2">
+                    <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">{{ pending_budgets }} Budgets</span>
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">{{ pending_variations }} Variations</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects KPI Table -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h2 class="text-lg font-semibold text-gray-900">Project Performance Overview</h2>
+                    <a href="{{ url_for('office_pm.performance_analytics') }}" class="text-sm text-blue-600 hover:text-blue-700">
+                        View Advanced Analytics →
+                    </a>
+                </div>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Health</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Utilization</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Progress</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Milestones</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Issues</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for kpi in project_kpis %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div>
+                                        <div class="text-sm font-medium text-gray-900">{{ kpi.project.name }}</div>
+                                        <div class="text-xs text-gray-500">{{ kpi.project.location or 'N/A' }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if kpi.health_status == 'good' %}bg-green-100 text-green-800
+                                    {% elif kpi.health_status == 'warning' %}bg-yellow-100 text-yellow-800
+                                    {% else %}bg-red-100 text-red-800{% endif %}">
+                                    {% if kpi.health_status == 'good' %}✓ Good
+                                    {% elif kpi.health_status == 'warning' %}⚠ Warning
+                                    {% else %}✗ Critical{% endif %}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                <div class="font-medium text-gray-900">₦{{ "{:,.0f}".format(kpi.budget_total) }}</div>
+                                <div class="text-xs text-gray-500">Spent: ₦{{ "{:,.0f}".format(kpi.budget_spent) }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-center">
+                                    <div class="text-sm font-medium text-gray-900">{{ kpi.budget_utilization }}%</div>
+                                    <div class="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                                        <div class="h-1.5 rounded-full 
+                                            {% if kpi.budget_utilization > 100 %}bg-red-600
+                                            {% elif kpi.budget_utilization > 85 %}bg-yellow-500
+                                            {% else %}bg-green-600{% endif %}" 
+                                            style="width: {{ kpi.budget_utilization if kpi.budget_utilization <= 100 else 100 }}%"></div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                <div class="text-sm font-medium text-gray-900">{{ kpi.milestone_completion }}%</div>
+                                <div class="text-xs text-gray-500">{{ kpi.avg_daily_progress }}% daily</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm">
+                                <span class="text-green-600 font-medium">{{ kpi.completed_milestones }}</span>
+                                <span class="text-gray-500">/{{ kpi.total_milestones }}</span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                {% if kpi.open_issues > 0 %}
+                                <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">{{ kpi.open_issues }}</span>
+                                {% else %}
+                                <span class="text-green-600 text-xs">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                                <div class="flex items-center justify-center gap-2">
+                                    <a href="{{ url_for('office_pm.project_details', project_id=kpi.project.id) }}" 
+                                       class="text-blue-600 hover:text-blue-900" title="View Details">
+                                        <i class='bx bx-show'></i>
+                                    </a>
+                                    <a href="{{ url_for('office_pm.project_staff', project_id=kpi.project.id) }}" 
+                                       class="text-purple-600 hover:text-purple-900" title="View Staff">
+                                        <i class='bx bx-group'></i>
+                                    </a>
+                                    <a href="{{ url_for('office_pm.project_documents', project_id=kpi.project.id) }}" 
+                                       class="text-green-600 hover:text-green-900" title="Documents">
+                                        <i class='bx bx-file'></i>
+                                    </a>
+                                    <a href="{{ url_for('office_pm.project_daily_reports', project_id=kpi.project.id) }}" 
+                                       class="text-yellow-600 hover:text-yellow-900" title="Daily Reports">
+                                        <i class='bx bx-calendar'></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Communications -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-900">Open Issues</h3>
+                        <span class="px-3 py-1 bg-red-100 text-red-800 text-sm rounded-full font-medium">{{ total_issues }}</span>
+                    </div>
+                </div>
+                <div class="p-6">
+                    {% if total_issues > 0 %}
+                    <div class="space-y-3">
+                        <div class="text-center py-4">
+                            <p class="text-gray-500">{{ total_issues }} issues require attention</p>
+                            <a href="{{ url_for('office_pm.communications') }}" class="mt-2 inline-block text-blue-600 hover:text-blue-700">
+                                View All Issues →
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <i class='bx bx-check-circle text-4xl text-green-500 mb-2'></i>
+                        <p>No open issues</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-lg font-semibold text-gray-900">Recent Communications</h3>
+                        <a href="{{ url_for('office_pm.communications') }}" class="text-sm text-blue-600 hover:text-blue-700">View All</a>
+                    </div>
+                </div>
+                <div class="p-6">
+                    {% if recent_communications %}
+                    <div class="space-y-3">
+                        {% for comm in recent_communications[:5] %}
+                        <div class="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+                            <div class="flex-1">
+                                <p class="text-sm text-gray-900">{{ comm.action }}</p>
+                                <p class="text-xs text-gray-500 mt-1">{{ comm.timestamp.strftime('%b %d, %Y %I:%M %p') }}</p>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8 text-gray-500">
+                        <p>No recent communications</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Safety Incidents</h1>
+            <p class="text-gray-600 mt-2">Report and track safety incidents</p>
+        </div>
+        <button onclick="document.getElementById('newIncidentModal').classList.remove('hidden')"
+                class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg shadow">
+            <i class="fas fa-plus mr-2"></i>Report Incident
+        </button>
+    </div>
+
+    <!-- Severity Filter -->
+    <div class="flex space-x-2 mb-6">
+        <a href="?severity=fatal" class="px-4 py-2 bg-black text-white rounded-lg text-sm">Fatal</a>
+        <a href="?severity=major" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm">Major</a>
+        <a href="?severity=minor" class="px-4 py-2 bg-yellow-500 text-white rounded-lg text-sm">Minor</a>
+        <a href="?severity=first_aid" class="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm">First Aid</a>
+        <a href="?severity=near_miss" class="px-4 py-2 bg-green-500 text-white rounded-lg text-sm">Near Miss</a>
+        <a href="?status=all" class="px-4 py-2 bg-gray-600 text-white rounded-lg text-sm">All</a>
+    </div>
+
+    <!-- Incidents List -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Incident #</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Severity</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Injured</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Days Lost</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for incident in incidents %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ incident.incident_number }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ incident.incident_date.strftime('%b %d, %Y') }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ incident.project.project_name }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ incident.incident_type|replace('_', ' ')|title }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full
+                            {% if incident.severity == 'fatal' %}bg-black text-white
+                            {% elif incident.severity == 'major' %}bg-red-100 text-red-800
+                            {% elif incident.severity == 'minor' %}bg-yellow-100 text-yellow-800
+                            {% elif incident.severity == 'first_aid' %}bg-blue-100 text-blue-800
+                            {% else %}bg-green-100 text-green-800{% endif %}">
+                            {{ incident.severity|replace('_', ' ')|upper }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ incident.injured_person_name or '-' }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {% if incident.days_lost > 0 %}
+                            <span class="text-red-600 font-semibold">{{ incident.days_lost }}</span>
+                        {% else %}
+                            <span class="text-gray-400">0</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full
+                            {% if incident.status == 'closed' %}bg-green-100 text-green-800
+                            {% elif incident.status == 'under_investigation' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ incident.status|replace('_', ' ')|title }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="#" class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="px-6 py-8 text-center text-gray-500">
+                        No safety incidents found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- New Incident Modal -->
+<div id="newIncidentModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-8 border w-full max-w-5xl shadow-lg rounded-lg bg-white">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Report Safety Incident</h3>
+            <button onclick="document.getElementById('newIncidentModal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Incident Number *</label>
+                    <input type="text" name="incident_number" required class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Project *</label>
+                    <select name="project_id" required class="w-full border-gray-300 rounded-lg">
+                        <option value="">Select Project</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.project_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Incident Date *</label>
+                    <input type="date" name="incident_date" required class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Incident Time</label>
+                    <input type="time" name="incident_time" class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Incident Type *</label>
+                    <select name="incident_type" required class="w-full border-gray-300 rounded-lg">
+                        <option value="">Select Type</option>
+                        <option value="injury">Injury</option>
+                        <option value="near_miss">Near Miss</option>
+                        <option value="property_damage">Property Damage</option>
+                        <option value="environmental">Environmental</option>
+                        <option value="fire">Fire</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Severity *</label>
+                    <select name="severity" required class="w-full border-gray-300 rounded-lg">
+                        <option value="">Select Severity</option>
+                        <option value="fatal">Fatal</option>
+                        <option value="major">Major</option>
+                        <option value="minor">Minor</option>
+                        <option value="first_aid">First Aid</option>
+                        <option value="near_miss">Near Miss</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Location</label>
+                    <input type="text" name="location" class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Injured Person Name</label>
+                    <input type="text" name="injured_person_name" class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Days Lost</label>
+                    <input type="number" name="days_lost" value="0" class="w-full border-gray-300 rounded-lg">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                <textarea name="description" required rows="3" class="w-full border-gray-300 rounded-lg"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Immediate Actions Taken</label>
+                <textarea name="immediate_actions_taken" rows="3" class="w-full border-gray-300 rounded-lg"></textarea>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4">
+                <label class="flex items-center">
+                    <input type="checkbox" name="first_aid_given" class="rounded border-gray-300 text-red-600">
+                    <span class="ml-2 text-sm text-gray-700">First Aid Given</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" name="emergency_services_called" class="rounded border-gray-300 text-red-600">
+                    <span class="ml-2 text-sm text-gray-700">Emergency Services Called</span>
+                </label>
+                <label class="flex items-center">
+                    <input type="checkbox" name="reportable_to_authority" class="rounded border-gray-300 text-red-600">
+                    <span class="ml-2 text-sm text-gray-700">Reportable to Authority</span>
+                </label>
+            </div>
+
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="document.getElementById('newIncidentModal').classList.add('hidden')"
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Report Incident
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

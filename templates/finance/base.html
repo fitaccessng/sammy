@@ -9,6 +9,9 @@
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <!-- Box Icons -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     
@@ -25,54 +28,95 @@
             <nav class="space-y-6">
                 <!-- Dashboard -->
                 <div class="space-y-2">
-                    <a href="{{ url_for('finance.finance_home') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                        <i class='bx bxs-dashboard text-xl'></i>
-                        <span>Dashboard</span>
+                    <a href="{{ url_for('finance.finance_home') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-chart-line text-xl'></i>
+                        <span>Finance Dashboard</span>
                     </a>
                 </div>
 
-                <!-- Financial Management -->
+                <!-- Budget & Planning -->
                 <div class="space-y-2">
-                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Financial Management</h2>
-                    <a href="{{ url_for('finance.bank_reconciliation') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                        <i class='bx bxs-bank text-xl'></i>
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Budget & Planning</h2>
+                    <a href="{{ url_for('finance_mgr.budgets') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-calculator text-xl'></i>
+                        <span>Budget Management</span>
+                    </a>
+                    <a href="{{ url_for('finance_mgr.cashflow') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-chart-area text-xl'></i>
+                        <span>Cash Flow Forecast</span>
+                    </a>
+                </div>
+
+                <!-- Invoicing & Payments -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Invoicing & Payments</h2>
+                    <a href="{{ url_for('finance_mgr.invoices') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-file-invoice text-xl'></i>
+                        <span>Invoices</span>
+                    </a>
+                    <a href="{{ url_for('finance_mgr.payments') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-credit-card text-xl'></i>
+                        <span>Payments</span>
+                    </a>
+                    <a href="{{ url_for('finance_mgr.receivables') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-receipt text-xl'></i>
+                        <span>Accounts Receivable</span>
+                    </a>
+                    <a href="{{ url_for('finance_mgr.payables') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-file-invoice-dollar text-xl'></i>
+                        <span>Accounts Payable</span>
+                    </a>
+                </div>
+
+                <!-- Transactions & Records -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Transactions & Records</h2>
+                    <a href="{{ url_for('finance_mgr.transactions') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-exchange-alt text-xl'></i>
+                        <span>Financial Transactions</span>
+                    </a>
+                    <a href="{{ url_for('finance.bank_reconciliation') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-university text-xl'></i>
                         <span>Bank Reconciliation</span>
                     </a>
-                    <a href="{{ url_for('finance.expenses') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                        <i class='bx bxs-receipt text-xl'></i>
+                    <a href="{{ url_for('finance.expenses') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-shopping-cart text-xl'></i>
                         <span>Expenses</span>
+                    </a>
+                </div>
+
+                <!-- Reports & Analytics -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Reports & Analytics</h2>
+                    <a href="{{ url_for('finance_mgr.reports') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-chart-bar text-xl'></i>
+                        <span>Financial Reports</span>
+                    </a>
+                    <a href="{{ url_for('finance.audit') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-clipboard-list text-xl'></i>
+                        <span>Audit Logs</span>
                     </a>
                 </div>
 
                 <!-- HR & Payroll -->
                 <div class="space-y-2">
-                    <h2 class="text-xs uppercase tracking-wider text-gray-400">HR & Payroll</h2>
-                    <a href="{{ url_for('hr.payroll') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                        <i class='bx bxs-wallet text-xl'></i>
-                        <span>Payroll Management</span>
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400 font-semibold">HR & Payroll</h2>
+                  
+                
+                    <a href="{{ url_for('finance.payroll_approvals') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-check-circle text-xl'></i>
+                        <span>Payroll Approvals</span>
                     </a>
                 </div>
 
                 <!-- Documents -->
                 <div class="space-y-2">
-                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Documents</h2>
-                    <a href="{{ url_for('project.documents') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                        <i class='bx bxs-file text-xl'></i>
-                        <span>Document Manager</span>
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Documents</h2>
+                    <a href="{{ url_for('finance.financial_documents') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-folder-open text-xl'></i>
+                        <span>Financial Documents</span>
                     </a>
-                    <a href="{{ url_for('finance.audit') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                        <i class='bx bxs-notepad text-xl'></i>
-                        <span>Audit Logs</span>
-                    </a>
-                </div>
-
-                <!-- Reports -->
-                <div class="space-y-2">
-                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports</h2>
-                    <a href="{{ url_for('hr.reports') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                        <i class='bx bxs-report text-xl'></i>
-                        <span>Financial Reports</span>
-                    </a>
+                   
                 </div>
             </nav>
         </aside>
@@ -85,25 +129,26 @@
                     <h1 class="text-xl font-semibold text-gray-800">{% block header %}Dashboard{% endblock %}</h1>
                     <div class="flex items-center space-x-4">
                         <button class="text-gray-500 hover:text-gray-700">
-                            <i class='bx bxs-bell text-xl'></i>
+                            <i class='fas fa-bell text-xl'></i>
                         </button>
                         <div class="relative">
                             <button id="userMenuBtn" class="flex items-center space-x-2">
                                 <img src="https://ui-avatars.com/api/?name=Finance&background=0D8ABC&color=fff" 
                                      alt="Profile" class="w-8 h-8 rounded-full">
                                 <span class="text-gray-700">Finance Admin</span>
-                                <i class='bx bx-chevron-down text-gray-500'></i>
+                                <i class='fas fa-chevron-down text-gray-500'></i>
                             </button>
                             
                             <!-- Dropdown Menu -->
                             <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                                 <a href="{{ url_for('project.settings') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class='bx bx-cog mr-2'></i>
+                                    <i class='fas fa-cog mr-2'></i>
                                     Settings
                                 </a>
                                 <hr class="my-1 border-gray-200">
                                  <a href="{{ url_for('logout') }}" 
                                        class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                        <i class='fas fa-sign-out-alt mr-2'></i>
                                         Logout
                                     </a>
                             </div>

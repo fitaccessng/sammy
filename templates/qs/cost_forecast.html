@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block title %}Cost Forecast - {{ project.name }} - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Budget Forecast & Projection</h1>
+        <p class="text-gray-600 mt-1">{{ project.name }} - Estimate to Complete</p>
+    </div>
+
+    <!-- Key Performance Indicators -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-blue-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-blue-900">Cost Performance Index (CPI)</p>
+            <p class="text-3xl font-bold text-blue-900 mt-2">{{ cost_performance_index }}</p>
+            <p class="text-xs text-blue-700 mt-1">
+                {% if cost_performance_index > 1 %}Under budget{% elif cost_performance_index == 1 %}On budget{% else %}Over budget{% endif %}
+            </p>
+        </div>
+        <div class="bg-green-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-green-900">Schedule Performance Index (SPI)</p>
+            <p class="text-3xl font-bold text-green-900 mt-2">{{ schedule_performance_index }}</p>
+            <p class="text-xs text-green-700 mt-1">
+                {% if schedule_performance_index > 1 %}Ahead of schedule{% elif schedule_performance_index == 1 %}On schedule{% else %}Behind schedule{% endif %}
+            </p>
+        </div>
+        <div class="bg-orange-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-orange-900">Work Done</p>
+            <p class="text-3xl font-bold text-orange-900 mt-2">{{ work_done_percentage }}%</p>
+            <p class="text-xs text-orange-700 mt-1">₦{{ "{:,.0f}".format(work_done_value) }}</p>
+        </div>
+        <div class="bg-purple-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-purple-900">Time Elapsed</p>
+            <p class="text-3xl font-bold text-purple-900 mt-2">{{ time_elapsed_percentage }}%</p>
+            <p class="text-xs text-purple-700 mt-1">Of project duration</p>
+        </div>
+    </div>
+
+    <!-- Cost Projection Summary -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Cost Breakdown -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Cost Projection to Completion</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center pb-3 border-b">
+                        <span class="text-gray-600">Total BOQ Value</span>
+                        <span class="font-semibold text-gray-900">₦{{ "{:,.0f}".format(total_boq) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b">
+                        <span class="text-gray-600">Actual Cost to Date</span>
+                        <span class="font-semibold text-gray-900">₦{{ "{:,.0f}".format(total_spent) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b">
+                        <span class="text-gray-600">Estimated Cost to Complete (ETC)</span>
+                        <span class="font-semibold text-orange-600">₦{{ "{:,.0f}".format(cost_to_complete) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b-2 border-gray-300 text-lg">
+                        <span class="font-bold text-gray-900">Estimated Final Cost (EAC)</span>
+                        <span class="font-bold {% if estimated_final_cost <= total_boq %}text-green-600{% else %}text-red-600{% endif %}">
+                            ₦{{ "{:,.0f}".format(estimated_final_cost) }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2">
+                        <span class="font-semibold {% if (total_boq - estimated_final_cost) >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            Variance at Completion
+                        </span>
+                        <span class="font-bold text-xl {% if (total_boq - estimated_final_cost) >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            ₦{{ "{:,.0f}".format(total_boq - estimated_final_cost) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Chart -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Performance Indicators</h3>
+            </div>
+            <div class="p-6">
+                <!-- CPI Indicator -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-700">Cost Performance Index (CPI)</span>
+                        <span class="text-sm font-bold 
+                            {% if cost_performance_index > 1 %}text-green-600
+                            {% elif cost_performance_index == 1 %}text-blue-600
+                            {% else %}text-red-600{% endif %}">
+                            {{ cost_performance_index }}
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="h-3 rounded-full 
+                            {% if cost_performance_index > 1 %}bg-green-600
+                            {% elif cost_performance_index == 1 %}bg-blue-600
+                            {% else %}bg-red-600{% endif %}" 
+                            style="width: {{ (cost_performance_index * 50) if cost_performance_index <= 2 else 100 }}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0.5</span>
+                        <span>1.0 (Target)</span>
+                        <span>1.5+</span>
+                    </div>
+                </div>
+
+                <!-- SPI Indicator -->
+                <div class="mb-6">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-sm font-medium text-gray-700">Schedule Performance Index (SPI)</span>
+                        <span class="text-sm font-bold 
+                            {% if schedule_performance_index > 1 %}text-green-600
+                            {% elif schedule_performance_index == 1 %}text-blue-600
+                            {% else %}text-red-600{% endif %}">
+                            {{ schedule_performance_index }}
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-3">
+                        <div class="h-3 rounded-full 
+                            {% if schedule_performance_index > 1 %}bg-green-600
+                            {% elif schedule_performance_index == 1 %}bg-blue-600
+                            {% else %}bg-red-600{% endif %}" 
+                            style="width: {{ (schedule_performance_index * 50) if schedule_performance_index <= 2 else 100 }}%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        <span>0.5</span>
+                        <span>1.0 (Target)</span>
+                        <span>1.5+</span>
+                    </div>
+                </div>
+
+                <!-- Health Status -->
+                <div class="mt-8 p-4 rounded-lg {% if cost_performance_index > 0.95 and schedule_performance_index > 0.95 %}bg-green-50{% elif cost_performance_index > 0.85 and schedule_performance_index > 0.85 %}bg-yellow-50{% else %}bg-red-50{% endif %}">
+                    <p class="text-sm font-medium {% if cost_performance_index > 0.95 and schedule_performance_index > 0.95 %}text-green-900{% elif cost_performance_index > 0.85 and schedule_performance_index > 0.85 %}text-yellow-900{% else %}text-red-900{% endif %}">
+                        Project Health: 
+                        {% if cost_performance_index > 0.95 and schedule_performance_index > 0.95 %}
+                            ✓ Healthy
+                        {% elif cost_performance_index > 0.85 and schedule_performance_index > 0.85 %}
+                            ⚠ Needs Attention
+                        {% else %}
+                            ✗ At Risk
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forecast by Category -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Budget Forecast by Category</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allocated Budget</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Spent to Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Remaining</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Spent %</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Projected Final</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Variance</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for forecast in forecast_by_category %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ forecast.category }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">₦{{ "{:,.0f}".format(forecast.allocated) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">₦{{ "{:,.0f}".format(forecast.spent) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium {% if forecast.remaining < 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                            ₦{{ "{:,.0f}".format(forecast.remaining) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="w-24 bg-gray-200 rounded-full h-2 mr-2">
+                                    <div class="{% if forecast.spent_percentage > 90 %}bg-red-600{% elif forecast.spent_percentage > 75 %}bg-yellow-500{% else %}bg-green-600{% endif %} h-2 rounded-full" 
+                                         style="width: {{ forecast.spent_percentage if forecast.spent_percentage <= 100 else 100 }}%"></div>
+                                </div>
+                                <span class="text-sm text-gray-700">{{ forecast.spent_percentage }}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">₦{{ "{:,.0f}".format(forecast.projected_final) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-bold {% if forecast.variance >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            ₦{{ "{:,.0f}".format(forecast.variance) }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="mt-8 flex justify-between">
+        <a href="{{ url_for('qs.dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">
+            Back to Dashboard
+        </a>
+        <div class="flex space-x-3">
+            <button onclick="window.print()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Print Forecast
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

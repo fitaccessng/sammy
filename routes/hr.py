@@ -322,21 +322,91 @@ def manage_departments():
 @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
 def hr_home():
     try:
-        from models import Employee, Query, Attendance, Payroll, Task
+        from models import Employee, Query, Attendance, Payroll, Task, Leave, Audit
+        from sqlalchemy import desc
+        
         total_staff = Employee.query.count()
-        pending_queries = Query.query.filter_by(status='Pending').count() if hasattr(Query, 'status') else 0
+        
+        # Active leaves - count approved leaves that are currently active
         today = datetime.now().date()
+        active_leaves = Leave.query.filter(
+            Leave.status.in_(['Approved', 'Active']),
+            Leave.start <= today,
+            Leave.end >= today
+        ).count() if hasattr(Leave, 'status') else 0
+        
+        pending_queries = Query.query.filter_by(status='Pending').count() if hasattr(Query, 'status') else 0
         attendance_today = Attendance.query.filter_by(date=today, status='Present').count() if hasattr(Attendance, 'date') else 0
         pending_tasks = Task.query.filter_by(status='Pending').count() if hasattr(Task, 'status') else 0
         pending_payroll = Payroll.query.filter_by(status='Pending Approval').with_entities(db.func.sum(Payroll.amount)).scalar() or 0
+        
+        # Recent activities - get latest staff additions, leave approvals, etc.
+        recent_activities = []
+        
+        # Recent staff additions (last 5)
+        recent_staff = Employee.query.filter(
+            Employee.date_of_employment.isnot(None)
+        ).order_by(desc(Employee.date_of_employment)).limit(3).all()
+        
+        for emp in recent_staff:
+            if emp.date_of_employment:
+                days_ago = (today - emp.date_of_employment).days
+                if days_ago == 0:
+                    time_ago = "Today"
+                elif days_ago == 1:
+                    time_ago = "Yesterday"
+                elif days_ago < 7:
+                    time_ago = f"{days_ago} days ago"
+                else:
+                    time_ago = emp.date_of_employment.strftime('%b %d, %Y')
+                
+                recent_activities.append({
+                    'type': 'staff_added',
+                    'icon': 'bx-user-plus',
+                    'color': 'blue',
+                    'title': f'New Staff: {emp.name}',
+                    'time': time_ago
+                })
+        
+        # Recent leave approvals (last 3)
+        recent_leaves = Leave.query.filter_by(status='Approved').order_by(
+            desc(Leave.created_at)
+        ).limit(3).all() if hasattr(Leave, 'created_at') else []
+        
+        for leave in recent_leaves:
+            emp = Employee.query.get(leave.employee_id) if leave.employee_id else None
+            if emp and leave.created_at:
+                days_ago = (datetime.now() - leave.created_at).days
+                if days_ago == 0:
+                    time_ago = "Today"
+                elif days_ago == 1:
+                    time_ago = "Yesterday"
+                elif days_ago < 7:
+                    time_ago = f"{days_ago} days ago"
+                else:
+                    time_ago = leave.created_at.strftime('%b %d, %Y')
+                
+                recent_activities.append({
+                    'type': 'leave_approved',
+                    'icon': 'bx-calendar-check',
+                    'color': 'green',
+                    'title': f'Leave Approved: {emp.name}',
+                    'time': time_ago
+                })
+        
+        # Sort by most recent and limit to 5
+        recent_activities = sorted(recent_activities, key=lambda x: x['time'])[:5]
+        
         summary = {
             'total_staff': total_staff,
+            'active_leaves': active_leaves,
             'pending_queries': pending_queries,
             'attendance_today': attendance_today,
             'pending_tasks': pending_tasks,
             'pending_payroll': pending_payroll
         }
-        return render_template('hr/index.html', summary=summary)
+        
+        return render_template('hr/index.html', summary=summary, recent_activities=recent_activities)
     except Exception as e:
         current_app.logger.error(f"HR dashboard error: {str(e)}")
         flash("Error loading HR dashboard", "error")
@@ -368,11 +438,63 @@ def leave_management():
                     'department': staff.department if staff and hasattr(staff, 'department') else ''
                 }
             })
-        return render_template('hr/leave/index.html', leaves=leaves, leave_events=leave_events)
+        # Get active employees for dropdown
+        employees = Employee.query.filter_by(status='Active').order_by(Employee.name).all()
+        return render_template('hr/leave/index.html', leaves=leaves, leave_events=leave_events, employees=employees)
     except Exception as e:
         current_app.logger.error(f"Leave management error: {str(e)}")
         flash("Error loading leave management", "error")
         return render_template('error.html'), 500
+
+@hr_bp.route("/leave/create", methods=['POST'])
+@role_required([Roles.SUPER_HQ, Roles.HQ_HR])
+def create_leave():
+    try:
+        from models import Leave, Employee
+        
+        employee_id = request.form.get('employee_id')
+        leave_type = request.form.get('leave_type')
+        start_date = request.form.get('start_date')
+        end_date = request.form.get('end_date')
+        reason = request.form.get('reason', '')
+        
+        # Validate required fields
+        if not all([employee_id, leave_type, start_date, end_date]):
+            flash("All required fields must be filled", "error")
+            return redirect(url_for('hr.leave_management'))
+        
+        # Convert dates
+        from datetime import datetime
+        start = datetime.strptime(start_date, '%Y-%m-%d').date()
+        end = datetime.strptime(end_date, '%Y-%m-%d').date()
+        
+        # Validate dates
+        if end < start:
+            flash("End date cannot be before start date", "error")
+            return redirect(url_for('hr.leave_management'))
+        
+        # Create leave request
+        new_leave = Leave(
+            employee_id=employee_id,
+            type=leave_type,
+            start=start,
+            end=end,
+            status='Pending',
+            created_at=datetime.now()
+        )
+        
+        db.session.add(new_leave)
+        db.session.commit()
+        
+        flash(f"Leave request created successfully for {leave_type}", "success")
+        current_app.logger.info(f"Leave request created: {new_leave.id} for employee {employee_id}")
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error creating leave: {str(e)}")
+        flash("Error creating leave request", "error")
+    
+    return redirect(url_for('hr.leave_management'))
 
 # Staff Query Routes
 @hr_bp.route("/queries", methods=['GET', 'POST'])
@@ -2042,7 +2164,7 @@ def staff_list():
         # Get staff list
         staff_list = []
         try:
-            employees = Employee.query.order_by(Employee.date_of_employment.desc()).limit(50).all()
+            employees = Employee.query.order_by(Employee.id.desc()).limit(50).all()
             for emp in employees:
                 staff_list.append({
                     'id': emp.id,
@@ -2056,7 +2178,7 @@ def staff_list():
                     'avatar_url': f"https://ui-avatars.com/api/?name={emp.name.replace(' ', '+')}&background=random"
                 })
         except Exception as le:
-            current_app.logger.error(f"Error getting staff list: {str(le)}")
+            current_app.logger.error(f"Error getting staff list: {str(le)}", exc_info=True)
             flash("Error loading staff list", "error")
         
         # Get departments
@@ -2262,16 +2384,50 @@ def staff_details_json(staff_id):
     except Exception as e:
         current_app.logger.error(f"Staff details JSON error: {e}")
         return jsonify({'error': 'internal_error'}), 500
-@hr_bp.route("/staff/<int:staff_id>/edit", methods=["POST"])
+@hr_bp.route("/staff/<int:staff_id>/edit", methods=["GET", "POST"])
 @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
 def edit_staff(staff_id):
     try:
-        from models import Employee
+        from models import Employee, Role
         emp = db.session.get(Employee, staff_id)
         if not emp:
             flash("Staff not found", "error")
             return redirect(url_for('hr.staff_list'))
-
+        
+        # GET request - show edit form
+        if request.method == 'GET':
+            # Prepare staff data
+            staff_data = {
+                'id': emp.id,
+                'staff_code': getattr(emp, 'staff_code', ''),
+                'name': emp.name,
+                'email': emp.email,
+                'phone': emp.phone,
+                'dob': emp.dob,
+                'gender': getattr(emp, 'gender', ''),
+                'current_address': emp.current_address,
+                'next_of_kin': emp.next_of_kin,
+                'next_of_kin_phone': emp.next_of_kin_phone,
+                'date_of_employment': emp.date_of_employment,
+                'employment_type': emp.employment_type,
+                'position': emp.position,
+                'department': emp.department,
+                'status': emp.status,
+                'academic_qualification_at_employment': emp.academic_qualification_at_employment,
+                'institution': getattr(emp, 'institution', ''),
+                'notes': getattr(emp, 'notes', ''),
+                'avatar_url': f"https://ui-avatars.com/api/?name={emp.name.replace(' ', '+')}&background=random"
+            }
+            
+            # Create a simple object to pass to template
+            class StaffObj:
+                def __init__(self, data):
+                    for key, value in data.items():
+                        setattr(self, key, value)
+            
+            return render_template('hr/staff/edit.html', staff=StaffObj(staff_data))
+        
+        # POST request - process form submission
         # Get form data
         name = (request.form.get('name') or '').strip()
         staff_code = (request.form.get('staff_code') or '').strip() or None

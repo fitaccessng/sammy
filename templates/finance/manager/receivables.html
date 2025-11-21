@@ -1,0 +1,113 @@
+{% extends "finance/base.html" %}
+{% block title %}Accounts Receivable{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }} p-4 rounded-lg mb-4
+                    {{ 'bg-green-50 border border-green-200 text-green-800' if category == 'success' else 'bg-red-50 border border-red-200 text-red-800' }}">
+                    <div class="flex items-center">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} mr-2"></i>
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">
+                <i class="fas fa-receipt text-yellow-600 mr-3"></i>Accounts Receivable
+            </h1>
+            <p class="text-gray-600">Automatically synced from unpaid invoices</p>
+        </div>
+        <a href="{{ url_for('finance_mgr.invoices') }}" class="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700">
+            <i class="fas fa-file-invoice mr-2"></i>Manage Invoices
+        </a>
+    </div>
+
+    <!-- Aging Summary -->
+    <div class="grid grid-cols-5 gap-4 mb-6">
+        {% for bucket_info in aging_summary %}
+        <div class="bg-white rounded-lg shadow p-4 {% if bucket_info.aging_bucket == '90+' %}border-2 border-red-500{% endif %}">
+            <p class="text-sm text-gray-600 mb-1">{{ bucket_info.aging_bucket }} days</p>
+            <p class="text-2xl font-bold {% if bucket_info.aging_bucket == '90+' %}text-red-600{% else %}text-gray-900{% endif %}">₦{{ "{:,.0f}".format(bucket_info.total or 0) }}</p>
+            <p class="text-xs text-gray-500">{{ bucket_info.count }} invoice{{ 's' if bucket_info.count != 1 else '' }}</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Top Debtors -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="text-lg font-semibold mb-4"><i class="fas fa-user-tie text-red-600 mr-2"></i>Top Outstanding Customers</h3>
+        <div class="grid grid-cols-2 gap-4">
+            {% for debtor in top_debtors %}
+            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                <span class="font-medium">{{ debtor.customer_name }}</span>
+                <span class="text-red-700 font-bold">₦{{ "{:,.0f}".format(debtor.total_outstanding) }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Receivables List -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Customer</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Invoice #</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Days Outstanding</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount Due</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aging Bucket</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for ar in receivables %}
+                <tr class="hover:bg-gray-50 {% if ar.days_outstanding > 90 %}bg-red-50{% elif ar.days_outstanding > 60 %}bg-orange-50{% elif ar.days_outstanding > 30 %}bg-yellow-50{% endif %}">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium">{{ ar.customer_name }}</div>
+                        {% if ar.invoice and ar.invoice.customer_email %}
+                        <div class="text-xs text-gray-500">{{ ar.invoice.customer_email }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <a href="{{ url_for('finance_mgr.view_invoice', invoice_id=ar.invoice_id) }}" class="font-medium text-blue-600 hover:text-blue-800">
+                            {{ ar.invoice_number }}
+                        </a>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">{{ ar.due_date.strftime('%b %d, %Y') }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs font-semibold rounded-full {% if ar.days_outstanding > 90 %}bg-red-600 text-white{% elif ar.days_outstanding > 60 %}bg-orange-600 text-white{% elif ar.days_outstanding > 30 %}bg-yellow-600 text-white{% else %}bg-green-100 text-green-800{% endif %}">{{ ar.days_outstanding }} days</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap font-bold">₦{{ "{:,.2f}".format(ar.invoice.total_amount if ar.invoice else 0) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap font-bold text-red-700">₦{{ "{:,.2f}".format(ar.balance) }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">{{ ar.aging_bucket }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap"><span class="px-2 py-1 text-xs rounded-full {% if ar.status == 'paid' %}bg-green-100 text-green-800{% elif ar.status == 'partially_paid' %}bg-yellow-100 text-yellow-800{% else %}bg-red-100 text-red-800{% endif %}">{{ ar.status }}</span></td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                        <a href="{{ url_for('finance_mgr.view_invoice', invoice_id=ar.invoice_id) }}" class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" class="px-6 py-12 text-center">
+                        <i class="fas fa-check-circle text-6xl text-green-300 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">No Outstanding Receivables</h3>
+                        <p class="text-gray-500 mb-6">All invoices have been paid or are not yet due</p>
+                        <a href="{{ url_for('finance_mgr.invoices') }}" class="bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700">
+                            <i class="fas fa-file-invoice mr-2"></i>View Invoices
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

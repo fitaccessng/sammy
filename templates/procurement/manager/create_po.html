@@ -1,0 +1,321 @@
+{% extends "base.html" %}
+
+{% block title %}Create Purchase Order - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Navigation Breadcrumb -->
+    <nav class="mb-4">
+        <ol class="flex items-center space-x-2 text-sm text-gray-600">
+            <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li><a href="{{ url_for('procurement_mgr.dashboard') }}" class="hover:text-blue-600">Procurement Manager</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li class="text-gray-900 font-medium">Create Purchase Order</li>
+        </ol>
+    </nav>
+
+    <!-- Quick Navigation -->
+    <div class="mb-6 bg-white rounded-lg shadow p-4">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('procurement_mgr.dashboard') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Dashboard</a>
+            <a href="{{ url_for('procurement_mgr.purchase_orders') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Purchase Orders</a>
+            <a href="{{ url_for('procurement_mgr.create_po') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Create PO</a>
+            <a href="{{ url_for('procurement_mgr.suppliers') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Suppliers</a>
+            <a href="{{ url_for('procurement_mgr.rfq') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">RFQ</a>
+            <a href="{{ url_for('procurement_mgr.delivery_tracking') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Delivery Tracking</a>
+            <a href="{{ url_for('procurement_mgr.reports') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Reports</a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Create Purchase Order</h1>
+        <p class="text-gray-600 mt-1">Issue a new purchase order</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('procurement_mgr.create_po') }}" id="poForm">
+        {{ form.hidden_tag() }}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Form -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Basic Information -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Project *</label>
+                            <select name="project_id" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" onchange="updateProjectBudget()">
+                                <option value="">Select Project</option>
+                                {% for project in projects %}
+                                <option value="{{ project.id }}" data-budget="{{ project.budget.total_budget if project.budget else 0 }}" data-spent="{{ project.budget.spent_amount if project.budget else 0 }}">
+                                    {{ project.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Expected Delivery *</label>
+                            <input type="date" name="expected_delivery" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Priority *</label>
+                            <select name="priority" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                                <option value="Normal">Normal</option>
+                                <option value="High">High</option>
+                                <option value="Urgent">Urgent</option>
+                                <option value="Low">Low</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Location *</label>
+                            <input type="text" name="delivery_location" required placeholder="Enter delivery address" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Supplier Information -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Supplier Information</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Supplier Name *</label>
+                            <input type="text" name="supplier_name" required placeholder="Supplier company name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Contact Person</label>
+                            <input type="text" name="supplier_contact" placeholder="Contact name" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                            <input type="email" name="supplier_email" placeholder="supplier@email.com" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                            <input type="tel" name="supplier_phone" placeholder="+234 xxx xxx xxxx" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Items -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-semibold text-gray-900">Line Items</h2>
+                        <button type="button" onclick="addLineItem()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                            + Add Item
+                        </button>
+                    </div>
+                    
+                    <div id="lineItemsContainer">
+                        <!-- Line items will be added here -->
+                    </div>
+
+                    <div class="mt-4 text-right text-gray-500 text-sm">
+                        Click "Add Item" to start adding line items
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="bg-white rounded-lg shadow p-6">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Additional Notes</h2>
+                    <textarea name="notes" rows="4" placeholder="Add any special instructions, terms, or conditions..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"></textarea>
+                </div>
+            </div>
+
+            <!-- Summary Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-lg shadow p-6 sticky top-4">
+                    <h2 class="text-xl font-semibold text-gray-900 mb-4">Order Summary</h2>
+                    
+                    <!-- Project Budget Info -->
+                    <div id="projectBudgetInfo" class="mb-6 p-4 bg-blue-50 rounded-lg hidden">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-2">Project Budget</h3>
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Total Budget:</span>
+                                <span class="font-medium" id="totalBudget">₦0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Already Spent:</span>
+                                <span class="font-medium" id="spentAmount">₦0.00</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Available:</span>
+                                <span class="font-medium text-green-600" id="availableAmount">₦0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Totals -->
+                    <div class="space-y-3 mb-6">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Subtotal:</span>
+                            <span class="font-medium" id="subtotal">₦0.00</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Tax (7.5%):</span>
+                            <span class="font-medium" id="tax">₦0.00</span>
+                        </div>
+                        <div class="border-t pt-3 flex justify-between">
+                            <span class="text-lg font-semibold text-gray-900">Total:</span>
+                            <span class="text-lg font-bold text-blue-600" id="total">₦0.00</span>
+                        </div>
+                    </div>
+
+                    <!-- Budget Warning -->
+                    <div id="budgetWarning" class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg hidden">
+                        <div class="flex items-start">
+                            <svg class="w-5 h-5 text-yellow-600 mr-2 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            <p class="text-sm text-yellow-800">This PO exceeds available budget</p>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="space-y-3">
+                        <button type="submit" name="save_as" value="Draft" class="w-full bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                            Save as Draft
+                        </button>
+                        <button type="submit" name="save_as" value="Pending" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                            Submit for Approval
+                        </button>
+                        <a href="{{ url_for('procurement_mgr.purchase_orders') }}" class="block w-full text-center bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+let itemCounter = 0;
+
+function addLineItem() {
+    itemCounter++;
+    const container = document.getElementById('lineItemsContainer');
+    const itemDiv = document.createElement('div');
+    itemDiv.className = 'border border-gray-200 rounded-lg p-4 mb-4';
+    itemDiv.id = `item-${itemCounter}`;
+    itemDiv.innerHTML = `
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-medium text-gray-900">Item #${itemCounter}</h3>
+            <button type="button" onclick="removeLineItem(${itemCounter})" class="text-red-600 hover:text-red-800">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+            <div class="col-span-2">
+                <input type="text" name="items[${itemCounter}][description]" placeholder="Item description" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <input type="number" name="items[${itemCounter}][quantity]" placeholder="Quantity" required min="1" step="0.01"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                       onchange="calculateLineTotal(${itemCounter})">
+            </div>
+            <div>
+                <input type="text" name="items[${itemCounter}][unit]" placeholder="Unit (kg, pcs, m3)" required 
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div>
+                <input type="number" name="items[${itemCounter}][unit_price]" placeholder="Unit Price (₦)" required min="0" step="0.01"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                       onchange="calculateLineTotal(${itemCounter})">
+            </div>
+            <div>
+                <input type="text" readonly placeholder="Line Total" id="line-total-${itemCounter}"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700 font-medium">
+            </div>
+        </div>
+    `;
+    container.appendChild(itemDiv);
+    updateOrderSummary();
+}
+
+function removeLineItem(id) {
+    document.getElementById(`item-${id}`).remove();
+    updateOrderSummary();
+}
+
+function calculateLineTotal(itemId) {
+    const quantity = parseFloat(document.querySelector(`input[name="items[${itemId}][quantity]"]`).value) || 0;
+    const unitPrice = parseFloat(document.querySelector(`input[name="items[${itemId}][unit_price]"]`).value) || 0;
+    const lineTotal = quantity * unitPrice;
+    document.getElementById(`line-total-${itemId}`).value = `₦${lineTotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+    updateOrderSummary();
+}
+
+function updateOrderSummary() {
+    let subtotal = 0;
+    const form = document.getElementById('poForm');
+    const quantityInputs = form.querySelectorAll('input[name^="items"][name$="[quantity]"]');
+    
+    quantityInputs.forEach(input => {
+        const itemId = input.name.match(/\[(\d+)\]/)[1];
+        const quantity = parseFloat(input.value) || 0;
+        const unitPrice = parseFloat(form.querySelector(`input[name="items[${itemId}][unit_price]"]`).value) || 0;
+        subtotal += quantity * unitPrice;
+    });
+    
+    const tax = subtotal * 0.075;
+    const total = subtotal + tax;
+    
+    document.getElementById('subtotal').textContent = `₦${subtotal.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+    document.getElementById('tax').textContent = `₦${tax.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+    document.getElementById('total').textContent = `₦${total.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+    
+    checkBudget();
+}
+
+function updateProjectBudget() {
+    const select = document.querySelector('select[name="project_id"]');
+    const option = select.options[select.selectedIndex];
+    
+    if (option.value) {
+        const totalBudget = parseFloat(option.dataset.budget) || 0;
+        const spentAmount = parseFloat(option.dataset.spent) || 0;
+        const available = totalBudget - spentAmount;
+        
+        document.getElementById('totalBudget').textContent = `₦${totalBudget.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+        document.getElementById('spentAmount').textContent = `₦${spentAmount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+        document.getElementById('availableAmount').textContent = `₦${available.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+        document.getElementById('projectBudgetInfo').classList.remove('hidden');
+        
+        checkBudget();
+    } else {
+        document.getElementById('projectBudgetInfo').classList.add('hidden');
+    }
+}
+
+function checkBudget() {
+    const select = document.querySelector('select[name="project_id"]');
+    const option = select.options[select.selectedIndex];
+    
+    if (option.value) {
+        const totalBudget = parseFloat(option.dataset.budget) || 0;
+        const spentAmount = parseFloat(option.dataset.spent) || 0;
+        const available = totalBudget - spentAmount;
+        
+        const totalText = document.getElementById('total').textContent.replace(/[₦,]/g, '');
+        const orderTotal = parseFloat(totalText) || 0;
+        
+        if (orderTotal > available) {
+            document.getElementById('budgetWarning').classList.remove('hidden');
+        } else {
+            document.getElementById('budgetWarning').classList.add('hidden');
+        }
+    }
+}
+
+// Add first line item on load
+document.addEventListener('DOMContentLoaded', function() {
+    addLineItem();
+});
+</script>
+{% endblock %}

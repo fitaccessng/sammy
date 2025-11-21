@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Equipment Management</h1>
+            <p class="text-gray-600 mt-2">Track equipment usage and maintenance</p>
+        </div>
+        <button onclick="document.getElementById('newLogModal').classList.remove('hidden')"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow">
+            <i class="fas fa-plus mr-2"></i>Log Usage
+        </button>
+    </div>
+
+    <!-- Equipment Logs -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Equipment</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Operator</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Hours</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fuel</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Condition</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Maintenance</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for log in logs %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ log.log_date.strftime('%b %d, %Y') }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ log.equipment.asset_name if log.equipment else 'N/A' }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ log.operator_name }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {{ "%.1f"|format(log.hours_used) }}h
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ "%.1f"|format(log.fuel_consumed) if log.fuel_consumed else '-' }}L
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full
+                            {% if log.condition_after == 'excellent' %}bg-green-100 text-green-800
+                            {% elif log.condition_after == 'good' %}bg-blue-100 text-blue-800
+                            {% elif log.condition_after == 'fair' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ log.condition_after|capitalize if log.condition_after else 'Unknown' }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        {% if log.maintenance_required %}
+                        <span class="px-2 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">
+                            <i class="fas fa-wrench"></i> Required
+                        </span>
+                        {% else %}
+                        <span class="text-gray-400">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="#" class="text-blue-600 hover:text-blue-900">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="px-6 py-8 text-center text-gray-500">
+                        No equipment logs found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- New Log Modal -->
+<div id="newLogModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-8 border w-full max-w-4xl shadow-lg rounded-lg bg-white">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">Log Equipment Usage</h3>
+            <button onclick="document.getElementById('newLogModal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Equipment *</label>
+                    <select name="equipment_id" required class="w-full border-gray-300 rounded-lg">
+                        <option value="">Select Equipment</option>
+                        {% for equip in equipment %}
+                        <option value="{{ equip.id }}">{{ equip.asset_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Project *</label>
+                    <select name="project_id" required class="w-full border-gray-300 rounded-lg">
+                        <option value="">Select Project</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.project_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Log Date *</label>
+                    <input type="date" name="log_date" required class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Operator Name *</label>
+                    <input type="text" name="operator_name" required class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Hours Used</label>
+                    <input type="number" name="hours_used" step="0.1" class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Fuel Consumed (L)</label>
+                    <input type="number" name="fuel_consumed" step="0.1" class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Condition Before</label>
+                    <select name="condition_before" class="w-full border-gray-300 rounded-lg">
+                        <option value="">Select Condition</option>
+                        <option value="excellent">Excellent</option>
+                        <option value="good">Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Condition After</label>
+                    <select name="condition_after" class="w-full border-gray-300 rounded-lg">
+                        <option value="">Select Condition</option>
+                        <option value="excellent">Excellent</option>
+                        <option value="good">Good</option>
+                        <option value="fair">Fair</option>
+                        <option value="poor">Poor</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Task Description</label>
+                <textarea name="task_description" rows="3" class="w-full border-gray-300 rounded-lg"></textarea>
+            </div>
+
+            <div>
+                <label class="flex items-center">
+                    <input type="checkbox" name="maintenance_required" class="rounded border-gray-300 text-indigo-600">
+                    <span class="ml-2 text-sm text-gray-700">Maintenance Required</span>
+                </label>
+            </div>
+
+            <div>
+                <label class="flex items-center">
+                    <input type="checkbox" name="safety_check_completed" class="rounded border-gray-300 text-indigo-600">
+                    <span class="ml-2 text-sm text-gray-700">Safety Check Completed</span>
+                </label>
+            </div>
+
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="document.getElementById('newLogModal').classList.add('hidden')"
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
+                    <i class="fas fa-save mr-2"></i>Save Log
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

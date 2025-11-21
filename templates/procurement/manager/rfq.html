@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+{% block title %}Request for Quotations - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Navigation Breadcrumb -->
+    <nav class="mb-4">
+        <ol class="flex items-center space-x-2 text-sm text-gray-600">
+            <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li><a href="{{ url_for('procurement_mgr.dashboard') }}" class="hover:text-blue-600">Procurement Manager</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li class="text-gray-900 font-medium">Request for Quotations</li>
+        </ol>
+    </nav>
+
+    <!-- Quick Navigation -->
+    <div class="mb-6 bg-white rounded-lg shadow p-4">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('procurement_mgr.dashboard') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Dashboard</a>
+            <a href="{{ url_for('procurement_mgr.purchase_orders') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Purchase Orders</a>
+            <a href="{{ url_for('procurement_mgr.create_po') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Create PO</a>
+            <a href="{{ url_for('procurement_mgr.suppliers') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Suppliers</a>
+            <a href="{{ url_for('procurement_mgr.rfq') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">RFQ</a>
+            <a href="{{ url_for('procurement_mgr.delivery_tracking') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Delivery Tracking</a>
+            <a href="{{ url_for('procurement_mgr.reports') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Reports</a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Request for Quotations</h1>
+        <p class="text-gray-600 mt-1">Manage RFQs and procurement requests</p>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Pending Requests</p>
+                    <p class="text-2xl font-bold text-yellow-600">{{ material_needs|selectattr('status', 'equalto', 'Pending')|list|length }}</p>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">In Progress</p>
+                    <p class="text-2xl font-bold text-blue-600">{{ material_needs|selectattr('status', 'equalto', 'Ordered')|list|length }}</p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-600 mb-1">Active Projects</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ projects_with_needs|length }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RFQ by Project -->
+    {% for project_id, materials in material_needs_by_project.items() %}
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-6 border-b border-gray-200">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="text-xl font-semibold text-gray-900">{{ materials[0].project.name }}</h2>
+                    <p class="text-sm text-gray-600 mt-1">{{ materials|length }} material(s) needed</p>
+                </div>
+                <button onclick="createBulkPO({{ project_id }})" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    Create Bulk PO
+                </button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Material</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity Needed</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Required By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for material in materials %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-gray-900">{{ material.material_name }}</div>
+                            <div class="text-xs text-gray-500">{{ material.description or 'No description' }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-gray-900">
+                            {{ "{:,.2f}".format(material.quantity_needed) }} {{ material.unit }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {% if material.required_date %}
+                                {{ material.required_date.strftime('%b %d, %Y') }}
+                                {% if material.required_date < now().date() %}
+                                <span class="text-red-600 text-xs">(Overdue)</span>
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if material.priority == 'Urgent' %}bg-red-100 text-red-800
+                                {% elif material.priority == 'High' %}bg-orange-100 text-orange-800
+                                {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                {{ material.priority or 'Normal' }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if material.status == 'Delivered' %}bg-green-100 text-green-800
+                                {% elif material.status == 'Ordered' %}bg-blue-100 text-blue-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ material.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            {% if material.status == 'Pending' %}
+                            <a href="{{ url_for('procurement_mgr.create_po') }}?material_id={{ material.id }}" class="text-blue-600 hover:text-blue-900">
+                                Create PO
+                            </a>
+                            {% else %}
+                            <span class="text-gray-400">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endfor %}
+
+    <!-- Procurement Requests -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h2 class="text-xl font-semibold text-gray-900">Recent Procurement Requests</h2>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request ID</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Requested By</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    {% for request in procurement_requests %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">PR-{{ request.id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ request.project.name if request.project else 'General' }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ request.description[:50] }}...</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ request.requested_by.full_name if request.requested_by else 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ request.created_at.strftime('%b %d, %Y') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if request.status == 'Completed' %}bg-green-100 text-green-800
+                                {% elif request.status == 'In Progress' %}bg-blue-100 text-blue-800
+                                {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                {{ request.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{{ url_for('procurement_mgr.create_po') }}?request_id={{ request.id }}" class="text-blue-600 hover:text-blue-900">
+                                Create PO
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if not material_needs and not procurement_requests %}
+    <div class="text-center py-12 text-gray-500">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <p class="mt-4">No pending procurement requests</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function createBulkPO(projectId) {
+    if (confirm('Create a single purchase order for all pending materials in this project?')) {
+        window.location.href = `/procurement/manager/purchase-orders/create?project_id=${projectId}&bulk=true`;
+    }
+}
+</script>
+{% endblock %}

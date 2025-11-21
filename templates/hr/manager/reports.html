@@ -1,0 +1,207 @@
+{% extends "hr/base.html" %}
+
+{% block title %}HR Reports{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+   
+
+    <h1 class="text-2xl sm:text-3xl font-bold mb-6">HR Analytics & Reports</h1>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-xs sm:text-sm">Total Employees</p>
+                    <p class="text-3xl sm:text-4xl font-bold text-gray-800">{{ total_employees }}</p>
+                </div>
+                <div class="bg-blue-100 p-3 sm:p-4 rounded-full">
+                    <i class="fas fa-users text-blue-600 text-2xl sm:text-3xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-xs sm:text-sm">New Hires (12 months)</p>
+                    <p class="text-3xl sm:text-4xl font-bold text-green-600">{{ new_hires }}</p>
+                </div>
+                <div class="bg-green-100 p-3 sm:p-4 rounded-full">
+                    <i class="fas fa-user-plus text-green-600 text-2xl sm:text-3xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6 hover:shadow-lg transition-shadow sm:col-span-2 lg:col-span-1">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-gray-500 text-xs sm:text-sm">Turnover Rate</p>
+                    <p class="text-3xl sm:text-4xl font-bold text-red-600">
+                        {{ "%.1f"|format((new_hires / total_employees * 100) if total_employees > 0 else 0) }}%
+                    </p>
+                </div>
+                <div class="bg-red-100 p-3 sm:p-4 rounded-full">
+                    <i class="fas fa-exchange-alt text-red-600 text-2xl sm:text-3xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+        <!-- Headcount by Department -->
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold mb-4">Headcount by Department</h3>
+            <div class="h-64 sm:h-80">
+                <canvas id="deptChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Leave Statistics -->
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold mb-4">Leave Statistics</h3>
+            <div class="space-y-3">
+                {% for stat in leave_stats %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <p class="font-medium text-gray-800">{{ stat[0] }}</p>
+                        <p class="text-sm text-gray-500">{{ stat[2] }} days total</p>
+                    </div>
+                    <span class="text-xl font-bold text-blue-600">{{ stat[1] }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-6">
+        <!-- Training Completion -->
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold mb-4">Training Completion by Category</h3>
+            <div class="space-y-3">
+                {% for stat in training_stats %}
+                <div class="p-3 border rounded-lg">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium text-gray-800">{{ stat[0] }}</span>
+                        <span class="text-sm font-bold text-green-600">
+                            {{ "%.0f"|format((stat[2] / stat[1] * 100) if stat[1] > 0 else 0) }}%
+                        </span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full" 
+                             style="width: {{ (stat[2] / stat[1] * 100) if stat[1] > 0 else 0 }}%"></div>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-1">{{ stat[2] }} of {{ stat[1] }} completed</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Attendance Trend -->
+        <div class="bg-white rounded-lg shadow-md p-4 sm:p-6">
+            <h3 class="text-base sm:text-lg font-semibold mb-4">Attendance Trend (Last 30 Days)</h3>
+            <div class="h-64 sm:h-80">
+                <canvas id="attendanceChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    // Department Headcount Chart
+    const deptCtx = document.getElementById('deptChart').getContext('2d');
+    new Chart(deptCtx, {
+        type: 'doughnut',
+        data: {
+            labels: [{% for dept in dept_headcount %}'{{ dept[0] or "Unassigned" }}',{% endfor %}],
+            datasets: [{
+                data: [{% for dept in dept_headcount %}{{ dept[1] }},{% endfor %}],
+                backgroundColor: [
+                    'rgba(59, 130, 246, 0.8)',
+                    'rgba(16, 185, 129, 0.8)',
+                    'rgba(245, 158, 11, 0.8)',
+                    'rgba(239, 68, 68, 0.8)',
+                    'rgba(139, 92, 246, 0.8)',
+                    'rgba(236, 72, 153, 0.8)',
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: window.innerWidth < 640 ? 1.5 : 2,
+            plugins: {
+                legend: {
+                    position: window.innerWidth < 768 ? 'bottom' : 'right',
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: window.innerWidth < 640 ? 10 : 12
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Attendance Trend Chart
+    const attCtx = document.getElementById('attendanceChart').getContext('2d');
+    new Chart(attCtx, {
+        type: 'line',
+        data: {
+            labels: [{% for trend in attendance_trend %}'{{ trend[0].strftime("%b %d") }}',{% endfor %}],
+            datasets: [{
+                label: 'Present',
+                data: [{% for trend in attendance_trend %}{{ trend[2] }},{% endfor %}],
+                borderColor: 'rgb(16, 185, 129)',
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                tension: 0.4,
+                fill: true
+            }, {
+                label: 'Late',
+                data: [{% for trend in attendance_trend %}{{ trend[3] }},{% endfor %}],
+                borderColor: 'rgb(245, 158, 11)',
+                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: window.innerWidth < 640 ? 1.5 : 2,
+            plugins: {
+                legend: {
+                    labels: {
+                        boxWidth: 12,
+                        font: {
+                            size: window.innerWidth < 640 ? 10 : 12
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: {
+                            size: window.innerWidth < 640 ? 10 : 12
+                        }
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: {
+                            size: window.innerWidth < 640 ? 10 : 12
+                        },
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

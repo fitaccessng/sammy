@@ -42,6 +42,7 @@
                         <i class='bx bxs-dashboard text-xl'></i>
                         <span>Dashboard</span>
                     </a>
+                  
                 </div>
 
                 <!-- Staff Management -->
@@ -52,15 +53,61 @@
                         <i class='bx bxs-user-detail text-xl'></i>
                         <span>Staff Directory</span>
                     </a>
+                   
                     <a href="{{ url_for('hr.attendance') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-time-five text-xl'></i>
                         <span>Attendance</span>
                     </a>
+                    <a href="{{ url_for('hr_mgr.attendance') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-calendar-check text-xl'></i>
+                        <span>Attendance Tracking</span>
+                    </a>
                     <a href="{{ url_for('hr.leave_management') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-calendar text-xl'></i>
                         <span>Leave Management</span>
+                    </a>
+                    <a href="{{ url_for('hr_mgr.leave') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-calendar-event text-xl'></i>
+                        <span>Leave Requests</span>
+                    </a>
+                    <a href="{{ url_for('hr_mgr.performance') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-award text-xl'></i>
+                        <span>Performance Reviews</span>
+                    </a>
+                    <!-- <a href="{{ url_for('hr_mgr.manpower') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-group text-xl'></i>
+                        <span>Manpower Planning</span>
+                    </a> -->
+                </div>
+
+                <!-- Recruitment -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Recruitment</h2>
+                    <a href="{{ url_for('hr_mgr.recruitment') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-user-plus text-xl'></i>
+                        <span>Job Postings</span>
+                    </a>
+                    <a href="{{ url_for('hr_mgr.interviews') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-conversation text-xl'></i>
+                        <span>Interviews</span>
+                    </a>
+                </div>
+
+                <!-- Training & Development -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Training</h2>
+                    <a href="{{ url_for('hr_mgr.training') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-book-reader text-xl'></i>
+                        <span>Training Programs</span>
                     </a>
                 </div>
 
@@ -107,11 +154,12 @@
                         <i class='bx bxs-report text-xl'></i>
                         <span>HR Reports</span>
                     </a>
-                    <a href="{{ url_for('procurement.analytics') }}" 
+                    <a href="{{ url_for('hr_mgr.reports') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                        <i class='bx bxs-bar-chart-alt-2 text-xl'></i>
-                        <span>Analytics</span>
+                        <i class='bx bxs-file-doc text-xl'></i>
+                        <span>Analytics & Insights</span>
                     </a>
+                 
                 </div>
             </nav>
         </aside>
@@ -134,14 +182,18 @@
                                 <i class='bx bx-chevron-down text-gray-500'></i>
                             </button>
                             <!-- Dropdown Menu -->
-                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                            <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                                 <div class="py-1">
-                                    <a href="{{ url_for('procurement.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profile</a>
-                                    <a href="{{ url_for('project.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Settings</a>
+                                    <a href="{{ url_for('hr.profile') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class='bx bx-user mr-2'></i>Profile
+                                    </a>
+                                    <a href="{{ url_for('hr.settings') }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                        <i class='bx bx-cog mr-2'></i>Settings
+                                    </a>
                                     <div class="border-t border-gray-100"></div>
                                     <a href="{{ url_for('logout') }}" 
                                        class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
-                                        Logout
+                                        <i class='bx bx-log-out mr-2'></i>Logout
                                     </a>
                                 </div>
                             </div>

@@ -1,0 +1,315 @@
+{% extends "base.html" %}
+
+{% block title %}Procurement Manager Dashboard - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Navigation Breadcrumb -->
+    <nav class="mb-4">
+        <ol class="flex items-center space-x-2 text-sm text-gray-600">
+            <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li class="text-gray-900 font-medium">Procurement Manager</li>
+        </ol>
+    </nav>
+
+    <!-- Quick Navigation -->
+    <div class="mb-6 bg-white rounded-lg shadow p-4">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('procurement_mgr.dashboard') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Dashboard</a>
+            <a href="{{ url_for('procurement_mgr.purchase_orders') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Purchase Orders</a>
+            <a href="{{ url_for('procurement_mgr.create_po') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Create PO</a>
+            <a href="{{ url_for('procurement_mgr.suppliers') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Suppliers</a>
+            <a href="{{ url_for('procurement_mgr.rfq') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">RFQ</a>
+            <a href="{{ url_for('procurement_mgr.delivery_tracking') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Delivery Tracking</a>
+            <a href="{{ url_for('procurement_mgr.reports') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Reports</a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Procurement Manager Dashboard</h1>
+        <p class="text-gray-600 mt-1">Material and equipment purchase management</p>
+    </div>
+
+    <!-- Alert for Overdue Deliveries -->
+    {% if overdue_deliveries %}
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
+        <div class="flex items-center">
+            <svg class="w-5 h-5 text-red-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path>
+            </svg>
+            <div>
+                <h3 class="text-sm font-medium text-red-800">Overdue Deliveries</h3>
+                <p class="text-sm text-red-700">{{ overdue_deliveries|length }} purchase order(s) are overdue for delivery</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Key Metrics -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Total Purchase Orders -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total Purchase Orders</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-2">{{ total_pos }}</p>
+                </div>
+                <div class="bg-blue-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                </div>
+            </div>
+            <div class="mt-4 flex space-x-4 text-xs">
+                <span class="text-yellow-600">⏳ {{ pending_pos }} Pending</span>
+                <span class="text-green-600">✓ {{ delivered_pos }} Delivered</span>
+            </div>
+        </div>
+
+        <!-- Total PO Value -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Total PO Value</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-2">₦{{ "{:,.0f}".format(total_po_value) }}</p>
+                </div>
+                <div class="bg-green-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">₦{{ "{:,.0f}".format(delivered_po_value) }} delivered</p>
+        </div>
+
+        <!-- Pending Requests -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Pending Requests</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-2">{{ pending_requests }}</p>
+                </div>
+                <div class="bg-yellow-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">Awaiting processing</p>
+        </div>
+
+        <!-- Active Suppliers -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Active Suppliers</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-2">{{ active_suppliers }}</p>
+                </div>
+                <div class="bg-purple-100 rounded-full p-3">
+                    <svg class="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">{{ total_suppliers }} total suppliers</p>
+        </div>
+    </div>
+
+    <!-- Financial Overview & Top Suppliers -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Financial Overview -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Financial Overview</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                        <span class="text-gray-600">Total PO Value</span>
+                        <span class="font-semibold text-gray-900">₦{{ "{:,.0f}".format(total_po_value) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                        <span class="text-gray-600">Pending Value</span>
+                        <span class="font-semibold text-yellow-600">₦{{ "{:,.0f}".format(pending_po_value) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                        <span class="text-gray-600">Delivered Value</span>
+                        <span class="font-semibold text-green-600">₦{{ "{:,.0f}".format(delivered_po_value) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold text-gray-700">Completion Rate</span>
+                        <span class="font-bold text-blue-600">{{ "{:.1f}".format((delivered_po_value/total_po_value*100) if total_po_value > 0 else 0) }}%</span>
+                    </div>
+                </div>
+                
+                <!-- Progress bar -->
+                <div class="mt-6">
+                    <div class="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>Progress</span>
+                        <span>{{ "{:.0f}".format((delivered_po_value/total_po_value*100) if total_po_value > 0 else 0) }}%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2">
+                        <div class="bg-green-600 h-2 rounded-full" style="width: {{ (delivered_po_value/total_po_value*100) if total_po_value > 0 else 0 }}%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Suppliers -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Top Suppliers by Volume</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    {% for supplier in top_suppliers %}
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900">{{ supplier[0] or 'Unknown' }}</p>
+                            <p class="text-xs text-gray-500">{{ supplier[1] }} orders</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm font-semibold text-gray-900">₦{{ "{:,.0f}".format(supplier[2] or 0) }}</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Project Budget Analysis -->
+    {% if project_budget_analysis %}
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Project Budget Analysis</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Allocated</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Spent</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Remaining</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Utilization</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for analysis in project_budget_analysis %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-gray-900">{{ analysis.project.name }}</div>
+                            <div class="text-xs text-gray-500">{{ analysis.project.location }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">₦{{ "{:,.0f}".format(analysis.allocated) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">₦{{ "{:,.0f}".format(analysis.spent) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap {% if analysis.remaining < 0 %}text-red-600{% else %}text-green-600{% endif %} font-medium">
+                            ₦{{ "{:,.0f}".format(analysis.remaining) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-1 mr-2">
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="{% if analysis.utilization > 90 %}bg-red-600{% elif analysis.utilization > 75 %}bg-yellow-500{% else %}bg-green-600{% endif %} h-2 rounded-full" 
+                                             style="width: {{ analysis.utilization if analysis.utilization <= 100 else 100 }}%"></div>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-medium">{{ "{:.0f}".format(analysis.utilization) }}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if analysis.utilization > 90 %}bg-red-100 text-red-800
+                                {% elif analysis.utilization > 75 %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {% if analysis.utilization > 90 %}Critical{% elif analysis.utilization > 75 %}Warning{% else %}On Track{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Purchase Orders -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-900">Recent Purchase Orders</h3>
+            <a href="{{ url_for('procurement_mgr.purchase_orders') }}" class="text-blue-600 hover:text-blue-800 text-sm font-medium">View All →</a>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">PO Number</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Supplier</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expected Delivery</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for po in recent_pos %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600">
+                            <a href="{{ url_for('procurement_mgr.view_po', po_id=po.id) }}">{{ po.order_number }}</a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ po.supplier_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {{ po.project.name if po.project else 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">₦{{ "{:,.2f}".format(po.total_amount) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {{ po.expected_delivery.strftime('%b %d, %Y') if po.expected_delivery else 'N/A' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if po.status == 'Delivered' %}bg-green-100 text-green-800
+                                {% elif po.status == 'Approved' %}bg-blue-100 text-blue-800
+                                {% elif po.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                {% elif po.status == 'Rejected' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ po.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="{{ url_for('procurement_mgr.view_po', po_id=po.id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <a href="{{ url_for('procurement_mgr.create_po') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-4 rounded-lg text-center font-medium flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create Purchase Order
+        </a>
+        <a href="{{ url_for('procurement_mgr.suppliers') }}" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-4 rounded-lg text-center font-medium flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+            </svg>
+            Manage Suppliers
+        </a>
+        <a href="{{ url_for('procurement_mgr.reports') }}" class="bg-green-600 hover:bg-green-700 text-white px-6 py-4 rounded-lg text-center font-medium flex items-center justify-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            </svg>
+            View Reports
+        </a>
+    </div>
+</div>
+{% endblock %}

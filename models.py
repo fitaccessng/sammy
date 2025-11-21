@@ -172,8 +172,12 @@ class Budget(db.Model):
     category = db.Column(db.String(64), nullable=False)  # e.g., payroll, procurement, etc.
     allocated_amount = db.Column(db.Float, nullable=False)
     spent_amount = db.Column(db.Float, default=0.0)
+    status = db.Column(db.String(32), nullable=False, default='active')  # active, completed, cancelled
+    fiscal_year = db.Column(db.Integer, nullable=True)  # e.g., 2025
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Note: Relationship is defined on Project model
 
     @property
     def remaining_amount(self):
@@ -189,6 +193,263 @@ class Budget(db.Model):
 
     def __repr__(self):
         return f'<Budget {self.project_id} - {self.category}>'
+
+class CashFlowForecast(db.Model):
+    __tablename__ = 'cash_flow_forecasts'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)
+    forecast_period = db.Column(db.String(64), nullable=False)  # e.g., "Q1 2025", "January 2025"
+    period_start = db.Column(db.Date, nullable=False)
+    period_end = db.Column(db.Date, nullable=False)
+    forecast_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    
+    # Cash flow components
+    expected_inflow = db.Column(db.Float, default=0.0)
+    actual_inflow = db.Column(db.Float, default=0.0)
+    expected_outflow = db.Column(db.Float, default=0.0)
+    actual_outflow = db.Column(db.Float, default=0.0)
+    opening_balance = db.Column(db.Float, default=0.0)
+    
+    # Cost breakdown
+    labor_cost = db.Column(db.Float, default=0.0)
+    material_cost = db.Column(db.Float, default=0.0)
+    equipment_cost = db.Column(db.Float, default=0.0)
+    subcontractor_cost = db.Column(db.Float, default=0.0)
+    overhead_cost = db.Column(db.Float, default=0.0)
+    
+    notes = db.Column(db.Text, nullable=True)
+    status = db.Column(db.String(32), nullable=False, default='draft')  # draft, approved, revised
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    project = db.relationship('Project', backref='project_cash_flow_forecasts')
+    creator = db.relationship('User', backref='created_forecasts', foreign_keys=[created_by])
+    
+    @property
+    def closing_balance(self):
+        """Calculate closing balance"""
+        return self.opening_balance + self.actual_inflow - self.actual_outflow
+    
+    @property
+    def variance_inflow(self):
+        """Calculate variance between expected and actual inflow"""
+        return self.actual_inflow - self.expected_inflow
+    
+    @property
+    def variance_outflow(self):
+        """Calculate variance between expected and actual outflow"""
+        return self.actual_outflow - self.expected_outflow
+    
+    @property
+    def total_cost(self):
+        """Calculate total cost from all components"""
+        return (self.labor_cost + self.material_cost + self.equipment_cost + 
+                self.subcontractor_cost + self.overhead_cost)
+    
+    def __repr__(self):
+        return f'<CashFlowForecast {self.forecast_period}>'
+
+class Invoice(db.Model):
+    __tablename__ = 'invoices'
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_number = db.Column(db.String(64), unique=True, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)
+    customer_name = db.Column(db.String(128), nullable=False)
+    customer_email = db.Column(db.String(128), nullable=True)
+    customer_address = db.Column(db.Text, nullable=True)
+    invoice_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    due_date = db.Column(db.Date, nullable=False)
+    status = db.Column(db.String(32), nullable=False, default='draft')  # draft, sent, partially_paid, paid, cancelled, overdue
+    payment_status = db.Column(db.String(32), nullable=True)  # unpaid, partially_paid, paid
+    subtotal = db.Column(db.Float, default=0.0)
+    tax_amount = db.Column(db.Float, default=0.0)
+    discount_amount = db.Column(db.Float, default=0.0)
+    total_amount = db.Column(db.Float, nullable=False, default=0.0)
+    paid_amount = db.Column(db.Float, default=0.0)
+    notes = db.Column(db.Text, nullable=True)
+    terms = db.Column(db.Text, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    
+    # Relationships
+    project = db.relationship('Project', backref='project_invoices')
+    creator = db.relationship('User', backref='created_invoices', foreign_keys=[created_by])
+    
+    @property
+    def balance_due(self):
+        """Calculate remaining balance"""
+        return max(0, self.total_amount - self.paid_amount)
+    
+    @property
+    def is_overdue(self):
+        """Check if invoice is overdue"""
+        from datetime import datetime
+        if self.due_date and self.status not in ['paid', 'cancelled']:
+            return datetime.now().date() > self.due_date
+        return False
+    
+    @property
+    def days_overdue(self):
+        """Calculate days overdue"""
+        from datetime import datetime
+        if self.is_overdue:
+            return (datetime.now().date() - self.due_date).days
+        return 0
+    
+    def calculate_totals(self):
+        """Calculate invoice totals from line items"""
+        # This method can be enhanced when InvoiceLineItem model is added
+        self.total_amount = self.subtotal + self.tax_amount - self.discount_amount
+    
+    def update_status(self):
+        """Update invoice status based on payment and due date"""
+        from datetime import datetime
+        
+        # Check if fully paid
+        if self.paid_amount >= self.total_amount:
+            self.status = 'paid'
+            self.payment_status = 'paid'
+        # Check if partially paid
+        elif self.paid_amount > 0:
+            self.status = 'partially_paid'
+            self.payment_status = 'partially_paid'
+        # Check if overdue
+        elif self.due_date and datetime.now().date() > self.due_date and self.status not in ['paid', 'cancelled', 'draft']:
+            self.status = 'overdue'
+        # Otherwise keep current status (draft, sent, etc.)
+        
+    def record_payment(self, amount):
+        """Record a payment against this invoice"""
+        self.paid_amount = (self.paid_amount or 0) + amount
+        self.update_status()
+        
+    def __repr__(self):
+        return f'<Invoice {self.invoice_number} - {self.customer_name}>'
+
+class Payment(db.Model):
+    __tablename__ = 'payments'
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoices.id'), nullable=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)
+    payment_number = db.Column(db.String(64), unique=True, nullable=False)
+    payment_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    payment_type = db.Column(db.String(32), nullable=False)  # receipt, disbursement
+    payment_method = db.Column(db.String(32), nullable=False)  # cash, check, bank_transfer, card
+    amount = db.Column(db.Float, nullable=False)
+    status = db.Column(db.String(32), nullable=False, default='pending')  # pending, approved, rejected, completed
+    reference_number = db.Column(db.String(128), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    notes = db.Column(db.Text, nullable=True)
+    request_date = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    
+    # Relationships
+    invoice = db.relationship('Invoice', backref='invoice_payments')
+    project = db.relationship('Project', backref='project_payments')
+    creator = db.relationship('User', backref='created_payments', foreign_keys=[created_by])
+    
+    def __repr__(self):
+        return f'<Payment {self.payment_number} - ₦{self.amount}>'
+
+class AccountsReceivable(db.Model):
+    __tablename__ = 'accounts_receivable'
+    id = db.Column(db.Integer, primary_key=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoices.id'), nullable=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)
+    customer_name = db.Column(db.String(128), nullable=False)
+    invoice_number = db.Column(db.String(64), nullable=True)
+    balance = db.Column(db.Float, nullable=False)
+    due_date = db.Column(db.Date, nullable=False)
+    status = db.Column(db.String(32), nullable=False, default='outstanding')  # outstanding, partially_paid, paid
+    aging_bucket = db.Column(db.String(32), nullable=True)  # current, 1-30, 31-60, 61-90, 90+
+    days_outstanding = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    invoice = db.relationship('Invoice', backref='receivables')
+    project = db.relationship('Project', backref='project_receivables')
+    
+    def calculate_aging(self):
+        """Calculate aging bucket based on days outstanding"""
+        from datetime import datetime
+        today = datetime.now().date()
+        self.days_outstanding = (today - self.due_date).days if self.due_date else 0
+        
+        if self.days_outstanding <= 0:
+            self.aging_bucket = 'current'
+        elif self.days_outstanding <= 30:
+            self.aging_bucket = '1-30'
+        elif self.days_outstanding <= 60:
+            self.aging_bucket = '31-60'
+        elif self.days_outstanding <= 90:
+            self.aging_bucket = '61-90'
+        else:
+            self.aging_bucket = '90+'
+    
+    def __repr__(self):
+        return f'<AccountsReceivable {self.customer_name} - ₦{self.balance}>'
+
+class AccountsPayable(db.Model):
+    __tablename__ = 'accounts_payable'
+    id = db.Column(db.Integer, primary_key=True)
+    vendor_name = db.Column(db.String(128), nullable=False)
+    vendor_email = db.Column(db.String(128), nullable=True)
+    bill_number = db.Column(db.String(64), nullable=True)
+    bill_date = db.Column(db.Date, nullable=False)
+    due_date = db.Column(db.Date, nullable=False)
+    amount_due = db.Column(db.Float, nullable=False)
+    balance = db.Column(db.Float, nullable=False)
+    paid_amount = db.Column(db.Float, default=0.0)
+    status = db.Column(db.String(32), nullable=False, default='unpaid')  # unpaid, partially_paid, paid, overdue
+    payment_terms = db.Column(db.String(64), nullable=True)  # Net 30, Net 60, etc.
+    description = db.Column(db.Text, nullable=True)
+    category = db.Column(db.String(64), nullable=True)  # Materials, Services, Equipment, etc.
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    project = db.relationship('Project', backref='project_payables')
+    creator = db.relationship('User', backref='created_payables', foreign_keys=[created_by])
+    
+    @property
+    def days_overdue(self):
+        """Calculate days overdue"""
+        from datetime import datetime
+        if self.due_date and self.status in ['unpaid', 'partially_paid']:
+            days = (datetime.now().date() - self.due_date).days
+            return max(0, days)
+        return 0
+    
+    @property
+    def is_overdue(self):
+        """Check if payable is overdue"""
+        return self.days_overdue > 0
+    
+    def calculate_aging(self):
+        """Calculate aging bucket based on days overdue"""
+        days = self.days_overdue
+        
+        if days <= 0:
+            self.aging_bucket = 'current'
+        elif days <= 30:
+            self.aging_bucket = '1-30'
+        elif days <= 60:
+            self.aging_bucket = '31-60'
+        elif days <= 90:
+            self.aging_bucket = '61-90'
+        else:
+            self.aging_bucket = '90+'
+    
+    def __repr__(self):
+        return f'<AccountsPayable {self.vendor_name} - ₦{self.balance}>'
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -225,6 +486,45 @@ class User(db.Model):
 
     def get_id(self):
         return str(self.id)
+
+
+class FinancialTransaction(db.Model):
+    """General ledger transactions for double-entry accounting"""
+    __tablename__ = 'financial_transactions'
+    id = db.Column(db.Integer, primary_key=True)
+    transaction_number = db.Column(db.String(64), unique=True, nullable=False)
+    transaction_type = db.Column(db.String(64), nullable=False)  # income, expense, transfer, adjustment
+    transaction_date = db.Column(db.Date, nullable=False, default=datetime.utcnow)
+    
+    # Chart of accounts
+    account_code = db.Column(db.String(32), nullable=True)
+    account_name = db.Column(db.String(128), nullable=True)
+    
+    # Double-entry amounts
+    debit_amount = db.Column(db.Float, default=0.0)
+    credit_amount = db.Column(db.Float, default=0.0)
+    
+    # Additional details
+    category = db.Column(db.String(64), nullable=True)
+    description = db.Column(db.Text, nullable=True)
+    reference_number = db.Column(db.String(64), nullable=True)
+    
+    # Links to other records
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)
+    invoice_id = db.Column(db.Integer, db.ForeignKey('invoices.id'), nullable=True)
+    payment_id = db.Column(db.Integer, db.ForeignKey('payments.id'), nullable=True)
+    
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    @property
+    def balance(self):
+        """Calculate the net balance (debit - credit)"""
+        return self.debit_amount - self.credit_amount
+    
+    def __repr__(self):
+        return f'<FinancialTransaction {self.transaction_number}>'
 
 class Project(db.Model):
     __tablename__ = 'projects'
@@ -376,6 +676,9 @@ class Asset(db.Model):
     status = db.Column(db.String(32), default='Active')
     location = db.Column(db.String(128))
     purchase_date = db.Column(db.Date)
+    purchase_cost = db.Column(db.Float, default=0.0)
+    current_value = db.Column(db.Float, default=0.0)
+    depreciation_rate = db.Column(db.Float, default=0.0)
     retired_date = db.Column(db.Date)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -480,6 +783,14 @@ class StaffPayroll(db.Model):
     work_days = db.Column(db.Integer)
     days_worked = db.Column(db.Integer)
     overtime_hours = db.Column(db.Float)
+    
+    # Salary components
+    basic_salary = db.Column(db.Float, default=0.0)  # Base salary
+    housing_allowance = db.Column(db.Float, default=0.0)
+    transport_allowance = db.Column(db.Float, default=0.0)
+    meal_allowance = db.Column(db.Float, default=0.0)
+    other_allowances = db.Column(db.Float, default=0.0)
+    
     gross = db.Column(db.Float)
     arrears = db.Column(db.Float)
     rice_contribution = db.Column(db.Float)
@@ -520,7 +831,7 @@ class PayrollApproval(db.Model):
     period_month = db.Column(db.Integer, nullable=False)
     total_amount = db.Column(db.Float, nullable=False)
     employee_count = db.Column(db.Integer, nullable=False)
-    status = db.Column(db.String(32), default='pending_admin')  # pending_admin, approved_by_admin, processed_by_finance, rejected
+    status = db.Column(db.String(32), default='pending_admin')  # pending_admin, approved_by_admin, processed_by_finance, rejected, paid
     submitted_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     admin_approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     finance_processed_by = db.Column(db.Integer, db.ForeignKey('user.id'))
@@ -530,12 +841,19 @@ class PayrollApproval(db.Model):
     finance_processed_at = db.Column(db.DateTime)
     rejected_at = db.Column(db.DateTime)
     rejection_reason = db.Column(db.Text)
+    finance_comments = db.Column(db.Text)
+    # Payment tracking fields
+    paid_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    paid_at = db.Column(db.DateTime)
+    payment_reference = db.Column(db.String(128))
+    payment_notes = db.Column(db.Text)
     
     # Relationships
     submitter = db.relationship('User', foreign_keys=[submitted_by], backref='submitted_payroll_approvals')
     admin_approver = db.relationship('User', foreign_keys=[admin_approved_by], backref='admin_approved_payrolls')
     finance_processor = db.relationship('User', foreign_keys=[finance_processed_by], backref='finance_processed_payrolls')
     rejector = db.relationship('User', foreign_keys=[rejected_by], backref='rejected_payroll_approvals')
+    payer = db.relationship('User', foreign_keys=[paid_by], backref='paid_payrolls')
 
 class Inspection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -646,6 +964,9 @@ class Document(db.Model):
     __tablename__ = 'documents'
     id = db.Column(db.Integer, primary_key=True)
     filename = db.Column(db.String(256), nullable=False)
+    original_name = db.Column(db.String(256), nullable=True)  # User-friendly name
+    description = db.Column(db.Text, nullable=True)
+    file_type = db.Column(db.String(10), nullable=True)  # pdf, jpg, png, etc.
     category = db.Column(db.String(64), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=True)  # Project association
     uploaded_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -656,8 +977,6 @@ class Document(db.Model):
     # Relationships
     project = db.relationship('Project', backref='documents')
     uploader = db.relationship('User', backref='uploaded_documents')
-    
-    # Add any additional fields as needed
 
     def __repr__(self):
         return f'<Document {self.filename}>'

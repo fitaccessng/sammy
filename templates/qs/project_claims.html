@@ -1,0 +1,237 @@
+{% extends "base.html" %}
+
+{% block title %}Claims Management - {{ project.name }} - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Claims Management</h1>
+            <p class="text-gray-600 mt-1">{{ project.name }}</p>
+        </div>
+        <div class="flex space-x-3">
+            <button onclick="openCreateClaimModal()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                New Claim
+            </button>
+            <a href="{{ url_for('qs.dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-gray-600">Total Claims</p>
+            <p class="text-2xl font-bold text-gray-900 mt-2">{{ claims|length }}</p>
+        </div>
+        <div class="bg-green-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-green-900">Approved Claims</p>
+            <p class="text-2xl font-bold text-green-900 mt-2">₦{{ "{:,.0f}".format(approved_claims_value) }}</p>
+            <p class="text-xs text-green-700 mt-1">{{ approved_claims|length }} claims</p>
+        </div>
+        <div class="bg-yellow-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-yellow-900">Pending Claims</p>
+            <p class="text-2xl font-bold text-yellow-900 mt-2">₦{{ "{:,.0f}".format(pending_claims_value) }}</p>
+            <p class="text-xs text-yellow-700 mt-1">{{ pending_claims|length }} pending</p>
+        </div>
+        <div class="bg-purple-50 rounded-lg shadow p-6">
+            <p class="text-sm font-medium text-purple-900">Contract Impact</p>
+            <p class="text-2xl font-bold text-purple-900 mt-2">{{ "{:.1f}".format((approved_claims_value/original_contract*100) if original_contract > 0 else 0) }}%</p>
+            <p class="text-xs text-purple-700 mt-1">Of original contract</p>
+        </div>
+    </div>
+
+    <!-- Contract Value Impact -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Contract Value Impact</h3>
+        <div class="grid grid-cols-3 gap-6">
+            <div>
+                <p class="text-sm text-gray-600">Original Contract</p>
+                <p class="text-xl font-bold text-gray-900">₦{{ "{:,.0f}".format(original_contract) }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Approved Claims</p>
+                <p class="text-xl font-bold text-green-600">+₦{{ "{:,.0f}".format(approved_claims_value) }}</p>
+            </div>
+            <div>
+                <p class="text-sm text-gray-600">Revised Contract</p>
+                <p class="text-xl font-bold text-blue-600">₦{{ "{:,.0f}".format(revised_contract) }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claims Table -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-gray-900">All Claims</h3>
+            <div class="flex space-x-2">
+                <button onclick="filterClaims('all')" class="claim-filter-btn active px-3 py-1 rounded-lg text-sm" data-status="all">All</button>
+                <button onclick="filterClaims('pending')" class="claim-filter-btn px-3 py-1 rounded-lg text-sm" data-status="pending">Pending</button>
+                <button onclick="filterClaims('approved')" class="claim-filter-btn px-3 py-1 rounded-lg text-sm" data-status="approved">Approved</button>
+                <button onclick="filterClaims('rejected')" class="claim-filter-btn px-3 py-1 rounded-lg text-sm" data-status="rejected">Rejected</button>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Claim No</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Claim Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date Submitted</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for claim in claims %}
+                    <tr class="hover:bg-gray-50 claim-row" data-status="{{ claim.status }}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#CLM-{{ claim.id }}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">{{ claim.item_name }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">₦{{ "{:,.2f}".format(claim.price * claim.qty) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ claim.created_at.strftime('%b %d, %Y') if claim.created_at else 'N/A' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if claim.status == 'approved' %}bg-green-100 text-green-800
+                                {% elif claim.status == 'pending' %}bg-yellow-100 text-yellow-800
+                                {% elif claim.status == 'rejected' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ claim.status|title }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <button onclick="viewClaimDetails({{ claim.id }})" class="text-blue-600 hover:text-blue-900 mr-2">View</button>
+                            {% if claim.status == 'pending' %}
+                            <button onclick="approveClaim({{ claim.id }})" class="text-green-600 hover:text-green-900 mr-2">Approve</button>
+                            <button onclick="rejectClaim({{ claim.id }})" class="text-red-600 hover:text-red-900">Reject</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Claim Modal -->
+<div id="createClaimModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 md:w-3/4 lg:w-1/2 shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-bold text-gray-900">Submit New Claim</h3>
+            <button onclick="closeCreateClaimModal()" class="text-gray-400 hover:text-gray-600">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+        <form id="createClaimForm" onsubmit="submitClaim(event)">
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Claim Description</label>
+                    <textarea name="claim_description" required rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Describe the additional work, variation, or reason for claim"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Claim Amount (₦)</label>
+                    <input type="number" step="0.01" name="claim_amount" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" placeholder="Enter claim amount">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Supporting Documents</label>
+                    <input type="file" multiple class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Upload drawings, site instructions, or other supporting documents</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button type="button" onclick="closeCreateClaimModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Submit Claim</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openCreateClaimModal() {
+    document.getElementById('createClaimModal').classList.remove('hidden');
+}
+
+function closeCreateClaimModal() {
+    document.getElementById('createClaimModal').classList.add('hidden');
+    document.getElementById('createClaimForm').reset();
+}
+
+function submitClaim(event) {
+    event.preventDefault();
+    const formData = new FormData(event.target);
+    const data = Object.fromEntries(formData.entries());
+
+    fetch("{{ url_for('qs.create_claim', project_id=project.id) }}", {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Claim submitted successfully');
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred');
+    });
+}
+
+function filterClaims(status) {
+    document.querySelectorAll('.claim-filter-btn').forEach(btn => {
+        btn.classList.remove('active', 'bg-blue-600', 'text-white');
+        btn.classList.add('text-gray-600');
+    });
+    
+    event.target.classList.add('active', 'bg-blue-600', 'text-white');
+    event.target.classList.remove('text-gray-600');
+
+    document.querySelectorAll('.claim-row').forEach(row => {
+        if (status === 'all') {
+            row.style.display = '';
+        } else {
+            row.style.display = row.dataset.status === status ? '' : 'none';
+        }
+    });
+}
+
+function viewClaimDetails(id) {
+    // Implement claim details view
+    alert('Claim details for ID: ' + id);
+}
+
+function approveClaim(id) {
+    if (confirm('Approve this claim?')) {
+        // Implement approve claim
+        alert('Claim approved: ' + id);
+    }
+}
+
+function rejectClaim(id) {
+    const reason = prompt('Enter reason for rejection:');
+    if (reason) {
+        // Implement reject claim
+        alert('Claim rejected: ' + id);
+    }
+}
+</script>
+
+<style>
+.claim-filter-btn.active {
+    @apply bg-blue-600 text-white;
+}
+.claim-filter-btn:not(.active) {
+    @apply text-gray-600 hover:bg-gray-100;
+}
+</style>
+{% endblock %}

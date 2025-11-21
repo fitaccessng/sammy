@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice {{ invoice.invoice_number }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px;
+            color: #333;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #4F46E5;
+            padding-bottom: 20px;
+        }
+        .company-info {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4F46E5;
+        }
+        .invoice-title {
+            font-size: 32px;
+            font-weight: bold;
+            color: #111;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .two-columns {
+            display: flex;
+            justify-content: space-between;
+            gap: 40px;
+        }
+        .column {
+            flex: 1;
+        }
+        .info-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+        }
+        .amounts {
+            border-top: 2px solid #ddd;
+            border-bottom: 2px solid #ddd;
+            padding: 20px 0;
+            margin: 30px 0;
+        }
+        .amount-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            font-size: 16px;
+        }
+        .total-row {
+            font-size: 24px;
+            font-weight: bold;
+            border-top: 2px solid #333;
+            padding-top: 15px;
+            margin-top: 15px;
+        }
+        .balance-row {
+            font-size: 20px;
+            font-weight: bold;
+            color: #D97706;
+            padding-top: 10px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status-paid { background-color: #D1FAE5; color: #065F46; }
+        .status-sent { background-color: #DBEAFE; color: #1E40AF; }
+        .status-draft { background-color: #F3F4F6; color: #374151; }
+        .status-partially_paid { background-color: #FEF3C7; color: #92400E; }
+        .status-overdue { background-color: #FEE2E2; color: #991B1B; }
+        .notes-section {
+            background-color: #F9FAFB;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .overdue-warning {
+            color: #DC2626;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div>
+            <div class="company-info">Sammya</div>
+            <div style="font-size: 14px; color: #666; margin-top: 5px;">Finance Department</div>
+        </div>
+        <div style="text-align: right;">
+            <div class="invoice-title">INVOICE</div>
+            <div style="font-size: 14px; margin-top: 5px;">{{ invoice.invoice_number }}</div>
+        </div>
+    </div>
+
+    <div class="two-columns">
+        <div class="column">
+            <div class="section-title">Bill To</div>
+            <div style="font-weight: bold; font-size: 16px;">{{ invoice.customer_name }}</div>
+            {% if invoice.customer_email %}
+            <div style="font-size: 14px; color: #666; margin-top: 5px;">{{ invoice.customer_email }}</div>
+            {% endif %}
+            {% if invoice.customer_address %}
+            <div style="font-size: 14px; color: #666; margin-top: 5px;">{{ invoice.customer_address }}</div>
+            {% endif %}
+            {% if invoice.project %}
+            <div style="font-size: 14px; color: #666; margin-top: 10px;">
+                <strong>Project:</strong> {{ invoice.project.project_name }}
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="column">
+            <div class="section-title">Invoice Details</div>
+            <div class="info-line">
+                <span style="color: #666;">Invoice Date:</span>
+                <span style="font-weight: 600;">{{ invoice.invoice_date.strftime('%B %d, %Y') }}</span>
+            </div>
+            <div class="info-line">
+                <span style="color: #666;">Due Date:</span>
+                <span style="font-weight: 600; {% if invoice.is_overdue %}color: #DC2626;{% endif %}">
+                    {{ invoice.due_date.strftime('%B %d, %Y') }}
+                </span>
+            </div>
+            {% if invoice.is_overdue %}
+            <div class="info-line overdue-warning">
+                <span>Days Overdue:</span>
+                <span>{{ invoice.days_overdue }}</span>
+            </div>
+            {% endif %}
+            <div class="info-line">
+                <span style="color: #666;">Status:</span>
+                <span class="status-badge status-{{ invoice.status }}">{{ invoice.status.upper() }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="amounts">
+        <div class="amount-row">
+            <span>Subtotal</span>
+            <span>₦{{ "{:,.2f}".format(invoice.subtotal) }}</span>
+        </div>
+        {% if invoice.tax_amount > 0 %}
+        <div class="amount-row">
+            <span>Tax</span>
+            <span>₦{{ "{:,.2f}".format(invoice.tax_amount) }}</span>
+        </div>
+        {% endif %}
+        {% if invoice.discount_amount > 0 %}
+        <div class="amount-row" style="color: #059669;">
+            <span>Discount</span>
+            <span>-₦{{ "{:,.2f}".format(invoice.discount_amount) }}</span>
+        </div>
+        {% endif %}
+        <div class="amount-row total-row">
+            <span>Total Amount</span>
+            <span>₦{{ "{:,.2f}".format(invoice.total_amount) }}</span>
+        </div>
+        {% if invoice.paid_amount > 0 %}
+        <div class="amount-row" style="color: #059669; font-size: 18px; font-weight: 600;">
+            <span>Paid Amount</span>
+            <span>₦{{ "{:,.2f}".format(invoice.paid_amount) }}</span>
+        </div>
+        {% endif %}
+        {% if invoice.balance_due > 0 %}
+        <div class="amount-row balance-row">
+            <span>Balance Due</span>
+            <span>₦{{ "{:,.2f}".format(invoice.balance_due) }}</span>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if invoice.terms or invoice.notes %}
+    <div class="notes-section">
+        {% if invoice.terms %}
+        <div style="margin-bottom: 15px;">
+            <div style="font-weight: bold; margin-bottom: 5px;">Payment Terms</div>
+            <div style="font-size: 14px; color: #666;">{{ invoice.terms }}</div>
+        </div>
+        {% endif %}
+        {% if invoice.notes %}
+        <div>
+            <div style="font-weight: bold; margin-bottom: 5px;">Notes</div>
+            <div style="font-size: 14px; color: #666;">{{ invoice.notes }}</div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div style="margin-top: 60px; padding-top: 20px; border-top: 1px solid #ddd; text-align: center; color: #999; font-size: 12px;">
+        <p>Thank you for your business!</p>
+        <p>This invoice was generated on {{ invoice.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+    </div>
+</body>
+</html>

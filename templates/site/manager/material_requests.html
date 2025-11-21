@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Material Requests</h1>
+            <p class="text-gray-600 mt-2">Submit and track material requisitions</p>
+        </div>
+        <button onclick="document.getElementById('newRequestModal').classList.remove('hidden')"
+                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg shadow">
+            <i class="fas fa-plus mr-2"></i>New Request
+        </button>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="bg-white rounded-t-lg shadow mb-0 border-b">
+        <div class="flex space-x-4 px-6 py-3">
+            <a href="?status=pending" class="px-4 py-2 text-sm font-medium border-b-2 border-yellow-500 text-yellow-700">
+                Pending
+            </a>
+            <a href="?status=approved" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800">
+                Approved
+            </a>
+            <a href="?status=fulfilled" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800">
+                Fulfilled
+            </a>
+            <a href="?status=all" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-800">
+                All Requests
+            </a>
+        </div>
+    </div>
+
+    <!-- Requests List -->
+    <div class="bg-white rounded-b-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request #</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Request Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Required Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Priority</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for request in requests %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ request.request_number }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ request.project.project_name }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ request.request_date.strftime('%b %d, %Y') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ request.required_date.strftime('%b %d, %Y') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full
+                            {% if request.priority == 'urgent' %}bg-red-100 text-red-800
+                            {% elif request.priority == 'high' %}bg-orange-100 text-orange-800
+                            {% else %}bg-blue-100 text-blue-800{% endif %}">
+                            {{ request.priority|upper }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full
+                            {% if request.status == 'fulfilled' %}bg-green-100 text-green-800
+                            {% elif request.status == 'approved' %}bg-blue-100 text-blue-800
+                            {% elif request.status == 'pending' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-red-100 text-red-800{% endif %}">
+                            {{ request.status|capitalize }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        {% if request.status == 'pending' %}
+                        <a href="#" class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                        No material requests found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- New Request Modal -->
+<div id="newRequestModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-8 border w-full max-w-4xl shadow-lg rounded-lg bg-white">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">New Material Request</h3>
+            <button onclick="document.getElementById('newRequestModal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Request Number *</label>
+                    <input type="text" name="request_number" required class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Project *</label>
+                    <select name="project_id" required class="w-full border-gray-300 rounded-lg">
+                        <option value="">Select Project</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.project_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Request Date *</label>
+                    <input type="date" name="request_date" required class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Required Date *</label>
+                    <input type="date" name="required_date" required class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Priority</label>
+                    <select name="priority" class="w-full border-gray-300 rounded-lg">
+                        <option value="normal">Normal</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Work Location</label>
+                    <input type="text" name="work_location" class="w-full border-gray-300 rounded-lg">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Purpose</label>
+                <textarea name="purpose" rows="2" class="w-full border-gray-300 rounded-lg"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Items Requested (JSON array)</label>
+                <textarea name="items_json" rows="4" class="w-full border-gray-300 rounded-lg font-mono text-sm"
+                          placeholder='[{"item": "Cement", "quantity": 100, "unit": "bags"}]'>[]</textarea>
+                <p class="text-xs text-gray-500 mt-1">Format: [{"item": "name", "quantity": number, "unit": "unit"}]</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Justification</label>
+                <textarea name="justification" rows="3" class="w-full border-gray-300 rounded-lg"></textarea>
+            </div>
+
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="document.getElementById('newRequestModal').classList.add('hidden')"
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                    <i class="fas fa-paper-plane mr-2"></i>Submit Request
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

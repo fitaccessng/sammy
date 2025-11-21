@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Cost Summary - {{ project.name }} - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-900">Cost Summary & Profitability Analysis</h1>
+        <p class="text-gray-600 mt-1">{{ project.name }}</p>
+    </div>
+
+    <!-- Financial Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-blue-50 rounded-lg shadow-sm p-6 border-l-4 border-blue-500">
+            <p class="text-sm font-medium text-blue-900">Original Contract Value</p>
+            <p class="text-2xl font-bold text-blue-900 mt-2">₦{{ "{:,.0f}".format(contract_value) }}</p>
+        </div>
+        <div class="bg-purple-50 rounded-lg shadow-sm p-6 border-l-4 border-purple-500">
+            <p class="text-sm font-medium text-purple-900">Approved Variations</p>
+            <p class="text-2xl font-bold text-purple-900 mt-2">₦{{ "{:,.0f}".format(total_variations) }}</p>
+        </div>
+        <div class="bg-green-50 rounded-lg shadow-sm p-6 border-l-4 border-green-500">
+            <p class="text-sm font-medium text-green-900">Revised Contract Value</p>
+            <p class="text-2xl font-bold text-green-900 mt-2">₦{{ "{:,.0f}".format(revised_contract) }}</p>
+        </div>
+        <div class="bg-orange-50 rounded-lg shadow-sm p-6 border-l-4 border-orange-500">
+            <p class="text-sm font-medium text-orange-900">Cost to Date</p>
+            <p class="text-2xl font-bold text-orange-900 mt-2">₦{{ "{:,.0f}".format(cost_to_date) }}</p>
+            <p class="text-xs text-orange-700 mt-1">{{ "{:.1f}".format((cost_to_date/revised_contract*100) if revised_contract > 0 else 0) }}% of contract</p>
+        </div>
+    </div>
+
+    <!-- Profitability Analysis -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Profitability Analysis</h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                        <span class="text-gray-600">Revised Contract Value</span>
+                        <span class="font-semibold text-gray-900">₦{{ "{:,.0f}".format(revised_contract) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-200">
+                        <span class="text-gray-600">Projected Final Cost</span>
+                        <span class="font-semibold text-gray-900">₦{{ "{:,.0f}".format(projected_final_cost) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center pb-3 border-b border-gray-200 text-lg">
+                        <span class="font-semibold {% if estimated_profit >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            Estimated Profit/Loss
+                        </span>
+                        <span class="font-bold {% if estimated_profit >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                            ₦{{ "{:,.0f}".format(estimated_profit) }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold {% if profit_margin >= 10 %}text-green-600{% elif profit_margin >= 5 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                            Profit Margin
+                        </span>
+                        <span class="font-bold text-2xl {% if profit_margin >= 10 %}text-green-600{% elif profit_margin >= 5 %}text-yellow-600{% else %}text-red-600{% endif %}">
+                            {{ profit_margin }}%
+                        </span>
+                    </div>
+                </div>
+                
+                <!-- Profit Margin Indicator -->
+                <div class="mt-6">
+                    <div class="flex justify-between text-xs text-gray-600 mb-1">
+                        <span>Loss</span>
+                        <span>Break Even</span>
+                        <span>Target (10%)</span>
+                        <span>Excellent (>15%)</span>
+                    </div>
+                    <div class="w-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 rounded-full h-3">
+                        <div class="bg-gray-900 h-3 rounded-full" style="width: {{ profit_margin if profit_margin > 0 else 0 }}%; max-width: 100%;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow">
+            <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-semibold text-gray-900">Cost Variance Analysis</h3>
+            </div>
+            <div class="p-6">
+                <div class="text-center mb-6">
+                    <p class="text-sm text-gray-600">Cost Variance</p>
+                    <p class="text-3xl font-bold {% if cost_variance >= 0 %}text-green-600{% else %}text-red-600{% endif %} mt-2">
+                        ₦{{ "{:,.0f}".format(cost_variance) }}
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1">
+                        {{ "{:.1f}".format(variance_percentage) }}% 
+                        {% if cost_variance >= 0 %}under{% else %}over{% endif %} budget
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-xs font-medium text-gray-500 uppercase">BOQ Value</p>
+                        <p class="text-lg font-bold text-gray-900">₦{{ "{:,.0f}".format(total_boq_value) }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-xs font-medium text-gray-500 uppercase">Actual Spent</p>
+                        <p class="text-lg font-bold text-gray-900">₦{{ "{:,.0f}".format(total_spent) }}</p>
+                    </div>
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <p class="text-xs font-medium text-gray-500 uppercase">Material Costs</p>
+                        <p class="text-lg font-bold text-gray-900">₦{{ "{:,.0f}".format(total_material_cost) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cost Breakdown by Category -->
+    <div class="bg-white rounded-lg shadow mb-8">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Cost Breakdown by Category</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Allocated</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Spent</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Utilization</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for category, data in cost_by_category.items() %}
+                    {% set utilization = (data.spent / data.allocated * 100) if data.allocated > 0 else 0 %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{{ category }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">₦{{ "{:,.0f}".format(data.allocated) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-900">₦{{ "{:,.0f}".format(data.spent) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap font-medium {% if data.remaining < 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                            ₦{{ "{:,.0f}".format(data.remaining) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center">
+                                <div class="flex-1 mr-2">
+                                    <div class="w-full bg-gray-200 rounded-full h-2">
+                                        <div class="{% if utilization > 90 %}bg-red-600{% elif utilization > 75 %}bg-yellow-500{% else %}bg-green-600{% endif %} h-2 rounded-full" 
+                                             style="width: {{ utilization if utilization <= 100 else 100 }}%"></div>
+                                    </div>
+                                </div>
+                                <span class="text-sm font-medium text-gray-700">{{ "{:.0f}".format(utilization) }}%</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if utilization > 90 %}bg-red-100 text-red-800
+                                {% elif utilization > 75 %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {% if utilization > 90 %}Critical{% elif utilization > 75 %}Warning{% else %}On Track{% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="flex justify-between items-center">
+        <a href="{{ url_for('qs.dashboard') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg">
+            Back to Dashboard
+        </a>
+        <div class="flex space-x-3">
+            <a href="{{ url_for('qs.project_boq', project_id=project.id) }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                View BOQ
+            </a>
+            <a href="{{ url_for('qs.project_valuations', project_id=project.id) }}" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                View Valuations
+            </a>
+            <button onclick="window.print()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center">
+                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                </svg>
+                Print Report
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

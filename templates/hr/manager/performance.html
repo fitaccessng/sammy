@@ -1,0 +1,208 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Performance Management{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+   
+
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Performance Management</h1>
+        <button onclick="document.getElementById('createModal').classList.remove('hidden')" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <i class="fas fa-plus mr-2"></i>New Appraisal
+        </button>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Review Period</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Review Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Overall Score</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reviewer</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for appraisal in appraisals %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">{{ appraisal.employee.name }}</div>
+                        <div class="text-sm text-gray-500">{{ appraisal.employee.department }}</div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {{ appraisal.review_period }} {{ appraisal.review_year }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {{ appraisal.review_date.strftime('%b %d, %Y') }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <span class="text-2xl font-bold text-blue-600">{{ "%.1f"|format(appraisal.overall_score or 0) }}</span>
+                            <span class="text-sm text-gray-500 ml-1">/5</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {{ appraisal.reviewer.full_name if appraisal.reviewer else 'N/A' }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full
+                            {% if appraisal.status == 'completed' %}bg-green-100 text-green-800
+                            {% elif appraisal.status == 'draft' %}bg-yellow-100 text-yellow-800
+                            {% endif %}">
+                            {{ appraisal.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if not appraisals %}
+        <div class="text-center py-12">
+            <i class="fas fa-chart-line text-gray-400 text-5xl mb-4"></i>
+            <p class="text-gray-500">No performance appraisals found</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Appraisal Modal -->
+<div id="createModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-2xl font-bold">Create Performance Appraisal</h3>
+            <button onclick="document.getElementById('createModal').classList.add('hidden')" 
+                    class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Employee *</label>
+                    <select name="employee_id" required class="w-full px-3 py-2 border rounded-lg">
+                        <option value="">Select employee</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.id }}">{{ emp.name }} - {{ emp.department }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Review Period *</label>
+                    <select name="review_period" required class="w-full px-3 py-2 border rounded-lg">
+                        <option value="Q1">Q1 (Jan-Mar)</option>
+                        <option value="Q2">Q2 (Apr-Jun)</option>
+                        <option value="Q3">Q3 (Jul-Sep)</option>
+                        <option value="Q4">Q4 (Oct-Dec)</option>
+                        <option value="Mid-Year">Mid-Year</option>
+                        <option value="Annual">Annual</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Review Year *</label>
+                    <input type="number" name="review_year" min="2020" max="2030" required 
+                           value="{{ current_year }}" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Review Date *</label>
+                    <input type="date" name="review_date" required class="w-full px-3 py-2 border rounded-lg">
+                </div>
+            </div>
+
+            <div class="border-t pt-4">
+                <h4 class="text-lg font-semibold mb-3">Performance Ratings (1-5)</h4>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Job Knowledge</label>
+                        <input type="number" name="job_knowledge_rating" min="1" max="5" 
+                               class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Quality of Work</label>
+                        <input type="number" name="quality_of_work_rating" min="1" max="5" 
+                               class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Productivity</label>
+                        <input type="number" name="productivity_rating" min="1" max="5" 
+                               class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Communication</label>
+                        <input type="number" name="communication_rating" min="1" max="5" 
+                               class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Teamwork</label>
+                        <input type="number" name="teamwork_rating" min="1" max="5" 
+                               class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Leadership</label>
+                        <input type="number" name="leadership_rating" min="1" max="5" 
+                               class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Initiative</label>
+                        <input type="number" name="initiative_rating" min="1" max="5" 
+                               class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Punctuality</label>
+                        <input type="number" name="punctuality_rating" min="1" max="5" 
+                               class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                </div>
+            </div>
+
+            <div class="border-t pt-4">
+                <h4 class="text-lg font-semibold mb-3">Qualitative Feedback</h4>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Strengths</label>
+                        <textarea name="strengths" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Areas for Improvement</label>
+                        <textarea name="areas_for_improvement" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Key Achievements</label>
+                        <textarea name="achievements" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Training Needs</label>
+                        <textarea name="training_needs" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Next Period Goals</label>
+                        <textarea name="next_period_goals" rows="2" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Recommendation</label>
+                        <select name="recommendation" class="w-full px-3 py-2 border rounded-lg">
+                            <option value="">Select...</option>
+                            <option value="Exceeds Expectations">Exceeds Expectations</option>
+                            <option value="Meets Expectations">Meets Expectations</option>
+                            <option value="Needs Improvement">Needs Improvement</option>
+                            <option value="Promotion Recommended">Promotion Recommended</option>
+                            <option value="Training Required">Training Required</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4">
+                <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Create Appraisal</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800">Site Meetings</h1>
+            <p class="text-gray-600 mt-2">Schedule and document site meetings</p>
+        </div>
+        <button onclick="document.getElementById('newMeetingModal').classList.remove('hidden')"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg shadow">
+            <i class="fas fa-plus mr-2"></i>New Meeting
+        </button>
+    </div>
+
+    <!-- Meetings List -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meeting #</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Chairperson</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for meeting in meetings %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        {{ meeting.meeting_number }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ meeting.project.project_name }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ meeting.meeting_type|replace('_', ' ')|title }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {{ meeting.meeting_date.strftime('%b %d, %Y') }}
+                        {% if meeting.start_time %}
+                        <br><span class="text-xs text-gray-400">{{ meeting.start_time.strftime('%I:%M %p') }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                        {{ meeting.chairperson }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs rounded-full
+                            {% if meeting.status == 'completed' %}bg-green-100 text-green-800
+                            {% elif meeting.status == 'in_progress' %}bg-blue-100 text-blue-800
+                            {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {{ meeting.status|replace('_', ' ')|title }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <a href="#" class="text-blue-600 hover:text-blue-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                        <a href="#" class="text-green-600 hover:text-green-900">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                        No meetings found
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- New Meeting Modal -->
+<div id="newMeetingModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-8 border w-full max-w-4xl shadow-lg rounded-lg bg-white">
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800">New Site Meeting</h3>
+            <button onclick="document.getElementById('newMeetingModal').classList.add('hidden')"
+                    class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form method="POST" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Meeting Number *</label>
+                    <input type="text" name="meeting_number" required class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Project *</label>
+                    <select name="project_id" required class="w-full border-gray-300 rounded-lg">
+                        <option value="">Select Project</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.project_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Meeting Type</label>
+                    <select name="meeting_type" class="w-full border-gray-300 rounded-lg">
+                        <option value="progress">Progress Review</option>
+                        <option value="coordination">Coordination</option>
+                        <option value="safety">Safety</option>
+                        <option value="technical">Technical</option>
+                        <option value="client">Client</option>
+                        <option value="toolbox">Toolbox Talk</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Meeting Date *</label>
+                    <input type="date" name="meeting_date" required class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
+                    <input type="time" name="start_time" class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">End Time</label>
+                    <input type="time" name="end_time" class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Venue</label>
+                    <input type="text" name="venue" class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Chairperson</label>
+                    <input type="text" name="chairperson" class="w-full border-gray-300 rounded-lg">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Secretary</label>
+                    <input type="text" name="secretary" class="w-full border-gray-300 rounded-lg">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Attendees (JSON array)</label>
+                <textarea name="attendees_json" rows="3" class="w-full border-gray-300 rounded-lg font-mono text-sm"
+                          placeholder='[{"name": "John Doe", "organization": "Company", "role": "Engineer"}]'>[]</textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Agenda</label>
+                <textarea name="agenda" rows="4" class="w-full border-gray-300 rounded-lg"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Minutes</label>
+                <textarea name="minutes" rows="5" class="w-full border-gray-300 rounded-lg"></textarea>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Decisions Made</label>
+                <textarea name="decisions_made" rows="3" class="w-full border-gray-300 rounded-lg"></textarea>
+            </div>
+
+            <div class="flex justify-end space-x-4">
+                <button type="button" onclick="document.getElementById('newMeetingModal').classList.add('hidden')"
+                        class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg">
+                    <i class="fas fa-save mr-2"></i>Save Meeting
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

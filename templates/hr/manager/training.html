@@ -1,0 +1,190 @@
+{% extends "hr/base.html" %}
+
+{% block title %}Training Management{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+   
+
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold">Training Management</h1>
+        <button onclick="document.getElementById('createModal').classList.remove('hidden')" 
+                class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+            <i class="fas fa-plus mr-2"></i>New Training
+        </button>
+    </div>
+
+    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Training Title</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type/Category</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Provider</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Dates</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for training in trainings %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">{{ training.employee.name }}</div>
+                        <div class="text-sm text-gray-500">{{ training.employee.department }}</div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">{{ training.training_title }}</div>
+                        {% if training.is_mandatory %}
+                        <span class="text-xs px-2 py-1 bg-red-100 text-red-800 rounded-full">Mandatory</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {{ training.training_type }}<br>
+                        <span class="text-gray-500">{{ training.training_category }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {{ training.provider_name or 'N/A' }}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        {% if training.start_date %}
+                        {{ training.start_date.strftime('%b %d') }}
+                        {% if training.end_date %} - {{ training.end_date.strftime('%b %d, %Y') }}{% endif %}
+                        {% else %}N/A{% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-sm text-gray-900">
+                        ₦{{ "{:,.2f}".format(training.cost) }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs font-semibold rounded-full
+                            {% if training.status == 'completed' %}bg-green-100 text-green-800
+                            {% elif training.status == 'in_progress' %}bg-blue-100 text-blue-800
+                            {% elif training.status == 'scheduled' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ training.status }}
+                        </span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% if not trainings %}
+        <div class="text-center py-12">
+            <i class="fas fa-graduation-cap text-gray-400 text-5xl mb-4"></i>
+            <p class="text-gray-500">No training records found</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Create Training Modal -->
+<div id="createModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-10 mx-auto p-5 border w-11/12 max-w-3xl shadow-lg rounded-md bg-white max-h-screen overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-2xl font-bold">Create Training Record</h3>
+            <button onclick="document.getElementById('createModal').classList.add('hidden')" 
+                    class="text-gray-400 hover:text-gray-600">
+                <i class="fas fa-times text-2xl"></i>
+            </button>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Employee *</label>
+                    <select name="employee_id" required class="w-full px-3 py-2 border rounded-lg">
+                        <option value="">Select employee</option>
+                        {% for emp in employees %}
+                        <option value="{{ emp.id }}">{{ emp.name }} - {{ emp.department }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Training Title *</label>
+                    <input type="text" name="training_title" required class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Training Type *</label>
+                    <select name="training_type" required class="w-full px-3 py-2 border rounded-lg">
+                        <option value="Internal">Internal</option>
+                        <option value="External">External</option>
+                        <option value="Online">Online</option>
+                        <option value="Workshop">Workshop</option>
+                        <option value="Seminar">Seminar</option>
+                        <option value="Conference">Conference</option>
+                        <option value="Certification">Certification</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                    <select name="training_category" required class="w-full px-3 py-2 border rounded-lg">
+                        <option value="Technical">Technical</option>
+                        <option value="Soft Skills">Soft Skills</option>
+                        <option value="Leadership">Leadership</option>
+                        <option value="Safety">Safety</option>
+                        <option value="Compliance">Compliance</option>
+                        <option value="Professional Development">Professional Development</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Provider Name</label>
+                    <input type="text" name="provider_name" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Trainer Name</label>
+                    <input type="text" name="trainer_name" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                    <input type="date" name="start_date" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                    <input type="date" name="end_date" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Duration (hours)</label>
+                    <input type="number" name="duration_hours" min="0" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Cost (₦)</label>
+                    <input type="number" name="cost" step="0.01" value="0" class="w-full px-3 py-2 border rounded-lg">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sponsored By</label>
+                    <select name="sponsored_by" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="company">Company</option>
+                        <option value="employee">Employee</option>
+                        <option value="government">Government</option>
+                        <option value="shared">Shared</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="w-full px-3 py-2 border rounded-lg">
+                        <option value="scheduled">Scheduled</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="flex items-center">
+                    <input type="checkbox" name="is_mandatory" class="mr-2">
+                    <span class="text-sm font-medium text-gray-700">Mandatory Training</span>
+                </label>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-4">
+                <button type="button" onclick="document.getElementById('createModal').classList.add('hidden')"
+                        class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Create Training</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

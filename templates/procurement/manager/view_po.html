@@ -1,0 +1,394 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase Order {{ po.order_number }} - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Navigation Breadcrumb -->
+    <nav class="mb-4">
+        <ol class="flex items-center space-x-2 text-sm text-gray-600">
+            <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li><a href="{{ url_for('procurement_mgr.dashboard') }}" class="hover:text-blue-600">Procurement Manager</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li><a href="{{ url_for('procurement_mgr.purchase_orders') }}" class="hover:text-blue-600">Purchase Orders</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li class="text-gray-900 font-medium">{{ po.order_number }}</li>
+        </ol>
+    </nav>
+
+    <!-- Quick Navigation -->
+    <div class="mb-6 bg-white rounded-lg shadow p-4">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('procurement_mgr.dashboard') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Dashboard</a>
+            <a href="{{ url_for('procurement_mgr.purchase_orders') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Purchase Orders</a>
+            <a href="{{ url_for('procurement_mgr.create_po') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Create PO</a>
+            <a href="{{ url_for('procurement_mgr.suppliers') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Suppliers</a>
+            <a href="{{ url_for('procurement_mgr.rfq') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">RFQ</a>
+            <a href="{{ url_for('procurement_mgr.delivery_tracking') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Delivery Tracking</a>
+            <a href="{{ url_for('procurement_mgr.reports') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Reports</a>
+        </div>
+    </div>
+
+    <!-- Header with Actions -->
+    <div class="mb-6 flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">{{ po.order_number }}</h1>
+            <p class="text-gray-600 mt-1">Purchase Order Details</p>
+        </div>
+        <div class="flex space-x-3">
+            {% if po.status == 'Pending' %}
+            <form method="POST" action="{{ url_for('procurement_mgr.approve_po', po_id=po.id) }}" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="approve">
+                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                    Approve PO
+                </button>
+            </form>
+            <button onclick="showRejectModal()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg">
+                Reject PO
+            </button>
+            {% elif po.status == 'Approved' %}
+            <form method="POST" action="{{ url_for('procurement_mgr.view_po', po_id=po.id) }}" class="inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="action" value="mark_ordered">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+                    Mark as Ordered
+                </button>
+            </form>
+            {% elif po.status == 'Ordered' %}
+            <button onclick="showDeliveryModal()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg">
+                Mark as Delivered
+            </button>
+            {% endif %}
+            <button onclick="window.print()" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg">
+                Print PO
+            </button>
+            <a href="{{ url_for('procurement_mgr.purchase_orders') }}" class="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">
+                Back to List
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Badge -->
+    <div class="mb-6">
+        <span class="px-4 py-2 text-sm font-semibold rounded-full 
+            {% if po.status == 'Delivered' %}bg-green-100 text-green-800
+            {% elif po.status == 'Approved' or po.status == 'Ordered' %}bg-blue-100 text-blue-800
+            {% elif po.status == 'Pending' or po.status == 'Draft' %}bg-yellow-100 text-yellow-800
+            {% elif po.status == 'Rejected' or po.status == 'Cancelled' %}bg-red-100 text-red-800
+            {% else %}bg-gray-100 text-gray-800{% endif %}">
+            Status: {{ po.status }}
+        </span>
+        <span class="ml-3 px-4 py-2 text-sm font-semibold rounded-full 
+            {% if po.priority == 'Urgent' %}bg-red-100 text-red-800
+            {% elif po.priority == 'High' %}bg-orange-100 text-orange-800
+            {% elif po.priority == 'Normal' %}bg-blue-100 text-blue-800
+            {% else %}bg-gray-100 text-gray-800{% endif %}">
+            Priority: {{ po.priority }}
+        </span>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Order Information -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">Order Information</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Project</p>
+                            <p class="font-medium text-gray-900">{{ po.project.name if po.project else 'General' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Expected Delivery</p>
+                            <p class="font-medium text-gray-900">
+                                {% if po.expected_delivery %}
+                                    {{ po.expected_delivery.strftime('%B %d, %Y') }}
+                                    {% if po.expected_delivery < now().date() and po.status not in ['Delivered', 'Cancelled'] %}
+                                    <span class="text-red-600 text-sm ml-2">(Overdue)</span>
+                                    {% endif %}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Created Date</p>
+                            <p class="font-medium text-gray-900">{{ po.created_at.strftime('%B %d, %Y %I:%M %p') }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Delivery Location</p>
+                            <p class="font-medium text-gray-900">{{ po.delivery_location or 'Not specified' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Supplier Information -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">Supplier Information</h2>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-2 gap-6">
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Supplier Name</p>
+                            <p class="font-medium text-gray-900">{{ po.supplier_name }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Contact Person</p>
+                            <p class="font-medium text-gray-900">{{ po.supplier_contact or 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Email</p>
+                            <p class="font-medium text-gray-900">{{ po.supplier_email or 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 mb-1">Phone</p>
+                            <p class="font-medium text-gray-900">{{ po.supplier_phone or 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Line Items -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">Line Items</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">#</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Unit Price</th>
+                                <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Line Total</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            {% for item in po.line_items %}
+                            <tr>
+                                <td class="px-6 py-4 text-sm text-gray-600">{{ loop.index }}</td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm font-medium text-gray-900">{{ item.description }}</div>
+                                    <div class="text-xs text-gray-500">{{ item.unit }}</div>
+                                </td>
+                                <td class="px-6 py-4 text-right text-sm text-gray-900">{{ "{:,.2f}".format(item.quantity) }}</td>
+                                <td class="px-6 py-4 text-right text-sm text-gray-900">₦{{ "{:,.2f}".format(item.unit_price) }}</td>
+                                <td class="px-6 py-4 text-right text-sm font-medium text-gray-900">₦{{ "{:,.2f}".format(item.line_total) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="bg-gray-50">
+                            <tr>
+                                <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-900">Subtotal:</td>
+                                <td class="px-6 py-3 text-right text-sm font-medium text-gray-900">₦{{ "{:,.2f}".format(po.subtotal) }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="px-6 py-3 text-right text-sm font-medium text-gray-900">Tax (7.5%):</td>
+                                <td class="px-6 py-3 text-right text-sm font-medium text-gray-900">₦{{ "{:,.2f}".format(po.tax_amount) }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4" class="px-6 py-3 text-right text-lg font-bold text-gray-900">Total:</td>
+                                <td class="px-6 py-3 text-right text-lg font-bold text-blue-600">₦{{ "{:,.2f}".format(po.total_amount) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            {% if po.notes %}
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">Additional Notes</h2>
+                </div>
+                <div class="p-6">
+                    <p class="text-gray-700 whitespace-pre-wrap">{{ po.notes }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Approval History -->
+            {% if po.status in ['Approved', 'Rejected', 'Delivered', 'Cancelled'] %}
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-900">Approval History</h2>
+                </div>
+                <div class="p-6">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0">
+                            {% if po.status == 'Approved' or po.status == 'Delivered' %}
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                            {% else %}
+                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-sm font-medium text-gray-900">{{ po.status }} by {{ po.approved_by.full_name if po.approved_by else 'System' }}</p>
+                            <p class="text-sm text-gray-600">{{ po.approval_date.strftime('%B %d, %Y %I:%M %p') if po.approval_date else 'N/A' }}</p>
+                            {% if po.approval_comments %}
+                            <p class="mt-2 text-sm text-gray-700">{{ po.approval_comments }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <!-- Budget Impact -->
+            {% if po.project and po.project.budget %}
+            <div class="bg-white rounded-lg shadow p-6 mb-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Budget Impact</h3>
+                <div class="space-y-4">
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">Total Budget</span>
+                            <span class="font-medium">₦{{ "{:,.2f}".format(po.project.budget.total_budget) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">Spent Before</span>
+                            <span class="font-medium">₦{{ "{:,.2f}".format(po.project.budget.spent_amount - (po.total_amount if po.status == 'Approved' else 0)) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gray-600">This PO</span>
+                            <span class="font-medium text-blue-600">₦{{ "{:,.2f}".format(po.total_amount) }}</span>
+                        </div>
+                        <div class="border-t pt-2 mt-2">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-gray-900 font-semibold">Remaining Budget</span>
+                                <span class="font-semibold {% if (po.project.budget.total_budget - po.project.budget.spent_amount) < 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                                    ₦{{ "{:,.2f}".format(po.project.budget.total_budget - po.project.budget.spent_amount) }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Budget Progress Bar -->
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>Budget Utilization</span>
+                            <span>{{ "{:.1f}".format((po.project.budget.spent_amount / po.project.budget.total_budget * 100) if po.project.budget.total_budget > 0 else 0) }}%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="h-2 rounded-full {% if (po.project.budget.spent_amount / po.project.budget.total_budget * 100) > 90 %}bg-red-600{% elif (po.project.budget.spent_amount / po.project.budget.total_budget * 100) > 75 %}bg-yellow-600{% else %}bg-blue-600{% endif %}" 
+                                 style="width: {{ min(100, (po.project.budget.spent_amount / po.project.budget.total_budget * 100) if po.project.budget.total_budget > 0 else 0) }}%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Quick Actions -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+                <div class="space-y-2">
+                    {% if po.supplier_email %}
+                    <a href="mailto:{{ po.supplier_email }}?subject=Purchase Order {{ po.order_number }}" 
+                       class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm">
+                        Email Supplier
+                    </a>
+                    {% endif %}
+                    {% if po.project %}
+                    <a href="{{ url_for('projects.project_detail', project_id=po.project.id) }}" 
+                       class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm">
+                        View Project
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('procurement_mgr.suppliers') }}" 
+                       class="block w-full text-center bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-sm">
+                        Supplier Directory
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Reject Purchase Order</h3>
+        <form method="POST" action="{{ url_for('procurement_mgr.approve_po', po_id=po.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="reject">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Rejection Reason *</label>
+                <textarea name="comments" rows="4" required placeholder="Explain why this PO is being rejected..." 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500"></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideRejectModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg">
+                    Reject PO
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delivery Modal -->
+<div id="deliveryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Mark as Delivered</h3>
+        <form method="POST" action="{{ url_for('procurement_mgr.view_po', po_id=po.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="action" value="mark_delivered">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Delivery Date *</label>
+                <input type="date" name="delivery_date" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Notes (Optional)</label>
+                <textarea name="delivery_notes" rows="3" placeholder="Any delivery notes or observations..." 
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"></textarea>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideDeliveryModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+                    Confirm Delivery
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showRejectModal() {
+    document.getElementById('rejectModal').classList.remove('hidden');
+}
+
+function hideRejectModal() {
+    document.getElementById('rejectModal').classList.add('hidden');
+}
+
+function showDeliveryModal() {
+    document.getElementById('deliveryModal').classList.remove('hidden');
+}
+
+function hideDeliveryModal() {
+    document.getElementById('deliveryModal').classList.add('hidden');
+}
+</script>
+{% endblock %}

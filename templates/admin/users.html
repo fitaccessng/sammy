@@ -1,0 +1,407 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-gray-50 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">User Management</h1>
+                    <p class="mt-2 text-sm text-gray-600">Manage all system users and their roles</p>
+                </div>
+                <a href="{{ url_for('signup') }}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                    Add New User
+                </a>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-blue-100 rounded-lg">
+                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Total Users</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-green-100 rounded-lg">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Verified</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.verified }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-yellow-100 rounded-lg">
+                        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Pending</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.unverified }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow p-6">
+                <div class="flex items-center">
+                    <div class="p-3 bg-purple-100 rounded-lg">
+                        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm font-medium text-gray-600">Management</p>
+                        <p class="text-2xl font-bold text-gray-900">{{ stats.role_counts.get(Roles.SUPER_HQ, 0) + stats.role_counts.get(Roles.HQ_FINANCE, 0) + stats.role_counts.get(Roles.HQ_HR, 0) + stats.role_counts.get(Roles.HQ_PROCUREMENT, 0) + stats.role_counts.get(Roles.QUARRY_MANAGER, 0) + stats.role_counts.get(Roles.PROJECT_MANAGER, 0) + stats.role_counts.get(Roles.HQ_COST_CONTROL, 0) }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="bg-white rounded-lg shadow mb-6 p-6">
+            <form method="GET" action="{{ url_for('admin.users') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Search -->
+                <div class="md:col-span-2">
+                    <label for="search" class="block text-sm font-medium text-gray-700 mb-2">Search Users</label>
+                    <input type="text" 
+                           name="search" 
+                           id="search" 
+                           value="{{ search_query }}"
+                           placeholder="Search by name or email..."
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Role Filter -->
+                <div>
+                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">Filter by Role</label>
+                    <select name="role" 
+                            id="role"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">All Roles</option>
+                        <optgroup label="Management">
+                            {% for role in Roles.get_management_roles() %}
+                            <option value="{{ role }}" {% if role_filter == role %}selected{% endif %}>
+                                {{ Roles.ROLE_NAMES.get(role, role) }}
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="Staff">
+                            {% for role in Roles.get_staff_roles() %}
+                            <option value="{{ role }}" {% if role_filter == role %}selected{% endif %}>
+                                {{ Roles.ROLE_NAMES.get(role, role) }}
+                            </option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div>
+                    <label for="status" class="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
+                    <select name="status" 
+                            id="status"
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                        <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified</option>
+                        <option value="unverified" {% if status_filter == 'unverified' %}selected{% endif %}>Unverified</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button (spans all columns on mobile) -->
+                <div class="md:col-span-4 flex gap-2">
+                    <button type="submit" 
+                            class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                        Apply Filters
+                    </button>
+                    <a href="{{ url_for('admin.users') }}" 
+                       class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">
+                        Clear Filters
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Users Table -->
+        <div class="bg-white rounded-lg shadow overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for user in users %}
+                        <tr class="hover:bg-gray-50 transition" id="user-row-{{ user.id }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <span class="text-blue-600 font-semibold text-sm">
+                                                {{ user.name[0:2].upper() }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium text-gray-900">{{ user.name }}</div>
+                                        <div class="text-sm text-gray-500">{{ user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if user.role == Roles.SUPER_HQ %}bg-purple-100 text-purple-800
+                                    {% elif user.role in Roles.get_management_roles() %}bg-blue-100 text-blue-800
+                                    {% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ Roles.ROLE_NAMES.get(user.role, user.role) }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    {% if user.is_verified %}bg-green-100 text-green-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ 'Verified' if user.is_verified else 'Pending' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <div class="flex justify-end gap-2">
+                                    <!-- Edit Role Button -->
+                                    <button onclick="openEditModal({{ user.id }}, '{{ user.name }}', '{{ user.role }}')"
+                                            class="text-blue-600 hover:text-blue-900 transition"
+                                            title="Edit Role">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                    </button>
+
+                                    <!-- Toggle Status Button -->
+                                    <button onclick="toggleUserStatus({{ user.id }}, {{ 'true' if user.is_verified else 'false' }})"
+                                            class="{% if user.is_verified %}text-yellow-600 hover:text-yellow-900{% else %}text-green-600 hover:text-green-900{% endif %} transition"
+                                            title="{% if user.is_verified %}Deactivate{% else %}Activate{% endif %} User">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            {% if user.is_verified %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                            {% else %}
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            {% endif %}
+                                        </svg>
+                                    </button>
+
+                                    <!-- Delete Button -->
+                                    <button onclick="deleteUser({{ user.id }}, '{{ user.name }}')"
+                                            class="text-red-600 hover:text-red-900 transition"
+                                            title="Delete User">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                <p class="text-lg font-medium">No users found</p>
+                                <p class="text-sm mt-2">Try adjusting your filters</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Role Modal -->
+<div id="editRoleModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-lg bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Edit User Role</h3>
+            <form id="editRoleForm" onsubmit="submitRoleEdit(event)">
+                <input type="hidden" id="editUserId">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">User</label>
+                    <p id="editUserName" class="text-gray-900 font-semibold"></p>
+                </div>
+
+                <div class="mb-6">
+                    <label for="editUserRole" class="block text-sm font-medium text-gray-700 mb-2">Select New Role</label>
+                    <select id="editUserRole" 
+                            name="role"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                        <optgroup label="Management Roles">
+                            {% for role in Roles.get_management_roles() %}
+                            <option value="{{ role }}">{{ Roles.ROLE_NAMES.get(role, role) }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        <optgroup label="Staff Roles">
+                            {% for role in Roles.get_staff_roles() %}
+                            <option value="{{ role }}">{{ Roles.ROLE_NAMES.get(role, role) }}</option>
+                            {% endfor %}
+                        </optgroup>
+                    </select>
+                </div>
+
+                <div class="flex gap-3 justify-end">
+                    <button type="button" 
+                            onclick="closeEditModal()"
+                            class="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                            class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+                        Update Role
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Edit Role Modal Functions
+function openEditModal(userId, userName, currentRole) {
+    document.getElementById('editUserId').value = userId;
+    document.getElementById('editUserName').textContent = userName;
+    document.getElementById('editUserRole').value = currentRole;
+    document.getElementById('editRoleModal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+    document.getElementById('editRoleModal').classList.add('hidden');
+}
+
+function submitRoleEdit(event) {
+    event.preventDefault();
+    const userId = document.getElementById('editUserId').value;
+    const formData = new FormData(event.target);
+    
+    fetch(`/admin/users/${userId}/edit-role`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            closeEditModal();
+            location.reload();
+        } else {
+            alert(data.message || 'Error updating role');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating role');
+    });
+}
+
+// Toggle User Status
+function toggleUserStatus(userId, isVerified) {
+    const action = isVerified ? 'deactivate' : 'activate';
+    if (!confirm(`Are you sure you want to ${action} this user?`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('csrf_token', '{{ csrf_token }}');
+    
+    fetch(`/admin/users/${userId}/toggle-status`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message || 'Error toggling status');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error toggling user status');
+    });
+}
+
+// Delete User
+function deleteUser(userId, userName) {
+    if (!confirm(`Are you sure you want to permanently delete ${userName}? This action cannot be undone.`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('csrf_token', '{{ csrf_token }}');
+    
+    fetch(`/admin/users/${userId}/delete`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message || 'Error deleting user');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error deleting user');
+    });
+}
+
+// Close modal when clicking outside
+document.getElementById('editRoleModal').addEventListener('click', function(event) {
+    if (event.target === this) {
+        closeEditModal();
+    }
+});
+</script>
+{% endblock %}

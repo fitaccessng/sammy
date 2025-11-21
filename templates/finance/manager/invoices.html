@@ -1,0 +1,266 @@
+{% extends "finance/base.html" %}
+{% block title %}Invoice Management{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ 'success' if category == 'success' else 'error' }} p-4 rounded-lg mb-4
+                    {{ 'bg-green-50 border border-green-200 text-green-800' if category == 'success' else 'bg-red-50 border border-red-200 text-red-800' }}">
+                    <div class="flex items-center">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-triangle' }} mr-2"></i>
+                        {{ message }}
+                    </div>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    <!-- Breadcrumb -->
+  
+
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                <i class="fas fa-file-invoice-dollar text-green-600 mr-3"></i>Invoice Management
+            </h1>
+            <p class="text-gray-600">Generate and track customer invoices</p>
+        </div>
+        <button onclick="openCreateModal()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition">
+            <i class="fas fa-plus mr-2"></i>Create Invoice
+        </button>
+    </div>
+
+    <!-- Status Tabs -->
+    <div class="mb-6 bg-white rounded-lg shadow p-2 flex gap-2">
+        <a href="?status=draft" class="px-4 py-2 rounded-lg {% if request.args.get('status') == 'draft' %}bg-gray-700 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+            <i class="fas fa-file mr-2"></i>Draft
+        </a>
+        <a href="?status=sent" class="px-4 py-2 rounded-lg {% if request.args.get('status', 'sent') == 'sent' %}bg-blue-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+            <i class="fas fa-paper-plane mr-2"></i>Sent
+        </a>
+        <a href="?status=partially_paid" class="px-4 py-2 rounded-lg {% if request.args.get('status') == 'partially_paid' %}bg-yellow-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+            <i class="fas fa-coins mr-2"></i>Partially Paid
+        </a>
+        <a href="?status=paid" class="px-4 py-2 rounded-lg {% if request.args.get('status') == 'paid' %}bg-green-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+            <i class="fas fa-check-circle mr-2"></i>Paid
+        </a>
+        <a href="?status=overdue" class="px-4 py-2 rounded-lg {% if request.args.get('status') == 'overdue' %}bg-red-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+            <i class="fas fa-exclamation-triangle mr-2"></i>Overdue
+        </a>
+        <a href="?status=all" class="px-4 py-2 rounded-lg {% if request.args.get('status') == 'all' %}bg-purple-600 text-white{% else %}text-gray-700 hover:bg-gray-100{% endif %}">
+            <i class="fas fa-list mr-2"></i>All
+        </a>
+    </div>
+
+    <!-- Invoices Table -->
+    <div class="bg-white rounded-lg shadow overflow-hidden">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice #</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for invoice in invoices %}
+                <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">{{ invoice.invoice_number }}</div>
+                        {% if invoice.project %}
+                        <div class="text-xs text-gray-500">{{ invoice.project.project_name }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-sm font-medium text-gray-900">{{ invoice.customer_name }}</div>
+                        {% if invoice.customer_email %}
+                        <div class="text-xs text-gray-500">{{ invoice.customer_email }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        {{ invoice.invoice_date.strftime('%b %d, %Y') }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <span class="{% if invoice.is_overdue %}text-red-600 font-semibold{% else %}text-gray-600{% endif %}">
+                            {{ invoice.due_date.strftime('%b %d, %Y') }}
+                        </span>
+                        {% if invoice.is_overdue %}
+                        <div class="text-xs text-red-600">{{ invoice.days_overdue }} days overdue</div>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        ₦{{ "{:,.2f}".format(invoice.total_amount) }}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <span class="{% if invoice.balance_due > 0 %}text-yellow-700{% else %}text-green-700{% endif %}">
+                            ₦{{ "{:,.2f}".format(invoice.balance_due) }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                            {% if invoice.status == 'paid' %}bg-green-100 text-green-800
+                            {% elif invoice.status == 'sent' %}bg-blue-100 text-blue-800
+                            {% elif invoice.status == 'draft' %}bg-gray-100 text-gray-800
+                            {% elif invoice.status == 'partially_paid' %}bg-yellow-100 text-yellow-800
+                            {% elif invoice.status == 'overdue' %}bg-red-100 text-red-800
+                            {% else %}bg-purple-100 text-purple-800{% endif %}">
+                            {{ invoice.status }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm">
+                        <div class="flex gap-2">
+                            <button onclick="viewInvoice({{ invoice.id }})" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            {% if invoice.status == 'draft' %}
+                            <button onclick="sendInvoice({{ invoice.id }})" class="text-green-600 hover:text-green-800">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                            {% endif %}
+                            <button onclick="downloadInvoice({{ invoice.id }})" class="text-purple-600 hover:text-purple-800">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <form action="{{ url_for('finance_mgr.delete_invoice', invoice_id=invoice.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this invoice?');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+                                <button type="submit" class="text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" class="px-6 py-12 text-center">
+                        <i class="fas fa-file-invoice-dollar text-6xl text-gray-300 mb-4"></i>
+                        <h3 class="text-xl font-semibold text-gray-700 mb-2">No Invoices Found</h3>
+                        <p class="text-gray-500 mb-6">Create your first invoice to start billing customers</p>
+                        <button onclick="openCreateModal()" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
+                            <i class="fas fa-plus mr-2"></i>Create Invoice
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create Invoice Modal -->
+<div id="createModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="text-xl font-bold text-gray-900">Create New Invoice</h3>
+            <button onclick="closeCreateModal()" class="text-gray-500 hover:text-gray-700">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form method="post" class="p-6">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Invoice Number *</label>
+                    <input type="text" name="invoice_number" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Project (Optional)</label>
+                    <select name="project_id" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                        <option value="">-- No Project --</option>
+                        {% for project in projects %}
+                        <option value="{{ project.id }}">{{ project.project_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Customer Name *</label>
+                    <input type="text" name="customer_name" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Customer Email</label>
+                    <input type="email" name="customer_email" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Customer Address</label>
+                <textarea name="customer_address" rows="2" class="w-full border border-gray-300 rounded-lg px-4 py-2"></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Invoice Date *</label>
+                    <input type="date" name="invoice_date" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Due Date *</label>
+                    <input type="date" name="due_date" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Subtotal *</label>
+                    <input type="number" name="subtotal" step="0.01" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tax Amount</label>
+                    <input type="number" name="tax_amount" step="0.01" value="0" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Discount Amount</label>
+                    <input type="number" name="discount_amount" step="0.01" value="0" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Payment Terms</label>
+                <textarea name="terms" rows="2" placeholder="Net 30, Due on Receipt, etc." class="w-full border border-gray-300 rounded-lg px-4 py-2"></textarea>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Notes</label>
+                <textarea name="notes" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2"></textarea>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="closeCreateModal()" class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button type="submit" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    <i class="fas fa-save mr-2"></i>Create Invoice
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openCreateModal() {
+        document.getElementById('createModal').classList.remove('hidden');
+    }
+    function closeCreateModal() {
+        document.getElementById('createModal').classList.add('hidden');
+    }
+    function viewInvoice(id) {
+        window.location.href = `/finance/manager/invoice/${id}`;
+    }
+    function sendInvoice(id) {
+        if(confirm('Send this invoice to the customer?')) {
+            window.location.href = `/finance/manager/invoice/${id}/send`;
+        }
+    }
+    function downloadInvoice(id) {
+        window.location.href = `/finance/manager/invoice/${id}/download`;
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block title %}Variance Analysis{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <nav class="mb-6 text-sm text-gray-600">
+        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Home</a>
+        <span class="mx-2">/</span>
+        <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="hover:text-blue-600">Cost Control</a>
+        <span class="mx-2">/</span>
+        <span class="text-gray-900">Variance Analysis</span>
+    </nav>
+
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Variance Analysis</h1>
+        <p class="text-gray-600">Compare planned vs actual costs across projects</p>
+    </div>
+
+    <!-- Quick Navigation -->
+    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
+            </a>
+            <a href="{{ url_for('cost_control_mgr.cost_tracking') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-clipboard-list mr-2"></i>Cost Tracking
+            </a>
+            <a href="{{ url_for('cost_control_mgr.variance_analysis') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
+                <i class="fas fa-chart-line mr-2"></i>Variance Analysis
+            </a>
+            <a href="{{ url_for('cost_control_mgr.budget_adjustments') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-adjust mr-2"></i>Budget Adjustments
+            </a>
+            <a href="{{ url_for('cost_control_mgr.cash_flow') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-money-bill-wave mr-2"></i>Cash Flow
+            </a>
+            <a href="{{ url_for('cost_control_mgr.approvals') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-check-circle mr-2"></i>Approvals
+            </a>
+            <a href="{{ url_for('cost_control_mgr.reports') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                <i class="fas fa-file-alt mr-2"></i>Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow mb-6 p-6">
+        <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                <select name="project_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="">All Projects</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}" {% if selected_project == project.id %}selected{% endif %}>{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Period</label>
+                <select name="period" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="week" {% if selected_period == 'week' %}selected{% endif %}>Last Week</option>
+                    <option value="month" {% if selected_period == 'month' %}selected{% endif %}>Last Month</option>
+                    <option value="quarter" {% if selected_period == 'quarter' %}selected{% endif %}>Last Quarter</option>
+                    <option value="year" {% if selected_period == 'year' %}selected{% endif %}>Last Year</option>
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="px-6 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900">
+                    <i class="fas fa-filter mr-2"></i>Apply Filters
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Variance Chart -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Planned vs Actual by Cost Type</h3>
+        <canvas id="varianceChart"></canvas>
+    </div>
+
+    <!-- Variance by Cost Type Table -->
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="p-6 border-b">
+            <h3 class="text-lg font-bold text-gray-900">Variance by Cost Type</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost Type</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Planned</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actual</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Variance</th>
+                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Entries</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for row in variance_by_type %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-medium">{{ row[0] }}</td>
+                        <td class="px-6 py-4 text-right">₦{{ "{:,.2f}".format(row[1]) }}</td>
+                        <td class="px-6 py-4 text-right">₦{{ "{:,.2f}".format(row[2]) }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <span class="{% if row[3] < 0 %}text-green-600{% else %}text-red-600{% endif %} font-bold">
+                                ₦{{ "{:,.2f}".format(row[3]|abs) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-center">{{ row[4] }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Project Variance Summary -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b">
+            <h3 class="text-lg font-bold text-gray-900">Project-wise Variance</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Project</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Planned</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actual</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Variance</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Variance %</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for row in project_variance %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 font-medium">{{ row[0] }}</td>
+                        <td class="px-6 py-4 text-right">₦{{ "{:,.2f}".format(row[2]) }}</td>
+                        <td class="px-6 py-4 text-right">₦{{ "{:,.2f}".format(row[3]) }}</td>
+                        <td class="px-6 py-4 text-right">
+                            <span class="{% if row[4] < 0 %}text-green-600{% else %}text-red-600{% endif %} font-bold">
+                                ₦{{ "{:,.2f}".format(row[4]|abs) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            {% if row[2] > 0 %}
+                            <span class="{% if row[4] < 0 %}text-green-600{% else %}text-red-600{% endif %}">
+                                {{ "%.1f"|format((row[4] / row[2] * 100)|abs) }}%
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const ctx = document.getElementById('varianceChart').getContext('2d');
+const chartData = {{ chart_data|tojson }};
+new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: chartData.labels,
+        datasets: [
+            {
+                label: 'Planned',
+                data: chartData.planned,
+                backgroundColor: '#3B82F6'
+            },
+            {
+                label: 'Actual',
+                data: chartData.actual,
+                backgroundColor: '#EF4444'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₦' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

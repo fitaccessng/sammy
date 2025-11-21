@@ -16,9 +16,6 @@
                     <div>
                         <h2 class="text-2xl font-bold text-gray-900">{{ staff.name }}</h2>
                         <p class="text-gray-600">{{ staff.position }} - {{ staff.department }}</p>
-                    <div>
-                        <label class="block text-xs text-gray-600">Period (Year)</label>
-                        <input type="number" name="period_year" class="w-full border rounded p-2 text-sm" />
                     </div>
                     <span class="px-2 py-1 text-xs font-semibold rounded-full
                         {% if staff.status == 'Active' %}bg-green-100 text-green-800
@@ -26,10 +23,13 @@
                         {% else %}bg-red-100 text-red-800{% endif %}">
                         {{ staff.status }}
                     </span>
-                    <button onclick="showModal('editStaffModal')" 
-                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                </div>
+                <div>
+                    <a href="{{ url_for('hr.edit_staff', staff_id=staff.id) }}" 
+                       class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 inline-flex items-center">
+                        <i class='bx bx-edit mr-2'></i>
                         Edit Profile
-                    </button>
+                    </a>
                 </div>
             </div>
         </div>
@@ -94,7 +94,7 @@
                     </div>
                     <div>
                         <p class="text-sm text-gray-500">Role</p>
-                        <form method="post" action="{{ url_for('assign_role', staff_id=staff.id) }}" class="mt-1">
+                        <form method="post" action="{{ url_for('hr.assign_role', staff_id=staff.id) }}" class="mt-1">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                             <div class="flex items-center space-x-2">
                                 <select name="role_id" class="border rounded p-2 text-sm flex-1" required>
@@ -300,7 +300,7 @@
             <div id="documents" class="tab-content space-y-4 hidden">
                 <div class="flex items-center justify-between mb-4">
                     <h4 class="font-semibold text-gray-800">Employee Documents</h4>
-                    <a href="{{ url_for('upload_staff_document', staff_id=staff.id) }}" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">Upload Document</a>
+                    <a href="{{ url_for('hr.upload_staff_document', staff_id=staff.id) }}" class="px-4 py-2 bg-indigo-600 text-white rounded text-sm hover:bg-indigo-700">Upload Document</a>
                 </div>
                 {% if staff.documents %}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -322,7 +322,7 @@
                                         <span>{{ doc.uploaded_at.strftime('%B %d, %Y') }}</span>
                                     </div>
                                 </div>
-                                <a href="{{ url_for('download_staff_document', staff_id=staff.id, doc_id=doc.id) }}" class="text-blue-600 hover:text-blue-800">
+                                <a href="{{ url_for('hr.download_staff_document', staff_id=staff.id, doc_id=doc.id) }}" class="text-blue-600 hover:text-blue-800">
                                     <i class='bx bx-download'></i>
                                 </a>
                             </div>
@@ -333,7 +333,7 @@
                     <div class="text-center py-8 text-gray-500">
                         <i class='bx bx-file text-4xl mb-2'></i>
                         <p>No documents uploaded</p>
-                        <a href="{{ url_for('upload_staff_document', staff_id=staff.id) }}" class="text-blue-600 hover:underline text-sm">Upload document</a>
+                        <a href="{{ url_for('hr.upload_staff_document', staff_id=staff.id) }}" class="text-blue-600 hover:underline text-sm">Upload document</a>
                     </div>
                 {% endif %}
             </div>
@@ -398,7 +398,7 @@
         </div>
         <div class="p-4">
             <!-- Add Payroll Form -->
-            <form id="addPayrollForm" class="hidden mb-4 border rounded p-4 bg-gray-50" method="post" action="{{ url_for('add_staff_payroll', staff_id=staff.id) }}">
+            <form id="addPayrollForm" class="hidden mb-4 border rounded p-4 bg-gray-50" method="post" action="{{ url_for('hr.add_staff_payroll', staff_id=staff.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <div>
@@ -534,138 +534,6 @@
     </div>
 </div>
 
-<!-- Edit Staff Modal -->
-<div id="editStaffModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 m-4">
-        <div class="flex items-center justify-between mb-6">
-            <h3 class="text-xl font-semibold text-gray-800">Edit Staff Information</h3>
-            <button type="button" class="text-gray-500 hover:text-gray-700" onclick="hideModal('editStaffModal')">
-                <i class='bx bx-x text-2xl'></i>
-            </button>
-        </div>
-        
-        <form method="post" action="{{ url_for('edit_staff', staff_id=staff.id) }}" class="space-y-6">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            
-            <!-- Basic Information Section -->
-            <div class="border-b pb-4">
-                <h4 class="text-sm font-semibold text-gray-800 mb-3">Basic Information</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Staff ID</label>
-                        <input type="text" name="staff_code" value="{{ staff.staff_code or '' }}" class="w-full border rounded p-2" placeholder="e.g. FA001">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Full Name *</label>
-                        <input type="text" name="name" value="{{ staff.name }}" class="w-full border rounded p-2" required>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Personal Information Section -->
-            <div class="border-b pb-4">
-                <h4 class="text-sm font-semibold text-gray-800 mb-3">Personal Information</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Email Address</label>
-                        <input type="email" name="email" value="{{ staff.email or '' }}" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Phone Number</label>
-                        <input type="tel" name="phone" value="{{ staff.phone or '' }}" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Date of Birth</label>
-                        <input type="date" name="dob" value="{{ staff.dob.strftime('%Y-%m-%d') if staff.dob else '' }}" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Gender</label>
-                        <select name="gender" class="w-full border rounded p-2">
-                            <option value="">Select Gender</option>
-                            <option value="Male" {% if staff.gender == 'Male' %}selected{% endif %}>Male</option>
-                            <option value="Female" {% if staff.gender == 'Female' %}selected{% endif %}>Female</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <label class="block text-sm text-gray-700 mb-1">Home Address</label>
-                    <textarea name="address" rows="2" class="w-full border rounded p-2">{{ staff.current_address or '' }}</textarea>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Emergency Contact Name</label>
-                        <input type="text" name="emergency_contact_name" value="{{ staff.next_of_kin or '' }}" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Emergency Contact Phone</label>
-                        <input type="tel" name="emergency_contact_phone" value="{{ staff.next_of_kin_phone or '' }}" class="w-full border rounded p-2">
-                    </div>
-                </div>
-            </div>
-
-            <!-- Employment Information Section -->
-            <div class="border-b pb-4">
-                <h4 class="text-sm font-semibold text-gray-800 mb-3">Employment Information</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Employment Date</label>
-                        <input type="date" name="employment_date" value="{{ staff.date_of_employment.strftime('%Y-%m-%d') if staff.date_of_employment else '' }}" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Employment Type</label>
-                        <select name="employment_type" class="w-full border rounded p-2">
-                            <option value="">Select Type</option>
-                            <option value="Full-time" {% if staff.employment_type == 'Full-time' %}selected{% endif %}>Full-time</option>
-                            <option value="Part-time" {% if staff.employment_type == 'Part-time' %}selected{% endif %}>Part-time</option>
-                            <option value="Contract" {% if staff.employment_type == 'Contract' %}selected{% endif %}>Contract</option>
-                            <option value="Intern" {% if staff.employment_type == 'Intern' %}selected{% endif %}>Intern</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Designation</label>
-                        <input type="text" name="designation" value="{{ staff.position or '' }}" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Department/Site</label>
-                        <input type="text" name="site_department" value="{{ staff.department or '' }}" class="w-full border rounded p-2">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Status</label>
-                        <select name="status" class="w-full border rounded p-2">
-                            <option value="Active" {% if staff.status == 'Active' %}selected{% endif %}>Active</option>
-                            <option value="On Leave" {% if staff.status == 'On Leave' %}selected{% endif %}>On Leave</option>
-                            <option value="Resigned" {% if staff.status == 'Resigned' %}selected{% endif %}>Resigned</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Additional Information Section -->
-            <div class="pb-4">
-                <h4 class="text-sm font-semibold text-gray-800 mb-3">Additional Information</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Academic Qualification</label>
-                        <input type="text" name="academic_qualification" value="{{ staff.academic_qualification_at_employment or '' }}" class="w-full border rounded p-2" placeholder="e.g. BSc Computer Science">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-700 mb-1">Institution</label>
-                        <input type="text" name="institution" value="{{ staff.institution or '' }}" class="w-full border rounded p-2" placeholder="e.g. University of Lagos">
-                    </div>
-                </div>
-                <div class="mt-4">
-                    <label class="block text-sm text-gray-700 mb-1">Notes</label>
-                    <textarea name="notes" rows="3" class="w-full border rounded p-2" placeholder="Additional notes about the employee">{{ staff.notes or '' }}</textarea>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-end space-x-3 pt-4 border-t">
-                <button type="button" onclick="hideModal('editStaffModal')" class="px-4 py-2 rounded border text-gray-700 hover:bg-gray-50">Cancel</button>
-                <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Update Staff</button>
-            </div>
-        </form>
-    </div>
-</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -701,34 +569,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-});
-
-// Modal functions
-function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-}
-
-function hideModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
-    }
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('bg-opacity-50')) {
-        const modals = document.querySelectorAll('[id$="Modal"]');
-        modals.forEach(modal => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        });
-    }
 });
 </script>
 {% endblock %}

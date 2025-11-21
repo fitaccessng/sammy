@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Purchase Orders - CSM{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Navigation Breadcrumb -->
+    <nav class="mb-4">
+        <ol class="flex items-center space-x-2 text-sm text-gray-600">
+            <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li><a href="{{ url_for('procurement_mgr.dashboard') }}" class="hover:text-blue-600">Procurement Manager</a></li>
+            <li><span class="mx-2">/</span></li>
+            <li class="text-gray-900 font-medium">Purchase Orders</li>
+        </ol>
+    </nav>
+
+    <!-- Quick Navigation -->
+    <div class="mb-6 bg-white rounded-lg shadow p-4">
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('procurement_mgr.dashboard') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Dashboard</a>
+            <a href="{{ url_for('procurement_mgr.purchase_orders') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Purchase Orders</a>
+            <a href="{{ url_for('procurement_mgr.create_po') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Create PO</a>
+            <a href="{{ url_for('procurement_mgr.suppliers') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Suppliers</a>
+            <a href="{{ url_for('procurement_mgr.rfq') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">RFQ</a>
+            <a href="{{ url_for('procurement_mgr.delivery_tracking') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Delivery Tracking</a>
+            <a href="{{ url_for('procurement_mgr.reports') }}" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Reports</a>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="mb-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900">Purchase Orders</h1>
+            <p class="text-gray-600 mt-1">Manage all purchase orders</p>
+        </div>
+        <a href="{{ url_for('procurement_mgr.create_po') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Create New PO
+        </a>
+    </div>
+
+    <!-- Filters -->
+    <div class="bg-white rounded-lg shadow p-6 mb-6">
+        <form method="GET" action="{{ url_for('procurement_mgr.purchase_orders') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="status" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Status</option>
+                    <option value="Draft" {% if status_filter == 'Draft' %}selected{% endif %}>Draft</option>
+                    <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+                    <option value="Ordered" {% if status_filter == 'Ordered' %}selected{% endif %}>Ordered</option>
+                    <option value="Delivered" {% if status_filter == 'Delivered' %}selected{% endif %}>Delivered</option>
+                    <option value="Cancelled" {% if status_filter == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
+                <select name="project_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Projects</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}" {% if project_filter == project.id %}selected{% endif %}>{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Supplier</label>
+                <select name="supplier" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">All Suppliers</option>
+                    {% for supplier in suppliers %}
+                    <option value="{{ supplier }}" {% if supplier_filter == supplier %}selected{% endif %}>{{ supplier }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex items-end">
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Search -->
+    <div class="bg-white rounded-lg shadow p-4 mb-6">
+        <form method="GET" action="{{ url_for('procurement_mgr.purchase_orders') }}" class="flex">
+            <input type="text" name="search" value="{{ search_query }}" placeholder="Search by PO number, description, or supplier..." 
+                   class="flex-1 px-4 py-2 border border-gray-300 rounded-l-lg focus:ring-blue-500 focus:border-blue-500">
+            <button type="submit" class="bg-gray-700 hover:bg-gray-800 text-white px-6 py-2 rounded-r-lg">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </button>
+        </form>
+    </div>
+
+    <!-- Purchase Orders Table -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">PO Number</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Supplier</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected Delivery</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Priority</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                    {% for po in purchase_orders %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <a href="{{ url_for('procurement_mgr.view_po', po_id=po.id) }}" class="text-sm font-medium text-blue-600 hover:text-blue-900">
+                                {{ po.order_number }}
+                            </a>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-gray-900">{{ po.supplier_name }}</div>
+                            <div class="text-xs text-gray-500">{{ po.supplier_contact }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {{ po.project.name if po.project else 'General' }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            ₦{{ "{:,.2f}".format(po.total_amount) }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                            {% if po.expected_delivery %}
+                                {{ po.expected_delivery.strftime('%b %d, %Y') }}
+                                {% if po.expected_delivery < now().date() and po.status not in ['Delivered', 'Cancelled'] %}
+                                <span class="text-red-600 text-xs">(Overdue)</span>
+                                {% endif %}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if po.priority == 'Urgent' %}bg-red-100 text-red-800
+                                {% elif po.priority == 'High' %}bg-orange-100 text-orange-800
+                                {% elif po.priority == 'Normal' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ po.priority }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                {% if po.status == 'Delivered' %}bg-green-100 text-green-800
+                                {% elif po.status == 'Approved' or po.status == 'Ordered' %}bg-blue-100 text-blue-800
+                                {% elif po.status == 'Pending' or po.status == 'Draft' %}bg-yellow-100 text-yellow-800
+                                {% elif po.status == 'Rejected' or po.status == 'Cancelled' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ po.status }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm space-x-2">
+                            <a href="{{ url_for('procurement_mgr.view_po', po_id=po.id) }}" class="text-blue-600 hover:text-blue-900">View</a>
+                            {% if po.status in ['Draft', 'Pending'] %}
+                            <button onclick="approvePO({{ po.id }})" class="text-green-600 hover:text-green-900">Approve</button>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    {% if not purchase_orders %}
+    <div class="text-center py-12 text-gray-500">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+        </svg>
+        <p class="mt-4">No purchase orders found</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function approvePO(poId) {
+    if (confirm('Approve this purchase order?')) {
+        fetch(`/procurement/manager/purchase-orders/${poId}/approve`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({action: 'approve', comments: 'Approved by Procurement Manager'})
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Purchase order approved');
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

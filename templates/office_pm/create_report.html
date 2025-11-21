@@ -1,0 +1,200 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Create Report - Office PM{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <!-- Header -->
+    <div class="bg-white shadow-sm border-b border-gray-200 mb-6">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">Create Custom Report</h1>
+                    <p class="mt-1 text-sm text-gray-500">Generate detailed project reports</p>
+                </div>
+                <a href="{{ url_for('office_pm.dashboard') }}" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    <i class='bx bx-arrow-back mr-2'></i>
+                    <span>Back to Dashboard</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <!-- Report Type Selection -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">📊 Select Report Type</h2>
+            </div>
+            <div class="p-6">
+                <form action="{{ url_for('office_pm.generate_report') }}" method="POST">
+                    <div class="space-y-6">
+                        <!-- Report Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Report Type</label>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <label class="relative flex cursor-pointer">
+                                    <input type="radio" name="report_type" value="financial" required 
+                                           class="peer sr-only">
+                                    <div class="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-blue-300 peer-checked:border-blue-600 peer-checked:bg-blue-50 transition-all">
+                                        <div class="text-center">
+                                            <i class='bx bx-dollar-circle text-4xl text-blue-600 mb-2'></i>
+                                            <h3 class="font-semibold text-gray-900">Financial Report</h3>
+                                            <p class="text-xs text-gray-600 mt-1">Budget, expenses, and financial analysis</p>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label class="relative flex cursor-pointer">
+                                    <input type="radio" name="report_type" value="progress" 
+                                           class="peer sr-only">
+                                    <div class="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-green-300 peer-checked:border-green-600 peer-checked:bg-green-50 transition-all">
+                                        <div class="text-center">
+                                            <i class='bx bx-bar-chart-alt-2 text-4xl text-green-600 mb-2'></i>
+                                            <h3 class="font-semibold text-gray-900">Progress Report</h3>
+                                            <p class="text-xs text-gray-600 mt-1">Milestones and completion status</p>
+                                        </div>
+                                    </div>
+                                </label>
+
+                                <label class="relative flex cursor-pointer">
+                                    <input type="radio" name="report_type" value="productivity" 
+                                           class="peer sr-only">
+                                    <div class="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-purple-300 peer-checked:border-purple-600 peer-checked:bg-purple-50 transition-all">
+                                        <div class="text-center">
+                                            <i class='bx bx-trending-up text-4xl text-purple-600 mb-2'></i>
+                                            <h3 class="font-semibold text-gray-900">Productivity Report</h3>
+                                            <p class="text-xs text-gray-600 mt-1">Labor, equipment, and daily progress</p>
+                                        </div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Project Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Select Projects</label>
+                            <div class="border border-gray-300 rounded-lg p-4 max-h-64 overflow-y-auto">
+                                <div class="space-y-2">
+                                    <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                        <input type="checkbox" id="select-all" onclick="toggleAll(this)" 
+                                               class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <span class="ml-2 text-sm font-medium text-gray-900">Select All Projects</span>
+                                    </label>
+                                    <hr class="my-2">
+                                    {% for project in projects %}
+                                    <label class="flex items-center p-2 hover:bg-gray-50 rounded cursor-pointer">
+                                        <input type="checkbox" name="project_ids" value="{{ project.id }}" 
+                                               class="project-checkbox w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                        <span class="ml-2 text-sm text-gray-700">{{ project.name }} - {{ project.location }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-2">Leave empty to include all projects</p>
+                        </div>
+
+                        <!-- Date Range -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Start Date</label>
+                                <input type="date" name="start_date" 
+                                       class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">End Date</label>
+                                <input type="date" name="end_date" 
+                                       class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <!-- Report Options -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Report Options</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_charts" value="yes" checked 
+                                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">Include charts and visualizations</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_summary" value="yes" checked 
+                                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">Include executive summary</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="include_recommendations" value="yes" 
+                                           class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <span class="ml-2 text-sm text-gray-700">Include recommendations</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="flex gap-3 pt-4">
+                            <button type="submit" 
+                                    class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                                <i class='bx bx-file-blank mr-2'></i>
+                                Generate Report
+                            </button>
+                            <button type="button" onclick="scheduleReport()" 
+                                    class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-medium">
+                                <i class='bx bx-calendar-plus mr-2'></i>
+                                Schedule
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Report Templates -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+            <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <h2 class="text-lg font-semibold text-gray-900">⚡ Quick Report Templates</h2>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button onclick="generateQuickReport('weekly')" 
+                            class="p-4 border-2 border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-left">
+                        <h4 class="font-semibold text-gray-900 mb-1">Weekly Summary</h4>
+                        <p class="text-sm text-gray-600">Past 7 days activity across all projects</p>
+                    </button>
+                    <button onclick="generateQuickReport('monthly')" 
+                            class="p-4 border-2 border-gray-200 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all text-left">
+                        <h4 class="font-semibold text-gray-900 mb-1">Monthly Summary</h4>
+                        <p class="text-sm text-gray-600">Current month performance report</p>
+                    </button>
+                    <button onclick="generateQuickReport('budget')" 
+                            class="p-4 border-2 border-gray-200 rounded-lg hover:border-yellow-500 hover:bg-yellow-50 transition-all text-left">
+                        <h4 class="font-semibold text-gray-900 mb-1">Budget Analysis</h4>
+                        <p class="text-sm text-gray-600">Financial overview and variance analysis</p>
+                    </button>
+                    <button onclick="generateQuickReport('executive')" 
+                            class="p-4 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all text-left">
+                        <h4 class="font-semibold text-gray-900 mb-1">Executive Dashboard</h4>
+                        <p class="text-sm text-gray-600">High-level portfolio overview</p>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAll(checkbox) {
+    const checkboxes = document.querySelectorAll('.project-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+}
+
+function scheduleReport() {
+    alert('Report scheduling feature coming soon!');
+}
+
+function generateQuickReport(type) {
+    alert('Generating ' + type + ' report...');
+    // Future implementation: Quick report generation
+}
+</script>
+{% endblock %}

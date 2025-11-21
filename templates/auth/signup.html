@@ -2,21 +2,21 @@
 
 {% block content %}
 <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full">
+    <div class="max-w-2xl w-full">
         <!-- Logo/Brand Section -->
         <div class="text-center mb-8">
             <h2 class="text-3xl font-extrabold text-gray-900">
                 Create your account
             </h2>
             <p class="mt-2 text-sm text-gray-600">
-                Join SammyA to streamline your business operations
+                Join SammyA Construction ERP to streamline your business operations
             </p>
         </div>
 
         <!-- Card Container -->
         <div class="bg-white rounded-xl shadow-lg p-8">
             <form method="POST" action="{{ url_for('signup') }}" class="space-y-6">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 
                 <!-- Full Name Input -->
                 <div>
@@ -34,32 +34,148 @@
                         placeholder="you@example.com">
                 </div>
 
-                <!-- Role Selection -->
+                <!-- Role Selection with Categories -->
                 <div>
-                    <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
-                    <select id="role" name="role" required
-                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500">
-                        <option value="">Select a role</option>
-                        <option value="super_hq">Super HQ Admin</option>
-                        <option value="hq_finance">HQ Finance Manager</option>
-                        <option value="hq_hr">HQ HR Manager</option>
-                        <option value="hq_procurement">HQ Procurement Manager</option>
-                        <option value="hq_quarry">HQ Quarry Manager</option>
-                        <option value="hq_project">HQ Project Manager</option>
-                        <option value="finance_staff">Finance Staff</option>
-                        <option value="hr_staff">HR Staff</option>
-                        <option value="procurement_staff">Procurement Staff</option>
-                        <option value="quarry_staff">Quarry Staff</option>
-                        <option value="project_staff">Project Staff</option>
-                    </select>
+                    <label for="role" class="block text-sm font-medium text-gray-700 mb-2">
+                        Select Your Role
+                    </label>
+                    <div class="space-y-4">
+                        <!-- HQ Management Roles -->
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                                HQ Management Roles
+                            </h3>
+                            <div class="space-y-2">
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="super_hq" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Super HQ Admin</div>
+                                        <div class="text-xs text-gray-500">Full system access and user management</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="hq_finance" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">HQ Finance Manager</div>
+                                        <div class="text-xs text-gray-500">Manage finance, budgets, and payroll</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="hq_hr" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">HQ HR Manager</div>
+                                        <div class="text-xs text-gray-500">Manage employees, attendance, and performance</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="hq_procurement" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">HQ Procurement Manager</div>
+                                        <div class="text-xs text-gray-500">Manage procurement and suppliers</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="hq_quarry" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Quarry Manager</div>
+                                        <div class="text-xs text-gray-500">Manage quarry operations</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="hq_project" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Project Manager</div>
+                                        <div class="text-xs text-gray-500">Manage site projects and progress</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="hq_cost_control" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">HQ Cost Control Manager</div>
+                                        <div class="text-xs text-gray-500">Monitor and control project costs</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Staff Roles -->
+                        <div class="border border-gray-200 rounded-lg p-4">
+                            <h3 class="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Staff Roles
+                            </h3>
+                            <div class="space-y-2">
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="finance_staff" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Finance Staff</div>
+                                        <div class="text-xs text-gray-500">Handle daily finance operations</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="hr_staff" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">HR Staff</div>
+                                        <div class="text-xs text-gray-500">Handle HR administrative tasks</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="procurement_staff" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Procurement Staff</div>
+                                        <div class="text-xs text-gray-500">Process procurement requests</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="procurement_officer" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Procurement Officer</div>
+                                        <div class="text-xs text-gray-500">Approve procurement activities</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="quarry_staff" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Quarry Staff</div>
+                                        <div class="text-xs text-gray-500">Handle quarry daily operations</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="project_staff" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Project Staff</div>
+                                        <div class="text-xs text-gray-500">Assist with site project tasks</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Password Input -->
-               <div class="mt-1 relative">
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <div class="mt-1 relative">
                         <input id="password" name="password" type="password" required 
                             class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 
                             focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                            placeholder="••••••••">
+                            placeholder="••••••••" minlength="8">
                         <button type="button" onclick="togglePassword()"
                             class="absolute inset-y-0 right-0 pr-3 flex items-center">
                             <svg class="h-5 w-5 text-gray-400" fill="none" id="eye-icon" viewBox="0 0 24 24" stroke="currentColor">
@@ -68,11 +184,13 @@
                             </svg>
                         </button>
                     </div>
+                    <p class="mt-1 text-xs text-gray-500">Must be at least 8 characters</p>
+                </div>
 
                 <!-- Submit Button -->
                 <div>
                     <button type="submit" 
-                        class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium 
+                        class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium 
                         text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 
                         focus:ring-blue-500 transition duration-150 ease-in-out">
                         Create Account

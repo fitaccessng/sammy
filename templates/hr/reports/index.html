@@ -6,8 +6,8 @@
 {% block content %}
 <div class="space-y-6">
     <!-- Report Statistics -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow p-4">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Available Reports</p>
@@ -19,7 +19,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Total Downloads</p>
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Pending Reports</p>
@@ -43,7 +43,7 @@
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white rounded-lg shadow p-4 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-gray-500 text-sm">Storage Used</p>
@@ -57,7 +57,7 @@
     </div>
 
     <!-- Generate Report Section -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-800 mb-4">
                 <i class='bx bx-plus-circle mr-2'></i>Generate New Report
@@ -114,21 +114,21 @@
         </div>
 
         <!-- Available Reports -->
-        <div class="md:col-span-2 bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
+        <div class="lg:col-span-2 bg-white rounded-lg shadow">
+            <div class="p-4 sm:p-6 border-b border-gray-200">
                 <h3 class="text-lg font-semibold text-gray-800">
                     <i class='bx bx-file-blank mr-2'></i>Available Reports
                 </h3>
             </div>
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
                 <div class="space-y-4">
                     {% if reports.available_reports %}
                     {% for report in reports.available_reports %}
-                    <div class="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors gap-4">
                         <div class="flex-1">
-                            <div class="flex items-center justify-between">
+                            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                 <h4 class="text-sm font-medium text-gray-900">{{ report.title }}</h4>
-                                <span class="px-2 py-1 text-xs font-semibold rounded-full 
+                                <span class="px-2 py-1 text-xs font-semibold rounded-full w-fit
                                     {% if report.format == 'PDF' %}bg-red-100 text-red-800
                                     {% elif report.format == 'Excel' %}bg-green-100 text-green-800
                                     {% else %}bg-blue-100 text-blue-800{% endif %}">
@@ -138,16 +138,18 @@
                             <p class="text-xs text-gray-500 mt-1">
                                 {{ report.description }}
                             </p>
-                            <p class="text-xs text-gray-400 mt-1">
-                                <i class='bx bx-calendar mr-1'></i>Last generated: {{ report.last_generated }}
+                            <p class="text-xs text-gray-400 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <span>
+                                    <i class='bx bx-calendar mr-1'></i>Last generated: {{ report.last_generated }}
+                                </span>
                                 {% if report.record_count %}
-                                <span class="ml-3">
+                                <span>
                                     <i class='bx bx-data mr-1'></i>{{ report.record_count }} records
                                 </span>
                                 {% endif %}
                             </p>
                         </div>
-                        <div class="flex items-center space-x-2 ml-4">
+                        <div class="flex items-center justify-end sm:justify-start space-x-2 sm:ml-4">
                             <button data-report-id="{{ report.id }}" data-report-type="{{ report.type }}" 
                                     class="view-details-btn text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-50 transition-colors"
                                     title="View Report Details">
@@ -169,7 +171,6 @@
                                 <i class='bx bx-paper-plane text-lg'></i>
                             </button>
                         </div>
-                        </div>
                     </div>
                     {% endfor %}
                     {% else %}
@@ -184,73 +185,7 @@
         </div>
     </div>
 
-    <!-- Recent Downloads -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200">
-            <h3 class="text-lg font-semibold text-gray-800">
-                <i class='bx bx-history mr-2'></i>Recent Downloads
-            </h3>
-        </div>
-        <div class="p-6">
-            {% if reports.recent_downloads %}
-            <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Report Name</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Downloaded By</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date & Time</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Size</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        {% for download in reports.recent_downloads %}
-                        <tr class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <i class='bx bx-file mr-2 text-gray-400'></i>
-                                    <span class="text-sm font-medium text-gray-900">{{ download.report_name }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <i class='bx bx-user mr-2 text-gray-400'></i>
-                                    <span class="text-sm text-gray-900">{{ download.downloaded_by }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <i class='bx bx-time mr-1'></i>{{ download.downloaded_at }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {% if download.file_size %}
-                                <i class='bx bx-hdd mr-1'></i>{{ download.file_size }}
-                                {% else %}
-                                <span class="text-gray-400">--</span>
-                                {% endif %}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <button class="text-blue-600 hover:text-blue-800 mr-2" title="Download Again">
-                                    <i class='bx bx-download'></i>
-                                </button>
-                                <button class="text-red-600 hover:text-red-800" title="Delete">
-                                    <i class='bx bx-trash'></i>
-                                </button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-            {% else %}
-            <div class="text-center py-8">
-                <i class='bx bx-download text-4xl text-gray-400'></i>
-                <p class="text-gray-500 mt-2">No recent downloads</p>
-                <p class="text-sm text-gray-400">Download history will appear here</p>
-            </div>
-            {% endif %}
-        </div>
-    </div>
+  
 
     <!-- Report Generation Status Modal -->
     <div id="statusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden items-center justify-center z-50">
@@ -371,7 +306,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     csrf_token: formData.get('csrf_token')
                 };
                 
-                const response = await fetch('{{ url_for("generate_report") }}', {
+                const response = await fetch('{{ url_for("hr.generate_report") }}', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
