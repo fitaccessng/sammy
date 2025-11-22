@@ -23,14 +23,7 @@
             </div>
             
             <nav class="space-y-6">
-                <!-- Add this to your navigation menu -->
-                <a href="{{ url_for('procurement.profile') }}" 
-                   class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                    <i class="bx bxs-user-circle text-xl"></i>
-                    <span>Profile</span>
-                </a>
 
-                <!-- Dashboard -->
                 <div class="space-y-2">
                     <a href="{{ url_for('procurement.procurement_home') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
@@ -38,11 +31,15 @@
                         <span>Dashboard</span>
                     </a>
                 </div>
+               
+
+                <!-- Dashboard -->
+                
 
                 <!-- Asset Management -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Asset Management</h2>
-                    <a href="{{ url_for('admin.assets') }}" 
+                    <a href="{{ url_for('procurement.assets') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-box text-xl'></i>
                         <span>Assets Directory</span>
@@ -53,8 +50,7 @@
                         <span>Maintenance</span>
                     </a>
                 </div>
-
-                <!-- Purchasing -->
+  <!-- Purchasing -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Purchasing</h2>
                     <a href="{{ url_for('procurement.purchases') }}" 
@@ -62,11 +58,18 @@
                         <i class='bx bxs-cart text-xl'></i>
                         <span>Purchase Orders</span>
                     </a>
+                   
+                </div>
+
+                <!-- Suppliers -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Suppliers</h2>
                     <a href="{{ url_for('procurement.suppliers') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-business text-xl'></i>
                         <span>Suppliers</span>
                     </a>
+                    
                 </div>
 
                 <!-- Tracking -->
@@ -77,6 +80,7 @@
                         <i class='bx bxs-map text-xl'></i>
                         <span>Asset Tracking</span>
                     </a>
+                    
                 </div>
 
                 <!-- Inventory Management -->
@@ -91,17 +95,22 @@
                 <!-- Reports -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports</h2>
-                    <a href="{{ url_for('hr.reports') }}" 
+                    <a href="{{ url_for('procurement.reports') }}" 
                        class="flex items-center space-x-2 text-gray-300 hover:text-white">
                         <i class='bx bxs-report text-xl'></i>
                         <span>Reports</span>
                     </a>
-                    <a href="{{ url_for('procurement.analytics') }}" 
-                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
-                        <i class="bx bx-line-chart text-xl"></i>
-                        <span>Analytics</span>
-                    </a>
+                   
                 </div>
+                <!-- Manager Dashboard -->
+             
+ <!-- Add this to your navigation menu -->
+                <a href="{{ url_for('procurement.profile') }}" 
+                   class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                    <i class="bx bxs-user-circle text-xl"></i>
+                    <span>Profile</span>
+                </a>
+              
             </nav>
         </aside>
 
@@ -138,11 +147,7 @@
                                     <i class='bx bx-user mr-2'></i>
                                     Profile
                                 </a>
-                                <a href="{{ url_for('project.settings') }}" 
-                                   class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
-                                    <i class='bx bx-cog mr-2'></i>
-                                    Settings
-                                </a>
+                              
                                 <hr class="my-1 border-gray-200">
                                 <a href="{{ url_for('logout') }}" 
                                    class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100">

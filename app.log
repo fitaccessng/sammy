@@ -23501,3 +23501,1257 @@ jinja2.exceptions.TemplateSyntaxError: Encountered unknown tag 'else'. Jinja was
 2025-11-21 01:08:29,964 - werkzeug - INFO - 127.0.0.1 - - [21/Nov/2025 01:08:29] "[32mGET /logout HTTP/1.1[0m" 302 -
 2025-11-21 01:08:29,986 - werkzeug - INFO - 127.0.0.1 - - [21/Nov/2025 01:08:29] "GET /login HTTP/1.1" 200 -
 2025-11-21 01:08:38,130 - werkzeug - INFO - 127.0.0.1 - - [21/Nov/2025 01:08:38] "GET /signup HTTP/1.1" 200 -
+2025-11-22 20:15:43,250 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.86.128:5000
+2025-11-22 20:15:43,251 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-22 20:15:43,254 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:15:45,270 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 20:15:45,277 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 20:18:32,228 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:18:32] "GET / HTTP/1.1" 200 -
+2025-11-22 20:18:33,999 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:18:33] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-11-22 20:18:35,656 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:18:35] "GET /login HTTP/1.1" 200 -
+2025-11-22 20:18:39,720 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:18:39] "GET /signup HTTP/1.1" 200 -
+2025-11-22 20:18:51,762 - utils.email - INFO - Successfully sent verification email to kelvinibeh3110@gmail.com
+2025-11-22 20:18:51,772 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:18:51] "[32mPOST /signup HTTP/1.1[0m" 302 -
+2025-11-22 20:18:51,803 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:18:51] "GET /verify-email HTTP/1.1" 200 -
+2025-11-22 20:22:16,759 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:22:16] "[32mPOST /verify-email HTTP/1.1[0m" 302 -
+2025-11-22 20:22:16,797 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:22:16] "GET /login HTTP/1.1" 200 -
+2025-11-22 20:22:18,352 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:22:18] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-11-22 20:22:18,587 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:22:18] "GET /procurement HTTP/1.1" 200 -
+2025-11-22 20:22:18,885 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:22:18] "GET /static/js/procurement.js HTTP/1.1" 200 -
+2025-11-22 20:22:18,901 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:22:18] "[33mGET /procurement/api/notifications HTTP/1.1[0m" 404 -
+2025-11-22 20:22:18,907 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:22:18] "[33mGET /procurement/api/notifications HTTP/1.1[0m" 404 -
+2025-11-22 20:25:30,279 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:25:30] "GET /procurement HTTP/1.1" 200 -
+2025-11-22 20:25:30,525 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:25:30] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:25:30,945 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:25:30] "[33mGET /procurement/api/notifications HTTP/1.1[0m" 404 -
+2025-11-22 20:25:30,952 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:25:30] "[33mGET /procurement/api/notifications HTTP/1.1[0m" 404 -
+2025-11-22 20:25:37,089 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:25:37] "GET /procurement/profile HTTP/1.1" 200 -
+2025-11-22 20:25:37,196 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:25:37] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:26:10,433 - app - ERROR - Error loading procurement manager dashboard: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 20929, in procurement_manager_dashboard
+    return render_template('procurement/manager/dashboard.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\dashboard.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\dashboard.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 20:26:10,472 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:26:10] "[32mGET /procurement/manager/dashboard HTTP/1.1[0m" 302 -
+2025-11-22 20:26:10,531 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:26:10] "GET / HTTP/1.1" 200 -
+2025-11-22 20:26:39,184 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:26:39] "GET /procurement/profile HTTP/1.1" 200 -
+2025-11-22 20:26:39,261 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:26:39] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:27:04,153 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:27:04] "GET /procurement/profile HTTP/1.1" 200 -
+2025-11-22 20:27:04,204 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:27:04] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:27:13,094 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:27:13] "GET /procurement HTTP/1.1" 200 -
+2025-11-22 20:27:13,257 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:27:13] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:27:13,890 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:27:13] "[33mGET /procurement/api/notifications HTTP/1.1[0m" 404 -
+2025-11-22 20:27:13,905 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:27:13] "[33mGET /procurement/api/notifications HTTP/1.1[0m" 404 -
+2025-11-22 20:33:00,830 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 20:33:03,943 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:33:08,763 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 20:33:08,772 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 20:33:49,241 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 20:33:49,661 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:33:55,256 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 20:33:55,262 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 20:34:58,787 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:34:58] "GET /procurement HTTP/1.1" 200 -
+2025-11-22 20:34:59,346 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:34:59] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:35:17,389 - app - ERROR - Error creating purchase order: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21075, in create_purchase_order
+    return render_template('procurement/manager/create_po.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\create_po.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\create_po.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 20:35:17,642 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:35:17] "[32mGET /procurement/manager/purchase-orders/create HTTP/1.1[0m" 302 -
+2025-11-22 20:35:17,859 - app - ERROR - Error loading purchase orders: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21045, in procurement_purchase_orders
+    return render_template('procurement/manager/purchase_orders.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 20:35:17,872 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:35:17] "[32mGET /procurement/manager/purchase-orders HTTP/1.1[0m" 302 -
+2025-11-22 20:35:18,053 - app - ERROR - Error loading procurement manager dashboard: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 20979, in procurement_manager_dashboard
+    return render_template('procurement/manager/dashboard.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\dashboard.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\dashboard.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 20:35:18,058 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:35:18] "[32mGET /procurement/manager/dashboard HTTP/1.1[0m" 302 -
+2025-11-22 20:35:18,075 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:35:18] "GET / HTTP/1.1" 200 -
+2025-11-22 20:37:27,070 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:37:27] "GET /procurement HTTP/1.1" 200 -
+2025-11-22 20:37:27,204 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:37:27] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:37:29,300 - app - ERROR - Error creating purchase order: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21075, in create_purchase_order
+    return render_template('procurement/manager/create_po.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\create_po.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\create_po.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 20:37:29,353 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:37:29] "[32mGET /procurement/manager/purchase-orders/create HTTP/1.1[0m" 302 -
+2025-11-22 20:37:29,503 - app - ERROR - Error loading purchase orders: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21045, in procurement_purchase_orders
+    return render_template('procurement/manager/purchase_orders.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 20:37:29,509 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:37:29] "[32mGET /procurement/manager/purchase-orders HTTP/1.1[0m" 302 -
+2025-11-22 20:37:29,663 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:37:29] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 20:37:35,502 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:37:35] "[31m[1mGET /admin/assets HTTP/1.1[0m" 403 -
+2025-11-22 20:38:08,044 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 20:38:10,301 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:38:23,183 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 20:38:23,201 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 20:39:03,947 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 20:39:04,279 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:39:07,641 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 20:39:07,648 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 20:39:09,146 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:39:09] "GET /admin/assets HTTP/1.1" 200 -
+2025-11-22 20:42:28,546 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:42:28] "GET /procurement HTTP/1.1" 200 -
+2025-11-22 20:42:29,273 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:42:29] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:43:30,179 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:43:30] "GET /procurement HTTP/1.1" 200 -
+2025-11-22 20:43:30,338 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:43:30] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:43:33,925 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:43:33] "GET /procurement/assets HTTP/1.1" 200 -
+2025-11-22 20:43:34,987 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:43:34] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:47:34,073 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.86.128:5000
+2025-11-22 20:47:34,074 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-22 20:47:34,077 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:47:36,545 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 20:47:36,545 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 20:48:37,958 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:48:37] "GET / HTTP/1.1" 200 -
+2025-11-22 20:48:39,734 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:48:39] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-11-22 20:48:50,897 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:48:50] "GET /login HTTP/1.1" 200 -
+2025-11-22 20:51:39,698 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:51:39] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-11-22 20:51:40,330 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:51:40] "GET /procurement HTTP/1.1" 200 -
+2025-11-22 20:51:40,813 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:51:40] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:52:19,087 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:52:19] "GET /procurement/assets HTTP/1.1" 200 -
+2025-11-22 20:52:19,165 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:52:19] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:54:20,763 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 20:54:21,757 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:56:04,378 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.86.128:5000
+2025-11-22 20:56:04,378 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-22 20:56:04,378 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:56:06,523 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 20:56:06,531 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 20:56:07,871 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:56:07] "GET /procurement/assets HTTP/1.1" 200 -
+2025-11-22 20:56:08,247 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:56:08] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:56:16,147 - app - INFO - New category created: Tools
+2025-11-22 20:56:16,147 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:56:16] "[32mPOST /procurement/categories/add HTTP/1.1[0m" 302 -
+2025-11-22 20:56:16,162 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:56:16] "GET /procurement/assets HTTP/1.1" 200 -
+2025-11-22 20:56:16,221 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:56:16] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:56:31,483 - app - INFO - New asset added: 378210 - Transfer
+2025-11-22 20:56:31,485 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:56:31] "[32mPOST /procurement/assets/add HTTP/1.1[0m" 302 -
+2025-11-22 20:56:31,497 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:56:31] "GET /procurement/assets HTTP/1.1" 200 -
+2025-11-22 20:56:31,548 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 20:56:31] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 20:57:41,088 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 20:57:41,564 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:57:44,230 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 20:57:44,240 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 20:57:58,340 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 20:57:58,589 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 20:58:01,096 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 20:58:01,112 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:00:24,574 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:00:24] "GET /procurement/assets HTTP/1.1" 200 -
+2025-11-22 21:00:24,830 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:00:24] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 21:00:33,240 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:00:33] "[33mGET /procurement/assets/2 HTTP/1.1[0m" 404 -
+2025-11-22 21:00:51,208 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:00:51] "POST /procurement/assets/delete/1 HTTP/1.1" 200 -
+2025-11-22 21:00:51,231 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:00:51] "GET /procurement/assets HTTP/1.1" 200 -
+2025-11-22 21:00:51,269 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:00:51] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 21:02:18,297 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 21:02:18,879 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:02:24,291 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:02:24,295 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:02:47,770 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 21:02:48,096 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:02:52,342 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:02:52,355 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:04:27,604 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:04:27] "GET /procurement/assets HTTP/1.1" 200 -
+2025-11-22 21:04:28,030 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:04:28] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 21:04:58,396 - app - ERROR - Maintenance error: type object 'InventoryItem' has no attribute 'maintenance_due'
+2025-11-22 21:04:58,407 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:04:58] "[35m[1mGET /procurement/maintenance HTTP/1.1[0m" 500 -
+2025-11-22 21:05:01,678 - app - ERROR - Maintenance error: type object 'InventoryItem' has no attribute 'maintenance_due'
+2025-11-22 21:05:01,682 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:05:01] "[35m[1mGET /procurement/maintenance HTTP/1.1[0m" 500 -
+2025-11-22 21:06:00,763 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 21:06:01,433 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:06:06,100 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:06:06,108 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:06:25,298 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 21:06:25,657 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:06:28,811 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:06:28,811 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:06:45,498 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:06:45] "GET /procurement/maintenance HTTP/1.1" 200 -
+2025-11-22 21:06:45,732 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:06:45] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 21:45:16,772 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:45:16] "GET /procurement/maintenance HTTP/1.1" 200 -
+2025-11-22 21:45:17,220 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:45:17] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 21:47:15,093 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 21:47:15,896 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:47:20,350 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:47:20,364 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:47:42,486 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 21:47:42,971 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:47:45,966 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:47:45,966 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:47:56,059 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 21:47:56,617 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:48:00,155 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:48:00,171 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:48:55,531 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 21:48:56,395 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:52:38,187 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.86.128:5000
+2025-11-22 21:52:38,188 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-22 21:52:38,191 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:52:41,595 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:52:41,606 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:52:46,609 - app - ERROR - Maintenance error: 'datetime' is undefined
+2025-11-22 21:52:46,631 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:52:46] "[35m[1mGET /procurement/maintenance HTTP/1.1[0m" 500 -
+2025-11-22 21:53:33,419 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 21:53:34,116 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:53:37,159 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:53:37,171 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:54:01,877 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 21:54:02,363 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 21:54:08,237 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 21:54:08,295 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 21:54:10,699 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:54:10] "GET /procurement/maintenance HTTP/1.1" 200 -
+2025-11-22 21:54:11,185 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:54:11] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 21:54:42,263 - app - INFO - New technician added: Ibeh Kelechi Kelvin
+2025-11-22 21:54:42,265 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:54:42] "[32mPOST /procurement/technicians/add HTTP/1.1[0m" 302 -
+2025-11-22 21:54:42,286 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:54:42] "GET /procurement/maintenance HTTP/1.1" 200 -
+2025-11-22 21:54:42,352 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:54:42] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 21:54:58,031 - app - INFO - Maintenance scheduled for asset 378210
+2025-11-22 21:54:58,034 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:54:58] "[32mPOST /procurement/maintenance/schedule HTTP/1.1[0m" 302 -
+2025-11-22 21:54:58,057 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:54:58] "GET /procurement/maintenance HTTP/1.1" 200 -
+2025-11-22 21:54:58,118 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:54:58] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 21:57:16,244 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:57:16] "GET /procurement/maintenance HTTP/1.1" 200 -
+2025-11-22 21:57:16,323 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:57:16] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 21:57:24,961 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:57:24] "[32mPOST /procurement/maintenance/update/1 HTTP/1.1[0m" 302 -
+2025-11-22 21:57:24,996 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:57:24] "GET /procurement/maintenance HTTP/1.1" 200 -
+2025-11-22 21:57:25,043 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 21:57:25] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:00:15,457 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:00:15] "GET /procurement/maintenance HTTP/1.1" 200 -
+2025-11-22 22:00:15,607 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:00:15] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:00:22,173 - app - ERROR - Purchase management error: division by zero
+2025-11-22 22:00:22,225 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:00:22] "[35m[1mGET /procurement/purchases HTTP/1.1[0m" 500 -
+2025-11-22 22:02:17,710 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:02:17] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:02:17,836 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:02:17] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:02:23,717 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:02:23] "GET /procurement HTTP/1.1" 200 -
+2025-11-22 22:02:23,869 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:02:23] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:02:27,254 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:02:27] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:02:27,317 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:02:27] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:02:48,279 - app - ERROR - Error loading purchase orders: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21416, in procurement_purchase_orders
+    return render_template('procurement/manager/purchase_orders.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:02:48,516 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:02:48] "[32mGET /procurement/manager/purchase-orders HTTP/1.1[0m" 302 -
+2025-11-22 22:02:48,642 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:02:48] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:06,051 - app - ERROR - Error loading purchase orders: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21416, in procurement_purchase_orders
+    return render_template('procurement/manager/purchase_orders.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:06,068 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:06] "[32mGET /procurement/manager/purchase-orders HTTP/1.1[0m" 302 -
+2025-11-22 22:08:06,119 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:06] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:09,233 - app - ERROR - Error loading purchase orders: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21416, in procurement_purchase_orders
+    return render_template('procurement/manager/purchase_orders.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:09,253 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:09] "[32mGET /procurement/manager/purchase-orders HTTP/1.1[0m" 302 -
+2025-11-22 22:08:09,287 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:09] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:11,424 - app - ERROR - Error loading purchase orders: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21416, in procurement_purchase_orders
+    return render_template('procurement/manager/purchase_orders.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:11,428 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:11] "[32mGET /procurement/manager/purchase-orders HTTP/1.1[0m" 302 -
+2025-11-22 22:08:11,470 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:11] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:19,256 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:19] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:21,589 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:21] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:24,445 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:24] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:08:24,489 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:24] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:08:33,028 - app - ERROR - Error creating purchase order: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21446, in create_purchase_order
+    return render_template('procurement/manager/create_po.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\create_po.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\create_po.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:33,050 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:33] "[32mGET /procurement/manager/purchase-orders/create HTTP/1.1[0m" 302 -
+2025-11-22 22:08:33,091 - app - ERROR - Error loading purchase orders: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21416, in procurement_purchase_orders
+    return render_template('procurement/manager/purchase_orders.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:33,094 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:33] "[32mGET /procurement/manager/purchase-orders HTTP/1.1[0m" 302 -
+2025-11-22 22:08:33,125 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:33] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:41,758 - app - ERROR - Error loading RFQ page: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21755, in manage_rfq
+    return render_template('procurement/manager/rfq.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\rfq.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\rfq.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:41,762 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:41] "[32mGET /procurement/manager/rfq HTTP/1.1[0m" 302 -
+2025-11-22 22:08:41,787 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:41] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:53,835 - app - ERROR - Error loading purchase orders: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21416, in procurement_purchase_orders
+    return render_template('procurement/manager/purchase_orders.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:53,844 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:53] "[32mGET /procurement/manager/purchase-orders HTTP/1.1[0m" 302 -
+2025-11-22 22:08:53,880 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:53] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:54,941 - app - ERROR - Error creating purchase order: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21446, in create_purchase_order
+    return render_template('procurement/manager/create_po.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\create_po.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\create_po.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:54,945 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:54] "[32mGET /procurement/manager/purchase-orders/create HTTP/1.1[0m" 302 -
+2025-11-22 22:08:55,028 - app - ERROR - Error loading purchase orders: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21416, in procurement_purchase_orders
+    return render_template('procurement/manager/purchase_orders.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\purchase_orders.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:55,034 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:55] "[32mGET /procurement/manager/purchase-orders HTTP/1.1[0m" 302 -
+2025-11-22 22:08:55,075 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:55] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:08:57,483 - app - ERROR - Error loading RFQ page: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21755, in manage_rfq
+    return render_template('procurement/manager/rfq.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\rfq.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\rfq.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:08:57,490 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:57] "[32mGET /procurement/manager/rfq HTTP/1.1[0m" 302 -
+2025-11-22 22:08:57,531 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:08:57] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:09:06,291 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:09:06] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:09:08,304 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:09:08] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:09:09,696 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:09:09] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:09:12,111 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:09:12] "GET /procurement/suppliers HTTP/1.1" 200 -
+2025-11-22 22:09:12,156 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:09:12] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:11:03,832 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 22:11:05,387 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 22:11:10,241 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 22:11:10,264 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 22:13:46,954 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 22:13:47,438 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 22:13:51,096 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 22:13:51,115 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 22:20:53,265 - app - ERROR - Supplier management error: Encountered unknown tag 'endblock'.
+2025-11-22 22:20:53,286 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:20:53] "[35m[1mGET /procurement/suppliers HTTP/1.1[0m" 500 -
+2025-11-22 22:21:48,375 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:21:48] "GET /procurement/suppliers HTTP/1.1" 200 -
+2025-11-22 22:21:48,742 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:21:48] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:22:01,878 - app - INFO - New supplier added: Hightower
+2025-11-22 22:22:01,880 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:22:01] "[32mPOST /procurement/suppliers/add HTTP/1.1[0m" 302 -
+2025-11-22 22:22:01,905 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:22:01] "GET /procurement/suppliers HTTP/1.1" 200 -
+2025-11-22 22:22:01,992 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:22:01] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:22:06,998 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:22:06] "[32mPOST /procurement/suppliers/validate/1 HTTP/1.1[0m" 302 -
+2025-11-22 22:22:07,017 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:22:07] "GET /procurement/suppliers HTTP/1.1" 200 -
+2025-11-22 22:22:07,073 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:22:07] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:22:11,581 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:22:11] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:22:11,626 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:22:11] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:25:37,464 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 22:25:38,630 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 22:25:42,737 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 22:25:42,746 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 22:26:02,879 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 22:26:03,182 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 22:26:06,117 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 22:26:06,122 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 22:27:52,422 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:27:52] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:27:52,664 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:27:52] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:45:04,204 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:45:04] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:45:04,354 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:45:04] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:47:52,604 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:47:52] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:47:52,680 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:47:52] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:52:06,807 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:52:06] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:52:06,983 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:52:06] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:53:53,701 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 22:53:55,219 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 22:53:59,465 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 22:53:59,475 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 22:54:17,136 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 22:54:17,468 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 22:54:20,457 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 22:54:20,464 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 22:54:46,389 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 22:54:46,747 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 22:54:49,559 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 22:54:49,564 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 22:54:52,819 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 22:54:53,181 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 22:54:56,293 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 22:54:56,303 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 22:55:15,231 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:55:15] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:55:15,611 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:55:15] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:56:47,488 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:56:47] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:56:47,568 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:56:47] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:57:25,905 - app - ERROR - Error loading suppliers: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 21983, in manage_suppliers
+    return render_template('procurement/manager/suppliers.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\suppliers.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\suppliers.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 22:57:25,959 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:57:25] "[32mGET /procurement/manager/suppliers HTTP/1.1[0m" 302 -
+2025-11-22 22:57:26,201 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:57:26] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 22:57:33,472 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:57:33] "GET /procurement/suppliers HTTP/1.1" 200 -
+2025-11-22 22:57:33,538 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:57:33] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:57:50,947 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:57:50] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:57:51,002 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:57:51] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:57:53,989 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:57:53] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 22:57:54,049 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:57:54] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 22:58:25,018 - app - ERROR - Error creating purchase order: 'po_number' is an invalid keyword argument for PurchaseOrder
+2025-11-22 22:58:25,022 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:58:25] "[35m[1mPOST /procurement/purchases/create HTTP/1.1[0m" 500 -
+2025-11-22 22:58:25,024 - app - ERROR - Error creating purchase order: 'po_number' is an invalid keyword argument for PurchaseOrder
+2025-11-22 22:58:25,024 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 22:58:25] "[35m[1mPOST /procurement/purchases/create HTTP/1.1[0m" 500 -
+2025-11-22 23:00:39,317 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\migrations\\versions\\add_purchase_order_tables.py', reloading
+2025-11-22 23:00:40,401 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:00:45,975 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:00:45,985 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:01:33,898 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\create_po_tables.py', reloading
+2025-11-22 23:01:34,255 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:01:36,953 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:01:36,962 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:01:51,384 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\create_po_tables.py', reloading
+2025-11-22 23:01:51,764 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:01:54,202 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:01:54,210 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:02:10,441 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\create_po_tables.py', reloading
+2025-11-22 23:02:10,804 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:02:13,812 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:02:13,817 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:02:23,003 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.86.128:5000
+2025-11-22 23:02:23,003 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-22 23:02:23,010 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:02:25,239 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:02:25,248 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:02:30,913 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:02:30] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 23:02:33,615 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:02:33] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:02:51,456 - app - ERROR - Error creating purchase order: 'po_number' is an invalid keyword argument for PurchaseOrder
+2025-11-22 23:02:51,456 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:02:51] "[35m[1mPOST /procurement/purchases/create HTTP/1.1[0m" 500 -
+2025-11-22 23:02:51,457 - app - ERROR - Error creating purchase order: 'po_number' is an invalid keyword argument for PurchaseOrder
+2025-11-22 23:02:51,457 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:02:51] "[35m[1mPOST /procurement/purchases/create HTTP/1.1[0m" 500 -
+2025-11-22 23:04:11,335 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 23:04:11,390 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 23:04:11,931 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:04:12,093 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:04:16,122 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:04:16,128 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:04:16,131 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:04:16,131 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:04:23,207 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 23:04:23,283 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 23:04:23,710 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:04:23,762 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:04:26,270 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:04:26,278 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:04:26,335 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:04:26,348 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:04:42,877 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:04:42,987 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:04:43,408 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:04:43,510 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:04:45,963 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:04:45,963 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:04:45,979 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:04:45,983 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:04:52,484 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:04:52,578 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:04:52,843 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:04:52,971 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:04:56,014 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:04:56,023 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:04:56,052 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:04:56,059 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:05:06,591 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:05:06] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 23:05:07,250 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:05:07] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:05:17,632 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:05:18,376 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:05:18,830 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:05:19,259 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:05:21,707 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:05:21,712 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:05:21,886 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:05:21,892 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:05:27,585 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:05:27,842 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:05:28,107 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:05:28,334 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:05:30,675 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:05:30,678 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:05:30,758 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:05:30,758 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:05:40,644 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:05:40] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 23:05:40,939 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:05:40] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:05:53,747 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:05:53] "POST /procurement/purchases/create HTTP/1.1" 200 -
+2025-11-22 23:05:53,757 - app - ERROR - Error creating purchase order: (sqlite3.IntegrityError) UNIQUE constraint failed: purchase_order.order_number
+[SQL: INSERT INTO purchase_order (order_number, supplier_name, supplier_contact, supplier_email, supplier_phone, project_id, status, priority, description, subtotal, tax_rate, tax_amount, total_amount, expected_delivery, requested_by, approved_by, approval_date, delivery_address, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)]
+[parameters: ('PO-20251122230553', 'Hightower', 'Hightower', None, None, None, 'Draft', 'Normal', None, 0.0, 0.0, 0.0, 1000000.0, '2025-11-23', None, None, None, None, None, '2025-11-22 22:05:53.756065', '2025-11-22 22:05:53.756065')]
+(Background on this error at: https://sqlalche.me/e/20/gkpj)
+2025-11-22 23:05:53,757 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:05:53] "[35m[1mPOST /procurement/purchases/create HTTP/1.1[0m" 500 -
+2025-11-22 23:05:53,798 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:05:53] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 23:05:53,842 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:05:53] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:05:57,041 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:05:57] "GET /procurement/purchases/1 HTTP/1.1" 200 -
+2025-11-22 23:06:00,572 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:06:00] "GET /procurement/purchases/1 HTTP/1.1" 200 -
+2025-11-22 23:06:27,726 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:06:27] "GET /procurement/purchases HTTP/1.1" 200 -
+2025-11-22 23:06:27,795 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:06:27] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:06:33,659 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:06:33] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:06:33,730 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:06:33] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:08:47,089 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 23:08:47,182 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 23:08:47,756 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:08:47,875 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:08:51,782 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:08:51,787 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:08:51,796 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:08:51,805 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:09:06,116 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:09:06,164 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:09:06,550 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:09:06,627 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:09:09,846 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:09:09,850 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:09:09,850 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:10:17,864 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_asset_location_fields.py', reloading
+2025-11-22 23:10:17,903 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_asset_location_fields.py', reloading
+2025-11-22 23:10:18,294 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:10:18,349 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:10:21,129 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:10:21,138 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:10:21,156 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:10:21,159 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:12:46,862 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 23:12:47,302 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:12:50,390 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:12:50,407 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:15:46,634 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:15:46] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:15:47,028 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:15:47] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:18:36,275 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:18:36] "[31m[1mGET /hr/reports HTTP/1.1[0m" 403 -
+2025-11-22 23:20:33,815 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:20:33] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:20:33,908 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:20:33] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:21:58,835 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:21:58] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:21:58,915 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:21:58] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:22:19,539 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:22:19] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:22:19,589 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:22:19] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:22:50,660 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:22:50] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:22:50,745 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:22:50] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:24:31,190 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\models.py', reloading
+2025-11-22 23:24:32,657 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:24:37,507 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:24:37,515 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:24:56,520 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:24:56,855 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:24:59,530 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:24:59,535 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:26:31,215 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_previous_location_field.py', reloading
+2025-11-22 23:26:31,646 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:26:35,094 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:26:35,100 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:26:51,713 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_previous_location_field.py', reloading
+2025-11-22 23:26:52,084 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:26:54,780 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:26:54,787 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:27:26,804 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\add_previous_location_field.py', reloading
+2025-11-22 23:27:27,161 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:27:31,085 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:27:31,098 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:28:28,904 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:28:28] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:28:29,454 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:28:29] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:28:34,797 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:28:34] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:28:34,862 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:28:34] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:28:50,403 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:28:50] "POST /procurement/tracking/update-location/2 HTTP/1.1" 200 -
+2025-11-22 23:28:51,604 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:28:51] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:28:51,677 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:28:51] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:30:40,007 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:30:40] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:30:40,078 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:30:40] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:30:42,272 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:30:42] "[31m[1mGET /hr/reports HTTP/1.1[0m" 403 -
+2025-11-22 23:33:04,530 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:33:04] "[31m[1mGET /hr/reports HTTP/1.1[0m" 403 -
+2025-11-22 23:34:39,645 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:34:39] "[31m[1mGET /hr/reports HTTP/1.1[0m" 403 -
+2025-11-22 23:37:16,119 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:37:17,682 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:37:22,522 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:37:22,543 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:37:24,139 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:37:24,467 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:39:51,488 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.86.128:5000
+2025-11-22 23:39:51,489 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-22 23:39:51,493 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:39:54,566 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:39:54,573 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:39:56,147 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:39:56] "[31m[1mGET /hr/reports HTTP/1.1[0m" 403 -
+2025-11-22 23:39:56,149 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:39:56] "[31m[1mGET /hr/reports HTTP/1.1[0m" 403 -
+2025-11-22 23:40:04,526 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:04] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:40:04,896 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:04] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:40:06,450 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:06] "[31m[1mGET /hr/reports HTTP/1.1[0m" 403 -
+2025-11-22 23:40:24,708 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:24] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:40:24,758 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:24] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:40:28,978 - app - ERROR - Error loading delivery tracking: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 22261, in delivery_tracking
+    return render_template('procurement/manager/delivery_tracking.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\delivery_tracking.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\delivery_tracking.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 23:40:29,036 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:29] "[32mGET /procurement/manager/delivery-tracking HTTP/1.1[0m" 302 -
+2025-11-22 23:40:29,206 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:29] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 23:40:34,211 - app - ERROR - Error loading delivery tracking: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 22261, in delivery_tracking
+    return render_template('procurement/manager/delivery_tracking.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\delivery_tracking.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\delivery_tracking.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 23:40:34,217 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:34] "[32mGET /procurement/manager/delivery-tracking HTTP/1.1[0m" 302 -
+2025-11-22 23:40:34,271 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:34] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 23:40:41,096 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:41] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 23:40:46,033 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:46] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:40:46,086 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:46] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:40:48,936 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:40:48] "GET /procurement/inventory HTTP/1.1" 200 -
+2025-11-22 23:41:17,359 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:41:17] "GET /procurement/tracking HTTP/1.1" 200 -
+2025-11-22 23:41:17,422 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:41:17] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:41:19,888 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:41:19] "GET /procurement/reports HTTP/1.1" 200 -
+2025-11-22 23:41:20,243 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:41:20] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:41:27,286 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:41:27] "GET /procurement/reports/quick/inventory HTTP/1.1" 200 -
+2025-11-22 23:41:31,714 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:41:31] "GET /procurement/reports/quick/purchases HTTP/1.1" 200 -
+2025-11-22 23:41:32,816 - app - ERROR - Error generating quick report: 'Vendor' object has no attribute 'email'
+2025-11-22 23:41:32,816 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:41:32] "[35m[1mGET /procurement/reports/quick/suppliers HTTP/1.1[0m" 500 -
+2025-11-22 23:42:27,376 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:42:28,466 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:42:33,016 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:42:33,028 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:42:36,287 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:42:36,657 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:42:39,476 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:42:39,483 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:43:04,076 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:43:04,436 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:43:16,670 - werkzeug - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.86.128:5000
+2025-11-22 23:43:16,677 - werkzeug - INFO - [33mPress CTRL+C to quit[0m
+2025-11-22 23:43:16,683 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:43:19,560 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:43:19,568 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:43:21,102 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:43:21] "GET /procurement/reports HTTP/1.1" 200 -
+2025-11-22 23:43:22,670 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:43:22] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:43:24,298 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:43:24] "GET /procurement/reports/quick/suppliers HTTP/1.1" 200 -
+2025-11-22 23:43:31,440 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:43:31] "GET /procurement/inventory HTTP/1.1" 200 -
+2025-11-22 23:45:47,293 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:45:48,159 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:45:52,137 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:45:52,143 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:45:57,315 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:45:57,821 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:46:00,552 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:46:00,558 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:46:10,657 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:46:10] "GET /procurement/inventory HTTP/1.1" 200 -
+2025-11-22 23:46:14,290 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:46:14] "GET /procurement/reports HTTP/1.1" 200 -
+2025-11-22 23:46:14,755 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:46:14] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:46:16,734 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:46:16] "GET /procurement/inventory HTTP/1.1" 200 -
+2025-11-22 23:46:48,659 - app - ERROR - Reports error: Could not build url for endpoint 'procurement.inventory'. Did you mean 'procurement.get_inventory' instead?
+2025-11-22 23:46:48,684 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:46:48] "[35m[1mGET /procurement/reports HTTP/1.1[0m" 500 -
+2025-11-22 23:49:43,956 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:49:43] "GET /procurement/reports HTTP/1.1" 200 -
+2025-11-22 23:49:44,077 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:49:44] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:49:47,674 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:49:47] "GET /procurement/inventory HTTP/1.1" 200 -
+2025-11-22 23:53:01,124 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:53:02,581 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:53:08,783 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:53:09,143 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:53:18,636 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:53:19,038 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:53:23,027 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:53:23,033 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:53:27,143 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:53:27] "GET /procurement/reports HTTP/1.1" 200 -
+2025-11-22 23:53:27,739 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:53:27] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:53:31,086 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:53:31] "GET /procurement/inventory HTTP/1.1" 200 -
+2025-11-22 23:53:31,278 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:53:31] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:53:31,461 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:53:31] "GET /procurement/inventory HTTP/1.1" 200 -
+2025-11-22 23:53:47,247 - app - ERROR - Error generating procurement reports: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+Traceback (most recent call last):
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\app.py", line 22368, in procurement_reports
+    return render_template('procurement/manager/reports.html',
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 151, in render_template
+    return _render(app, template, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\templating.py", line 132, in _render
+    rv = template.render(context)
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 1301, in render
+    self.environment.handle_exception()
+  File "C:\Python312\Lib\site-packages\jinja2\environment.py", line 936, in handle_exception
+    raise rewrite_traceback_stack(source=source)
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\reports.html", line 1, in top-level template code
+    {% extends "base.html" %}
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\base.html", line 49, in top-level template code
+    {% block content %}{% endblock %}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Nwakanma\Desktop\Fitaccess\sammy\templates\procurement\manager\reports.html", line 10, in block 'content'
+    <li><a href="{{ url_for('main.dashboard') }}" class="hover:text-blue-600">Home</a></li>
+    ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1697, in url_for
+    return self.handle_url_build_error(error, endpoint, values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\flask\app.py", line 1686, in url_for
+    rv = url_adapter.build(  # type: ignore[union-attr]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\werkzeug\routing\map.py", line 924, in build
+    raise BuildError(endpoint, values, method, self)
+werkzeug.routing.exceptions.BuildError: Could not build url for endpoint 'main.dashboard'. Did you mean 'admin.dashboard' instead?
+2025-11-22 23:53:47,276 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:53:47] "[32mGET /procurement/manager/reports HTTP/1.1[0m" 302 -
+2025-11-22 23:53:47,425 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:53:47] "GET /procurement/manager/dashboard HTTP/1.1" 200 -
+2025-11-22 23:53:50,782 - app - ERROR - Analytics error: type object 'ProcurementRequest' has no attribute 'vendor_id'
+2025-11-22 23:53:50,793 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:53:50] "[35m[1mGET /procurement/analytics HTTP/1.1[0m" 500 -
+2025-11-22 23:54:14,083 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:54:14] "GET /procurement/inventory HTTP/1.1" 200 -
+2025-11-22 23:54:14,139 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:54:14] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:54:14,340 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:54:14] "GET /procurement/inventory HTTP/1.1" 200 -
+2025-11-22 23:54:15,814 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:54:15] "GET /procurement/profile HTTP/1.1" 200 -
+2025-11-22 23:54:15,864 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:54:15] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:55:25,368 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:55:25] "GET /procurement/profile HTTP/1.1" 200 -
+2025-11-22 23:55:25,438 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:55:25] "[36mGET /static/js/procurement.js HTTP/1.1[0m" 304 -
+2025-11-22 23:55:27,245 - app - INFO - Getting accessible projects for user 3 (hq_procurement)
+2025-11-22 23:55:27,245 - app - INFO - Staff user - checking assignments for user 3
+2025-11-22 23:55:27,249 - app - INFO - Found 0 direct user assignments
+2025-11-22 23:55:27,269 - app - INFO - No matching employee record found
+2025-11-22 23:55:27,269 - app - INFO - Staff user - 0 user assignments + 0 employee assignments = 0 total projects
+2025-11-22 23:55:27,310 - werkzeug - INFO - 127.0.0.1 - - [22/Nov/2025 23:55:27] "GET /project/settings HTTP/1.1" 200 -
+2025-11-22 23:56:16,689 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:56:17,419 - werkzeug - INFO -  * Restarting with stat
+2025-11-22 23:56:21,912 - werkzeug - WARNING -  * Debugger is active!
+2025-11-22 23:56:21,919 - werkzeug - INFO -  * Debugger PIN: 109-957-620
+2025-11-22 23:58:40,943 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Nwakanma\\Desktop\\Fitaccess\\sammy\\app.py', reloading
+2025-11-22 23:58:41,389 - werkzeug - INFO -  * Restarting with stat

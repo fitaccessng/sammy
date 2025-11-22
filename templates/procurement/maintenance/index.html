@@ -10,11 +10,11 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500">Scheduled</p>
-                    <h3 class="text-2xl font-bold text-blue-600">{{ data.stats.scheduled }}</h3>
+                    <p class="text-sm text-gray-500">Total Assets</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ data.stats.total_assets }}</h3>
                 </div>
                 <div class="bg-blue-100 p-3 rounded-full">
-                    <i class='bx bx-calendar text-2xl text-blue-600'></i>
+                    <i class='bx bx-box text-2xl text-blue-600'></i>
                 </div>
             </div>
         </div>
@@ -22,8 +22,8 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500">In Progress</p>
-                    <h3 class="text-2xl font-bold text-yellow-600">{{ data.stats.in_progress }}</h3>
+                    <p class="text-sm text-gray-500">Due Soon</p>
+                    <h3 class="text-2xl font-bold text-yellow-600">{{ data.stats.due_soon_count }}</h3>
                 </div>
                 <div class="bg-yellow-100 p-3 rounded-full">
                     <i class='bx bx-time text-2xl text-yellow-600'></i>
@@ -34,8 +34,8 @@
         <div class="bg-white rounded-lg shadow p-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500">Completed</p>
-                    <h3 class="text-2xl font-bold text-green-600">{{ data.stats.completed }}</h3>
+                    <p class="text-sm text-gray-500">Completed This Month</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ data.stats.completed_this_month }}</h3>
                 </div>
                 <div class="bg-green-100 p-3 rounded-full">
                     <i class='bx bx-check-circle text-2xl text-green-600'></i>
@@ -47,11 +47,125 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500">Overdue</p>
-                    <h3 class="text-2xl font-bold text-red-600">{{ data.stats.overdue }}</h3>
+                    <h3 class="text-2xl font-bold text-red-600">{{ data.stats.overdue_count }}</h3>
                 </div>
                 <div class="bg-red-100 p-3 rounded-full">
                     <i class='bx bx-error text-2xl text-red-600'></i>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technicians & Scheduled Maintenance Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Technicians List -->
+        <div class="bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800">Technicians</h3>
+                    <button onclick="showModal('addTechnician')" 
+                            class="text-blue-600 hover:text-blue-800">
+                        <i class='bx bx-plus-circle text-2xl'></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <div class="space-y-3">
+                    {% if data.technicians %}
+                        {% for tech in data.technicians %}
+                        <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                            <div class="flex items-center">
+                                <div class="bg-blue-100 p-2 rounded-full mr-3">
+                                    <i class='bx bx-user text-xl text-blue-600'></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-gray-900">{{ tech.name }}</p>
+                                    <p class="text-xs text-gray-500">{{ tech.specialization or 'General' }}</p>
+                                </div>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                                {{ tech.status }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-8">
+                            <i class='bx bx-user-plus text-4xl text-gray-300'></i>
+                            <p class="text-sm text-gray-500 mt-2">No technicians yet</p>
+                            <button onclick="showModal('addTechnician')" 
+                                    class="mt-3 text-sm text-blue-600 hover:text-blue-800">
+                                Add First Technician
+                            </button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Scheduled Maintenance -->
+        <div class="md:col-span-2 bg-white rounded-lg shadow">
+            <div class="p-6 border-b border-gray-200">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800">Upcoming Scheduled Maintenance</h3>
+                    <button onclick="showModal('scheduleMaintenance')" 
+                            class="px-3 py-1 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700">
+                        <i class='bx bx-plus mr-1'></i>Schedule
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                {% if data.scheduled %}
+                    <div class="space-y-3">
+                        {% for schedule in data.scheduled %}
+                        <div class="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <span class="font-medium text-gray-900">{{ schedule.asset.code }}</span>
+                                        <span class="mx-2 text-gray-400">•</span>
+                                        <span class="text-sm text-gray-600">{{ schedule.maintenance_type }}</span>
+                                    </div>
+                                    <p class="text-sm text-gray-700 mb-2">{{ schedule.asset.description[:60] }}...</p>
+                                    <div class="flex items-center text-xs text-gray-500 space-x-4">
+                                        <span>
+                                            <i class='bx bx-calendar'></i>
+                                            {{ schedule.scheduled_date.strftime('%Y-%m-%d') }}
+                                        </span>
+                                        {% if schedule.technician %}
+                                        <span>
+                                            <i class='bx bx-user'></i>
+                                            {{ schedule.technician.name }}
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="flex flex-col items-end space-y-2">
+                                    <span class="px-2 py-1 text-xs rounded-full
+                                        {% if schedule.status == 'scheduled' %}bg-blue-100 text-blue-800
+                                        {% elif schedule.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                                        {% elif schedule.status == 'completed' %}bg-green-100 text-green-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ schedule.status|title }}
+                                    </span>
+                                    <button onclick="showUpdateModal({{ schedule.id }}, '{{ schedule.status }}', {{ schedule.cost or 0 }})" 
+                                            class="text-sm text-blue-600 hover:text-blue-800">
+                                        Update
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-8">
+                        <i class='bx bx-calendar-check text-4xl text-gray-300'></i>
+                        <p class="text-sm text-gray-500 mt-2">No scheduled maintenance</p>
+                        <button onclick="showModal('scheduleMaintenance')" 
+                                class="mt-3 text-sm text-blue-600 hover:text-blue-800">
+                            Schedule First Maintenance
+                        </button>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -72,56 +186,155 @@
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead>
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Type</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset Code</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Assigned To</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Due/Days</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        {% for i in range(5) %}
+                        <!-- Scheduled Maintenance -->
+                        {% if data.scheduled %}
+                            {% for schedule in data.scheduled %}
+                            <tr class="bg-blue-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ schedule.asset.code }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">{{ schedule.asset.description[:40] }}...</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm text-gray-900">{{ schedule.asset.category }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if schedule.status == 'scheduled' %}bg-blue-100 text-blue-800
+                                        {% elif schedule.status == 'in_progress' %}bg-yellow-100 text-yellow-800
+                                        {% elif schedule.status == 'completed' %}bg-green-100 text-green-800
+                                        {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                        {{ schedule.status|title }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 font-medium">
+                                    {{ schedule.scheduled_date.strftime('%Y-%m-%d') }}
+                                    {% if schedule.technician %}
+                                    <div class="text-xs text-gray-500 mt-1">{{ schedule.technician.name }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button onclick="showUpdateModal({{ schedule.id }}, '{{ schedule.status }}', {{ schedule.cost or 0 }})" 
+                                            class="text-blue-600 hover:text-blue-900 mr-3">Update</button>
+                                    <button onclick="window.location.href='/procurement/assets/{{ schedule.asset_id }}'" 
+                                            class="text-green-600 hover:text-green-900">View</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <!-- Overdue Items -->
+                        {% if data.overdue %}
+                            {% for item in data.overdue %}
+                            <tr class="bg-red-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ item.code }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">{{ item.description[:40] }}...</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm text-gray-900">{{ item.category }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                        Overdue
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-red-600 font-medium">
+                                    {{ item.days_overdue }} days overdue
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button onclick="showModal('scheduleMaintenance')" class="text-blue-600 hover:text-blue-900 mr-3">Schedule</button>
+                                    <button onclick="window.location.href='/procurement/assets/{{ item.id }}'" 
+                                            class="text-green-600 hover:text-green-900">View</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <!-- Due Soon Items -->
+                        {% if data.due_soon %}
+                            {% for item in data.due_soon %}
+                            <tr class="bg-yellow-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ item.code }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">{{ item.description[:40] }}...</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm text-gray-900">{{ item.category }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                        Due Soon
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-yellow-600 font-medium">
+                                    In {{ item.due_in }} days
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button onclick="showModal('scheduleMaintenance')" class="text-blue-600 hover:text-blue-900 mr-3">Schedule</button>
+                                    <button onclick="window.location.href='/procurement/assets/{{ item.id }}'" 
+                                            class="text-green-600 hover:text-green-900">View</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <!-- Completed Maintenance History -->
+                        {% if data.history %}
+                            {% for record in data.history %}
+                            <tr class="bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm font-medium text-gray-900">{{ record.asset.code }}</div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm text-gray-900">{{ record.asset.description[:40] }}...</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="text-sm text-gray-900">{{ record.asset.category }}</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                        Completed
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {{ record.completed_date.strftime('%Y-%m-%d') if record.completed_date else 'N/A' }}
+                                    {% if record.cost %}
+                                    <div class="text-xs text-gray-500 mt-1">₦{{ "{:,.2f}".format(record.cost) }}</div>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <button onclick="window.location.href='/procurement/assets/{{ record.asset_id }}'" 
+                                            class="text-green-600 hover:text-green-900">View</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <!-- Empty State -->
+                        {% if not data.scheduled and not data.overdue and not data.due_soon and not data.history %}
                         <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        <div class="bg-gray-100 rounded-full p-2">
-                                            <i class='bx bx-car text-xl text-gray-600'></i>
-                                        </div>
-                                    </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">Asset #{{ loop.index }}</div>
-                                        <div class="text-sm text-gray-500">ID: A00{{ loop.index }}</div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm text-gray-900">Routine Check</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="text-sm text-gray-900">2025-09-{{ loop.index + 10 }}</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {% if loop.index % 3 == 0 %}bg-yellow-100 text-yellow-800
-                                    {% elif loop.index % 2 == 0 %}bg-green-100 text-green-800
-                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
-                                    {% if loop.index % 3 == 0 %}In Progress
-                                    {% elif loop.index % 2 == 0 %}Completed
-                                    {% else %}Scheduled{% endif %}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                Technician {{ loop.index }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button class="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                <button class="text-green-600 hover:text-green-900 mr-3">Update</button>
-                                <button class="text-red-600 hover:text-red-900">Cancel</button>
+                            <td colspan="6" class="px-6 py-12 text-center">
+                                <i class='bx bx-check-circle text-4xl text-green-300'></i>
+                                <p class="mt-2 text-sm text-gray-500">No maintenance records found</p>
+                                <p class="text-xs text-gray-400 mt-1">Schedule maintenance to get started</p>
                             </td>
                         </tr>
-                        {% endfor %}
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -130,49 +343,63 @@
 </div>
 
 <!-- Schedule Maintenance Modal -->
-<div id="scheduleMaintenance" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+<div id="scheduleMaintenance" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Schedule Maintenance</h3>
-            <form id="maintenanceForm" class="space-y-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Schedule Maintenance</h3>
+                <button onclick="hideModal('scheduleMaintenance')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            <form action="{{ url_for('procurement.schedule_maintenance') }}" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Asset</label>
-                    <select required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    <select name="asset_id" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">Select Asset</option>
-                        <option value="1">Asset #1 - Vehicle</option>
-                        <option value="2">Asset #2 - Equipment</option>
-                        <option value="3">Asset #3 - Machinery</option>
+                        {% for asset in data.assets %}
+                        <option value="{{ asset.id }}">{{ asset.code }} - {{ asset.description[:50] }}</option>
+                        {% endfor %}
                     </select>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Maintenance Type</label>
-                    <select required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    <select name="maintenance_type" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                         <option value="">Select Type</option>
-                        <option value="routine">Routine Check</option>
-                        <option value="repair">Repair</option>
-                        <option value="inspection">Inspection</option>
+                        <option value="Routine Check">Routine Check</option>
+                        <option value="Repair">Repair</option>
+                        <option value="Inspection">Inspection</option>
+                        <option value="Preventive Maintenance">Preventive Maintenance</option>
+                        <option value="Emergency Repair">Emergency Repair</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Due Date</label>
-                    <input type="date" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    <label class="block text-sm font-medium text-gray-700">Scheduled Date</label>
+                    <input type="date" name="scheduled_date" required 
+                           min="{{ data.today }}"
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Assign To</label>
-                    <select required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
-                        <option value="">Select Technician</option>
-                        <option value="1">Technician 1</option>
-                        <option value="2">Technician 2</option>
-                        <option value="3">Technician 3</option>
+                    <select name="technician_id" class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Technician (Optional)</option>
+                        {% for tech in data.technicians %}
+                        <option value="{{ tech.id }}">{{ tech.name }} - {{ tech.specialization or 'General' }}</option>
+                        {% endfor %}
                     </select>
+                    <p class="mt-1 text-xs text-gray-500">Leave empty to assign later, or <button type="button" onclick="hideModal('scheduleMaintenance'); showModal('addTechnician')" class="text-blue-600 hover:text-blue-800">add a new technician</button></p>
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Notes</label>
-                    <textarea class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm" rows="3"></textarea>
+                    <textarea name="notes" 
+                              class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500" 
+                              rows="3" 
+                              placeholder="Add any specific instructions or requirements"></textarea>
                 </div>
 
                 <div class="flex justify-end space-x-3">
@@ -182,7 +409,118 @@
                     </button>
                     <button type="submit" 
                             class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                        Schedule
+                        Schedule Maintenance
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Add Technician Modal -->
+<div id="addTechnician" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Add Technician</h3>
+                <button onclick="hideModal('addTechnician')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            <form action="{{ url_for('procurement.add_technician') }}" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Full Name *</label>
+                    <input type="text" name="name" required 
+                           placeholder="e.g., John Doe"
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email Address *</label>
+                    <input type="email" name="email" required 
+                           placeholder="technician@example.com"
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone Number *</label>
+                    <input type="tel" name="phone" required 
+                           placeholder="+234 800 000 0000"
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Specialization</label>
+                    <input type="text" name="specialization" 
+                           placeholder="e.g., Electrical, Mechanical, HVAC"
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <p class="mt-1 text-xs text-gray-500">Optional - Area of expertise</p>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideModal('addTechnician')" 
+                            class="px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Add Technician
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Update Maintenance Modal -->
+<div id="updateMaintenanceModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Update Maintenance Status</h3>
+                <button onclick="hideModal('updateMaintenanceModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            <form id="updateMaintenanceForm" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <input type="hidden" id="update_schedule_id" name="schedule_id" />
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status *</label>
+                    <select id="update_status" name="status" required 
+                            class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="scheduled">Scheduled</option>
+                        <option value="in_progress">In Progress</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Cost (₦)</label>
+                    <input type="number" id="update_cost" name="cost" step="0.01" min="0"
+                           placeholder="0.00"
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <p class="mt-1 text-xs text-gray-500">Total maintenance cost (optional)</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Notes</label>
+                    <textarea id="update_notes" name="notes" rows="3"
+                              placeholder="Add completion notes, issues found, parts replaced, etc."
+                              class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideModal('updateMaintenanceModal')" 
+                            class="px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Update Status
                     </button>
                 </div>
             </form>
@@ -196,36 +534,49 @@ document.addEventListener('DOMContentLoaded', function() {
     // Modal functions
     window.showModal = function(modalId) {
         document.getElementById(modalId).classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
     }
     
     window.hideModal = function(modalId) {
         document.getElementById(modalId).classList.add('hidden');
+        document.body.style.overflow = 'auto';
     }
     
-    // Form submission
-    const maintenanceForm = document.getElementById('maintenanceForm');
-    if (maintenanceForm) {
-        maintenanceForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            // Add form submission logic here
-            fetch('/procurement/maintenance/schedule', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(Object.fromEntries(new FormData(this)))
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    hideModal('scheduleMaintenance');
-                    // Refresh the page or update the table
-                    location.reload();
-                }
-            })
-            .catch(error => console.error('Error:', error));
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modals = document.querySelectorAll('.fixed.inset-0');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                hideModal(modal.id);
+            }
         });
-    }
+    });
+    
+    // Handle escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modals = document.querySelectorAll('.fixed.inset-0:not(.hidden)');
+            modals.forEach(modal => {
+                hideModal(modal.id);
+            });
+        }
+    });
+    
+    // Show update maintenance modal
+    window.showUpdateModal = function(scheduleId, currentStatus, currentCost) {
+        // Set form action
+        const form = document.getElementById('updateMaintenanceForm');
+        form.action = `/procurement/maintenance/update/${scheduleId}`;
+        
+        // Populate form fields
+        document.getElementById('update_schedule_id').value = scheduleId;
+        document.getElementById('update_status').value = currentStatus;
+        document.getElementById('update_cost').value = currentCost || '';
+        document.getElementById('update_notes').value = '';
+        
+        // Show modal
+        showModal('updateMaintenanceModal');
+    };
 });
 </script>
 {% endblock %}

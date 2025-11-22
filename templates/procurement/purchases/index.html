@@ -76,7 +76,11 @@
         <div class="mt-4">
             <div class="w-full bg-gray-200 rounded-full h-2">
                 <div class="bg-blue-600 h-2 rounded-full" 
-                     style="width: {{ (data.budget.utilized / data.budget.total) * 100 }}%"></div>
+                     style="width: {% if data.budget.total > 0 %}{{ (data.budget.utilized / data.budget.total) * 100 }}{% else %}0{% endif %}%"></div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-500 mt-2">
+                <span>{% if data.budget.total > 0 %}{{ "%.1f"|format((data.budget.utilized / data.budget.total) * 100) }}{% else %}0{% endif %}% Utilized</span>
+                <span>{% if data.budget.total > 0 %}{{ "%.1f"|format((data.budget.remaining / data.budget.total) * 100) }}{% else %}100{% endif %}% Remaining</span>
             </div>
         </div>
     </div>
@@ -105,8 +109,53 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <!-- Purchase order rows will be dynamically populated -->
+                    <tbody id="purchaseOrdersTable" class="bg-white divide-y divide-gray-200">
+                        {% for po in data.purchase_orders %}
+                        <tr class="hover:bg-gray-50" data-po-id="{{ po.id }}">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ po.po_number }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ po.supplier }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">₦{{ "{:,.0f}".format(po.total_amount) }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if po.status == 'pending' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    Pending
+                                </span>
+                                {% elif po.status == 'in_transit' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                                    In Transit
+                                </span>
+                                {% elif po.status == 'delivered' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Delivered
+                                </span>
+                                {% else %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    {{ po.status|title }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">{{ po.order_date }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="viewPO({{ po.id }})" class="text-blue-600 hover:text-blue-900 mr-3">
+                                    <i class='bx bx-show'></i>
+                                </button>
+                                <button onclick="editPO({{ po.id }})" class="text-green-600 hover:text-green-900 mr-3">
+                                    <i class='bx bx-edit'></i>
+                                </button>
+                                <button onclick="deletePO({{ po.id }})" class="text-red-600 hover:text-red-900">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -123,14 +172,19 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Supplier</label>
-                        <select required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                        <select name="supplier_id" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
                             <option value="">Select Supplier</option>
-                            <!-- Add supplier options -->
+                            {% for supplier in data.suppliers %}
+                            <option value="{{ supplier.id }}">{{ supplier.name }}{% if supplier.category %} - {{ supplier.category }}{% endif %}</option>
+                            {% endfor %}
+                            {% if not data.suppliers %}
+                            <option value="" disabled>No validated suppliers available</option>
+                            {% endif %}
                         </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">Expected Delivery Date</label>
-                        <input type="date" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                        <input type="date" name="delivery_date" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
                     </div>
                 </div>
                 
@@ -167,16 +221,69 @@
     </div>
 </div>
 
+<!-- Success Modal -->
+<div id="successModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-1/2 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class='bx bx-check text-3xl text-green-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Purchase Order Created Successfully</h3>
+            
+            <div id="poDetails" class="bg-gray-50 rounded-lg p-4 space-y-3">
+                <!-- PO details will be populated here -->
+            </div>
+            
+            <div class="flex justify-center mt-6">
+                <button onclick="hideModal('successModal')" 
+                        class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class='bx bx-x text-3xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Error</h3>
+            
+            <div id="errorMessage" class="bg-gray-50 rounded-lg p-4 text-center text-gray-700">
+                <!-- Error message will be populated here -->
+            </div>
+            
+            <div class="flex justify-center mt-6">
+                <button onclick="hideModal('errorModal')" 
+                        class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Modal functions
     window.showModal = function(modalId) {
         document.getElementById(modalId).classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
     }
     
     window.hideModal = function(modalId) {
         document.getElementById(modalId).classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+    
+    window.showError = function(message) {
+        document.getElementById('errorMessage').textContent = message;
+        showModal('errorModal');
     }
     
     // Add item row function
@@ -195,15 +302,253 @@ document.addEventListener('DOMContentLoaded', function() {
         itemsList.appendChild(newRow);
     }
     
+    // Get CSRF token
+    function getCSRFToken() {
+        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+    }
+    
     // Form submission
     const newPurchaseForm = document.getElementById('newPurchaseForm');
     if (newPurchaseForm) {
-        newPurchaseForm.addEventListener('submit', function(e) {
+        newPurchaseForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            // Add your form submission logic here
-            hideModal('newPurchaseModal');
-            alert('Purchase order created successfully!');
+            
+            // Collect form data
+            const formData = new FormData(newPurchaseForm);
+            const supplier = formData.get('supplier_id');
+            const supplierName = newPurchaseForm.querySelector('[name="supplier_id"] option:checked').textContent;
+            const deliveryDate = formData.get('delivery_date');
+            
+            // Collect items
+            const itemRows = document.querySelectorAll('#itemsList > div');
+            const items = [];
+            let totalAmount = 0;
+            
+            itemRows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                if (inputs[0].value && inputs[1].value && inputs[2].value) {
+                    const item = inputs[0].value;
+                    const qty = parseFloat(inputs[1].value);
+                    const price = parseFloat(inputs[2].value);
+                    const subtotal = qty * price;
+                    
+                    items.push({
+                        item: item,
+                        quantity: qty,
+                        unitPrice: price,
+                        subtotal: subtotal
+                    });
+                    
+                    totalAmount += subtotal;
+                }
+            });
+            
+            if (items.length === 0) {
+                return;
+            }
+            
+            // Check if editing or creating new
+            const editingPoId = newPurchaseForm.dataset.editingPo;
+            
+            try {
+                let response;
+                const data = {
+                    supplier_id: supplier,
+                    delivery_date: deliveryDate,
+                    items: items,
+                    total_amount: totalAmount
+                };
+                
+                if (editingPoId) {
+                    // Update existing PO
+                    response = await fetch(`/procurement/purchases/${editingPoId}/update`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify(data)
+                    });
+                    
+                    delete newPurchaseForm.dataset.editingPo;
+                } else {
+                    // Create new PO
+                    response = await fetch('/procurement/purchases/create', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCSRFToken()
+                        },
+                        body: JSON.stringify(data)
+                    });
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Reload page to show updated data
+                    location.reload();
+                } else {
+                    showError(result.error || 'Failed to save purchase order');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showError('An error occurred while saving the purchase order. Please try again.');
+            }
+            
+            // Reset form
+            newPurchaseForm.reset();
+            // Keep only one item row
+            const itemsList = document.getElementById('itemsList');
+            while (itemsList.children.length > 1) {
+                itemsList.removeChild(itemsList.lastChild);
+            }
         });
+    }
+    
+    // View PO function
+    window.viewPO = async function(poId) {
+        try {
+            const response = await fetch(`/procurement/purchases/${poId}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const po = result.po;
+                
+                let itemsHTML = '<div class="overflow-x-auto"><table class="min-w-full text-sm"><thead class="bg-gray-100"><tr><th class="px-3 py-2 text-left">Item</th><th class="px-3 py-2 text-right">Qty</th><th class="px-3 py-2 text-right">Unit Price</th><th class="px-3 py-2 text-right">Subtotal</th></tr></thead><tbody>';
+                
+                po.items.forEach(item => {
+                    itemsHTML += `
+                        <tr class="border-t">
+                            <td class="px-3 py-2">${item.item}</td>
+                            <td class="px-3 py-2 text-right">${item.quantity}</td>
+                            <td class="px-3 py-2 text-right">₦${item.unitPrice.toLocaleString()}</td>
+                            <td class="px-3 py-2 text-right">₦${item.subtotal.toLocaleString()}</td>
+                        </tr>
+                    `;
+                });
+                
+                itemsHTML += `
+                    <tr class="border-t font-semibold bg-gray-50">
+                        <td colspan="3" class="px-3 py-2 text-right">Total Amount:</td>
+                        <td class="px-3 py-2 text-right">₦${po.total_amount.toLocaleString()}</td>
+                    </tr>
+                </tbody></table></div>`;
+                
+                const poDetailsHTML = `
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="font-medium text-gray-700">PO Number:</span>
+                            <span class="text-gray-900">${po.po_number}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-gray-700">Supplier:</span>
+                            <span class="text-gray-900">${po.supplier}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-gray-700">Expected Delivery:</span>
+                            <span class="text-gray-900">${new Date(po.expected_delivery).toLocaleDateString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-gray-700">Order Date:</span>
+                            <span class="text-gray-900">${new Date(po.order_date).toLocaleDateString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="font-medium text-gray-700">Status:</span>
+                            <span class="px-2 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800">${po.status}</span>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <h4 class="font-medium text-gray-700 mb-2">Order Items:</h4>
+                        ${itemsHTML}
+                    </div>
+                `;
+                
+                document.getElementById('poDetails').innerHTML = poDetailsHTML;
+                showModal('successModal');
+            }
+        } catch (error) {
+            console.error('Error viewing PO:', error);
+            showError('Error loading purchase order details. Please try again.');
+        }
+    }
+    
+    // Edit PO function
+    window.editPO = async function(poId) {
+        try {
+            const response = await fetch(`/procurement/purchases/${poId}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                const po = result.po;
+                
+                // Populate form with PO data
+                const form = document.getElementById('newPurchaseForm');
+                form.querySelector('[name="supplier_id"]').value = po.supplier_id;
+                form.querySelector('[name="delivery_date"]').value = po.expected_delivery;
+                
+                // Clear and populate items
+                const itemsList = document.getElementById('itemsList');
+                itemsList.innerHTML = '';
+                
+                po.items.forEach((item, index) => {
+                    const newRow = document.createElement('div');
+                    newRow.className = 'grid grid-cols-4 gap-2';
+                    newRow.innerHTML = `
+                        <input type="text" value="${item.item}" placeholder="Item" class="rounded-md p-2 border border-gray-300 shadow-sm">
+                        <input type="number" value="${item.quantity}" placeholder="Quantity" class="rounded-md p-2 border border-gray-300 shadow-sm">
+                        <input type="number" value="${item.unitPrice}" placeholder="Unit Price" class="rounded-md p-2 border border-gray-300 shadow-sm">
+                        <button type="button" onclick="this.parentElement.remove()" class="text-red-600 hover:text-red-800">
+                            <i class='bx bx-trash'></i>
+                        </button>
+                    `;
+                    itemsList.appendChild(newRow);
+                });
+                
+                // Store the editing PO ID for update
+                form.dataset.editingPo = poId;
+                
+                // Show modal
+                showModal('newPurchaseModal');
+            }
+        } catch (error) {
+            console.error('Error loading PO for edit:', error);
+            showError('Error loading purchase order. Please try again.');
+        }
+    }
+    
+    // Delete PO function
+    window.deletePO = async function(poId) {
+        // Get PO number from table row for confirmation
+        const row = document.querySelector(`tr[data-po-id="${poId}"]`);
+        const poNumber = row ? row.querySelector('td:first-child .text-sm').textContent : poId;
+        
+        if (confirm(`Are you sure you want to delete Purchase Order ${poNumber}?`)) {
+            try {
+                const response = await fetch(`/procurement/purchases/${poId}/delete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Remove from table
+                    if (row) {
+                        row.remove();
+                    }
+                    showError('Purchase order deleted successfully.');
+                } else {
+                    showError(result.error || 'Failed to delete purchase order');
+                }
+            } catch (error) {
+                console.error('Error deleting PO:', error);
+                showError('Error deleting purchase order. Please try again.');
+            }
+        }
     }
 });
 </script>

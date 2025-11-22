@@ -127,11 +127,53 @@ class InventoryItem(db.Model):
     uom = db.Column(db.String(32), nullable=False)
     total_cost = db.Column(db.Float, default=0.0)
     price_change = db.Column(db.Float, default=0.0)
+    location = db.Column(db.String(255), nullable=True)  # Physical location/address
+    previous_location = db.Column(db.String(255), nullable=True)  # Previous location for history
+    latitude = db.Column(db.Float, nullable=True)  # GPS latitude
+    longitude = db.Column(db.Float, nullable=True)  # GPS longitude
+    status = db.Column(db.String(32), default='Active')  # Active, In Transit, In Maintenance, Retired
+    last_location_update = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     def __repr__(self):
         return f'<InventoryItem {self.code}>'
+
+class Technician(db.Model):
+    __tablename__ = 'technicians'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(128), nullable=False)
+    email = db.Column(db.String(128), unique=True, nullable=False)
+    phone = db.Column(db.String(20), nullable=False)
+    specialization = db.Column(db.String(128), nullable=True)
+    status = db.Column(db.String(20), default='active')  # active, inactive, on_leave
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<Technician {self.name}>'
+
+class MaintenanceSchedule(db.Model):
+    __tablename__ = 'maintenance_schedules'
+    id = db.Column(db.Integer, primary_key=True)
+    asset_id = db.Column(db.Integer, db.ForeignKey('inventory_items.id'), nullable=False)
+    technician_id = db.Column(db.Integer, db.ForeignKey('technicians.id'), nullable=True)
+    maintenance_type = db.Column(db.String(64), nullable=False)  # Routine, Repair, Inspection, etc.
+    scheduled_date = db.Column(db.Date, nullable=False)
+    completed_date = db.Column(db.Date, nullable=True)
+    status = db.Column(db.String(20), default='scheduled')  # scheduled, in_progress, completed, cancelled
+    notes = db.Column(db.Text, nullable=True)
+    cost = db.Column(db.Float, default=0.0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    asset = db.relationship('InventoryItem', backref='maintenance_schedules')
+    technician = db.relationship('Technician', backref='maintenance_schedules')
+    
+    def __repr__(self):
+        return f'<MaintenanceSchedule {self.id} - Asset {self.asset_id}>'
+
 from extensions import db
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash

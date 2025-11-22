@@ -1,0 +1,496 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}Inventory Management | SammyA{% endblock %}
+{% block header %}Inventory Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Items</p>
+                    <h3 class="text-2xl font-bold text-blue-600" id="totalItems">0</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-package text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Value</p>
+                    <h3 class="text-2xl font-bold text-green-600" id="totalValue">₦0.00</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-money text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Categories</p>
+                    <h3 class="text-2xl font-bold text-purple-600" id="totalCategories">0</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-category text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Low Stock Items</p>
+                    <h3 class="text-2xl font-bold text-red-600" id="lowStockItems">0</h3>
+                </div>
+                <div class="bg-red-100 p-3 rounded-full">
+                    <i class='bx bx-error text-2xl text-red-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Actions -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <input type="text" id="searchInput" placeholder="Search by code or description..." 
+                       class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-full sm:w-64">
+                <select id="categoryFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+            <button onclick="showAddModal()" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                <i class='bx bx-plus'></i> Add New Item
+            </button>
+        </div>
+    </div>
+
+    <!-- Inventory Table -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Inventory Items</h3>
+        </div>
+        <div class="p-4 sm:p-6">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Group</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantity</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">UOM</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Unit Cost</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Cost</th>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody" class="bg-white divide-y divide-gray-200">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Item Modal -->
+<div id="itemModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-4 sm:top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white m-4">
+        <div class="max-h-[85vh] overflow-y-auto">
+            <h3 id="modalTitle" class="text-lg font-semibold text-gray-900 mb-4">Add New Item</h3>
+            <form id="itemForm" class="space-y-4">
+                <input type="hidden" id="itemId">
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Item Code *</label>
+                        <input type="text" id="itemCode" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
+                        <input type="text" id="itemCategory" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description *</label>
+                    <textarea id="itemDescription" required rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Group</label>
+                        <input type="text" id="itemGroup" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Unit of Measure *</label>
+                        <select id="itemUom" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                            <option value="">Select UOM</option>
+                            <option value="Pcs">Pieces (Pcs)</option>
+                            <option value="Kg">Kilograms (Kg)</option>
+                            <option value="L">Liters (L)</option>
+                            <option value="M">Meters (M)</option>
+                            <option value="Box">Box</option>
+                            <option value="Pack">Pack</option>
+                            <option value="Set">Set</option>
+                            <option value="Unit">Unit</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Quantity *</label>
+                        <input type="number" id="itemQuantity" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Unit Cost (₦) *</label>
+                        <input type="number" id="itemUnitCost" step="0.01" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Total Cost (₦)</label>
+                        <input type="number" id="itemTotalCost" step="0.01" readonly class="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100">
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row justify-end gap-2 pt-4">
+                    <button type="button" onclick="hideModal('itemModal')" class="w-full sm:w-auto px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Save Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class='bx bx-check text-3xl text-green-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Success</h3>
+            <p id="successMessage" class="text-center text-gray-700 mb-4"></p>
+            <div class="flex justify-center">
+                <button onclick="hideModal('successModal'); loadInventory();" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class='bx bx-x text-3xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Error</h3>
+            <p id="errorMessage" class="text-center text-gray-700 mb-4"></p>
+            <div class="flex justify-center">
+                <button onclick="hideModal('errorModal')" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class='bx bx-trash text-3xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Delete Item</h3>
+            <p class="text-center text-gray-700 mb-4">Are you sure you want to delete this inventory item?</p>
+            <div class="flex flex-col sm:flex-row justify-center gap-2">
+                <button onclick="hideModal('deleteModal')" class="w-full sm:w-auto px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                    Cancel
+                </button>
+                <button id="confirmDeleteBtn" class="w-full sm:w-auto px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Get CSRF token
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+// Modal functions
+function showModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function showSuccess(message) {
+    document.getElementById('successMessage').textContent = message;
+    showModal('successModal');
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    showModal('errorModal');
+}
+
+let inventoryData = [];
+let deleteItemId = null;
+
+// Load inventory
+async function loadInventory() {
+    try {
+        const response = await fetch('/procurement/inventory', {
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (!response.ok) throw new Error('Failed to load inventory');
+        
+        inventoryData = await response.json();
+        displayInventory(inventoryData);
+        updateStats(inventoryData);
+        updateCategoryFilter(inventoryData);
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to load inventory data');
+    }
+}
+
+// Display inventory in table
+function displayInventory(data) {
+    const tbody = document.getElementById('inventoryTableBody');
+    
+    if (data.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="9" class="px-4 py-8 text-center text-gray-500">
+                    <i class='bx bx-inbox text-4xl mb-2'></i>
+                    <p>No inventory items found</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+    
+    tbody.innerHTML = data.map(item => `
+        <tr class="hover:bg-gray-50">
+            <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${item.code}</td>
+            <td class="px-4 py-4 text-sm text-gray-900">
+                <div class="max-w-xs truncate" title="${item.description}">${item.description}</div>
+            </td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${item.category || 'N/A'}</td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${item.group || 'N/A'}</td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">${item.qty_available}</td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-500">${item.uom}</td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">₦${Number(item.unit_cost).toLocaleString('en-NG', {minimumFractionDigits: 2})}</td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900">₦${Number(item.total_cost).toLocaleString('en-NG', {minimumFractionDigits: 2})}</td>
+            <td class="px-4 py-4 whitespace-nowrap text-sm">
+                <div class="flex gap-2">
+                    <button onclick="editItem(${item.id})" class="text-blue-600 hover:text-blue-800" title="Edit">
+                        <i class='bx bx-edit text-lg'></i>
+                    </button>
+                    <button onclick="deleteItem(${item.id})" class="text-red-600 hover:text-red-800" title="Delete">
+                        <i class='bx bx-trash text-lg'></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Update statistics
+function updateStats(data) {
+    document.getElementById('totalItems').textContent = data.length;
+    
+    const totalValue = data.reduce((sum, item) => sum + (item.total_cost || 0), 0);
+    document.getElementById('totalValue').textContent = `₦${totalValue.toLocaleString('en-NG', {minimumFractionDigits: 2})}`;
+    
+    const categories = new Set(data.map(item => item.category).filter(c => c));
+    document.getElementById('totalCategories').textContent = categories.size;
+    
+    const lowStock = data.filter(item => item.qty_available < 10).length;
+    document.getElementById('lowStockItems').textContent = lowStock;
+}
+
+// Update category filter
+function updateCategoryFilter(data) {
+    const categories = new Set(data.map(item => item.category).filter(c => c));
+    const filter = document.getElementById('categoryFilter');
+    const currentValue = filter.value;
+    
+    filter.innerHTML = '<option value="">All Categories</option>';
+    categories.forEach(category => {
+        filter.innerHTML += `<option value="${category}">${category}</option>`;
+    });
+    
+    filter.value = currentValue;
+}
+
+// Show add modal
+function showAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add New Item';
+    document.getElementById('itemForm').reset();
+    document.getElementById('itemId').value = '';
+    showModal('itemModal');
+}
+
+// Edit item
+function editItem(id) {
+    const item = inventoryData.find(i => i.id === id);
+    if (!item) return;
+    
+    document.getElementById('modalTitle').textContent = 'Edit Item';
+    document.getElementById('itemId').value = item.id;
+    document.getElementById('itemCode').value = item.code;
+    document.getElementById('itemDescription').value = item.description;
+    document.getElementById('itemCategory').value = item.category || '';
+    document.getElementById('itemGroup').value = item.group || '';
+    document.getElementById('itemQuantity').value = item.qty_available;
+    document.getElementById('itemUnitCost').value = item.unit_cost;
+    document.getElementById('itemUom').value = item.uom;
+    document.getElementById('itemTotalCost').value = item.total_cost;
+    
+    showModal('itemModal');
+}
+
+// Delete item
+function deleteItem(id) {
+    deleteItemId = id;
+    showModal('deleteModal');
+}
+
+// Calculate total cost
+document.getElementById('itemQuantity')?.addEventListener('input', calculateTotal);
+document.getElementById('itemUnitCost')?.addEventListener('input', calculateTotal);
+
+function calculateTotal() {
+    const qty = parseFloat(document.getElementById('itemQuantity').value) || 0;
+    const unitCost = parseFloat(document.getElementById('itemUnitCost').value) || 0;
+    document.getElementById('itemTotalCost').value = (qty * unitCost).toFixed(2);
+}
+
+// Form submission
+document.getElementById('itemForm')?.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const itemId = document.getElementById('itemId').value;
+    const formData = {
+        code: document.getElementById('itemCode').value,
+        description: document.getElementById('itemDescription').value,
+        category: document.getElementById('itemCategory').value,
+        group: document.getElementById('itemGroup').value,
+        qty_available: parseFloat(document.getElementById('itemQuantity').value),
+        unit_cost: parseFloat(document.getElementById('itemUnitCost').value),
+        uom: document.getElementById('itemUom').value,
+        total_cost: parseFloat(document.getElementById('itemTotalCost').value),
+        price_change: 0
+    };
+    
+    try {
+        const url = itemId ? `/procurement/inventory/${itemId}` : '/procurement/inventory';
+        const method = itemId ? 'PUT' : 'POST';
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            hideModal('itemModal');
+            showSuccess(itemId ? 'Item updated successfully!' : 'Item added successfully!');
+        } else {
+            showError(result.error || 'Failed to save item');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred while saving the item');
+    }
+});
+
+// Confirm delete
+document.getElementById('confirmDeleteBtn')?.addEventListener('click', async function() {
+    if (!deleteItemId) return;
+    
+    try {
+        const response = await fetch(`/procurement/inventory/${deleteItemId}`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        if (response.ok) {
+            hideModal('deleteModal');
+            showSuccess('Item deleted successfully!');
+        } else {
+            showError('Failed to delete item');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred while deleting the item');
+    }
+});
+
+// Search functionality
+document.getElementById('searchInput')?.addEventListener('input', function(e) {
+    const searchTerm = e.target.value.toLowerCase();
+    const filtered = inventoryData.filter(item => 
+        item.code.toLowerCase().includes(searchTerm) ||
+        item.description.toLowerCase().includes(searchTerm)
+    );
+    displayInventory(filtered);
+});
+
+// Category filter
+document.getElementById('categoryFilter')?.addEventListener('change', function(e) {
+    const category = e.target.value;
+    const filtered = category ? inventoryData.filter(item => item.category === category) : inventoryData;
+    displayInventory(filtered);
+});
+
+// Load data on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadInventory();
+});
+</script>
+{% endblock %}
+{% endblock %}

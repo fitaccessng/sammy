@@ -3,223 +3,334 @@
 {% block title %}Reports & Analytics | SammyA Procurement{% endblock %}
 {% block header %}Reports & Analytics{% endblock %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
-{% endblock %}
-
 {% block content %}
 <div class="space-y-6">
+    <!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Assets</p>
+                    <h3 class="text-2xl font-bold text-blue-600">{{ data.stats.total_assets }}</h3>
+                </div>
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <i class='bx bx-package text-2xl text-blue-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Purchases</p>
+                    <h3 class="text-2xl font-bold text-green-600">{{ data.stats.total_purchases }}</h3>
+                </div>
+                <div class="bg-green-100 p-3 rounded-full">
+                    <i class='bx bx-cart text-2xl text-green-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Active Suppliers</p>
+                    <h3 class="text-2xl font-bold text-purple-600">{{ data.stats.active_suppliers }}</h3>
+                </div>
+                <div class="bg-purple-100 p-3 rounded-full">
+                    <i class='bx bx-store text-2xl text-purple-600'></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-gray-500">Total Spend</p>
+                    <h3 class="text-2xl font-bold text-orange-600">₦{{ "{:,.2f}".format(data.stats.total_spend) }}</h3>
+                </div>
+                <div class="bg-orange-100 p-3 rounded-full">
+                    <i class='bx bx-money text-2xl text-orange-600'></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Report Filters -->
     <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4">Generate Custom Report</h3>
         <form id="reportForm" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Report Type</label>
-                <select id="reportType" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Report Type</label>
+                <select id="reportType" required class="w-full p-2 border border-gray-300 rounded-md">
                     <option value="">Select Type</option>
-                    <option value="assets">Asset Report</option>
-                    <option value="purchases">Purchase Report</option>
-                    <option value="maintenance">Maintenance Report</option>
-                    <option value="suppliers">Supplier Report</option>
+                    <option value="assets">Inventory Assets</option>
+                    <option value="purchases">Purchase Orders</option>
+                    <option value="suppliers">Supplier Performance</option>
+                    <option value="tracking">Asset Tracking</option>
+                    <option value="spending">Spending Analysis</option>
                 </select>
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700">Date Range</label>
-                <input type="text" id="dateRange" required 
-                       class="mt-1 block w-full p-2 border rounded-md border-gray-300 shadow-sm">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+                <input type="date" id="startDate" class="w-full p-2 border border-gray-300 rounded-md">
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700">Format</label>
-                <select id="exportFormat" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
-                    <option value="excel">Excel</option>
-                    <option value="pdf">PDF</option>
-                    <option value="csv">CSV</option>
-                </select>
+                <label class="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+                <input type="date" id="endDate" class="w-full p-2 border border-gray-300 rounded-md">
             </div>
             
             <div class="flex items-end">
                 <button type="submit" 
-                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
-                    Generate Report
+                        class="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                    <i class='bx bx-bar-chart'></i> Generate Report
                 </button>
             </div>
         </form>
     </div>
 
     <!-- Report Preview -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Chart Section -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Data Visualization</h3>
-            </div>
-            <div class="p-6">
-                <canvas id="reportChart" class="w-full h-64"></canvas>
-            </div>
+    <div class="bg-white rounded-lg shadow">
+        <div class="p-6 border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-800">Report Preview</h3>
         </div>
-
-        <!-- Summary Section -->
-        <div class="bg-white rounded-lg shadow">
-            <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Summary</h3>
-            </div>
-            <div class="p-6">
-                <div id="reportSummary" class="space-y-4">
-                    <!-- Summary data will be populated here -->
-                </div>
+        <div id="reportPreview" class="p-6">
+            <div class="text-center text-gray-500 py-12">
+                <i class='bx bx-file text-6xl mb-4'></i>
+                <p>Select report parameters and click "Generate Report" to view data</p>
             </div>
         </div>
     </div>
 
-    <!-- Detailed Data -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex justify-between items-center">
-                <h3 class="text-lg font-semibold text-gray-800">Detailed Report</h3>
-                <button id="exportBtn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
-                    Export Report
+    <!-- Quick Reports Section -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" onclick="generateQuickReport('inventory')">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class='bx bx-package text-2xl text-blue-600'></i>
+                    </div>
+                    <span class="text-sm text-gray-500">Quick Report</span>
+                </div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">Inventory Summary</h4>
+                <p class="text-sm text-gray-600">Complete list of all inventory items with quantities and values</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" onclick="generateQuickReport('purchases')">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class='bx bx-cart text-2xl text-green-600'></i>
+                    </div>
+                    <span class="text-sm text-gray-500">Quick Report</span>
+                </div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">Purchase History</h4>
+                <p class="text-sm text-gray-600">All purchase orders with status and supplier details</p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer" onclick="generateQuickReport('suppliers')">
+            <div class="p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <i class='bx bx-store text-2xl text-purple-600'></i>
+                    </div>
+                    <span class="text-sm text-gray-500">Quick Report</span>
+                </div>
+                <h4 class="text-lg font-semibold text-gray-800 mb-2">Supplier List</h4>
+                <p class="text-sm text-gray-600">All registered suppliers with categories and payment terms</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class='bx bx-check text-3xl text-green-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Report Generated</h3>
+            <p id="successMessage" class="text-center text-gray-700 mb-4"></p>
+            <div class="flex justify-center gap-2">
+                <button onclick="hideModal('successModal')" class="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400">
+                    Close
+                </button>
+                <button id="downloadBtn" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    <i class='bx bx-download'></i> Download
                 </button>
             </div>
         </div>
-        <div class="p-6">
-            <div class="overflow-x-auto">
-                <table id="reportTable" class="min-w-full divide-y divide-gray-200">
-                    <thead>
-                        <tr>
-                            <!-- Table headers will be dynamically populated -->
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <!-- Table data will be dynamically populated -->
-                    </tbody>
-                </table>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class='bx bx-x text-3xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Error</h3>
+            <p id="errorMessage" class="text-center text-gray-700 mb-4"></p>
+            <div class="flex justify-center">
+                <button onclick="hideModal('errorModal')" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Close
+                </button>
             </div>
         </div>
     </div>
 </div>
 
 {% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/moment/moment.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
-
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Initialize date range picker
-    $('#dateRange').daterangepicker({
-        startDate: moment().subtract(30, 'days'),
-        endDate: moment(),
-        ranges: {
-           'Today': [moment(), moment()],
-           'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-           'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-           'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-           'This Month': [moment().startOf('month'), moment().endOf('month')],
-           'Last Month': [moment().subtract(1, 'month').startOf('month'), 
-                         moment().subtract(1, 'month').endOf('month')]
-        }
-    });
+// Get CSRF token
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
 
-    // Initialize Chart.js
-    const ctx = document.getElementById('reportChart').getContext('2d');
-    let reportChart = null;
+// Modal functions
+function showModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function showSuccess(message) {
+    document.getElementById('successMessage').textContent = message;
+    showModal('successModal');
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    showModal('errorModal');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Set default dates (last 30 days)
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setDate(endDate.getDate() - 30);
+    
+    document.getElementById('startDate').valueAsDate = startDate;
+    document.getElementById('endDate').valueAsDate = endDate;
 
     // Form submission handler
-    const reportForm = document.getElementById('reportForm');
-    if (reportForm) {
-        reportForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const formData = new FormData(this);
-            
-            fetch('/procurement/reports/generate', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    updateChart(data.chartData);
-                    updateSummary(data.summaryData);
-                    updateTable(data.tableData);
-                }
-            })
-            .catch(error => console.error('Error:', error));
-        });
-    }
-
-    // Export button handler
-    const exportBtn = document.getElementById('exportBtn');
-    if (exportBtn) {
-        exportBtn.addEventListener('click', function() {
-            const reportType = document.getElementById('reportType').value;
-            const format = document.getElementById('exportFormat').value;
-            const dateRange = document.getElementById('dateRange').value;
-
-            window.location.href = `/procurement/reports/export?type=${reportType}&format=${format}&dates=${dateRange}`;
-        });
-    }
-
-    // Update chart function
-    function updateChart(data) {
-        if (reportChart) {
-            reportChart.destroy();
+    document.getElementById('reportForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const reportType = document.getElementById('reportType').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        
+        if (!reportType) {
+            showError('Please select a report type');
+            return;
         }
-
-        reportChart = new Chart(ctx, {
-            type: data.type || 'bar',
-            data: data.data,
-            options: data.options
-        });
-    }
-
-    // Update summary function
-    function updateSummary(data) {
-        const summaryDiv = document.getElementById('reportSummary');
-        summaryDiv.innerHTML = '';
-
-        Object.entries(data).forEach(([key, value]) => {
-            const item = document.createElement('div');
-            item.className = 'flex justify-between items-center';
-            item.innerHTML = `
-                <span class="text-sm font-medium text-gray-600">${key}</span>
-                <span class="text-sm text-gray-900">${value}</span>
-            `;
-            summaryDiv.appendChild(item);
-        });
-    }
-
-    // Update table function
-    function updateTable(data) {
-        const table = document.getElementById('reportTable');
-        const thead = table.querySelector('thead tr');
-        const tbody = table.querySelector('tbody');
-
-        // Clear existing content
-        thead.innerHTML = '';
-        tbody.innerHTML = '';
-
-        // Add headers
-        data.headers.forEach(header => {
-            const th = document.createElement('th');
-            th.className = 'px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase';
-            th.textContent = header;
-            thead.appendChild(th);
-        });
-
-        // Add data rows
-        data.rows.forEach(row => {
-            const tr = document.createElement('tr');
-            row.forEach(cell => {
-                const td = document.createElement('td');
-                td.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
-                td.textContent = cell;
-                tr.appendChild(td);
+        
+        try {
+            const response = await fetch('/procurement/reports/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({
+                    report_type: reportType,
+                    start_date: startDate,
+                    end_date: endDate
+                })
             });
-            tbody.appendChild(tr);
-        });
-    }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                displayReportPreview(result.data, reportType);
+                showSuccess('Report generated successfully!');
+            } else {
+                showError(result.error || 'Failed to generate report');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError('An error occurred while generating the report');
+        }
+    });
 });
+
+// Quick report function
+async function generateQuickReport(type) {
+    try {
+        const response = await fetch(`/procurement/reports/quick/${type}`, {
+            method: 'GET',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            displayReportPreview(result.data, type);
+        } else {
+            showError(result.error || 'Failed to generate quick report');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred while generating the quick report');
+    }
+}
+
+// Display report preview
+function displayReportPreview(data, type) {
+    const preview = document.getElementById('reportPreview');
+    
+    let html = '<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200">';
+    html += '<thead class="bg-gray-50"><tr>';
+    
+    // Add headers
+    if (data.length > 0) {
+        Object.keys(data[0]).forEach(key => {
+            html += `<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">${key.replace(/_/g, ' ')}</th>`;
+        });
+        html += '</tr></thead><tbody class="bg-white divide-y divide-gray-200">';
+        
+        // Add rows
+        data.forEach(row => {
+            html += '<tr>';
+            Object.values(row).forEach(value => {
+                html += `<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${value || 'N/A'}</td>`;
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        
+        // Add export button
+        html += `<div class="mt-4 flex justify-end">
+            <button onclick="exportReport('${type}')" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                <i class='bx bx-download'></i> Export to Excel
+            </button>
+        </div>`;
+    } else {
+        html = '<div class="text-center text-gray-500 py-12"><i class="bx bx-info-circle text-6xl mb-4"></i><p>No data available for this report</p></div>';
+    }
+    
+    preview.innerHTML = html;
+}
+
+// Export report function
+function exportReport(type) {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+    window.location.href = `/procurement/reports/export?type=${type}&start=${startDate}&end=${endDate}&format=excel`;
+}
 </script>
 {% endblock %}
 {% endblock %}

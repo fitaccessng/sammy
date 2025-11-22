@@ -58,23 +58,23 @@
 
     <!-- Asset Tracking Map -->
     <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200">
-            <div class="flex justify-between items-center">
+        <div class="p-4 sm:p-6 border-b border-gray-200">
+            <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <h3 class="text-lg font-semibold text-gray-800">Asset Location Map</h3>
-                <div class="flex space-x-2">
-                    <select class="rounded-md border-gray-300 shadow-sm">
+                <div class="flex flex-col sm:flex-row gap-2">
+                    <select class="rounded-md border-gray-300 shadow-sm text-sm">
                         <option value="all">All Assets</option>
                         <option value="vehicles">Vehicles</option>
                         <option value="equipment">Equipment</option>
                     </select>
-                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm">
                         Refresh
                     </button>
                 </div>
             </div>
         </div>
-        <div class="p-6">
-            <div id="assetMap" class="h-96 w-full bg-gray-100 rounded-lg">
+        <div class="p-4 sm:p-6">
+            <div id="assetMap" class="h-64 sm:h-80 md:h-96 w-full bg-gray-100 rounded-lg relative z-0">
                 <!-- Map will be loaded here -->
             </div>
         </div>
@@ -82,24 +82,67 @@
 
     <!-- Recent Movement History -->
     <div class="bg-white rounded-lg shadow">
-        <div class="p-6 border-b border-gray-200">
+        <div class="p-4 sm:p-6 border-b border-gray-200">
             <h3 class="text-lg font-semibold text-gray-800">Recent Movements</h3>
         </div>
-        <div class="p-6">
-            <div class="overflow-x-auto">
+        <div class="p-2 sm:p-4 lg:p-6">
+            <div class="overflow-x-auto -mx-2 sm:mx-0">
                 <table class="min-w-full divide-y divide-gray-200">
-                    <thead>
+                    <thead class="bg-gray-50">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset Name</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">From</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">To</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                            <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Asset ID</th>
+                            <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Asset Name</th>
+                            <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Current Location</th>
+                            <th class="hidden md:table-cell px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Previous Location</th>
+                            <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Last Update</th>
+                            <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Status</th>
+                            <th class="px-3 sm:px-4 lg:px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase whitespace-nowrap">Actions</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        <!-- Movement history rows will be dynamically populated -->
+                        {% for asset in data.assets %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm font-medium text-gray-900">{{ asset.code }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-900">{{ asset.description }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">{{ asset.location or 'Not set' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">{{ asset.previous_location or 'N/A' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="text-sm text-gray-500">{{ asset.last_location_update or 'Never' }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% if asset.status == 'Active' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Active
+                                </span>
+                                {% elif asset.status == 'In Transit' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                    In Transit
+                                </span>
+                                {% elif asset.status == 'In Maintenance' %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    In Maintenance
+                                </span>
+                                {% else %}
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-gray-100 text-gray-800">
+                                    {{ asset.status }}
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <button onclick="updateLocation({{ asset.id }})" class="text-blue-600 hover:text-blue-900">
+                                    <i class='bx bx-map-pin'></i> Update Location
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -107,17 +150,257 @@
     </div>
 </div>
 
+<!-- Update Location Modal -->
+<div id="updateLocationModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-4 sm:top-20 mx-auto p-5 border w-full max-w-md sm:max-w-lg shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3 max-h-[80vh] overflow-y-auto">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Update Asset Location</h3>
+            <form id="updateLocationForm" class="space-y-4">
+                <input type="hidden" id="assetId" name="asset_id">
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Asset Code</label>
+                    <input type="text" id="assetCode" readonly class="mt-1 p-2 border block w-full rounded-md bg-gray-100 border-gray-300">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Asset Description</label>
+                    <input type="text" id="assetDescription" readonly class="mt-1 p-2 border block w-full rounded-md bg-gray-100 border-gray-300">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Location/Address</label>
+                    <input type="text" name="location" id="location" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm" placeholder="Enter physical location or address">
+                </div>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Latitude</label>
+                        <input type="number" name="latitude" id="latitude" step="any" class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., 9.0820">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Longitude</label>
+                        <input type="number" name="longitude" id="longitude" step="any" class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm" placeholder="e.g., 8.6753">
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Status</label>
+                    <select name="status" id="status" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                        <option value="Active">Active</option>
+                        <option value="In Transit">In Transit</option>
+                        <option value="In Maintenance">In Maintenance</option>
+                        <option value="Retired">Retired</option>
+                    </select>
+                </div>
+                
+                <div class="bg-blue-50 p-3 rounded">
+                    <p class="text-sm text-blue-700">
+                        <i class='bx bx-info-circle'></i> 
+                        Tip: You can get coordinates by clicking on the map or use your device's GPS location.
+                    </p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row justify-end gap-2">
+                    <button type="button" onclick="hideModal('updateLocationModal')" class="w-full sm:w-auto px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50 order-3 sm:order-1">
+                        Cancel
+                    </button>
+                    <button type="button" onclick="getCurrentLocation()" class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 order-2">
+                        <i class='bx bx-current-location'></i> Use Current Location
+                    </button>
+                    <button type="submit" class="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 order-1 sm:order-3">
+                        Update Location
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class='bx bx-check text-3xl text-green-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Success</h3>
+            <p id="successMessage" class="text-center text-gray-700 mb-4"></p>
+            <div class="flex justify-center">
+                <button onclick="hideModal('successModal'); location.reload();" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class='bx bx-x text-3xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Error</h3>
+            <p id="errorMessage" class="text-center text-gray-700 mb-4"></p>
+            <div class="flex justify-center">
+                <button onclick="hideModal('errorModal')" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% block extra_js %}
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script>
+// Get CSRF token
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+// Modal functions
+function showModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function showSuccess(message) {
+    document.getElementById('successMessage').textContent = message;
+    showModal('successModal');
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    showModal('errorModal');
+}
+
+let map;
+let markers = [];
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Google Maps
-    const map = new google.maps.Map(document.getElementById('assetMap'), {
-        center: { lat: 9.0820, lng: 8.6753 }, // Nigeria center
-        zoom: 6
-    });
+    // Initialize Leaflet Map (free alternative to Google Maps)
+    map = L.map('assetMap').setView([9.0820, 8.6753], 6); // Nigeria center
     
-    // Add your map markers and tracking logic here
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+    
+    // Load asset markers
+    const assets = {{ data.assets | tojson }};
+    
+    assets.forEach(asset => {
+        if (asset.latitude && asset.longitude) {
+            const marker = L.marker([asset.latitude, asset.longitude]).addTo(map);
+            
+            let statusColor = 'green';
+            if (asset.status === 'In Transit') statusColor = 'orange';
+            else if (asset.status === 'In Maintenance') statusColor = 'red';
+            
+            marker.bindPopup(`
+                <div class="p-2">
+                    <strong>${asset.code}</strong><br>
+                    ${asset.description}<br>
+                    <span class="text-sm text-gray-600">${asset.location || 'No location set'}</span><br>
+                    <span class="text-xs" style="color: ${statusColor}">● ${asset.status}</span>
+                </div>
+            `);
+            
+            markers.push(marker);
+        }
+    });
+});
+
+// Update location function
+async function updateLocation(assetId) {
+    try {
+        // Fetch asset details
+        const assets = {{ data.assets | tojson }};
+        const asset = assets.find(a => a.id === assetId);
+        
+        if (!asset) {
+            showError('Asset not found');
+            return;
+        }
+        
+        // Populate form
+        document.getElementById('assetId').value = asset.id;
+        document.getElementById('assetCode').value = asset.code;
+        document.getElementById('assetDescription').value = asset.description;
+        document.getElementById('location').value = asset.location || '';
+        document.getElementById('latitude').value = asset.latitude || '';
+        document.getElementById('longitude').value = asset.longitude || '';
+        document.getElementById('status').value = asset.status || 'Active';
+        
+        showModal('updateLocationModal');
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error loading asset details');
+    }
+}
+
+// Get current location using browser GPS
+function getCurrentLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                document.getElementById('latitude').value = position.coords.latitude.toFixed(6);
+                document.getElementById('longitude').value = position.coords.longitude.toFixed(6);
+                showSuccess('Current location captured successfully!');
+                setTimeout(() => hideModal('successModal'), 1500);
+            },
+            (error) => {
+                showError('Unable to get your location: ' + error.message);
+            }
+        );
+    } else {
+        showError('Geolocation is not supported by your browser');
+    }
+}
+
+// Form submission
+document.getElementById('updateLocationForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const assetId = document.getElementById('assetId').value;
+    const formData = {
+        location: document.getElementById('location').value,
+        latitude: document.getElementById('latitude').value,
+        longitude: document.getElementById('longitude').value,
+        status: document.getElementById('status').value
+    };
+    
+    try {
+        const response = await fetch(`/procurement/tracking/update-location/${assetId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify(formData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            hideModal('updateLocationModal');
+            showSuccess('Asset location updated successfully!');
+        } else {
+            showError(result.error || 'Failed to update location');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('An error occurred while updating location');
+    }
 });
 </script>
 {% endblock %}

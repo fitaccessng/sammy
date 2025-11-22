@@ -8,23 +8,38 @@
     <!-- Profile Overview -->
     <div class="bg-white rounded-lg shadow">
         <div class="p-6">
-            <div class="flex items-center space-x-6">
-                <div class="flex-shrink-0">
-                    <div class="h-24 w-24 bg-blue-100 rounded-full flex items-center justify-center">
-                        <i class="bx bxs-user text-5xl text-blue-600"></i>
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+                <div class="flex items-center space-x-6">
+                    <div class="flex-shrink-0">
+                        <div class="h-24 w-24 bg-gradient-to-br from-blue-500 to-green-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-lg">
+                            {{ data.user.name[0].upper() }}
+                        </div>
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-900">{{ data.user.name }}</h2>
+                        <p class="text-sm text-gray-500">{{ data.user.role }} | {{ data.user.department }}</p>
+                        <div class="mt-2 flex items-center text-sm text-gray-600">
+                            <i class="bx bx-envelope mr-2"></i>
+                            {{ data.user.email }}
+                        </div>
+                        <div class="mt-1 flex items-center text-sm text-gray-600">
+                            <i class="bx bx-calendar mr-2"></i>
+                            Joined {{ data.user.joined_date }}
+                        </div>
+                        <div class="mt-1">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium {% if data.user.status == 'Verified' %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                <i class='bx bx-check-circle mr-1'></i> {{ data.user.status }}
+                            </span>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <h2 class="text-2xl font-bold text-gray-900">{{ data.user.name }}</h2>
-                    <p class="text-sm text-gray-500">{{ data.user.role }} | {{ data.user.department }}</p>
-                    <div class="mt-2 flex items-center text-sm text-gray-500">
-                        <i class="bx bx-envelope mr-2"></i>
-                        {{ data.user.email }}
-                    </div>
-                    <div class="mt-1 flex items-center text-sm text-gray-500">
-                        <i class="bx bx-calendar mr-2"></i>
-                        Joined {{ data.user.joined_date }}
-                    </div>
+                <div class="flex flex-col gap-2">
+                    <button onclick="showEditModal()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center justify-center gap-2">
+                        <i class='bx bx-edit'></i> Edit Profile
+                    </button>
+                    <button onclick="showPasswordModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 flex items-center justify-center gap-2">
+                        <i class='bx bx-lock'></i> Change Password
+                    </button>
                 </div>
             </div>
         </div>
@@ -32,50 +47,54 @@
 
     <!-- Activity Stats -->
     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500">Purchases Initiated</p>
-                    <h3 class="text-2xl font-bold text-blue-600">{{ data.stats.purchases_initiated }}</h3>
+                    <p class="text-sm text-gray-500">Purchase Orders</p>
+                    <h3 class="text-3xl font-bold text-blue-600">{{ data.stats.purchases_initiated }}</h3>
+                    <p class="text-xs text-gray-400 mt-1">Total created</p>
                 </div>
                 <div class="bg-blue-100 p-3 rounded-full">
-                    <i class="bx bx-cart text-2xl text-blue-600"></i>
+                    <i class="bx bx-cart text-3xl text-blue-600"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-500">Assets Managed</p>
-                    <h3 class="text-2xl font-bold text-green-600">{{ data.stats.assets_managed }}</h3>
+                    <h3 class="text-3xl font-bold text-green-600">{{ data.stats.assets_managed }}</h3>
+                    <p class="text-xs text-gray-400 mt-1">In inventory</p>
                 </div>
                 <div class="bg-green-100 p-3 rounded-full">
-                    <i class="bx bx-box text-2xl text-green-600"></i>
+                    <i class="bx bx-box text-3xl text-green-600"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500">Suppliers Handled</p>
-                    <h3 class="text-2xl font-bold text-purple-600">{{ data.stats.suppliers_handled }}</h3>
+                    <p class="text-sm text-gray-500">Active Suppliers</p>
+                    <h3 class="text-3xl font-bold text-purple-600">{{ data.stats.suppliers_handled }}</h3>
+                    <p class="text-xs text-gray-400 mt-1">Validated vendors</p>
                 </div>
                 <div class="bg-purple-100 p-3 rounded-full">
-                    <i class="bx bx-building-house text-2xl text-purple-600"></i>
+                    <i class="bx bx-building-house text-3xl text-purple-600"></i>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white rounded-lg shadow p-4">
+        <div class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition-shadow">
             <div class="flex items-center justify-between">
                 <div>
-                    <p class="text-sm text-gray-500">Reports Generated</p>
-                    <h3 class="text-2xl font-bold text-orange-600">{{ data.stats.reports_generated }}</h3>
+                    <p class="text-sm text-gray-500">Reports</p>
+                    <h3 class="text-3xl font-bold text-orange-600">{{ data.stats.reports_generated }}</h3>
+                    <p class="text-xs text-gray-400 mt-1">Generated</p>
                 </div>
                 <div class="bg-orange-100 p-3 rounded-full">
-                    <i class="bx bx-file text-2xl text-orange-600"></i>
+                    <i class="bx bx-file text-3xl text-orange-600"></i>
                 </div>
             </div>
         </div>
@@ -87,23 +106,202 @@
             <h3 class="text-lg font-semibold text-gray-800">Recent Activity</h3>
         </div>
         <div class="p-6">
+            {% if data.recent_activity %}
             <div class="space-y-4">
                 {% for activity in data.recent_activity %}
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-3">
-                        <div class="bg-gray-100 p-2 rounded-full">
-                            <i class="bx bx-history text-gray-600"></i>
+                <div class="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                    <div class="flex items-start space-x-3">
+                        <div class="bg-white p-2 rounded-full shadow-sm">
+                            <i class="bx {{ activity.icon }} text-blue-600 text-xl"></i>
                         </div>
                         <div>
                             <p class="text-sm font-medium text-gray-900">{{ activity.action }}</p>
-                            <p class="text-xs text-gray-500">Ref: {{ activity.reference }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ activity.reference }}</p>
+                            {% if activity.status %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium mt-2 
+                                {% if activity.status == 'Delivered' %}bg-green-100 text-green-800
+                                {% elif activity.status == 'Pending' %}bg-yellow-100 text-yellow-800
+                                {% elif activity.status == 'Ordered' %}bg-blue-100 text-blue-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ activity.status }}
+                            </span>
+                            {% endif %}
                         </div>
                     </div>
-                    <span class="text-sm text-gray-500">{{ activity.timestamp }}</span>
+                    <span class="text-xs text-gray-400 whitespace-nowrap">{{ activity.timestamp }}</span>
                 </div>
                 {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12 text-gray-500">
+                <i class='bx bx-history text-6xl mb-4'></i>
+                <p>No recent activity</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Edit Profile Modal -->
+<div id="editModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Edit Profile</h3>
+            <form id="editProfileForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                    <input type="text" id="editName" value="{{ data.user.name }}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="editEmail" value="{{ data.user.email }}" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" onclick="hideModal('editModal')" class="px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="passwordModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-md shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Change Password</h3>
+            <form id="changePasswordForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Current Password</label>
+                    <input type="password" id="currentPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+                    <input type="password" id="newPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+                    <input type="password" id="confirmPassword" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <div class="flex justify-end gap-2 pt-4">
+                    <button type="button" onclick="hideModal('passwordModal')" class="px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Update Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-green-100 rounded-full mb-4">
+                <i class='bx bx-check text-3xl text-green-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Success</h3>
+            <p id="successMessage" class="text-center text-gray-700 mb-4"></p>
+            <div class="flex justify-center">
+                <button onclick="hideModal('successModal'); location.reload();" class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    OK
+                </button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Error Modal -->
+<div id="errorModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-sm shadow-lg rounded-md bg-white m-4">
+        <div class="mt-3">
+            <div class="flex items-center justify-center w-12 h-12 mx-auto bg-red-100 rounded-full mb-4">
+                <i class='bx bx-x text-3xl text-red-600'></i>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-900 text-center mb-4">Error</h3>
+            <p id="errorMessage" class="text-center text-gray-700 mb-4"></p>
+            <div class="flex justify-center">
+                <button onclick="hideModal('errorModal')" class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Get CSRF token
+function getCSRFToken() {
+    return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
+// Modal functions
+function showModal(modalId) {
+    document.getElementById(modalId).classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function hideModal(modalId) {
+    document.getElementById(modalId).classList.add('hidden');
+    document.body.style.overflow = 'auto';
+}
+
+function showSuccess(message) {
+    document.getElementById('successMessage').textContent = message;
+    showModal('successModal');
+}
+
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    showModal('errorModal');
+}
+
+function showEditModal() {
+    showModal('editModal');
+}
+
+function showPasswordModal() {
+    showModal('passwordModal');
+}
+
+// Edit profile form submission (placeholder - implement backend endpoint as needed)
+document.getElementById('editProfileForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    showError('Profile update feature is under development. Please contact your administrator.');
+});
+
+// Change password form submission (placeholder - implement backend endpoint as needed)
+document.getElementById('changePasswordForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    
+    if (newPassword !== confirmPassword) {
+        showError('New password and confirmation do not match!');
+        return;
+    }
+    
+    if (newPassword.length < 8) {
+        showError('Password must be at least 8 characters long!');
+        return;
+    }
+    
+    showError('Password change feature is under development. Please contact your administrator.');
+});
+</script>
+{% endblock %}
 {% endblock %}

@@ -88,53 +88,75 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
-                        {% for i in range(5) %}
-                        <tr>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    <div class="flex-shrink-0 h-10 w-10">
-                                        <div class="bg-gray-100 rounded-full p-2">
-                                            <i class='bx bxs-building text-xl text-gray-600'></i>
+                        {% if data.suppliers %}
+                            {% for supplier in data.suppliers %}
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        <div class="flex-shrink-0 h-10 w-10">
+                                            <div class="bg-gray-100 rounded-full p-2">
+                                                <i class='bx bxs-building text-xl text-gray-600'></i>
+                                            </div>
+                                        </div>
+                                        <div class="ml-4">
+                                            <div class="text-sm font-medium text-gray-900">{{ supplier.name }}</div>
+                                            <div class="text-sm text-gray-500">Added: {{ supplier.created_at }}</div>
                                         </div>
                                     </div>
-                                    <div class="ml-4">
-                                        <div class="text-sm font-medium text-gray-900">Supplier #{{ loop.index }}</div>
-                                        <div class="text-sm text-gray-500">ID: SUP{{ loop.index }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                        {{ supplier.category }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="text-sm text-gray-900">{{ supplier.payment_terms }}</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <div class="flex items-center">
+                                        {% for star in range(5) %}
+                                            {% if star < supplier.rating|int %}
+                                            <i class='bx bxs-star text-yellow-400'></i>
+                                            {% else %}
+                                            <i class='bx bx-star text-gray-300'></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="ml-2 text-sm text-gray-600">{{ supplier.rating }}</span>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                IT Equipment
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-900">John Doe</div>
-                                <div class="text-sm text-gray-500">john@supplier{{ loop.index }}.com</div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex items-center">
-                                    {% for star in range(5) %}
-                                    <i class='bx bxs-star text-yellow-400'></i>
-                                    {% endfor %}
-                                    <span class="ml-2 text-sm text-gray-600">5.0</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                                    {% if loop.index % 3 == 0 %}bg-yellow-100 text-yellow-800
-                                    {% elif loop.index % 2 == 0 %}bg-green-100 text-green-800
-                                    {% else %}bg-blue-100 text-blue-800{% endif %}">
-                                    {% if loop.index % 3 == 0 %}Pending
-                                    {% elif loop.index % 2 == 0 %}Active
-                                    {% else %}New{% endif %}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                <button class="text-blue-600 hover:text-blue-900 mr-3">View</button>
-                                <button class="text-green-600 hover:text-green-900 mr-3">Edit</button>
-                                <button class="text-red-600 hover:text-red-900">Block</button>
-                            </td>
-                        </tr>
-                        {% endfor %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                        {% if supplier.status_color == 'green' %}bg-green-100 text-green-800
+                                        {% elif supplier.status_color == 'yellow' %}bg-yellow-100 text-yellow-800
+                                        {% elif supplier.status_color == 'red' %}bg-red-100 text-red-800
+                                        {% else %}bg-blue-100 text-blue-800{% endif %}">
+                                        {{ supplier.status }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    {% if not supplier.validated %}
+                                    <form action="{{ url_for('procurement.validate_supplier', supplier_id=supplier.id) }}" method="POST" style="display:inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                                        <button type="submit" class="text-green-600 hover:text-green-900 mr-3">Validate</button>
+                                    </form>
+                                    {% endif %}
+                                    <button onclick="deleteSupplier({{ supplier.id }}, '{{ supplier.name }}')" 
+                                            class="text-red-600 hover:text-red-900">Delete</button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-12 text-center">
+                                    <i class='bx bxs-business text-4xl text-gray-300'></i>
+                                    <p class="mt-2 text-sm text-gray-500">No suppliers found</p>
+                                    <button onclick="showModal('addSupplier')" 
+                                            class="mt-3 text-sm text-blue-600 hover:text-blue-800">
+                                        Add your first supplier
+                                    </button>
+                                </td>
+                            </tr>
+                        {% endif %}
                     </tbody>
                 </table>
             </div>
@@ -143,57 +165,51 @@
 </div>
 
 <!-- Add Supplier Modal -->
-<div id="addSupplier" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+<div id="addSupplier" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-2/3 shadow-lg rounded-md bg-white">
         <div class="mt-3">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Supplier</h3>
-            <form id="supplierForm" class="space-y-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Add New Supplier</h3>
+                <button onclick="hideModal('addSupplier')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            <form action="{{ url_for('procurement.add_supplier') }}" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Company Name</label>
-                        <input type="text" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                        <label class="block text-sm font-medium text-gray-700">Company Name *</label>
+                        <input type="text" name="name" required 
+                               placeholder="e.g., ABC Suppliers Ltd"
+                               class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">Category</label>
-                        <select required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                        <label class="block text-sm font-medium text-gray-700">Category *</label>
+                        <select name="category" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                             <option value="">Select Category</option>
-                            <option value="it">IT Equipment</option>
-                            <option value="office">Office Supplies</option>
-                            <option value="vehicles">Vehicles</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Contact Person</label>
-                        <input type="text" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Email</label>
-                        <input type="email" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Phone</label>
-                        <input type="tel" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Payment Terms</label>
-                        <select required class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
-                            <option value="">Select Terms</option>
-                            <option value="immediate">Immediate</option>
-                            <option value="net15">Net 15</option>
-                            <option value="net30">Net 30</option>
+                            <option value="IT Equipment">IT Equipment</option>
+                            <option value="Office Supplies">Office Supplies</option>
+                            <option value="Vehicles">Vehicles</option>
+                            <option value="Construction Materials">Construction Materials</option>
+                            <option value="Heavy Equipment">Heavy Equipment</option>
+                            <option value="Tools">Tools</option>
+                            <option value="General Supplies">General Supplies</option>
                         </select>
                     </div>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Address</label>
-                    <textarea required class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm" rows="3"></textarea>
+                    <label class="block text-sm font-medium text-gray-700">Payment Terms</label>
+                    <select name="payment_terms" class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Terms</option>
+                        <option value="Cash on Delivery">Cash on Delivery</option>
+                        <option value="Net 7 Days">Net 7 Days</option>
+                        <option value="Net 15 Days">Net 15 Days</option>
+                        <option value="Net 30 Days">Net 30 Days</option>
+                        <option value="Net 60 Days">Net 60 Days</option>
+                        <option value="Credit Terms">Credit Terms</option>
+                    </select>
+                    <p class="mt-1 text-xs text-gray-500">Optional - Payment terms for this supplier</p>
                 </div>
                 
                 <div class="flex justify-end space-x-3">
@@ -217,34 +233,58 @@ document.addEventListener('DOMContentLoaded', function() {
     // Modal functions
     window.showModal = function(modalId) {
         document.getElementById(modalId).classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
     }
     
     window.hideModal = function(modalId) {
         document.getElementById(modalId).classList.add('hidden');
+        document.body.style.overflow = 'auto';
     }
     
-    // Form submission
-    const supplierForm = document.getElementById('supplierForm');
-    if (supplierForm) {
-        supplierForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            fetch('/procurement/suppliers/add', {
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modals = document.querySelectorAll('.fixed.inset-0');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                hideModal(modal.id);
+            }
+        });
+    });
+    
+    // Handle escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modals = document.querySelectorAll('.fixed.inset-0:not(.hidden)');
+            modals.forEach(modal => {
+                hideModal(modal.id);
+            });
+        }
+    });
+    
+    // Delete supplier
+    window.deleteSupplier = function(supplierId, supplierName) {
+        if (confirm(`Are you sure you want to delete "${supplierName}"? This action cannot be undone.`)) {
+            fetch(`/procurement/suppliers/delete/${supplierId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(Object.fromEntries(new FormData(this)))
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                }
             })
             .then(response => response.json())
             .then(data => {
                 if (data.status === 'success') {
-                    hideModal('addSupplier');
                     location.reload();
+                } else {
+                    alert('Error deleting supplier: ' + (data.error || 'Unknown error'));
                 }
             })
-            .catch(error => console.error('Error:', error));
-        });
-    }
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting supplier');
+            });
+        }
+    };
 });
 </script>
 {% endblock %}

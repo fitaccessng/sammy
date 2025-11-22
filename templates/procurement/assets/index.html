@@ -72,18 +72,74 @@
             <div class="p-6">
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
-                        <thead>
+                        <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Asset ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Code</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Cost</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <!-- Asset rows will be dynamically populated -->
+                            {% if data.assets %}
+                                {% for asset in data.assets %}
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                        {{ asset.code }}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-700">
+                                        {{ asset.description[:50] }}{% if asset.description|length > 50 %}...{% endif %}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                                            {{ asset.category }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                        {{ asset.qty_available }} {{ asset.uom }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                        ₦{{ "{:,.2f}".format(asset.unit_cost) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                            {% if asset.qty_available > 10 %}bg-green-100 text-green-800
+                                            {% elif asset.qty_available > 0 %}bg-yellow-100 text-yellow-800
+                                            {% else %}bg-red-100 text-red-800{% endif %}">
+                                            {{ asset.status }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                        <button onclick="viewAsset({{ asset.id }})" 
+                                                class="text-blue-600 hover:text-blue-900 mr-3">
+                                            <i class='bx bx-show'></i>
+                                        </button>
+                                        <button onclick="editAsset({{ asset.id }})" 
+                                                class="text-green-600 hover:text-green-900 mr-3">
+                                            <i class='bx bx-edit'></i>
+                                        </button>
+                                        <button onclick="deleteAsset({{ asset.id }})" 
+                                                class="text-red-600 hover:text-red-900">
+                                            <i class='bx bx-trash'></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="px-6 py-12 text-center">
+                                        <i class='bx bx-box text-4xl text-gray-300'></i>
+                                        <p class="mt-2 text-sm text-gray-500">No assets found</p>
+                                        <button onclick="showModal('addAssetModal')" 
+                                                class="mt-3 text-sm text-blue-600 hover:text-blue-800">
+                                            Add your first asset
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endif %}
                         </tbody>
                     </table>
                 </div>
@@ -93,16 +149,39 @@
         <!-- Categories & Filters -->
         <div class="bg-white rounded-lg shadow">
             <div class="p-6 border-b border-gray-200">
-                <h3 class="text-lg font-semibold text-gray-800">Categories</h3>
+                <div class="flex justify-between items-center">
+                    <h3 class="text-lg font-semibold text-gray-800">Categories</h3>
+                    <button onclick="showModal('addCategoryModal')" 
+                            class="text-blue-600 hover:text-blue-800">
+                        <i class='bx bx-plus-circle text-xl'></i>
+                    </button>
+                </div>
             </div>
             <div class="p-6">
                 <div class="space-y-4">
-                    {% for category in data.categories %}
-                    <div class="flex items-center justify-between">
-                        <span class="text-gray-700">{{ category.name }}</span>
-                        <span class="bg-gray-100 px-2 py-1 rounded text-sm text-gray-600">0</span>
-                    </div>
-                    {% endfor %}
+                    {% if data.categories %}
+                        {% for category in data.categories %}
+                        <div class="flex items-center justify-between hover:bg-gray-50 p-2 rounded transition">
+                            <span class="text-gray-700">{{ category.name }}</span>
+                            <div class="flex items-center space-x-2">
+                                <span class="bg-gray-100 px-2 py-1 rounded text-sm text-gray-600">{{ category.count|default(0) }}</span>
+                                <button onclick="deleteCategory('{{ category.name }}')" 
+                                        class="text-red-600 hover:text-red-800 p-1">
+                                    <i class='bx bx-trash text-lg'></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class='bx bx-category text-3xl text-gray-300'></i>
+                            <p class="text-sm text-gray-500 mt-2">No categories yet</p>
+                            <button onclick="showModal('addCategoryModal')" 
+                                    class="mt-3 text-sm text-blue-600 hover:text-blue-800">
+                                Create First Category
+                            </button>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -110,26 +189,58 @@
 </div>
 
 <!-- Add Asset Modal -->
-<div id="addAssetModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
+<div id="addAssetModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
         <div class="mt-3">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Add New Asset</h3>
-            <form id="addAssetForm" class="space-y-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Add New Asset</h3>
+                <button onclick="hideModal('addAssetModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            <form id="addAssetForm" action="{{ url_for('procurement.add_asset') }}" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Asset Name</label>
-                    <input type="text" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    <label class="block text-sm font-medium text-gray-700">Asset Code</label>
+                    <input type="text" name="code" required 
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Asset Description</label>
+                    <input type="text" name="description" required 
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Category</label>
-                    <select required class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm">
+                    <select name="category" required 
+                            class="mt-1 block p-2 border w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                        <option value="">Select Category</option>
                         {% for category in data.categories %}
-                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        <option value="{{ category.name }}">{{ category.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700">Location</label>
-                    <input type="text" required class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                    <label class="block text-sm font-medium text-gray-700">Group</label>
+                    <input type="text" name="group" 
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                        <input type="number" name="qty_available" step="0.01" required 
+                               class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Unit (UOM)</label>
+                        <input type="text" name="uom" required placeholder="e.g., pcs, kg, m" 
+                               class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Unit Cost</label>
+                    <input type="number" name="unit_cost" step="0.01" required 
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
                 </div>
                 <div class="flex justify-end space-x-3">
                     <button type="button" onclick="hideModal('addAssetModal')" 
@@ -146,28 +257,239 @@
     </div>
 </div>
 
+<!-- Add Category Modal -->
+<div id="addCategoryModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Add New Category</h3>
+                <button onclick="hideModal('addCategoryModal')" class="text-gray-400 hover:text-gray-600">
+                    <i class='bx bx-x text-2xl'></i>
+                </button>
+            </div>
+            <form id="addCategoryForm" action="{{ url_for('procurement.add_category') }}" method="POST" class="space-y-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Category Name</label>
+                    <input type="text" name="category_name" required 
+                           placeholder="e.g., Heavy Equipment, Tools, Materials"
+                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                    <p class="mt-1 text-xs text-gray-500">This will be used to organize your inventory items</p>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideModal('addCategoryModal')" 
+                            class="px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Add Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // Modal functions
     window.showModal = function(modalId) {
         document.getElementById(modalId).classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
     }
     
     window.hideModal = function(modalId) {
         document.getElementById(modalId).classList.add('hidden');
+        document.body.style.overflow = 'auto';
     }
     
-    // Form submission
-    const addAssetForm = document.getElementById('addAssetForm');
-    if (addAssetForm) {
-        addAssetForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            // Add your form submission logic here
-            hideModal('addAssetModal');
-            alert('Asset added successfully!');
+    // Close modal when clicking outside
+    document.addEventListener('click', function(event) {
+        const modals = document.querySelectorAll('.fixed.inset-0');
+        modals.forEach(modal => {
+            if (event.target === modal) {
+                hideModal(modal.id);
+            }
         });
-    }
+    });
+    
+    // Handle escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            const modals = document.querySelectorAll('.fixed.inset-0:not(.hidden)');
+            modals.forEach(modal => {
+                hideModal(modal.id);
+            });
+        }
+    });
+    
+    // Asset action functions
+    window.viewAsset = function(assetId) {
+        window.location.href = `/procurement/assets/${assetId}`;
+    };
+    
+    window.editAsset = function(assetId) {
+        // Fetch asset data
+        fetch(`/procurement/assets/edit/${assetId}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(asset => {
+            // Create and show edit modal
+            const modal = document.createElement('div');
+            modal.id = 'editAssetModal';
+            modal.className = 'fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50';
+            modal.innerHTML = `
+                <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                    <div class="mt-3">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-lg font-semibold text-gray-900">Edit Asset</h3>
+                            <button onclick="document.getElementById('editAssetModal').remove()" 
+                                    class="text-gray-400 hover:text-gray-600">
+                                <i class='bx bx-x text-2xl'></i>
+                            </button>
+                        </div>
+                        <form id="editAssetForm" class="space-y-4">
+                            <input type="hidden" name="csrf_token" value="${document.querySelector('meta[name="csrf-token"]').content}" />
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Asset Code</label>
+                                <input type="text" name="code" value="${asset.code}" required 
+                                       class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Description</label>
+                                <input type="text" name="description" value="${asset.description}" required 
+                                       class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Category</label>
+                                <input type="text" name="category" value="${asset.category}" required 
+                                       class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Group</label>
+                                <input type="text" name="group" value="${asset.group || ''}" 
+                                       class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">Quantity</label>
+                                    <input type="number" name="qty_available" value="${asset.qty_available}" step="0.01" required 
+                                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700">UOM</label>
+                                    <input type="text" name="uom" value="${asset.uom}" required 
+                                           class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700">Unit Cost</label>
+                                <input type="number" name="unit_cost" value="${asset.unit_cost}" step="0.01" required 
+                                       class="mt-1 p-2 border block w-full rounded-md border-gray-300 shadow-sm">
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" onclick="document.getElementById('editAssetModal').remove()" 
+                                        class="px-4 py-2 border text-gray-700 rounded-lg hover:bg-gray-50">
+                                    Cancel
+                                </button>
+                                <button type="submit" 
+                                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                    Update Asset
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Handle form submission
+            document.getElementById('editAssetForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+                const data = Object.fromEntries(formData);
+                
+                fetch(`/procurement/assets/update/${assetId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': data.csrf_token
+                    },
+                    body: JSON.stringify(data)
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        location.reload();
+                    } else {
+                        alert('Error updating asset: ' + (result.error || 'Unknown error'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error updating asset');
+                });
+            });
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error loading asset data');
+        });
+    };
+    
+    window.deleteAsset = function(assetId) {
+        if (confirm('Are you sure you want to delete this asset? This action cannot be undone.')) {
+            fetch(`/procurement/assets/delete/${assetId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    location.reload();
+                } else {
+                    alert('Error deleting asset: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting asset');
+            });
+        }
+    };
+    
+    window.deleteCategory = function(categoryName) {
+        if (confirm(`Are you sure you want to delete the category "${categoryName}" and all its items? This action cannot be undone.`)) {
+            fetch(`/procurement/categories/delete/${encodeURIComponent(categoryName)}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    alert(data.message);
+                    location.reload();
+                } else {
+                    alert('Error deleting category: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting category');
+            });
+        }
+    };
 });
 </script>
 {% endblock %}
