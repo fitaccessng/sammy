@@ -1,0 +1,190 @@
+{% extends "finance/base.html" %}
+
+{% block title %}Cost Approvals - Finance{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-6">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Cost Approvals</h1>
+        <p class="text-gray-600">Review and approve budget adjustment requests from Cost Control</p>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="bg-white rounded-lg shadow mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="flex">
+                <a href="{{ url_for('finance.cost_approvals', status='pending') }}" 
+                   class="px-6 py-4 text-sm font-semibold border-b-2 {% if status_filter == 'pending' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-gray-800{% endif %}">
+                    Pending
+                </a>
+                <a href="{{ url_for('finance.cost_approvals', status='approved') }}" 
+                   class="px-6 py-4 text-sm font-semibold border-b-2 {% if status_filter == 'approved' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-gray-800{% endif %}">
+                    Approved
+                </a>
+                <a href="{{ url_for('finance.cost_approvals', status='rejected') }}" 
+                   class="px-6 py-4 text-sm font-semibold border-b-2 {% if status_filter == 'rejected' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-gray-800{% endif %}">
+                    Rejected
+                </a>
+                <a href="{{ url_for('finance.cost_approvals', status='all') }}" 
+                   class="px-6 py-4 text-sm font-semibold border-b-2 {% if status_filter == 'all' %}border-blue-600 text-blue-600{% else %}border-transparent text-gray-600 hover:text-gray-800{% endif %}">
+                    All
+                </a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Approvals List -->
+    <div class="space-y-4">
+        {% if approvals %}
+            {% for item in approvals %}
+            <div class="bg-white rounded-lg shadow hover:shadow-lg transition-shadow">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-xl font-bold text-gray-800">
+                                    {{ item.project.name if item.project else 'N/A' }}
+                                </h3>
+                                <span class="px-3 py-1 rounded-full text-sm font-semibold
+                                    {% if item.approval.status == 'approved' %}bg-green-100 text-green-800
+                                    {% elif item.approval.status == 'rejected' %}bg-red-100 text-red-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ item.approval.status|title }}
+                                </span>
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-800">
+                                    Budget Adjustment
+                                </span>
+                            </div>
+                            <p class="text-sm text-gray-600">{{ item.approval.description }}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-bold text-blue-600">₦{{ "{:,.2f}".format(item.approval.amount) }}</p>
+                            <p class="text-xs text-gray-500">Adjustment Amount</p>
+                        </div>
+                    </div>
+
+                    {% if item.reference_details %}
+                    <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3">Budget Adjustment Details</h4>
+                        <div class="grid md:grid-cols-2 gap-4 text-sm mb-4">
+                            <div>
+                                <p class="text-gray-600">Category</p>
+                                <p class="font-semibold text-gray-800">{{ item.reference_details.category|title }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Type</p>
+                                <p class="font-semibold text-gray-800">
+                                    <span class="{% if item.reference_details.adjustment_type == 'increase' %}text-green-600{% else %}text-red-600{% endif %}">
+                                        {{ item.reference_details.adjustment_type|title }}
+                                    </span>
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Current Budget</p>
+                                <p class="font-semibold text-gray-800">₦{{ "{:,.2f}".format(item.reference_details.old_amount) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-gray-600">Proposed Budget</p>
+                                <p class="font-semibold text-gray-800">₦{{ "{:,.2f}".format(item.reference_details.new_amount) }}</p>
+                            </div>
+                            <div class="md:col-span-2">
+                                <p class="text-gray-600">Requested By</p>
+                                <p class="font-semibold text-gray-800">{{ item.reference_details.requester_name }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="text-sm font-semibold text-gray-700 mb-1">Reason</p>
+                            <p class="text-sm text-gray-800 bg-white p-3 rounded border border-gray-200">
+                                {{ item.reference_details.reason }}
+                            </p>
+                        </div>
+                        
+                        {% if item.reference_details.impact_analysis %}
+                        <div>
+                            <p class="text-sm font-semibold text-gray-700 mb-1">Impact Analysis</p>
+                            <p class="text-sm text-gray-800 bg-white p-3 rounded border border-gray-200">
+                                {{ item.reference_details.impact_analysis }}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="grid md:grid-cols-3 gap-4 mb-4 p-3 bg-blue-50 rounded">
+                        <div>
+                            <p class="text-xs text-gray-600">Created Date</p>
+                            <p class="font-semibold text-gray-800">
+                                {{ item.approval.created_at.strftime('%b %d, %Y %I:%M %p') if item.approval.created_at else 'N/A' }}
+                            </p>
+                        </div>
+                        {% if item.approval.approved_at %}
+                        <div>
+                            <p class="text-xs text-gray-600">Processed Date</p>
+                            <p class="font-semibold text-gray-800">
+                                {{ item.approval.approved_at.strftime('%b %d, %Y %I:%M %p') }}
+                            </p>
+                        </div>
+                        {% endif %}
+                        {% if item.approval.approver_id %}
+                        <div>
+                            <p class="text-xs text-gray-600">Processed By</p>
+                            <p class="font-semibold text-gray-800">
+                                {% set approver = item.approval.approver %}
+                                {{ approver.name if approver else 'Unknown' }}
+                            </p>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    {% if item.approval.status == 'pending' %}
+                    <form method="POST" action="{{ url_for('finance.cost_approvals') }}" class="border-t pt-4">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <input type="hidden" name="approval_id" value="{{ item.approval.id }}">
+                        
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Comments</label>
+                            <textarea name="comments" 
+                                      placeholder="Add your comments here..." 
+                                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                      rows="3"></textarea>
+                        </div>
+                        
+                        <div class="flex gap-3">
+                            <button type="submit" name="action" value="approve" 
+                                    class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                                    onclick="return confirm('Are you sure you want to approve this budget adjustment?')">
+                                <i class="fas fa-check mr-2"></i> Approve
+                            </button>
+                            <button type="submit" name="action" value="reject" 
+                                    class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg transition-colors"
+                                    onclick="return confirm('Are you sure you want to reject this budget adjustment?')">
+                                <i class="fas fa-times mr-2"></i> Reject
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="p-4 bg-gray-100 rounded-lg border-t">
+                        <p class="text-sm text-gray-700">
+                            <span class="font-semibold">Status:</span> 
+                            This budget adjustment has been {{ item.approval.status }}.
+                            {% if item.approval.comments %}
+                            <br><span class="font-semibold mt-2 inline-block">Comments:</span> {{ item.approval.comments }}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="bg-white rounded-lg shadow p-12 text-center">
+            <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+            <p class="text-xl text-gray-500">No {{ status_filter }} approvals found</p>
+            <p class="text-sm text-gray-400 mt-2">Budget adjustment requests will appear here when Cost Control submits them</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

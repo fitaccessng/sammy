@@ -1124,7 +1124,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // DPR Management Functions
     window.approveDPR = function(dprId) {
         if (confirm('Are you sure you want to approve this DPR?')) {
-            fetch(`{{ url_for('approve_dpr', dpr_id=0) }}`.replace('0', dprId), {
+            fetch(`{{ url_for('project.approve_dpr', dpr_id=0) }}`.replace('0', dprId), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

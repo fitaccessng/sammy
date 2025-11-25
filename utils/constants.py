@@ -9,6 +9,8 @@ class Roles:
     QUARRY_MANAGER = 'hq_quarry'
     PROJECT_MANAGER = 'hq_project'
     HQ_COST_CONTROL = 'hq_cost_control'
+    OFFICE_PM = 'office_pm'
+    QS_MANAGER = 'qs_manager'
     
     # Staff Roles
     FINANCE_STAFF = 'finance_staff'
@@ -26,7 +28,9 @@ class Roles:
         HQ_PROCUREMENT: [PROCUREMENT_STAFF, PROCUREMENT_OFFICER],
         QUARRY_MANAGER: [QUARRY_STAFF],
         PROJECT_MANAGER: [PROJECT_STAFF],
-        HQ_COST_CONTROL: []
+        HQ_COST_CONTROL: [],
+        OFFICE_PM: [],
+        QS_MANAGER: []
     }
     
     # Role Display Names
@@ -38,6 +42,8 @@ class Roles:
         QUARRY_MANAGER: 'Quarry Manager',
         PROJECT_MANAGER: 'Project Manager',
         HQ_COST_CONTROL: 'HQ Cost Control Manager',
+        OFFICE_PM: 'Office Project Manager',
+        QS_MANAGER: 'QS Manager',
         FINANCE_STAFF: 'Finance Staff',
         HR_STAFF: 'HR Staff',
         PROCUREMENT_STAFF: 'Procurement Staff',
@@ -55,6 +61,8 @@ class Roles:
         QUARRY_MANAGER: 'Manage quarry operations',
         PROJECT_MANAGER: 'Manage site projects and progress',
         HQ_COST_CONTROL: 'Monitor and control project costs',
+        OFFICE_PM: 'Manage office-level project coordination and reporting',
+        QS_MANAGER: 'Manage quantity surveying and cost estimation',
         FINANCE_STAFF: 'Handle daily finance operations',
         HR_STAFF: 'Handle HR administrative tasks',
         PROCUREMENT_STAFF: 'Process procurement requests',

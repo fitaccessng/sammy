@@ -1,16 +1,10 @@
-{% extends "base.html" %}
+{% extends "cost_control/base.html" %}
 
 {% block title %}Expenditure Reports{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
-    <nav class="mb-6 text-sm text-gray-600">
-        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Home</a>
-        <span class="mx-2">/</span>
-        <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="hover:text-blue-600">Cost Control</a>
-        <span class="mx-2">/</span>
-        <span class="text-gray-900">Expenditure Reports</span>
-    </nav>
+   
 
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Expenditure Reports</h1>
@@ -18,62 +12,73 @@
     </div>
 
     <!-- Quick Navigation -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cost_tracking') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-clipboard-list mr-2"></i>Cost Tracking
-            </a>
-            <a href="{{ url_for('cost_control_mgr.variance_analysis') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-chart-line mr-2"></i>Variance Analysis
-            </a>
-            <a href="{{ url_for('cost_control_mgr.budget_adjustments') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-adjust mr-2"></i>Budget Adjustments
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cash_flow') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-money-bill-wave mr-2"></i>Cash Flow
-            </a>
-            <a href="{{ url_for('cost_control_mgr.approvals') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-check-circle mr-2"></i>Approvals
-            </a>
-            <a href="{{ url_for('cost_control_mgr.expenditure_reports') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                <i class="fas fa-receipt mr-2"></i>Expenditures
-            </a>
-            <a href="{{ url_for('cost_control_mgr.reports') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-file-alt mr-2"></i>Reports
-            </a>
+   
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-gray-600 uppercase">Total Expenditure</h3>
+                <i class="fas fa-dollar-sign text-2xl text-blue-600"></i>
+            </div>
+            <p class="text-3xl font-bold text-gray-900">₦{{ "{:,.0f}".format(total_expenditure) }}</p>
+            <p class="text-sm text-gray-500 mt-2">Actual costs incurred</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-gray-600 uppercase">Total Planned</h3>
+                <i class="fas fa-clipboard-check text-2xl text-green-600"></i>
+            </div>
+            <p class="text-3xl font-bold text-gray-900">₦{{ "{:,.0f}".format(total_planned) }}</p>
+            <p class="text-sm text-gray-500 mt-2">Budgeted amount</p>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-sm font-semibold text-gray-600 uppercase">Variance</h3>
+                <i class="fas fa-{% if total_variance > 0 %}exclamation-triangle{% else %}check-circle{% endif %} text-2xl {% if total_variance > 0 %}text-red-600{% else %}text-green-600{% endif %}"></i>
+            </div>
+            <p class="text-3xl font-bold {% if total_variance > 0 %}text-red-600{% else %}text-green-600{% endif %}">
+                {{ "+" if total_variance > 0 else "" }}₦{{ "{:,.0f}".format(total_variance) }}
+            </p>
+            <p class="text-sm text-gray-500 mt-2">
+                {% if total_planned > 0 %}
+                {{ "%.1f"|format((total_variance / total_planned) * 100) }}% variance
+                {% else %}
+                N/A
+                {% endif %}
+            </p>
         </div>
     </div>
 
-    <!-- Summary by Category -->
+    <!-- Summary by Type and Project -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Spending by Category</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Spending by Cost Type</h3>
             <div class="space-y-3">
-                {% for cat in category_summary %}
+                {% for type_data in type_summary %}
                 <div class="flex items-center justify-between">
                     <div>
-                        <div class="font-semibold">{{ cat[0] }}</div>
-                        <div class="text-sm text-gray-600">{{ cat[2] }} transactions</div>
+                        <div class="font-semibold">{{ type_data[0]|title }}</div>
+                        <div class="text-sm text-gray-600">{{ type_data[2] }} entries</div>
                     </div>
-                    <div class="text-lg font-bold">₦{{ "{:,.0f}".format(cat[1]) }}</div>
+                    <div class="text-lg font-bold">₦{{ "{:,.0f}".format(type_data[1]) }}</div>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
         <div class="bg-white rounded-lg shadow p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4">Top Vendors</h3>
+            <h3 class="text-lg font-bold text-gray-900 mb-4">Spending by Project</h3>
             <div class="space-y-3">
-                {% for vendor in vendor_summary %}
+                {% for project_data in project_summary %}
                 <div class="flex items-center justify-between">
                     <div>
-                        <div class="font-semibold">{{ vendor[0] }}</div>
-                        <div class="text-sm text-gray-600">{{ vendor[2] }} transactions</div>
+                        <div class="font-semibold">{{ project_data[0] }}</div>
+                        <div class="text-sm text-gray-600">{{ project_data[2] }} entries</div>
                     </div>
-                    <div class="text-lg font-bold">₦{{ "{:,.0f}".format(vendor[1]) }}</div>
+                    <div class="text-lg font-bold">₦{{ "{:,.0f}".format(project_data[1]) }}</div>
                 </div>
                 {% endfor %}
             </div>
@@ -91,23 +96,31 @@
                     <tr>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payee</th>
-                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Amount</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Cost Type</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Planned</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actual</th>
+                        <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Variance</th>
                         <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
                     {% for exp in expenditures %}
                     <tr class="hover:bg-gray-50">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ exp.transaction_date.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">{{ exp.entry_date.strftime('%Y-%m-%d') }}</td>
                         <td class="px-6 py-4 text-sm">{{ exp.description }}</td>
-                        <td class="px-6 py-4 text-sm">{{ exp.category }}</td>
-                        <td class="px-6 py-4 text-sm">{{ exp.payee_name }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold">₦{{ "{:,.2f}".format(exp.amount) }}</td>
+                        <td class="px-6 py-4 text-sm">
+                            <span class="px-2 py-1 bg-gray-100 rounded text-xs">{{ exp.cost_type }}</span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right">₦{{ "{:,.2f}".format(exp.planned_cost) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right font-semibold">₦{{ "{:,.2f}".format(exp.actual_cost) }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                            <span class="{% if exp.variance < 0 %}text-green-600{% else %}text-red-600{% endif %} font-semibold">
+                                {{ "%.1f"|format(exp.variance_percentage) }}%
+                            </span>
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            <span class="px-2 py-1 bg-{% if exp.status == 'paid' %}green{% elif exp.status == 'approved' %}blue{% else %}yellow{% endif %}-100 text-{% if exp.status == 'paid' %}green{% elif exp.status == 'approved' %}blue{% else %}yellow{% endif %}-800 text-xs rounded-full">
-                                {{ exp.status }}
+                            <span class="px-2 py-1 bg-{% if exp.status == 'approved' %}green{% elif exp.status == 'rejected' %}red{% else %}yellow{% endif %}-100 text-{% if exp.status == 'approved' %}green{% elif exp.status == 'rejected' %}red{% else %}yellow{% endif %}-800 text-xs rounded-full">
+                                {{ exp.status|title }}
                             </span>
                         </td>
                     </tr>

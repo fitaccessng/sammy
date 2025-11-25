@@ -104,6 +104,22 @@
                                         <div class="text-xs text-gray-500">Monitor and control project costs</div>
                                     </div>
                                 </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="office_pm" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">Office Project Manager</div>
+                                        <div class="text-xs text-gray-500">Manage office-level project coordination and reporting</div>
+                                    </div>
+                                </label>
+                                
+                                <label class="flex items-start p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition">
+                                    <input type="radio" name="role" value="qs_manager" required class="mt-1 mr-3 text-blue-600 focus:ring-blue-500">
+                                    <div class="flex-1">
+                                        <div class="font-medium text-gray-900">QS Manager</div>
+                                        <div class="text-xs text-gray-500">Manage quantity surveying and cost estimation</div>
+                                    </div>
+                                </label>
                             </div>
                         </div>
 
@@ -246,9 +262,13 @@ const roleDescriptions = {
     'hq_procurement': 'Manage procurement processes and procurement staff',
     'hq_quarry': 'Supervise quarry operations and quarry staff',
     'hq_project': 'Oversee project management and project staff',
+    'hq_cost_control': 'Monitor and control project costs',
+    'office_pm': 'Manage office-level project coordination and reporting',
+    'qs_manager': 'Manage quantity surveying and cost estimation',
     'finance_staff': 'Handle day-to-day financial tasks',
     'hr_staff': 'Handle day-to-day HR tasks',
     'procurement_staff': 'Handle day-to-day procurement tasks',
+    'procurement_officer': 'Approve procurement activities',
     'quarry_staff': 'Handle day-to-day quarry operations',
     'project_staff': 'Handle day-to-day project tasks'
 };

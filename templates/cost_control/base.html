@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SammyA Cost Control{% endblock %}</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Box Icons -->
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="bg-blue-900 text-white w-64 min-h-screen p-4">
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold">SammyA Cost Control</h1>
+            </div>
+            
+            <nav class="space-y-6">
+
+                <div class="space-y-2">
+                    <a href="{{ url_for('cost_control_mgr.dashboard') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-dashboard text-xl'></i>
+                        <span>Dashboard</span>
+                    </a>
+                </div>
+               
+                <!-- Cost Tracking -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Cost Management</h2>
+                    <a href="{{ url_for('cost_control_mgr.cost_tracking') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-clipboard text-xl'></i>
+                        <span>Cost Tracking</span>
+                    </a>
+                    <a href="{{ url_for('cost_control_mgr.variance_analysis') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-chart text-xl'></i>
+                        <span>Variance Analysis</span>
+                    </a>
+                </div>
+
+                <!-- Budget Management -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Budget Management</h2>
+                    <a href="{{ url_for('cost_control_mgr.budget_adjustments') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-adjust text-xl'></i>
+                        <span>Budget Adjustments</span>
+                    </a>
+                    <a href="{{ url_for('cost_control_mgr.cash_flow') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-wallet text-xl'></i>
+                        <span>Cash Flow</span>
+                    </a>
+                </div>
+
+                <!-- Approvals -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Approvals</h2>
+                    <a href="{{ url_for('cost_control_mgr.approvals') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white relative">
+                        <i class='bx bxs-check-circle text-xl'></i>
+                        <span>Pending Approvals</span>
+                        <span class="absolute right-0 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            {{ pending_approvals_count|default(0) }}
+                        </span>
+                    </a>
+                    <a href="{{ url_for('cost_control_mgr.purchase_order_approvals') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-shopping-bag text-xl'></i>
+                        <span>PO Approvals</span>
+                    </a>
+                </div>
+
+                <!-- Expenditures -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Expenditures</h2>
+                    <a href="{{ url_for('cost_control_mgr.expenditure_reports') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-receipt text-xl'></i>
+                        <span>Expenditure Reports</span>
+                    </a>
+                </div>
+
+                <!-- Reports -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400">Reports</h2>
+                    <a href="{{ url_for('cost_control_mgr.reports') }}" 
+                       class="flex items-center space-x-2 text-gray-300 hover:text-white">
+                        <i class='bx bxs-report text-xl'></i>
+                        <span>Reports</span>
+                    </a>
+                </div>
+
+                <!-- Profile -->
+              
+              
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="flex-1">
+            <!-- Top Navigation -->
+            <header class="bg-white shadow-sm">
+                <div class="flex items-center justify-between px-6 py-4">
+                    <h1 class="text-xl font-semibold text-gray-800">{% block header %}Dashboard{% endblock %}</h1>
+                    <div class="flex items-center space-x-4">
+                        <!-- Notification Center -->
+                        {% include 'components/notification_center.html' %}
+                        
+                        <!-- User Menu -->
+                        <div class="relative">
+                            <button id="userMenuBtn" class="flex items-center space-x-2">
+                                <img src="https://ui-avatars.com/api/?name={{ current_user.name|default('Cost Control')|replace(' ', '+') }}&background=1E3A8A&color=fff" 
+                                     alt="Profile" class="w-8 h-8 rounded-full">
+                                <span class="text-gray-700">{{ current_user.name|default('Cost Control Manager') }}</span>
+                                <i class='bx bx-chevron-down text-gray-500'></i>
+                            </button>
+                            
+                            <!-- Dropdown Menu -->
+                            <div id="userDropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                               
+
+                                <hr class="my-1 border-gray-200">
+                                <a href="{{ url_for('logout') }}" 
+                                   class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                    <i class='bx bx-log-out mr-2'></i>
+                                    Logout
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="p-6">
+                <!-- Flash Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        <div class="mb-6 space-y-2">
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }} bg-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'blue' }}-100 border border-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'blue' }}-400 text-{{ 'green' if category == 'success' else 'red' if category == 'error' else 'blue' }}-700 px-4 py-3 rounded relative" role="alert">
+                                    <span class="block sm:inline">{{ message }}</span>
+                                    <button onclick="this.parentElement.remove()" class="absolute top-0 bottom-0 right-0 px-4 py-3">
+                                        <i class='bx bx-x text-xl'></i>
+                                    </button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    {% block extra_js %}{% endblock %}
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const userMenuBtn = document.getElementById('userMenuBtn');
+            const userDropdown = document.getElementById('userDropdown');
+            
+            if (userMenuBtn && userDropdown) {
+                // Toggle dropdown
+                userMenuBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    userDropdown.classList.toggle('hidden');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!userMenuBtn.contains(e.target)) {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+                
+                // Close dropdown when pressing escape
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape') {
+                        userDropdown.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Auto-hide alerts after 5 seconds
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    alert.style.transition = 'opacity 0.5s';
+                    alert.style.opacity = '0';
+                    setTimeout(() => alert.remove(), 500);
+                });
+            }, 5000);
+        });
+    </script>
+</body>
+</html>

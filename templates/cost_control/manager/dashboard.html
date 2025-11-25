@@ -1,17 +1,11 @@
-{% extends "base.html" %}
+{% extends "cost_control/base.html" %}
 
 {% block title %}Cost Control Manager - Dashboard{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
     <!-- Breadcrumb Navigation -->
-    <nav class="mb-6 text-sm text-gray-600">
-        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Home</a>
-        <span class="mx-2">/</span>
-        <span class="text-gray-900 font-semibold">Cost Control Manager</span>
-        <span class="mx-2">/</span>
-        <span class="text-gray-900">Dashboard</span>
-    </nav>
+   
 
     <!-- Page Header -->
     <div class="mb-8">
@@ -20,37 +14,7 @@
     </div>
 
     <!-- Quick Navigation Bar -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cost_tracking') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                <i class="fas fa-clipboard-list mr-2"></i>Cost Tracking
-            </a>
-            <a href="{{ url_for('cost_control_mgr.variance_analysis') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                <i class="fas fa-chart-line mr-2"></i>Variance Analysis
-            </a>
-            <a href="{{ url_for('cost_control_mgr.budget_adjustments') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                <i class="fas fa-adjust mr-2"></i>Budget Adjustments
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cash_flow') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                <i class="fas fa-money-bill-wave mr-2"></i>Cash Flow
-            </a>
-            <a href="{{ url_for('cost_control_mgr.approvals') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition relative">
-                <i class="fas fa-check-circle mr-2"></i>Approvals
-                {% if kpis.pending_approvals > 0 %}
-                <span class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">{{ kpis.pending_approvals }}</span>
-                {% endif %}
-            </a>
-            <a href="{{ url_for('cost_control_mgr.expenditure_reports') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                <i class="fas fa-receipt mr-2"></i>Expenditures
-            </a>
-            <a href="{{ url_for('cost_control_mgr.reports') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">
-                <i class="fas fa-file-alt mr-2"></i>Reports
-            </a>
-        </div>
-    </div>
+  
 
     <!-- KPI Cards -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -143,10 +107,10 @@
                     <i class="fas fa-balance-scale text-gray-600"></i>
                 </div>
             </div>
-            <div class="text-3xl font-bold {% if kpis.total_variance < 0 %}text-green-600{% else %}text-red-600{% endif %}">
-                ₦{{ "{:,.0f}".format(kpis.total_variance|abs) }}
+            <div class="text-3xl font-bold {% if kpis.total_variance and kpis.total_variance < 0 %}text-green-600{% elif kpis.total_variance and kpis.total_variance > 0 %}text-red-600{% else %}text-gray-600{% endif %}">
+                ₦{{ "{:,.0f}".format((kpis.total_variance or 0)|abs) }}
             </div>
-            <div class="text-sm text-gray-600 mt-2">{{ kpis.variance_entries }} entries</div>
+            <div class="text-sm text-gray-600 mt-2">{{ kpis.variance_entries or 0 }} entries</div>
         </div>
     </div>
 
@@ -219,6 +183,7 @@
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-200">
+                    {% if recent_entries %}
                     {% for entry in recent_entries %}
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
@@ -240,16 +205,26 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            {% if entry.approval_status == 'approved' %}
+                            {% if entry.status == 'approved' %}
                             <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Approved</span>
-                            {% elif entry.approval_status == 'pending' %}
+                            {% elif entry.status == 'pending' %}
                             <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Pending</span>
+                            {% elif entry.status == 'rejected' %}
+                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Rejected</span>
                             {% else %}
-                            <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">{{ entry.approval_status }}</span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">{{ entry.status|capitalize }}</span>
                             {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-8 text-center text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-2"></i>
+                            <p>No cost entries found. Start tracking project costs to see data here.</p>
+                        </td>
+                    </tr>
+                    {% endif %}
                 </tbody>
             </table>
         </div>

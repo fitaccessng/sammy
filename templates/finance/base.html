@@ -68,6 +68,19 @@
                     </a>
                 </div>
 
+                <!-- Approvals -->
+                <div class="space-y-2">
+                    <h2 class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Approvals</h2>
+                    <a href="{{ url_for('finance.cost_approvals') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-dollar-sign text-xl'></i>
+                        <span>Budget Adjustments</span>
+                    </a>
+                    <a href="{{ url_for('finance.purchase_order_approvals') }}" class="flex items-center space-x-2 text-gray-300 hover:text-white hover:bg-blue-700 p-2 rounded">
+                        <i class='fas fa-check-circle text-xl'></i>
+                        <span>PO Approvals</span>
+                    </a>
+                </div>
+
                 <!-- Transactions & Records -->
                 <div class="space-y-2">
                     <h2 class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Transactions & Records</h2>
@@ -128,9 +141,9 @@
                 <div class="flex items-center justify-between px-6 py-4">
                     <h1 class="text-xl font-semibold text-gray-800">{% block header %}Dashboard{% endblock %}</h1>
                     <div class="flex items-center space-x-4">
-                        <button class="text-gray-500 hover:text-gray-700">
-                            <i class='fas fa-bell text-xl'></i>
-                        </button>
+                        <!-- Notification Center -->
+                        {% include 'components/notification_center.html' %}
+                        
                         <div class="relative">
                             <button id="userMenuBtn" class="flex items-center space-x-2">
                                 <img src="https://ui-avatars.com/api/?name=Finance&background=0D8ABC&color=fff" 

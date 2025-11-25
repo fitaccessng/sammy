@@ -1,0 +1,276 @@
+{% extends "cost_control/base.html" %}
+
+{% block title %}Purchase Order Approvals - Cost Control{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Purchase Order Approvals</h1>
+            <nav class="text-sm breadcrumbs">
+                <a href="{{ url_for('main_home') }}" class="text-blue-600 hover:text-blue-800">Home</a>
+                <span class="mx-2">/</span>
+                <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="text-blue-600 hover:text-blue-800">Cost Control</a>
+                <span class="mx-2">/</span>
+                <span class="text-gray-600">PO Approvals</span>
+            </nav>
+        </div>
+        <div class="bg-blue-100 px-4 py-2 rounded-lg">
+            <span class="text-sm text-blue-800 font-semibold">Pending: {{ workflows|length }}</span>
+        </div>
+    </div>
+
+    {% if workflows %}
+    <!-- Purchase Orders List -->
+    <div class="grid gap-6">
+        {% for item in workflows %}
+        <div class="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+            <div class="p-6">
+                <!-- Header -->
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h3 class="text-xl font-bold text-gray-800">{{ item.po.order_number }}</h3>
+                            <span class="px-3 py-1 text-xs font-semibold rounded-full
+                                {% if item.workflow.priority == 'urgent' %}bg-red-100 text-red-800
+                                {% elif item.workflow.priority == 'high' %}bg-orange-100 text-orange-800
+                                {% else %}bg-green-100 text-green-800{% endif %}">
+                                {{ item.workflow.priority|upper }}
+                            </span>
+                        </div>
+                        <p class="text-gray-600">{{ item.po.supplier_name }}</p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-2xl font-bold text-blue-600">₦{{ "{:,.2f}".format(item.po.total_amount) }}</div>
+                        <div class="text-sm text-gray-500">{{ item.workflow.initiated_at.strftime('%b %d, %Y') }}</div>
+                    </div>
+                </div>
+
+                <!-- Details -->
+                <div class="grid md:grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                    <div>
+                        <span class="text-sm font-semibold text-gray-700">Description:</span>
+                        <p class="text-gray-600">{{ item.po.description or 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm font-semibold text-gray-700">Expected Delivery:</span>
+                        <p class="text-gray-600">{{ item.po.expected_delivery.strftime('%b %d, %Y') if item.po.expected_delivery else 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm font-semibold text-gray-700">Project:</span>
+                        <p class="text-gray-600">{{ item.po.project.name if item.po.project else 'N/A' }}</p>
+                    </div>
+                    <div>
+                        <span class="text-sm font-semibold text-gray-700">Requested By:</span>
+                        <p class="text-gray-600">{{ item.po.requested_by_employee.name if item.po.requested_by_employee else 'N/A' }}</p>
+                    </div>
+                </div>
+
+                <!-- Line Items -->
+                <div class="mb-4">
+                    <button type="button" onclick="toggleItems('items-{{ item.po.id }}')" 
+                            class="text-blue-600 hover:text-blue-800 font-semibold text-sm flex items-center gap-2">
+                        <i class='bx bx-chevron-down'></i>
+                        View Items ({{ item.line_items|length }})
+                    </button>
+                    <div id="items-{{ item.po.id }}" class="hidden mt-3 overflow-x-auto">
+                        <table class="min-w-full bg-white border rounded-lg">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Item</th>
+                                    <th class="px-4 py-2 text-left text-xs font-semibold text-gray-700">Description</th>
+                                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Quantity</th>
+                                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Unit Price</th>
+                                    <th class="px-4 py-2 text-right text-xs font-semibold text-gray-700">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for line in item.line_items %}
+                                <tr class="border-t">
+                                    <td class="px-4 py-2">{{ line.item_name }}</td>
+                                    <td class="px-4 py-2 text-gray-600">{{ line.description or '-' }}</td>
+                                    <td class="px-4 py-2 text-right">{{ line.quantity }} {{ line.unit }}</td>
+                                    <td class="px-4 py-2 text-right">₦{{ "{:,.2f}".format(line.unit_price) }}</td>
+                                    <td class="px-4 py-2 text-right font-semibold">₦{{ "{:,.2f}".format(line.line_total) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Approval Form -->
+                <form action="{{ url_for('cost_control_mgr.approve_purchase_order', po_id=item.po.id) }}" method="POST" class="border-t pt-4">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Comments</label>
+                        <textarea name="comments" rows="2" 
+                                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  placeholder="Add your comments here..."></textarea>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button type="button" onclick="viewPODetails({{ item.po.id }})"
+                                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <i class='bx bx-show text-xl'></i>
+                            View Details
+                        </button>
+                        <button type="submit" name="action" value="approve"
+                                class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <i class='bx bx-check-circle text-xl'></i>
+                            Approve
+                        </button>
+                        <button type="submit" name="action" value="reject"
+                                onclick="return confirm('Are you sure you want to reject this purchase order?')"
+                                class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition-colors flex items-center justify-center gap-2">
+                            <i class='bx bx-x-circle text-xl'></i>
+                            Reject
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-white rounded-lg shadow-md p-12 text-center">
+        <i class='bx bx-check-circle text-6xl text-green-500 mb-4'></i>
+        <h3 class="text-xl font-bold text-gray-800 mb-2">All Caught Up!</h3>
+        <p class="text-gray-600">There are no purchase orders pending your approval at this time.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- PO Details Modal -->
+<div id="poDetailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4 border-b pb-3">
+            <h3 class="text-2xl font-bold text-gray-900" id="modalPONumber">Purchase Order Details</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
+                <i class='bx bx-x text-3xl'></i>
+            </button>
+        </div>
+        
+        <div id="modalContent" class="space-y-4">
+            <!-- Content will be loaded dynamically -->
+            <div class="text-center py-8">
+                <i class='bx bx-loader-alt bx-spin text-4xl text-blue-600'></i>
+                <p class="mt-2 text-gray-600">Loading details...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleItems(id) {
+    const element = document.getElementById(id);
+    element.classList.toggle('hidden');
+}
+
+function viewPODetails(poId) {
+    const modal = document.getElementById('poDetailsModal');
+    const modalContent = document.getElementById('modalContent');
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    
+    // Fetch PO details
+    fetch(`/procurement/purchases/${poId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const po = data.po;
+                document.getElementById('modalPONumber').textContent = po.po_number;
+                
+                modalContent.innerHTML = `
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Supplier</p>
+                            <p class="font-semibold text-gray-800">${po.supplier}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Total Amount</p>
+                            <p class="font-semibold text-blue-600 text-xl">₦${parseFloat(po.total_amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Status</p>
+                            <p class="font-semibold text-gray-800">${po.status.replace(/_/g, ' ')}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Expected Delivery</p>
+                            <p class="font-semibold text-gray-800">${po.expected_delivery || 'N/A'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Line Items</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Item</th>
+                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Quantity</th>
+                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Unit Price</th>
+                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${po.items.map(item => `
+                                        <tr class="border-b">
+                                            <td class="px-4 py-3 text-gray-800">${item.item}</td>
+                                            <td class="px-4 py-3 text-right text-gray-800">${item.quantity}</td>
+                                            <td class="px-4 py-3 text-right text-gray-800">₦${parseFloat(item.unitPrice).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                            <td class="px-4 py-3 text-right font-semibold text-gray-800">₦${parseFloat(item.subtotal).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                                <tfoot class="bg-gray-50">
+                                    <tr>
+                                        <td colspan="3" class="px-4 py-3 text-right font-bold text-gray-800">Total:</td>
+                                        <td class="px-4 py-3 text-right font-bold text-blue-600">₦${parseFloat(po.total_amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-blue-50 border-l-4 border-blue-600 p-4 rounded">
+                        <p class="text-sm font-semibold text-blue-800 mb-1">Cost Control Review</p>
+                        <p class="text-sm text-blue-700">Please review the purchase order details above and provide your approval or rejection decision below.</p>
+                    </div>
+                `;
+            } else {
+                modalContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class='bx bx-error text-4xl text-red-600'></i>
+                        <p class="mt-2 text-gray-600">Error loading purchase order details</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            modalContent.innerHTML = `
+                <div class="text-center py-8">
+                    <i class='bx bx-error text-4xl text-red-600'></i>
+                    <p class="mt-2 text-gray-600">Error loading purchase order details</p>
+                </div>
+            `;
+        });
+}
+
+function closeModal() {
+    document.getElementById('poDetailsModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('poDetailsModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

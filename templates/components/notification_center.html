@@ -1,0 +1,262 @@
+<!-- Notification Center Component -->
+<div class="relative" id="notificationCenter">
+    <!-- Notification Bell Button -->
+    <button onclick="toggleNotifications()" class="relative p-2 text-gray-600 hover:text-blue-600 transition-colors rounded-lg hover:bg-gray-100">
+        <i class='bx bx-bell text-2xl'></i>
+        <!-- Unread Badge -->
+        <span id="notificationBadge" class="hidden absolute top-0 right-0 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+            0
+        </span>
+    </button>
+
+    <!-- Notification Dropdown -->
+    <div id="notificationDropdown" class="hidden absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-50">
+        <!-- Header -->
+        <div class="px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="font-semibold text-gray-800">Notifications</h3>
+            <button onclick="markAllAsRead()" class="text-sm text-blue-600 hover:text-blue-800">
+                Mark all as read
+            </button>
+        </div>
+
+        <!-- Notification List -->
+        <div id="notificationList" class="max-h-96 overflow-y-auto">
+            <!-- Loading State -->
+            <div id="notificationsLoading" class="text-center py-8">
+                <i class='bx bx-loader-alt bx-spin text-3xl text-blue-500'></i>
+            </div>
+
+            <!-- Empty State (hidden by default) -->
+            <div id="notificationsEmpty" class="hidden text-center py-8 text-gray-500">
+                <i class='bx bx-bell-off text-4xl mb-2'></i>
+                <p>No notifications</p>
+            </div>
+
+            <!-- Notifications Container -->
+            <div id="notificationsContainer"></div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-4 py-3 border-t border-gray-200 text-center">
+            <a href="{{ url_for('notifications_page') }}" class="text-sm text-blue-600 hover:text-blue-800 font-semibold">
+                View all notifications →
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+#notificationCenter .notification-item {
+    transition: background-color 0.2s;
+}
+
+#notificationCenter .notification-item:hover {
+    background-color: #f3f4f6;
+}
+
+#notificationCenter .notification-item.unread {
+    background-color: #eff6ff;
+}
+
+#notificationCenter .notification-priority-urgent {
+    border-left: 3px solid #ef4444;
+}
+
+#notificationCenter .notification-priority-high {
+    border-left: 3px solid #f97316;
+}
+
+#notificationCenter .notification-priority-normal {
+    border-left: 3px solid #3b82f6;
+}
+</style>
+
+<script>
+let notificationDropdownOpen = false;
+let notificationRefreshInterval = null;
+
+// Toggle notification dropdown
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    notificationDropdownOpen = !notificationDropdownOpen;
+    
+    if (notificationDropdownOpen) {
+        dropdown.classList.remove('hidden');
+        loadNotifications();
+    } else {
+        dropdown.classList.add('hidden');
+    }
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const notificationCenter = document.getElementById('notificationCenter');
+    if (notificationCenter && !notificationCenter.contains(event.target)) {
+        document.getElementById('notificationDropdown').classList.add('hidden');
+        notificationDropdownOpen = false;
+    }
+});
+
+// Load unread count
+function loadUnreadCount() {
+    fetch('/api/notifications/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const badge = document.getElementById('notificationBadge');
+                const count = data.unread_count;
+                
+                if (count > 0) {
+                    badge.textContent = count > 99 ? '99+' : count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        })
+        .catch(error => console.error('Error loading unread count:', error));
+}
+
+// Load notifications
+function loadNotifications(unreadOnly = false) {
+    const container = document.getElementById('notificationsContainer');
+    const loading = document.getElementById('notificationsLoading');
+    const empty = document.getElementById('notificationsEmpty');
+    
+    loading.classList.remove('hidden');
+    empty.classList.add('hidden');
+    container.innerHTML = '';
+    
+    const url = unreadOnly ? '/api/notifications?unread_only=true' : '/api/notifications';
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+            
+            if (data.success && data.notifications.length > 0) {
+                container.innerHTML = data.notifications.map(notif => createNotificationHTML(notif)).join('');
+            } else {
+                empty.classList.remove('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Error loading notifications:', error);
+            loading.classList.add('hidden');
+            empty.classList.remove('hidden');
+        });
+}
+
+// Create notification HTML
+function createNotificationHTML(notif) {
+    const timeAgo = getTimeAgo(new Date(notif.created_at));
+    const unreadClass = notif.is_read ? '' : 'unread';
+    const priorityClass = `notification-priority-${notif.priority}`;
+    const icon = getNotificationIcon(notif.notification_type);
+    
+    return `
+        <div class="notification-item ${unreadClass} ${priorityClass} px-4 py-3 border-b border-gray-100 cursor-pointer"
+             onclick="handleNotificationClick(${notif.id}, '${notif.action_url}')">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0 mt-1">
+                    <i class='${icon} text-xl ${notif.is_read ? 'text-gray-400' : 'text-blue-600'}'></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-gray-800 ${notif.is_read ? 'font-normal' : ''}">${notif.title}</p>
+                    <p class="text-xs text-gray-600 mt-1 line-clamp-2">${notif.message}</p>
+                    <p class="text-xs text-gray-500 mt-1">${timeAgo}</p>
+                </div>
+                ${!notif.is_read ? '<div class="flex-shrink-0"><div class="w-2 h-2 bg-blue-600 rounded-full"></div></div>' : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Get notification icon based on type
+function getNotificationIcon(type) {
+    const icons = {
+        'approval_request': 'bx bx-task',
+        'approval_approved': 'bx bx-check-circle',
+        'approval_rejected': 'bx bx-x-circle',
+        'workflow_completed': 'bx bx-badge-check',
+        'budget_alert': 'bx bx-dollar-circle',
+        'system': 'bx bx-info-circle',
+        'general': 'bx bx-bell'
+    };
+    return icons[type] || icons['general'];
+}
+
+// Get time ago string
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    
+    const intervals = {
+        year: 31536000,
+        month: 2592000,
+        week: 604800,
+        day: 86400,
+        hour: 3600,
+        minute: 60
+    };
+    
+    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+        const interval = Math.floor(seconds / secondsInUnit);
+        if (interval >= 1) {
+            return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
+        }
+    }
+    
+    return 'Just now';
+}
+
+// Handle notification click
+function handleNotificationClick(notificationId, actionUrl) {
+    // Mark as read
+    fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    }).then(() => {
+        loadUnreadCount();
+        if (actionUrl && actionUrl !== 'None' && actionUrl !== '') {
+            window.location.href = actionUrl;
+        }
+    });
+}
+
+// Mark all as read
+function markAllAsRead() {
+    fetch('/api/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadNotifications();
+            loadUnreadCount();
+        }
+    })
+    .catch(error => console.error('Error marking all as read:', error));
+}
+
+// Initialize notification center
+document.addEventListener('DOMContentLoaded', function() {
+    loadUnreadCount();
+    
+    // Refresh unread count every 30 seconds
+    notificationRefreshInterval = setInterval(loadUnreadCount, 30000);
+});
+
+// Clean up interval on page unload
+window.addEventListener('beforeunload', function() {
+    if (notificationRefreshInterval) {
+        clearInterval(notificationRefreshInterval);
+    }
+});
+</script>

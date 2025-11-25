@@ -21,6 +21,7 @@ from utils.decorators import role_required
 from utils.constants import Roles
 from utils.email import send_verification_email, send_email
 from utils.payroll_calculator import PayrollCalculator, PayrollBatch
+from utils.workflow import create_approval_workflow, send_approval_notification
 from models import *
 import pandas as pd
 from io import BytesIO
@@ -237,6 +238,158 @@ Construction Management Team
     def main_home():
         return render_template("index.html")
 
+
+    # ===== NOTIFICATION API ROUTES =====
+    
+    @app.route('/api/notifications', methods=['GET'], endpoint='api.get_notifications')
+    @login_required
+    def get_user_notifications():
+        """Get notifications for current user"""
+        from models import Notification
+        from utils.workflow import get_user_notifications
+        
+        try:
+            unread_only = request.args.get('unread_only', 'false').lower() == 'true'
+            limit = request.args.get('limit', 50, type=int)
+            
+            notifications = get_user_notifications(
+                user_id=current_user.id,
+                unread_only=unread_only,
+                limit=limit
+            )
+            
+            notifications_data = []
+            for notif in notifications:
+                notifications_data.append({
+                    'id': notif.id,
+                    'title': notif.title,
+                    'message': notif.message,
+                    'type': notif.notification_type,
+                    'is_read': notif.is_read,
+                    'action_url': notif.action_url,
+                    'priority': notif.priority,
+                    'created_at': notif.created_at.isoformat() if notif.created_at else None,
+                    'reference_type': notif.reference_type,
+                    'reference_id': notif.reference_id
+                })
+            
+            return jsonify({
+                'success': True,
+                'notifications': notifications_data,
+                'count': len(notifications_data)
+            })
+            
+        except Exception as e:
+            current_app.logger.error(f"Error fetching notifications: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    
+    @app.route('/api/notifications/unread-count', methods=['GET'], endpoint='api.unread_notification_count')
+    @login_required
+    def get_unread_notification_count():
+        """Get count of unread notifications"""
+        from models import Notification
+        
+        try:
+            count = Notification.query.filter_by(
+                user_id=current_user.id,
+                is_read=False
+            ).count()
+            
+            return jsonify({
+                'success': True,
+                'count': count
+            })
+            
+        except Exception as e:
+            current_app.logger.error(f"Error counting notifications: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    
+    @app.route('/api/notifications/<int:notification_id>/read', methods=['POST'], endpoint='api.mark_notification_read')
+    @login_required
+    def mark_notification_as_read(notification_id):
+        """Mark a notification as read"""
+        from utils.workflow import mark_notification_read
+        
+        try:
+            success = mark_notification_read(notification_id, current_user.id)
+            
+            if success:
+                return jsonify({'success': True, 'message': 'Notification marked as read'})
+            else:
+                return jsonify({'success': False, 'error': 'Notification not found or already read'}), 404
+                
+        except Exception as e:
+            current_app.logger.error(f"Error marking notification as read: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    
+    @app.route('/api/notifications/mark-all-read', methods=['POST'], endpoint='api.mark_all_notifications_read')
+    @login_required
+    def mark_all_notifications_as_read():
+        """Mark all notifications as read for current user"""
+        from utils.workflow import mark_all_notifications_read
+        
+        try:
+            count = mark_all_notifications_read(current_user.id)
+            
+            return jsonify({
+                'success': True,
+                'message': f'{count} notification(s) marked as read',
+                'count': count
+            })
+                
+        except Exception as e:
+            current_app.logger.error(f"Error marking all notifications as read: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+    
+    
+    @app.route('/notifications')
+    @login_required
+    def notifications_page():
+        """Display notifications page"""
+        return render_template('notifications.html')
+    
+    
+    @app.route('/api/pending-approvals', methods=['GET'], endpoint='api.pending_approvals')
+    @login_required
+    def get_pending_approvals():
+        """Get pending approvals for current user"""
+        from models import ApprovalWorkflow
+        from utils.workflow import get_pending_approvals_for_user
+        
+        try:
+            workflows = get_pending_approvals_for_user(current_user)
+            
+            approvals_data = []
+            for workflow in workflows:
+                approvals_data.append({
+                    'id': workflow.id,
+                    'workflow_type': workflow.workflow_type,
+                    'reference_number': workflow.reference_number,
+                    'reference_id': workflow.reference_id,
+                    'description': workflow.description,
+                    'total_amount': workflow.total_amount,
+                    'priority': workflow.priority,
+                    'current_stage': workflow.current_stage,
+                    'overall_status': workflow.overall_status,
+                    'initiated_at': workflow.initiated_at.isoformat() if workflow.initiated_at else None
+                })
+            
+            return jsonify({
+                'success': True,
+                'approvals': approvals_data,
+                'count': len(approvals_data)
+            })
+            
+        except Exception as e:
+            current_app.logger.error(f"Error fetching pending approvals: {str(e)}", exc_info=True)
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+
+    # ===== MAIN ROUTES =====
+
     @app.route('/signup', methods=['GET', 'POST'], endpoint='signup')
     def signup():
         try:
@@ -309,6 +462,7 @@ Construction Management Team
             Roles.HQ_FINANCE: 'finance.finance_home',
             Roles.HQ_HR: 'hr.hr_home',
             Roles.HQ_PROCUREMENT: 'procurement.procurement_home',
+            Roles.HQ_COST_CONTROL: 'cost_control_mgr.dashboard',
             Roles.QUARRY_MANAGER: 'quarry.quarry_home',
             Roles.PROJECT_MANAGER: 'project.project_home',
         # Staff Level Routes
@@ -318,7 +472,7 @@ Construction Management Team
             Roles.QUARRY_STAFF: 'quarry.staff_home',
             Roles.PROJECT_STAFF: 'project.staff_home'
         }
-        return dashboard_routes.get(role, 'main.home')
+        return dashboard_routes.get(role, 'main_home')
 
 # Login
     @app.route("/login", methods=["GET", "POST"], endpoint='login')
@@ -874,8 +1028,8 @@ Construction Management Team
                 'monthly_burn_rate': monthly_spend,
                 'pending_approvals': pending_approvals,
                 'pending_adjustments': pending_adjustments,
-                'total_variance': variance_data.total_variance if variance_data else 0,
-                'variance_entries': variance_data.entry_count if variance_data else 0
+                'total_variance': (variance_data.total_variance if variance_data and variance_data.total_variance else 0),
+                'variance_entries': (variance_data.entry_count if variance_data and variance_data.entry_count else 0)
             },
             'budget_alerts': budget_alerts[:10],  # Top 10 alerts
             'recent_entries': recent_entries,
@@ -884,7 +1038,9 @@ Construction Management Team
             ],
             'spending_by_category': {
                 cat: float(amt) for cat, amt in spending_by_category
-            }
+            },
+            'pending_approvals_count': pending_approvals,
+            'notifications_count': pending_approvals + pending_adjustments
         }
         
         return render_template('cost_control/manager/dashboard.html', **dashboard_data)
@@ -893,19 +1049,32 @@ Construction Management Team
     @app.route('/cost-control/manager/cost-tracking', methods=['GET', 'POST'], endpoint='cost_control_mgr.cost_tracking')
     @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
     def cost_tracking():
-        """Add and view cost tracking entries"""
+        """Add and view cost tracking entries with budget updates"""
         if request.method == 'POST':
             try:
                 data = request.form
+                project_id = int(data.get('project_id'))
+                category_id = int(data.get('category_id')) if data.get('category_id') else None
+                actual_cost = float(data.get('actual_cost', 0))
+                
+                # Validate project exists
+                project = Project.query.get(project_id)
+                if not project:
+                    flash('Invalid project selected', 'error')
+                    return redirect(url_for('cost_control_mgr.cost_tracking'))
+                
+                # Get category to determine budget category
+                category = CostCategory.query.get(category_id) if category_id else None
+                budget_category = category.type if category else data.get('cost_type')
                 
                 # Create new cost tracking entry
                 entry = CostTrackingEntry(
-                    project_id=data.get('project_id'),
-                    category_id=data.get('category_id'),
+                    project_id=project_id,
+                    category_id=category_id,
                     entry_date=datetime.strptime(data.get('entry_date'), '%Y-%m-%d').date(),
                     description=data.get('description'),
                     planned_cost=float(data.get('planned_cost', 0)),
-                    actual_cost=float(data.get('actual_cost', 0)),
+                    actual_cost=actual_cost,
                     cost_type=data.get('cost_type'),
                     quantity=float(data.get('quantity', 0)) if data.get('quantity') else None,
                     unit=data.get('unit'),
@@ -916,12 +1085,18 @@ Construction Management Team
                 # Calculate variance
                 entry.calculate_variance()
                 
+                # Add entry first to get ID
+                db.session.add(entry)
+                
                 # Check if approval required (variance > 10%)
                 if abs(entry.variance_percentage) > 10:
                     entry.requires_approval = True
-                    entry.approval_status = 'pending'
+                    entry.status = 'pending'
                     
-                    # Create approval request
+                    # Flush to get entry.id before creating approval
+                    db.session.flush()
+                    
+                    # Create approval request (now entry.id exists)
                     approval = CostApproval(
                         reference_type='cost_entry',
                         reference_id=entry.id,
@@ -932,16 +1107,75 @@ Construction Management Team
                         created_by=current_user.id
                     )
                     db.session.add(approval)
+                    
+                    # Notify Cost Control managers about the approval request
+                    cost_control_users = User.query.filter(
+                        User.role.in_([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+                    ).all()
+                    
+                    for user in cost_control_users:
+                        notification = Notification(
+                            user_id=user.id,
+                            title='Cost Entry Approval Required',
+                            message=f'High variance cost entry requires approval: {entry.description} ({entry.variance_percentage:.1f}% variance)',
+                            notification_type='approval_required',
+                            reference_type='cost_approval',
+                            reference_id=approval.id
+                        )
+                        db.session.add(notification)
+                    
+                    flash(f'Cost entry created with {entry.variance_percentage:.1f}% variance. Approval required.', 'warning')
+                else:
+                    entry.status = 'approved'
+                    flash('Cost entry added successfully', 'success')
                 
-                db.session.add(entry)
+                # Update budget spent_amount
+                budget = Budget.query.filter_by(
+                    project_id=project_id,
+                    category=budget_category
+                ).first()
+                
+                if budget:
+                    budget.spent_amount += actual_cost
+                    budget.updated_at = datetime.now(timezone.utc)
+                    
+                    # Check if budget is exceeded
+                    if budget.spent_amount > budget.allocated_amount:
+                        overage = budget.spent_amount - budget.allocated_amount
+                        flash(f'Warning: Budget exceeded by {overage:.2f} for {budget_category}', 'warning')
+                        
+                        # Log audit
+                        current_app.logger.warning(
+                            f"Budget exceeded - Project: {project.name}, Category: {budget_category}, "
+                            f"Overage: {overage:.2f}, Entry: {entry.id}, User: {current_user.id}"
+                        )
+                else:
+                    # Create new budget entry if it doesn't exist
+                    budget = Budget(
+                        project_id=project_id,
+                        category=budget_category,
+                        allocated_amount=0.0,  # Will need to be set by admin
+                        spent_amount=actual_cost,
+                        status='active',
+                        fiscal_year=datetime.now().year
+                    )
+                    db.session.add(budget)
+                    flash(f'Note: No budget exists for {budget_category}. Budget tracking created.', 'info')
+                
+                # Log audit trail
+                current_app.logger.info(
+                    f"Cost entry created - Project: {project.name}, Category: {budget_category}, "
+                    f"Amount: {actual_cost}, Variance: {entry.variance_percentage:.1f}%, User: {current_user.id}"
+                )
+                
                 db.session.commit()
-                
-                flash('Cost entry added successfully', 'success')
                 return redirect(url_for('cost_control_mgr.cost_tracking'))
                 
             except Exception as e:
                 db.session.rollback()
+                current_app.logger.error(f"Error adding cost entry: {str(e)}\n{traceback.format_exc()}")
                 flash(f'Error adding cost entry: {str(e)}', 'error')
+                return redirect(url_for('cost_control_mgr.cost_tracking'))
         
         # GET request - show all entries with filters
         project_id = request.args.get('project_id', type=int)
@@ -964,12 +1198,52 @@ Construction Management Team
         
         # Get projects and categories for dropdowns
         projects = Project.query.filter_by(status='In Progress').all()
+        
+        # Get all categories (will be filtered by project in frontend via AJAX)
         categories = CostCategory.query.all()
+        
+        # Get budget summary for context
+        budget_summary = {}
+        if project_id:
+            budgets = Budget.query.filter_by(project_id=project_id).all()
+            for budget in budgets:
+                budget_summary[budget.category] = {
+                    'allocated': budget.allocated_amount,
+                    'spent': budget.spent_amount,
+                    'remaining': budget.remaining_amount,
+                    'usage_percentage': budget.usage_percentage
+                }
         
         return render_template('cost_control/manager/cost_tracking.html',
                              entries=entries,
                              projects=projects,
-                             categories=categories)
+                             categories=categories,
+                             budget_summary=budget_summary,
+                             selected_project_id=project_id)
+    
+    
+    @app.route('/cost-control/manager/api/categories/<int:project_id>', endpoint='cost_control_mgr.get_project_categories')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ, Roles.PROJECT_MANAGER])
+    def get_project_categories(project_id):
+        """API endpoint to fetch categories for a specific project"""
+        try:
+            categories = CostCategory.query.filter_by(project_id=project_id).all()
+            return jsonify({
+                'success': True,
+                'categories': [
+                    {
+                        'id': cat.id,
+                        'name': cat.name,
+                        'type': cat.type
+                    }
+                    for cat in categories
+                ]
+            })
+        except Exception as e:
+            return jsonify({
+                'success': False,
+                'message': str(e)
+            }), 500
     
     
     @app.route('/cost-control/manager/variance-analysis', endpoint='cost_control_mgr.variance_analysis')
@@ -1091,6 +1365,7 @@ Construction Management Team
                 )
                 
                 db.session.add(adjustment)
+                db.session.flush()  # Flush to get the adjustment.id before creating approval
                 
                 # Create approval workflow
                 approval = CostApproval(
@@ -1104,8 +1379,24 @@ Construction Management Team
                 )
                 db.session.add(approval)
                 
+                # Notify Finance users about budget adjustment request
+                finance_users = User.query.filter(
+                    User.role.in_([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+                ).all()
+                
+                for user in finance_users:
+                    notification = Notification(
+                        user_id=user.id,
+                        title='Budget Adjustment Approval Required',
+                        message=f'Budget adjustment request: {budget.category} - {adjustment.adjustment_type} of ₦{abs(adjustment_amount):,.2f}',
+                        notification_type='approval_required',
+                        reference_type='cost_approval',
+                        reference_id=approval.id
+                    )
+                    db.session.add(notification)
+                
                 db.session.commit()
-                flash('Budget adjustment request submitted successfully', 'success')
+                flash('Budget adjustment request submitted to Finance for approval', 'success')
                 
             except Exception as e:
                 db.session.rollback()
@@ -1269,9 +1560,50 @@ Construction Management Team
                 if approval.reference_type == 'cost_entry':
                     entry = CostTrackingEntry.query.get(approval.reference_id)
                     if entry:
-                        entry.approval_status = 'approved'
+                        entry.status = 'approved'
                         entry.approved_by = current_user.id
                         entry.approved_at = datetime.now(timezone.utc)
+                        
+                        # Notify the creator
+                        creator = User.query.get(entry.created_by)
+                        if creator:
+                            notification = Notification(
+                                user_id=creator.id,
+                                title='Cost Entry Approved',
+                                message=f'Your cost entry has been approved: {entry.description}',
+                                notification_type='approval_update',
+                                reference_type='cost_entry',
+                                reference_id=entry.id
+                            )
+                            db.session.add(notification)
+                
+                # Update budget if it's a budget adjustment
+                elif approval.reference_type == 'budget_adjustment':
+                    adjustment = BudgetAdjustment.query.get(approval.reference_id)
+                    if adjustment:
+                        adjustment.status = 'approved'
+                        adjustment.approved_by = current_user.id
+                        adjustment.approved_at = datetime.now(timezone.utc)
+                        adjustment.approval_comments = comments
+                        
+                        # Update the actual budget
+                        budget = Budget.query.get(adjustment.budget_id)
+                        if budget:
+                            budget.allocated_amount = adjustment.new_amount
+                            budget.updated_at = datetime.now(timezone.utc)
+                        
+                        # Notify the requester
+                        requester = User.query.get(adjustment.requested_by)
+                        if requester:
+                            notification = Notification(
+                                user_id=requester.id,
+                                title='Budget Adjustment Approved',
+                                message=f'Budget adjustment approved: {adjustment.category} - New amount: ₦{adjustment.new_amount:,.2f}',
+                                notification_type='approval_update',
+                                reference_type='budget_adjustment',
+                                reference_id=adjustment.id
+                            )
+                            db.session.add(notification)
                 
                 flash('Approval processed successfully', 'success')
                 
@@ -1286,8 +1618,40 @@ Construction Management Team
                 if approval.reference_type == 'cost_entry':
                     entry = CostTrackingEntry.query.get(approval.reference_id)
                     if entry:
-                        entry.approval_status = 'rejected'
-                        entry.rejection_reason = comments
+                        entry.status = 'rejected'
+                        
+                        # Notify the creator
+                        creator = User.query.get(entry.created_by)
+                        if creator:
+                            notification = Notification(
+                                user_id=creator.id,
+                                title='Cost Entry Rejected',
+                                message=f'Your cost entry was rejected: {entry.description}. Reason: {comments}',
+                                notification_type='approval_update',
+                                reference_type='cost_entry',
+                                reference_id=entry.id
+                            )
+                            db.session.add(notification)
+                
+                # Update budget adjustment status
+                elif approval.reference_type == 'budget_adjustment':
+                    adjustment = BudgetAdjustment.query.get(approval.reference_id)
+                    if adjustment:
+                        adjustment.status = 'rejected'
+                        adjustment.approval_comments = comments
+                        
+                        # Notify the requester
+                        requester = User.query.get(adjustment.requested_by)
+                        if requester:
+                            notification = Notification(
+                                user_id=requester.id,
+                                title='Budget Adjustment Rejected',
+                                message=f'Budget adjustment rejected: {adjustment.category}. Reason: {comments}',
+                                notification_type='approval_update',
+                                reference_type='budget_adjustment',
+                                reference_id=adjustment.id
+                            )
+                            db.session.add(notification)
                 
                 flash('Approval rejected', 'info')
                 
@@ -1346,65 +1710,208 @@ Construction Management Team
                              approvals=enriched_approvals)
     
     
+    @app.route('/cost-control/manager/purchase-order-approvals', methods=['GET'], endpoint='cost_control_mgr.purchase_order_approvals')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+    def cost_control_purchase_order_approvals():
+        """View pending purchase orders for Cost Control approval"""
+        from models import ApprovalWorkflow, WorkflowStep
+        from utils.workflow import get_pending_approvals_for_user
+        
+        # Get workflows pending Cost Control approval
+        pending_workflows = get_pending_approvals_for_user(current_user)
+        
+        # Filter for purchase orders only
+        po_workflows = [w for w in pending_workflows if w.workflow_type == 'purchase_order']
+        
+        # Enrich with PO details
+        enriched_workflows = []
+        for workflow in po_workflows:
+            po = PurchaseOrder.query.get(workflow.reference_id)
+            if po:
+                # Get current step
+                current_step = WorkflowStep.query.filter_by(
+                    workflow_id=workflow.id,
+                    required_role=current_user.role,
+                    status='pending'
+                ).first()
+                
+                enriched_workflows.append({
+                    'workflow': workflow,
+                    'po': po,
+                    'current_step': current_step,
+                    'line_items': po.line_items
+                })
+        
+        return render_template('cost_control/manager/purchase_order_approvals.html',
+                             workflows=enriched_workflows)
+    
+    
+    @app.route('/cost-control/manager/purchase-orders/<int:po_id>/approve', methods=['POST'], endpoint='cost_control_mgr.approve_purchase_order')
+    @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
+    def cost_control_approve_purchase_order(po_id):
+        """Approve or reject purchase order at Cost Control stage"""
+        from models import ApprovalWorkflow, WorkflowStep
+        from utils.workflow import approve_workflow_step, reject_workflow_step, log_audit as workflow_log_audit
+        
+        try:
+            po = PurchaseOrder.query.get_or_404(po_id)
+            
+            if not po.workflow_id:
+                flash('Purchase order does not have an approval workflow', 'error')
+                return redirect(url_for('cost_control_mgr.purchase_order_approvals'))
+            
+            action = request.form.get('action')
+            comments = request.form.get('comments', '').strip()
+            
+            workflow = ApprovalWorkflow.query.get(po.workflow_id)
+            if not workflow:
+                flash('Workflow not found', 'error')
+                return redirect(url_for('cost_control_mgr.purchase_order_approvals'))
+            
+            # Get current step
+            current_step = WorkflowStep.query.filter_by(
+                workflow_id=workflow.id,
+                required_role=current_user.role,
+                status='pending'
+            ).first()
+            
+            if not current_step:
+                flash('No pending approval step found', 'error')
+                return redirect(url_for('cost_control_mgr.purchase_order_approvals'))
+            
+            if action == 'approve':
+                # Approve workflow step
+                success, message, next_step = approve_workflow_step(
+                    workflow_id=workflow.id,
+                    step_order=current_step.step_order,
+                    approver_id=current_user.id,
+                    comments=comments
+                )
+                
+                if success:
+                    # Update PO details
+                    po.cost_control_approved_by = current_user.id
+                    po.cost_control_approved_at = datetime.now(timezone.utc)
+                    po.cost_control_comments = comments
+                    
+                    if next_step:
+                        # Moving to Finance approval
+                        po.status = 'Pending_Finance'
+                    else:
+                        # Final approval
+                        po.status = 'Approved'
+                        po.approval_date = datetime.now(timezone.utc)
+                    
+                    db.session.commit()
+                    flash(message, 'success')
+                else:
+                    flash(message, 'error')
+                    
+            elif action == 'reject':
+                if not comments:
+                    flash('Rejection reason is required', 'error')
+                    return redirect(url_for('cost_control_mgr.purchase_order_approvals'))
+                
+                # Reject workflow
+                success, message = reject_workflow_step(
+                    workflow_id=workflow.id,
+                    step_order=current_step.step_order,
+                    rejector_id=current_user.id,
+                    comments=comments
+                )
+                
+                if success:
+                    # Update PO status
+                    po.status = 'Rejected'
+                    po.notes = (po.notes or '') + f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M')}] Cost Control Rejected: {comments}"
+                    
+                    db.session.commit()
+                    flash(message, 'info')
+                else:
+                    flash(message, 'error')
+            
+            return redirect(url_for('cost_control_mgr.purchase_order_approvals'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error processing PO approval: {str(e)}", exc_info=True)
+            flash(f'Error processing approval: {str(e)}', 'error')
+            return redirect(url_for('cost_control_mgr.purchase_order_approvals'))
+    
+    
     @app.route('/cost-control/manager/expenditure-reports', endpoint='cost_control_mgr.expenditure_reports')
     @role_required([Roles.HQ_COST_CONTROL, Roles.SUPER_HQ])
     def expenditure_reports():
-        """Detailed expenditure reports by category"""
+        """Detailed expenditure reports by category using cost tracking entries"""
         from sqlalchemy import func
         
         project_id = request.args.get('project_id', type=int)
         date_from = request.args.get('date_from')
         date_to = request.args.get('date_to')
-        category = request.args.get('category')
+        cost_type = request.args.get('cost_type')
         
-        query = ExpenditureLog.query
+        query = CostTrackingEntry.query
         
         if project_id:
             query = query.filter_by(project_id=project_id)
-        if category:
-            query = query.filter_by(category=category)
+        if cost_type:
+            query = query.filter_by(cost_type=cost_type)
         if date_from:
-            query = query.filter(ExpenditureLog.transaction_date >= date_from)
+            query = query.filter(CostTrackingEntry.entry_date >= date_from)
         if date_to:
-            query = query.filter(ExpenditureLog.transaction_date <= date_to)
+            query = query.filter(CostTrackingEntry.entry_date <= date_to)
         
-        expenditures = query.order_by(ExpenditureLog.transaction_date.desc()).all()
+        expenditures = query.order_by(CostTrackingEntry.entry_date.desc()).all()
         
-        # Summary by category
-        category_summary = db.session.query(
-            ExpenditureLog.category,
-            func.sum(ExpenditureLog.amount).label('total'),
-            func.count(ExpenditureLog.id).label('count')
+        # Summary by cost type
+        type_summary = db.session.query(
+            CostTrackingEntry.cost_type,
+            func.sum(CostTrackingEntry.actual_cost).label('total'),
+            func.count(CostTrackingEntry.id).label('count')
         )
         
         if project_id:
-            category_summary = category_summary.filter_by(project_id=project_id)
+            type_summary = type_summary.filter_by(project_id=project_id)
+        if date_from:
+            type_summary = type_summary.filter(CostTrackingEntry.entry_date >= date_from)
+        if date_to:
+            type_summary = type_summary.filter(CostTrackingEntry.entry_date <= date_to)
         
-        category_summary = category_summary.group_by(ExpenditureLog.category).all()
+        type_summary = type_summary.group_by(CostTrackingEntry.cost_type).all()
         
-        # Summary by vendor
-        vendor_summary = db.session.query(
-            Vendor.name,
-            func.sum(ExpenditureLog.amount).label('total'),
-            func.count(ExpenditureLog.id).label('count')
-        ).join(
-            ExpenditureLog, Vendor.id == ExpenditureLog.vendor_id
-        )
+        # Summary by project
+        project_summary = db.session.query(
+            Project.name,
+            func.sum(CostTrackingEntry.actual_cost).label('total'),
+            func.count(CostTrackingEntry.id).label('count')
+        ).join(Project, Project.id == CostTrackingEntry.project_id)
         
-        if project_id:
-            vendor_summary = vendor_summary.filter(ExpenditureLog.project_id == project_id)
+        if date_from:
+            project_summary = project_summary.filter(CostTrackingEntry.entry_date >= date_from)
+        if date_to:
+            project_summary = project_summary.filter(CostTrackingEntry.entry_date <= date_to)
         
-        vendor_summary = vendor_summary.group_by(Vendor.name).order_by(
-            func.sum(ExpenditureLog.amount).desc()
-        ).limit(10).all()
+        project_summary = project_summary.group_by(Project.name).order_by(
+            func.sum(CostTrackingEntry.actual_cost).desc()
+        ).all()
+        
+        # Calculate totals
+        total_expenditure = sum(e.actual_cost for e in expenditures)
+        total_planned = sum(e.planned_cost for e in expenditures)
+        total_variance = total_expenditure - total_planned
         
         projects = Project.query.filter_by(status='In Progress').all()
         
         return render_template('cost_control/manager/expenditure_reports.html',
                              expenditures=expenditures,
-                             category_summary=category_summary,
-                             vendor_summary=vendor_summary,
-                             projects=projects)
+                             type_summary=type_summary,
+                             project_summary=project_summary,
+                             projects=projects,
+                             total_expenditure=total_expenditure,
+                             total_planned=total_planned,
+                             total_variance=total_variance,
+                             selected_project_id=project_id,
+                             selected_cost_type=cost_type)
     
     
     @app.route('/cost-control/manager/reports', endpoint='cost_control_mgr.reports')
@@ -1459,8 +1966,8 @@ Construction Management Team
         
         # Efficiency metrics
         total_entries = CostTrackingEntry.query.count()
-        approved_count = CostTrackingEntry.query.filter_by(approval_status='approved').count()
-        pending_count = CostTrackingEntry.query.filter_by(approval_status='pending').count()
+        approved_count = CostTrackingEntry.query.filter_by(status='approved').count()
+        pending_count = CostTrackingEntry.query.filter_by(status='pending').count()
         
         return render_template('cost_control/manager/reports.html',
                              project_performance=project_performance,
@@ -4047,6 +4554,23 @@ FitAccess Finance Team
             current_app.logger.error(f"Analytics error: {str(e)}")
             flash("Error loading analytics", "error")
             return render_template('error.html'), 500
+    @app.route('/procurement/my-approvals', endpoint='procurement.my_approvals')
+    @role_required([Roles.HQ_PROCUREMENT])
+    def my_approvals():
+        """View all purchase orders submitted by current user with approval status"""
+        try:
+            # Get all POs submitted by current user
+            purchase_orders = PurchaseOrder.query.filter_by(
+                requested_by=current_user.id
+            ).order_by(PurchaseOrder.created_at.desc()).all()
+            
+            return render_template('procurement/my_approvals.html', 
+                                 purchase_orders=purchase_orders)
+        except Exception as e:
+            current_app.logger.error(f"My approvals error: {str(e)}", exc_info=True)
+            flash("Error loading approval status", "error")
+            return redirect(url_for('procurement.procurement_home'))
+
     @app.route('/procurement/purchases', endpoint='procurement.purchases')
     @role_required([Roles.HQ_PROCUREMENT])
     def purchases():
@@ -4123,7 +4647,8 @@ FitAccess Finance Team
                 supplier_contact=vendor.name if vendor else '',
                 expected_delivery=datetime.strptime(data['delivery_date'], '%Y-%m-%d').date(),
                 total_amount=data['total_amount'],
-                status='Draft'
+                status='Draft',
+                requested_by=current_user.id  # Link PO to current user
             )
             db.session.add(po)
             db.session.flush()  # Get the PO id
@@ -4138,6 +4663,28 @@ FitAccess Finance Team
                     line_total=item['subtotal']
                 )
                 db.session.add(po_item)
+            
+            # Create approval workflow and send to Cost Control
+            workflow = create_approval_workflow(
+                workflow_type='purchase_order',
+                reference_id=po.id,
+                reference_number=po.order_number,
+                initiated_by=current_user.id,
+                total_amount=po.total_amount,
+                description=f"Purchase Order from {po.supplier_name}",
+                priority='normal'
+            )
+            
+            # Link workflow to PO
+            po.workflow_id = workflow.id
+            po.status = 'Pending_Cost_Control'
+            
+            # Send notification to Cost Control (step 1)
+            send_approval_notification(
+                workflow_id=workflow.id,
+                step_order=1,
+                action='request'
+            )
             
             db.session.commit()
             
@@ -4160,7 +4707,7 @@ FitAccess Finance Team
             return jsonify({'success': False, 'error': str(e)}), 500
 
     @app.route('/procurement/purchases/<int:po_id>', methods=['GET'], endpoint='procurement.get_purchase_order')
-    @role_required([Roles.HQ_PROCUREMENT])
+    @role_required([Roles.HQ_PROCUREMENT, Roles.HQ_COST_CONTROL, Roles.HQ_FINANCE, Roles.SUPER_HQ])
     def get_purchase_order(po_id):
         try:
             po = PurchaseOrder.query.get_or_404(po_id)
@@ -4442,7 +4989,7 @@ FitAccess Finance Team
             asset.latitude = float(data.get('latitude')) if data.get('latitude') else None
             asset.longitude = float(data.get('longitude')) if data.get('longitude') else None
             asset.status = data.get('status', asset.status)
-            asset.last_location_update = datetime.utcnow()
+            asset.last_location_update = datetime.now(timezone.utc)
             
             db.session.commit()
             
@@ -4871,7 +5418,7 @@ FitAccess Finance Team
                     'total_amount': pr.price * pr.qty,
                     'status': pr.status,
                     'created_at': pr.created_at,
-                    'days_ago': (datetime.utcnow() - pr.created_at).days
+                    'days_ago': (datetime.utcnow() - pr.created_at).days if pr.created_at else 0
                 } for pr in recent_procurements]
             else:
                 recent_purchases = [{
@@ -4881,7 +5428,7 @@ FitAccess Finance Team
                     'total_amount': po.total_amount,
                     'status': po.status,
                     'created_at': po.created_at,
-                    'days_ago': (datetime.utcnow() - po.created_at).days
+                    'days_ago': (datetime.utcnow() - po.created_at).days if po.created_at else 0
                 } for po in recent_purchases]
             
             # Upcoming Maintenance (simulate with low stock items or recent inventory items)
@@ -7531,7 +8078,10 @@ FitAccess Finance Team
     @app.route('/finance/payroll/<int:approval_id>/process', methods=['POST'], endpoint='finance.process_payroll_approval')
     @role_required([Roles.SUPER_HQ, Roles.HQ_FINANCE])
     def process_payroll_approval(approval_id):
-        """Process payroll approval (approve or reject)"""
+        """Process payroll approval with workflow (approve or reject, notify Admin and HR)"""
+        from models import ApprovalWorkflow, WorkflowStep
+        from utils.workflow import approve_workflow_step, reject_workflow_step
+        
         try:
             approval = db.session.get(PayrollApproval, approval_id)
             if not approval:
@@ -7543,49 +8093,115 @@ FitAccess Finance Team
             action = request.form.get('action')
             comments = request.form.get('comments', '')
             
+            # Find the associated workflow
+            workflow = ApprovalWorkflow.query.filter_by(
+                workflow_type='payroll',
+                reference_id=approval.id
+            ).first()
+            
+            if not workflow:
+                # Fallback to old approval method if no workflow found
+                current_app.logger.warning(f"No workflow found for payroll approval {approval_id}")
+                if action == 'approve':
+                    approval.status = 'approved'
+                    approval.finance_processed_by = current_user.id
+                    approval.finance_processed_at = datetime.now(timezone.utc)
+                    approval.finance_comments = comments
+                    db.session.commit()
+                    return jsonify({'status': 'success', 'message': 'Payroll approved'})
+                elif action == 'reject':
+                    approval.status = 'rejected'
+                    approval.finance_processed_by = current_user.id
+                    approval.finance_processed_at = datetime.now(timezone.utc)
+                    approval.finance_comments = comments
+                    db.session.commit()
+                    return jsonify({'status': 'success', 'message': 'Payroll rejected'})
+            
+            # Get current step
+            current_step = WorkflowStep.query.filter_by(
+                workflow_id=workflow.id,
+                required_role='hq_finance',
+                status='pending'
+            ).first()
+            
+            if not current_step:
+                return jsonify({'status': 'error', 'message': 'No pending approval step found'}), 400
+            
             if action == 'approve':
-                approval.status = 'approved'
-                approval.finance_processed_by = session.get('user_id')
-                approval.finance_processed_at = datetime.now()
-                approval.finance_comments = comments
-                
-                # Create audit log
-                audit = Audit(
-                    name='Payroll Approved',
-                    date=datetime.now(),
-                    status='approved',
-                    approved_by=current_user.name
+                # Approve workflow step
+                success, message, next_step = approve_workflow_step(
+                    workflow_id=workflow.id,
+                    step_order=current_step.step_order,
+                    approver_id=current_user.id,
+                    comments=comments
                 )
-                db.session.add(audit)
                 
-                db.session.commit()
-                flash(f"Payroll for {approval.period_month}/{approval.period_year} approved", "success")
-                return jsonify({'status': 'success', 'message': 'Payroll approved'})
-                
+                if success:
+                    # Update payroll approval status
+                    approval.status = 'approved'
+                    approval.finance_processed_by = current_user.id
+                    approval.finance_processed_at = datetime.now(timezone.utc)
+                    approval.finance_comments = comments
+                    
+                    # Update all related staff payrolls
+                    staff_payrolls = StaffPayroll.query.filter_by(
+                        period_year=approval.period_year,
+                        period_month=approval.period_month
+                    ).all()
+                    
+                    for payroll in staff_payrolls:
+                        payroll.approval_status = 'approved'
+                        payroll.approved_by_finance = current_user.id
+                        payroll.finance_approved_at = datetime.now(timezone.utc)
+                    
+                    db.session.commit()
+                    
+                    # Note: Admin and HR are automatically notified via the workflow system
+                    flash(f"Payroll for {approval.period_month}/{approval.period_year} approved. Admin and HR have been notified.", "success")
+                    return jsonify({'status': 'success', 'message': 'Payroll approved and notifications sent'})
+                else:
+                    return jsonify({'status': 'error', 'message': message}), 400
+                    
             elif action == 'reject':
-                approval.status = 'rejected'
-                approval.finance_processed_by = session.get('user_id')
-                approval.finance_processed_at = datetime.now()
-                approval.finance_comments = comments
+                if not comments:
+                    return jsonify({'status': 'error', 'message': 'Rejection reason is required'}), 400
                 
-                # Create audit log
-                audit = Audit(
-                    name='Payroll Rejected',
-                    date=datetime.now(),
-                    status='rejected',
-                    approved_by=current_user.name
+                # Reject workflow
+                success, message = reject_workflow_step(
+                    workflow_id=workflow.id,
+                    step_order=current_step.step_order,
+                    rejector_id=current_user.id,
+                    comments=comments
                 )
-                db.session.add(audit)
                 
-                db.session.commit()
-                flash(f"Payroll for {approval.period_month}/{approval.period_year} rejected", "warning")
-                return jsonify({'status': 'success', 'message': 'Payroll rejected'})
+                if success:
+                    # Update payroll approval status
+                    approval.status = 'rejected'
+                    approval.rejected_by = current_user.id
+                    approval.rejected_at = datetime.now(timezone.utc)
+                    approval.rejection_reason = comments
+                    
+                    # Update all related staff payrolls
+                    staff_payrolls = StaffPayroll.query.filter_by(
+                        period_year=approval.period_year,
+                        period_month=approval.period_month
+                    ).all()
+                    
+                    for payroll in staff_payrolls:
+                        payroll.approval_status = 'rejected'
+                    
+                    db.session.commit()
+                    
+                    flash(f"Payroll for {approval.period_month}/{approval.period_year} rejected. HR has been notified.", "warning")
+                    return jsonify({'status': 'success', 'message': 'Payroll rejected'})
+                else:
+                    return jsonify({'status': 'error', 'message': message}), 400
             
             return jsonify({'status': 'error', 'message': 'Invalid action'}), 400
         
         except Exception as e:
             db.session.rollback()
-            current_app.logger.error(f"Error processing payroll: {str(e)}")
+            current_app.logger.error(f"Error processing payroll: {str(e)}", exc_info=True)
             return jsonify({'status': 'error', 'message': str(e)}), 500
 
     @app.route('/finance/payroll/<int:approval_id>/mark-paid', methods=['POST'], endpoint='finance.mark_payroll_paid')
@@ -7652,6 +8268,278 @@ FitAccess Finance Team
             current_app.logger.error(f"Error loading payroll detail: {str(e)}")
             flash("Error loading payroll detail", "error")
             return redirect(url_for('finance.payroll_approvals'))
+
+
+# ===== FINANCE PURCHASE ORDER APPROVAL ROUTES =====
+
+    @app.route('/finance/purchase-order-approvals', methods=['GET'], endpoint='finance.purchase_order_approvals')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def finance_purchase_order_approvals():
+        """View pending purchase orders for Finance approval"""
+        from models import ApprovalWorkflow, WorkflowStep
+        from utils.workflow import get_pending_approvals_for_user
+        
+        # Get workflows pending Finance approval
+        pending_workflows = get_pending_approvals_for_user(current_user)
+        
+        # Filter for purchase orders only
+        po_workflows = [w for w in pending_workflows if w.workflow_type == 'purchase_order']
+        
+        # Enrich with PO details
+        enriched_workflows = []
+        for workflow in po_workflows:
+            po = PurchaseOrder.query.get(workflow.reference_id)
+            if po:
+                # Get current step
+                current_step = WorkflowStep.query.filter_by(
+                    workflow_id=workflow.id,
+                    required_role=current_user.role,
+                    status='pending'
+                ).first()
+                
+                # Get cost control approval details
+                cost_control_step = WorkflowStep.query.filter_by(
+                    workflow_id=workflow.id,
+                    step_order=1  # Cost Control is first step
+                ).first()
+                
+                enriched_workflows.append({
+                    'workflow': workflow,
+                    'po': po,
+                    'current_step': current_step,
+                    'cost_control_step': cost_control_step,
+                    'line_items': po.line_items
+                })
+        
+        return render_template('finance/purchase_order_approvals.html',
+                             workflows=enriched_workflows)
+    
+    
+    @app.route('/finance/purchase-orders/<int:po_id>/approve', methods=['POST'], endpoint='finance.approve_purchase_order')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def finance_approve_purchase_order(po_id):
+        """Approve or reject purchase order at Finance stage (final approval)"""
+        from models import ApprovalWorkflow, WorkflowStep
+        from utils.workflow import approve_workflow_step, reject_workflow_step
+        
+        try:
+            po = PurchaseOrder.query.get_or_404(po_id)
+            
+            if not po.workflow_id:
+                flash('Purchase order does not have an approval workflow', 'error')
+                return redirect(url_for('finance.purchase_order_approvals'))
+            
+            action = request.form.get('action')
+            comments = request.form.get('comments', '').strip()
+            
+            workflow = ApprovalWorkflow.query.get(po.workflow_id)
+            if not workflow:
+                flash('Workflow not found', 'error')
+                return redirect(url_for('finance.purchase_order_approvals'))
+            
+            # Get current step
+            current_step = WorkflowStep.query.filter_by(
+                workflow_id=workflow.id,
+                required_role=current_user.role,
+                status='pending'
+            ).first()
+            
+            if not current_step:
+                flash('No pending approval step found', 'error')
+                return redirect(url_for('finance.purchase_order_approvals'))
+            
+            if action == 'approve':
+                # Approve workflow step (this should be final approval)
+                success, message, next_step = approve_workflow_step(
+                    workflow_id=workflow.id,
+                    step_order=current_step.step_order,
+                    approver_id=current_user.id,
+                    comments=comments
+                )
+                
+                if success:
+                    # Update PO details
+                    po.finance_approved_by = current_user.id
+                    po.finance_approved_at = datetime.now(timezone.utc)
+                    po.finance_comments = comments
+                    po.status = 'Approved'
+                    po.approval_date = datetime.now(timezone.utc)
+                    
+                    # Update budget spent if project linked
+                    if po.project_id:
+                        budgets = Budget.query.filter_by(
+                            project_id=po.project_id,
+                            category='procurement'
+                        ).first()
+                        
+                        if budgets:
+                            budgets.spent_amount += po.total_amount
+                            budgets.remaining_amount = budgets.allocated_amount - budgets.spent_amount
+                    
+                    db.session.commit()
+                    flash(f'Purchase Order {po.order_number} fully approved!', 'success')
+                else:
+                    flash(message, 'error')
+                    
+            elif action == 'reject':
+                if not comments:
+                    flash('Rejection reason is required', 'error')
+                    return redirect(url_for('finance.purchase_order_approvals'))
+                
+                # Reject workflow
+                success, message = reject_workflow_step(
+                    workflow_id=workflow.id,
+                    step_order=current_step.step_order,
+                    rejector_id=current_user.id,
+                    comments=comments
+                )
+                
+                if success:
+                    # Update PO status
+                    po.status = 'Rejected'
+                    po.notes = (po.notes or '') + f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M')}] Finance Rejected: {comments}"
+                    
+                    db.session.commit()
+                    flash(f'Purchase Order {po.order_number} rejected', 'info')
+                else:
+                    flash(message, 'error')
+            
+            return redirect(url_for('finance.purchase_order_approvals'))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error processing PO approval: {str(e)}", exc_info=True)
+            flash(f'Error processing approval: {str(e)}', 'error')
+            return redirect(url_for('finance.purchase_order_approvals'))
+
+
+# ===== FINANCE COST APPROVALS ROUTES =====
+
+    @app.route('/finance/cost-approvals', methods=['GET', 'POST'], endpoint='finance.cost_approvals')
+    @role_required([Roles.HQ_FINANCE, Roles.SUPER_HQ])
+    def finance_cost_approvals():
+        """Cost approval queue for Finance (mainly budget adjustments)"""
+        if request.method == 'POST':
+            approval_id = request.form.get('approval_id')
+            action = request.form.get('action')
+            comments = request.form.get('comments')
+            
+            approval = CostApproval.query.get_or_404(approval_id)
+            
+            # Verify this approval is meant for Finance
+            if approval.required_role != Roles.HQ_FINANCE:
+                flash('This approval is not for Finance review', 'error')
+                return redirect(url_for('finance.cost_approvals'))
+            
+            if action == 'approve':
+                approval.status = 'approved'
+                approval.approver_id = current_user.id
+                approval.approved_at = datetime.now(timezone.utc)
+                approval.comments = comments
+                approval.action_taken = 'approved'
+                
+                # Update budget if it's a budget adjustment
+                if approval.reference_type == 'budget_adjustment':
+                    adjustment = BudgetAdjustment.query.get(approval.reference_id)
+                    if adjustment:
+                        adjustment.status = 'approved'
+                        adjustment.approved_by = current_user.id
+                        adjustment.approved_at = datetime.now(timezone.utc)
+                        adjustment.approval_comments = comments
+                        
+                        # Update the actual budget
+                        budget = Budget.query.get(adjustment.budget_id)
+                        if budget:
+                            budget.allocated_amount = adjustment.new_amount
+                            budget.updated_at = datetime.now(timezone.utc)
+                        
+                        # Notify the requester
+                        requester = User.query.get(adjustment.requested_by)
+                        if requester:
+                            notification = Notification(
+                                user_id=requester.id,
+                                title='Budget Adjustment Approved',
+                                message=f'Budget adjustment approved: {adjustment.category} - New amount: ₦{adjustment.new_amount:,.2f}',
+                                notification_type='approval_update',
+                                reference_type='budget_adjustment',
+                                reference_id=adjustment.id
+                            )
+                            db.session.add(notification)
+                
+                flash('Approval processed successfully', 'success')
+                
+            elif action == 'reject':
+                approval.status = 'rejected'
+                approval.approver_id = current_user.id
+                approval.approved_at = datetime.now(timezone.utc)
+                approval.comments = comments
+                approval.action_taken = 'rejected'
+                
+                # Update budget adjustment status
+                if approval.reference_type == 'budget_adjustment':
+                    adjustment = BudgetAdjustment.query.get(approval.reference_id)
+                    if adjustment:
+                        adjustment.status = 'rejected'
+                        adjustment.approval_comments = comments
+                        
+                        # Notify the requester
+                        requester = User.query.get(adjustment.requested_by)
+                        if requester:
+                            notification = Notification(
+                                user_id=requester.id,
+                                title='Budget Adjustment Rejected',
+                                message=f'Budget adjustment rejected: {adjustment.category}. Reason: {comments}',
+                                notification_type='approval_update',
+                                reference_type='budget_adjustment',
+                                reference_id=adjustment.id
+                            )
+                            db.session.add(notification)
+                
+                flash('Approval rejected', 'info')
+            
+            db.session.commit()
+            return redirect(url_for('finance.cost_approvals'))
+        
+        # GET request - show pending approvals for Finance
+        status_filter = request.args.get('status', 'pending')
+        
+        query = CostApproval.query.filter_by(required_role=Roles.HQ_FINANCE)
+        
+        if status_filter != 'all':
+            query = query.filter_by(status=status_filter)
+        
+        approvals = query.order_by(CostApproval.created_at.desc()).all()
+        
+        # Enrich approval data with project and reference info
+        enriched_approvals = []
+        for approval in approvals:
+            project = Project.query.get(approval.project_id)
+            
+            ref_details = {}
+            if approval.reference_type == 'budget_adjustment':
+                adjustment = BudgetAdjustment.query.get(approval.reference_id)
+                if adjustment:
+                    requester = User.query.get(adjustment.requested_by)
+                    ref_details = {
+                        'category': adjustment.category,
+                        'old_amount': adjustment.old_amount,
+                        'new_amount': adjustment.new_amount,
+                        'adjustment_type': adjustment.adjustment_type,
+                        'reason': adjustment.reason,
+                        'impact_analysis': adjustment.impact_analysis,
+                        'requester_name': requester.name if requester else 'Unknown'
+                    }
+            
+            enriched_approvals.append({
+                'approval': approval,
+                'project': project,
+                'reference_details': ref_details
+            })
+        
+        return render_template('finance/cost_approvals.html',
+                             approvals=enriched_approvals,
+                             status_filter=status_filter)
+
 
 # ===== DOCUMENT MANAGEMENT ROUTES =====
 
@@ -9974,9 +10862,8 @@ FitAccess Finance Team
     @app.route('/hr/payroll/submit-for-approval', methods=['POST'], endpoint='hr.submit_payroll_for_approval')
     @role_required([Roles.SUPER_HQ, Roles.HQ_HR])
     def submit_payroll_for_approval():
-        """Submit payroll for admin approval"""
+        """Submit payroll for Finance approval with workflow"""
         try:
-        
             period_year = request.form.get('period_year', type=int)
             period_month = request.form.get('period_month', type=int)
         
@@ -9984,7 +10871,7 @@ FitAccess Finance Team
                 flash("Period year and month are required", "error")
                 return redirect(url_for('hr.payroll'))
         
-        # Get all draft payrolls for the specified period
+            # Get all draft payrolls for the specified period
             draft_payrolls = StaffPayroll.query.filter(
                 StaffPayroll.period_year == period_year,
                 StaffPayroll.period_month == period_month,
@@ -9995,33 +10882,54 @@ FitAccess Finance Team
                 flash(f"No draft payrolls found for {datetime(period_year, period_month, 1).strftime('%B %Y')}", "warning")
                 return redirect(url_for('hr.payroll'))
         
-        # Update all payrolls to pending_admin status
+            # Update all payrolls to pending finance status (workflow goes HR → Finance → Admin notified)
             for payroll in draft_payrolls:
-                payroll.approval_status = 'pending_admin'
-                payroll.submitted_at = datetime.now()
+                payroll.approval_status = 'pending_finance'
+                payroll.submitted_at = datetime.now(timezone.utc)
         
-        # Create payroll approval record
+            # Create payroll approval record
             total_amount = sum([p.balance_salary for p in draft_payrolls if p.balance_salary])
             total_employees = len(draft_payrolls)
         
+            # Generate payroll reference number
+            payroll_ref = f"PAY-{period_year}-{period_month:02d}"
+            
+            # Create payroll approval record
             payroll_approval = PayrollApproval(
                 period_year=period_year,
                 period_month=period_month,
                 total_amount=total_amount,
                 employee_count=total_employees,
-                status='pending_admin',
-                submitted_by=session.get('user_id'),
-                submitted_at=datetime.now()
+                status='pending_finance',
+                submitted_by=current_user.id,
+                submitted_at=datetime.now(timezone.utc)
             )
         
             db.session.add(payroll_approval)
+            db.session.flush()  # Get the payroll_approval ID
+        
+            # Import workflow utilities
+            from utils.workflow import create_approval_workflow
+            
+            # Create approval workflow (HR → Finance, then notify Admin)
+            workflow = create_approval_workflow(
+                workflow_type='payroll',
+                reference_id=payroll_approval.id,
+                reference_number=payroll_ref,
+                initiated_by=current_user.id,
+                total_amount=total_amount,
+                description=f"Payroll for {datetime(period_year, period_month, 1).strftime('%B %Y')} - {total_employees} employees",
+                project_id=None,
+                priority='high'  # Payroll is always high priority
+            )
+            
             db.session.commit()
         
             current_app.logger.info(f"Payroll submitted for approval: {total_employees} employees, "
                                    f"Total: ₦{total_amount:,.2f} for {datetime(period_year, period_month, 1).strftime('%B %Y')}")
         
             flash(f"Payroll for {datetime(period_year, period_month, 1).strftime('%B %Y')} "
-                  f"submitted for admin approval. Total: ₦{total_amount:,.2f} ({total_employees} employees)", "success")
+                  f"submitted to Finance for approval. Total: ₦{total_amount:,.2f} ({total_employees} employees)", "success")
         
         except Exception as e:
             db.session.rollback()
@@ -21999,6 +22907,35 @@ FitAccess Finance Team
             po.tax_amount = (subtotal * tax_rate / 100)
             po.total_amount = subtotal + po.tax_amount
             
+            # Check if submitting for approval
+            submit_for_approval = data.get('submit_for_approval') == 'yes'
+            
+            if submit_for_approval:
+                # Import workflow utilities
+                from utils.workflow import create_approval_workflow, log_audit as workflow_log_audit
+                
+                # Update PO status
+                po.status = 'Pending_Cost_Control'
+                
+                # Create approval workflow
+                workflow = create_approval_workflow(
+                    workflow_type='purchase_order',
+                    reference_id=po.id,
+                    reference_number=po.order_number,
+                    initiated_by=current_user.id,
+                    total_amount=po.total_amount,
+                    description=po.description or f"Purchase Order for {po.supplier_name}",
+                    project_id=po.project_id,
+                    priority=po.priority.lower() if po.priority else 'normal'
+                )
+                
+                # Link workflow to PO
+                po.workflow_id = workflow.id
+                
+                flash(f'Purchase Order {po.order_number} submitted for approval', 'success')
+            else:
+                flash(f'Purchase Order {po.order_number} created as draft', 'info')
+            
             # Log activity
             audit = Audit(
                 user_id=current_user.id,
@@ -22012,7 +22949,6 @@ FitAccess Finance Team
             
             db.session.commit()
             
-            flash(f'Purchase Order {po.order_number} created successfully', 'success')
             return redirect(url_for('procurement_mgr.view_po', po_id=po.id))
             
         except Exception as e:
@@ -22071,56 +23007,72 @@ FitAccess Finance Team
     @role_required([Roles.SUPER_HQ, Roles.HQ_PROCUREMENT, 'PROCUREMENT_MANAGER'])
     def approve_purchase_order(po_id):
         """
-        Approve purchase order
+        Submit purchase order for approval workflow (Procurement → Cost Control → Finance)
         """
         try:
             po = PurchaseOrder.query.get_or_404(po_id)
             
             data = request.get_json() if request.is_json else request.form
-            action = data.get('action', 'approve')
-            comments = data.get('comments', '').strip()
             
-            if action == 'approve':
-                po.status = 'Approved'
-                po.approved_by = current_user.id if hasattr(current_user, 'id') else None
-                po.approval_date = datetime.now(timezone.utc)
-                message = f'Purchase Order {po.order_number} approved successfully'
-                
-                # Update budget spent if project linked
-                if po.project_id:
-                    budgets = Budget.query.filter_by(
-                        project_id=po.project_id,
-                        category='procurement'
-                    ).first()
-                    
-                    if budgets:
-                        budgets.spent_amount += po.total_amount
-            elif action == 'reject':
-                po.status = 'Rejected'
-                message = f'Purchase Order {po.order_number} rejected'
-            else:
-                po.status = 'Ordered'
-                message = f'Purchase Order {po.order_number} marked as ordered'
+            # Check if PO already has a workflow
+            if po.workflow_id:
+                message = f'Purchase Order {po.order_number} is already in approval workflow'
+                if request.is_json:
+                    return jsonify({'success': False, 'error': message}), 400
+                flash(message, 'warning')
+                return redirect(url_for('procurement_mgr.view_po', po_id=po.id))
             
-            if comments:
-                po.notes = (po.notes or '') + f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M')}] {comments}"
+            # Import workflow utilities
+            from utils.workflow import create_approval_workflow
+            
+            # Update PO status to pending cost control approval
+            po.status = 'Pending_Cost_Control'
+            
+            # Create approval workflow
+            workflow = create_approval_workflow(
+                workflow_type='purchase_order',
+                reference_id=po.id,
+                reference_number=po.order_number,
+                initiated_by=current_user.id,
+                total_amount=po.total_amount,
+                description=po.description or f"Purchase Order for {po.supplier_name}",
+                project_id=po.project_id,
+                priority=po.priority.lower() if po.priority else 'normal'
+            )
+            
+            # Link workflow to PO
+            po.workflow_id = workflow.id
             
             # Log activity
             audit = Audit(
                 user_id=current_user.id,
-                action=f'{action}_purchase_order',
+                action='submit_for_approval',
                 table_name='purchase_order',
                 record_id=po.id,
-                changes=f"{action.capitalize()} PO {po.order_number}: {comments}",
+                changes=f"Submitted PO {po.order_number} for approval workflow",
                 timestamp=datetime.now(timezone.utc)
             )
             db.session.add(audit)
             
             db.session.commit()
             
+            message = f'Purchase Order {po.order_number} submitted for approval'
+            
             if request.is_json:
                 return jsonify({'success': True, 'message': message})
             else:
+                flash(message, 'success')
+                return redirect(url_for('procurement_mgr.view_po', po_id=po.id))
+            
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(f"Error submitting purchase order for approval: {str(e)}", exc_info=True)
+            
+            if request.is_json:
+                return jsonify({'success': False, 'error': str(e)}), 500
+            else:
+                flash(f'Error submitting purchase order: {str(e)}', 'error')
+                return redirect(url_for('procurement_mgr.view_po', po_id=po.id))
                 flash(message, 'success')
                 return redirect(url_for('procurement_mgr.view_po', po_id=po.id))
             

@@ -1,50 +1,39 @@
-{% extends "base.html" %}
+{% extends "cost_control/base.html" %}
 
 {% block title %}Cost Tracking{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
-    <!-- Breadcrumb -->
-    <nav class="mb-6 text-sm text-gray-600">
-        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Home</a>
-        <span class="mx-2">/</span>
-        <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="hover:text-blue-600">Cost Control</a>
-        <span class="mx-2">/</span>
-        <span class="text-gray-900">Cost Tracking</span>
-    </nav>
-
     <!-- Header -->
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Cost Tracking</h1>
-        <p class="text-gray-600">Track and manage project costs by category</p>
+        <p class="text-gray-600">Track and manage project costs with real-time budget monitoring</p>
     </div>
 
-    <!-- Quick Navigation -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cost_tracking') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                <i class="fas fa-clipboard-list mr-2"></i>Cost Tracking
-            </a>
-            <a href="{{ url_for('cost_control_mgr.variance_analysis') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-chart-line mr-2"></i>Variance Analysis
-            </a>
-            <a href="{{ url_for('cost_control_mgr.budget_adjustments') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-adjust mr-2"></i>Budget Adjustments
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cash_flow') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-money-bill-wave mr-2"></i>Cash Flow
-            </a>
-            <a href="{{ url_for('cost_control_mgr.approvals') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-check-circle mr-2"></i>Approvals
-            </a>
-            <a href="{{ url_for('cost_control_mgr.reports') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-file-alt mr-2"></i>Reports
-            </a>
+    {% if budget_summary and selected_project_id %}
+    <!-- Budget Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {% for category, data in budget_summary.items() %}
+        <div class="bg-white rounded-lg shadow p-4">
+            <h3 class="text-sm font-semibold text-gray-600 mb-2">{{ category|title }}</h3>
+            <div class="mb-2">
+                <div class="flex justify-between text-xs text-gray-500 mb-1">
+                    <span>Spent: ₦{{ "{:,.0f}".format(data.spent) }}</span>
+                    <span>Budget: ₦{{ "{:,.0f}".format(data.allocated) }}</span>
+                </div>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="{% if data.usage_percentage > 90 %}bg-red-600{% elif data.usage_percentage > 75 %}bg-yellow-500{% else %}bg-green-500{% endif %} h-2 rounded-full" 
+                         style="width: {{ data.usage_percentage }}%"></div>
+                </div>
+            </div>
+            <p class="text-xs text-gray-600">
+                Remaining: ₦{{ "{:,.0f}".format(data.remaining) }} 
+                <span class="font-semibold">({{ "%.1f"|format(100 - data.usage_percentage) }}%)</span>
+            </p>
         </div>
+        {% endfor %}
     </div>
+    {% endif %}
 
     <!-- Add Cost Entry Form -->
     <div class="bg-white rounded-lg shadow mb-6">
@@ -52,66 +41,89 @@
             <h2 class="text-xl font-bold text-gray-900">Add Cost Entry</h2>
         </div>
         <div class="p-6">
-            <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form method="POST" id="costEntryForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Project</label>
-                    <select name="project_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Project *</label>
+                    <select name="project_id" id="projectSelect" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         <option value="">Select Project</option>
                         {% for project in projects %}
-                        <option value="{{ project.id }}">{{ project.name }}</option>
+                        <option value="{{ project.id }}" {% if selected_project_id == project.id %}selected{% endif %}>
+                            {{ project.name }}
+                        </option>
                         {% endfor %}
                     </select>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Category</label>
-                    <select name="category_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        <option value="">Select Category</option>
-                        {% for category in categories %}
-                        <option value="{{ category.id }}">{{ category.name }}</option>
-                        {% endfor %}
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Category *</label>
+                    <select name="category_id" id="categorySelect" required 
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        <option value="">Select Project First</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Cost Type</label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Cost Type *</label>
                     <select name="cost_type" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        <option value="Material">Material</option>
-                        <option value="Labor">Labor</option>
-                        <option value="Equipment">Equipment</option>
-                        <option value="Subcontractor">Subcontractor</option>
-                        <option value="Overhead">Overhead</option>
+                        <option value="material">Material</option>
+                        <option value="labor">Labor</option>
+                        <option value="equipment">Equipment</option>
+                        <option value="subcontractor">Subcontractor</option>
+                        <option value="overhead">Overhead</option>
+                        <option value="transportation">Transportation</option>
+                        <option value="professional_services">Professional Services</option>
                     </select>
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Entry Date</label>
-                    <input type="date" name="entry_date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Entry Date *</label>
+                    <input type="date" name="entry_date" required value="{{ today }}"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
                 
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                    <input type="text" name="description" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Description *</label>
+                    <input type="text" name="description" required placeholder="e.g., Steel reinforcement bars for foundation"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Planned Cost (₦)</label>
-                    <input type="number" name="planned_cost" step="0.01" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Planned Cost (₦) *</label>
+                    <input type="number" name="planned_cost" step="0.01" required id="plannedCost"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Actual Cost (₦)</label>
-                    <input type="number" name="actual_cost" step="0.01" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Actual Cost (₦) *</label>
+                    <input type="number" name="actual_cost" step="0.01" required id="actualCost"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Quantity</label>
-                    <input type="number" name="quantity" step="0.01" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="number" name="quantity" step="0.01" placeholder="Optional"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                 </div>
                 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Unit</label>
-                    <input type="text" name="unit" placeholder="e.g., kg, m³, hrs" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <input type="text" name="unit" placeholder="e.g., kg, m³, hrs, pcs"
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+                
+                <!-- Variance Preview -->
+                <div class="md:col-span-2 p-4 bg-gray-50 rounded-lg" id="variancePreview" style="display: none;">
+                    <p class="text-sm text-gray-600">
+                        <strong>Variance:</strong> 
+                        <span id="varianceAmount" class="font-semibold"></span>
+                        <span id="variancePercent" class="font-semibold"></span>
+                    </p>
+                    <p class="text-xs text-yellow-600 mt-1" id="approvalWarning" style="display: none;">
+                        ⚠️ This entry will require approval due to high variance (>10%)
+                    </p>
                 </div>
                 
                 <div class="md:col-span-2">
@@ -131,7 +143,9 @@
                 <select name="project_id" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                     <option value="">All Projects</option>
                     {% for project in projects %}
-                    <option value="{{ project.id }}">{{ project.name }}</option>
+                    <option value="{{ project.id }}" {% if selected_project_id == project.id %}selected{% endif %}>
+                        {{ project.name }}
+                    </option>
                     {% endfor %}
                 </select>
             </div>
@@ -139,11 +153,11 @@
                 <label class="block text-sm font-medium text-gray-700 mb-2">Cost Type</label>
                 <select name="cost_type" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
                     <option value="">All Types</option>
-                    <option value="Material">Material</option>
-                    <option value="Labor">Labor</option>
-                    <option value="Equipment">Equipment</option>
-                    <option value="Subcontractor">Subcontractor</option>
-                    <option value="Overhead">Overhead</option>
+                    <option value="material">Material</option>
+                    <option value="labor">Labor</option>
+                    <option value="equipment">Equipment</option>
+                    <option value="subcontractor">Subcontractor</option>
+                    <option value="overhead">Overhead</option>
                 </select>
             </div>
             <div>
@@ -168,6 +182,7 @@
             <h2 class="text-xl font-bold text-gray-900">Cost Entries</h2>
         </div>
         <div class="overflow-x-auto">
+            {% if entries %}
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
@@ -196,19 +211,122 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-center">
-                            {% if entry.approval_status == 'approved' %}
+                            {% if entry.status == 'approved' %}
                             <span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Approved</span>
-                            {% elif entry.approval_status == 'pending' %}
+                            {% elif entry.status == 'pending' %}
                             <span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded-full">Pending</span>
+                            {% elif entry.status == 'rejected' %}
+                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">Rejected</span>
                             {% else %}
-                            <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">{{ entry.approval_status }}</span>
+                            <span class="px-2 py-1 bg-gray-100 text-gray-800 text-xs rounded-full">{{ entry.status }}</span>
                             {% endif %}
                         </td>
                     </tr>
                     {% endfor %}
                 </tbody>
             </table>
+            {% else %}
+            <div class="p-8 text-center text-gray-500">
+                <i class="fas fa-inbox text-4xl mb-4"></i>
+                <p>No cost entries found. Add your first entry above.</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<script>
+// Dynamic category loading based on project selection
+document.getElementById('projectSelect').addEventListener('change', function() {
+    const projectId = this.value;
+    const categorySelect = document.getElementById('categorySelect');
+    
+    if (!projectId) {
+        categorySelect.innerHTML = '<option value="">Select Project First</option>';
+        return;
+    }
+    
+    // Show loading
+    categorySelect.innerHTML = '<option value="">Loading categories...</option>';
+    
+    // Fetch categories for selected project
+    fetch(`/cost-control/manager/api/categories/${projectId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                categorySelect.innerHTML = '<option value="">Select Category</option>';
+                data.categories.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat.id;
+                    option.textContent = cat.name;
+                    categorySelect.appendChild(option);
+                });
+            } else {
+                categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching categories:', error);
+            categorySelect.innerHTML = '<option value="">Error loading categories</option>';
+        });
+});
+
+// Real-time variance calculation
+const plannedCostInput = document.getElementById('plannedCost');
+const actualCostInput = document.getElementById('actualCost');
+const variancePreview = document.getElementById('variancePreview');
+const varianceAmount = document.getElementById('varianceAmount');
+const variancePercent = document.getElementById('variancePercent');
+const approvalWarning = document.getElementById('approvalWarning');
+
+function calculateVariance() {
+    const planned = parseFloat(plannedCostInput.value) || 0;
+    const actual = parseFloat(actualCostInput.value) || 0;
+    
+    if (planned > 0 && actual > 0) {
+        const variance = actual - planned;
+        const variancePercentage = (variance / planned) * 100;
+        
+        variancePreview.style.display = 'block';
+        varianceAmount.textContent = `₦${variance.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`;
+        variancePercent.textContent = `(${variancePercentage.toFixed(1)}%)`;
+        
+        // Color code the variance
+        if (variance < 0) {
+            varianceAmount.className = 'font-semibold text-green-600';
+            variancePercent.className = 'font-semibold text-green-600';
+        } else {
+            varianceAmount.className = 'font-semibold text-red-600';
+            variancePercent.className = 'font-semibold text-red-600';
+        }
+        
+        // Show approval warning if variance > 10%
+        if (Math.abs(variancePercentage) > 10) {
+            approvalWarning.style.display = 'block';
+        } else {
+            approvalWarning.style.display = 'none';
+        }
+    } else {
+        variancePreview.style.display = 'none';
+    }
+}
+
+plannedCostInput.addEventListener('input', calculateVariance);
+actualCostInput.addEventListener('input', calculateVariance);
+
+// Set today's date as default
+document.addEventListener('DOMContentLoaded', function() {
+    const dateInput = document.querySelector('input[name="entry_date"]');
+    if (!dateInput.value) {
+        const today = new Date().toISOString().split('T')[0];
+        dateInput.value = today;
+    }
+    
+    // Trigger category load if project is pre-selected
+    const projectSelect = document.getElementById('projectSelect');
+    if (projectSelect.value) {
+        projectSelect.dispatchEvent(new Event('change'));
+    }
+});
+</script>
 {% endblock %}

@@ -1,0 +1,359 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold text-gray-800 mb-2">Notifications</h1>
+        <p class="text-gray-600">View and manage all your notifications</p>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="bg-white rounded-lg shadow-md mb-6">
+        <div class="border-b border-gray-200">
+            <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                <button onclick="filterNotifications('all')" 
+                        class="notification-tab py-4 px-1 border-b-2 font-medium text-sm active"
+                        data-tab="all">
+                    All Notifications
+                </button>
+                <button onclick="filterNotifications('unread')" 
+                        class="notification-tab py-4 px-1 border-b-2 font-medium text-sm"
+                        data-tab="unread">
+                    Unread
+                    <span id="unreadBadge" class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2 rounded-full text-xs font-semibold">0</span>
+                </button>
+                <button onclick="filterNotifications('approval_request')" 
+                        class="notification-tab py-4 px-1 border-b-2 font-medium text-sm"
+                        data-tab="approval_request">
+                    Approvals
+                </button>
+                <button onclick="filterNotifications('budget_alert')" 
+                        class="notification-tab py-4 px-1 border-b-2 font-medium text-sm"
+                        data-tab="budget_alert">
+                    Budget Alerts
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Actions Bar -->
+    <div class="flex justify-between items-center mb-4">
+        <div class="text-sm text-gray-600">
+            <span id="notificationCount">Loading...</span>
+        </div>
+        <button onclick="markAllAsRead()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+            <i class='bx bx-check-double'></i> Mark All as Read
+        </button>
+    </div>
+
+    <!-- Notifications List -->
+    <div id="notificationsContainer" class="space-y-3">
+        <!-- Loading State -->
+        <div id="loadingState" class="text-center py-12">
+            <i class='bx bx-loader-alt bx-spin text-5xl text-blue-500'></i>
+            <p class="text-gray-600 mt-4">Loading notifications...</p>
+        </div>
+
+        <!-- Empty State (hidden by default) -->
+        <div id="emptyState" class="hidden bg-white rounded-lg shadow-md p-12 text-center">
+            <i class='bx bx-bell-off text-6xl text-gray-400 mb-4'></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">No notifications</h3>
+            <p class="text-gray-600">You're all caught up!</p>
+        </div>
+
+        <!-- Notifications will be loaded here -->
+    </div>
+
+    <!-- Pagination -->
+    <div id="paginationContainer" class="hidden mt-6 flex justify-center">
+        <nav class="flex items-center gap-2">
+            <button id="prevPage" onclick="changePage('prev')" class="px-4 py-2 bg-white border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                Previous
+            </button>
+            <span id="pageInfo" class="px-4 py-2 text-gray-600">Page 1</span>
+            <button id="nextPage" onclick="changePage('next')" class="px-4 py-2 bg-white border rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed">
+                Next
+            </button>
+        </nav>
+    </div>
+</div>
+
+<style>
+.notification-tab {
+    border-bottom-color: transparent;
+    color: #6b7280;
+}
+
+.notification-tab.active {
+    border-bottom-color: #3b82f6;
+    color: #3b82f6;
+}
+
+.notification-card {
+    transition: all 0.2s;
+}
+
+.notification-card:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.notification-card.unread {
+    background-color: #eff6ff;
+    border-left: 4px solid #3b82f6;
+}
+
+.notification-card.read {
+    border-left: 4px solid #e5e7eb;
+}
+
+.priority-urgent {
+    border-left-color: #ef4444 !important;
+}
+
+.priority-high {
+    border-left-color: #f97316 !important;
+}
+</style>
+
+<script>
+let currentPage = 1;
+let currentFilter = 'all';
+let totalPages = 1;
+
+// Load notifications
+function loadNotifications() {
+    const container = document.getElementById('notificationsContainer');
+    const loading = document.getElementById('loadingState');
+    const empty = document.getElementById('emptyState');
+    const pagination = document.getElementById('paginationContainer');
+    
+    loading.classList.remove('hidden');
+    empty.classList.add('hidden');
+    pagination.classList.add('hidden');
+    
+    let url = '/api/notifications?page=' + currentPage;
+    if (currentFilter === 'unread') {
+        url += '&unread_only=true';
+    } else if (currentFilter !== 'all') {
+        url += '&notification_type=' + currentFilter;
+    }
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('hidden');
+            
+            if (data.success && data.notifications.length > 0) {
+                // Clear previous notifications
+                const existingNotifs = container.querySelectorAll('.notification-card');
+                existingNotifs.forEach(n => n.remove());
+                
+                // Add new notifications
+                data.notifications.forEach(notif => {
+                    container.insertAdjacentHTML('beforeend', createNotificationCard(notif));
+                });
+                
+                // Update count
+                document.getElementById('notificationCount').textContent = 
+                    `Showing ${data.notifications.length} notification${data.notifications.length !== 1 ? 's' : ''}`;
+                
+                // Update pagination if available
+                if (data.total_pages && data.total_pages > 1) {
+                    totalPages = data.total_pages;
+                    pagination.classList.remove('hidden');
+                    updatePagination();
+                }
+            } else {
+                empty.classList.remove('hidden');
+                document.getElementById('notificationCount').textContent = 'No notifications';
+            }
+            
+            // Load unread count
+            loadUnreadCount();
+        })
+        .catch(error => {
+            console.error('Error loading notifications:', error);
+            loading.classList.add('hidden');
+            empty.classList.remove('hidden');
+        });
+}
+
+// Create notification card HTML
+function createNotificationCard(notif) {
+    const timeAgo = getTimeAgo(new Date(notif.created_at));
+    const readClass = notif.is_read ? 'read' : 'unread';
+    const priorityClass = notif.priority === 'urgent' ? 'priority-urgent' : 
+                         notif.priority === 'high' ? 'priority-high' : '';
+    const icon = getNotificationIcon(notif.notification_type);
+    const iconColor = notif.is_read ? 'text-gray-400' : 'text-blue-600';
+    
+    return `
+        <div class="notification-card ${readClass} ${priorityClass} bg-white rounded-lg shadow-md p-6 cursor-pointer"
+             onclick="handleNotificationClick(${notif.id}, '${notif.action_url || ''}')">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 mt-1">
+                    <i class='${icon} text-3xl ${iconColor}'></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-start justify-between mb-2">
+                        <h3 class="text-lg font-semibold text-gray-800 ${notif.is_read ? 'font-normal' : ''}">${notif.title}</h3>
+                        <span class="text-xs text-gray-500 whitespace-nowrap ml-4">${timeAgo}</span>
+                    </div>
+                    <p class="text-gray-600 mb-3">${notif.message}</p>
+                    <div class="flex items-center gap-4 text-sm">
+                        ${notif.priority !== 'normal' ? `
+                            <span class="px-2 py-1 rounded-full text-xs font-semibold
+                                ${notif.priority === 'urgent' ? 'bg-red-100 text-red-800' : 'bg-orange-100 text-orange-800'}">
+                                ${notif.priority.toUpperCase()}
+                            </span>
+                        ` : ''}
+                        ${notif.email_sent ? '<span class="text-gray-500"><i class="bx bx-envelope"></i> Email sent</span>' : ''}
+                        ${!notif.is_read ? '<span class="text-blue-600 font-semibold">• Unread</span>' : ''}
+                    </div>
+                </div>
+                ${!notif.is_read ? `
+                <div class="flex-shrink-0">
+                    <button onclick="event.stopPropagation(); markAsRead(${notif.id})" 
+                            class="text-blue-600 hover:text-blue-800 p-2">
+                        <i class='bx bx-check text-xl'></i>
+                    </button>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+}
+
+// Get notification icon
+function getNotificationIcon(type) {
+    const icons = {
+        'approval_request': 'bx bx-task',
+        'approval_approved': 'bx bx-check-circle',
+        'approval_rejected': 'bx bx-x-circle',
+        'workflow_completed': 'bx bx-badge-check',
+        'budget_alert': 'bx bx-dollar-circle',
+        'system': 'bx bx-info-circle',
+        'general': 'bx bx-bell'
+    };
+    return icons[type] || icons['general'];
+}
+
+// Get time ago string
+function getTimeAgo(date) {
+    const seconds = Math.floor((new Date() - date) / 1000);
+    const intervals = {
+        year: 31536000,
+        month: 2592000,
+        week: 604800,
+        day: 86400,
+        hour: 3600,
+        minute: 60
+    };
+    
+    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+        const interval = Math.floor(seconds / secondsInUnit);
+        if (interval >= 1) {
+            return `${interval} ${unit}${interval > 1 ? 's' : ''} ago`;
+        }
+    }
+    return 'Just now';
+}
+
+// Filter notifications
+function filterNotifications(filter) {
+    currentFilter = filter;
+    currentPage = 1;
+    
+    // Update active tab
+    document.querySelectorAll('.notification-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${filter}"]`).classList.add('active');
+    
+    loadNotifications();
+}
+
+// Handle notification click
+function handleNotificationClick(notificationId, actionUrl) {
+    markAsRead(notificationId).then(() => {
+        if (actionUrl && actionUrl !== 'None' && actionUrl !== '' && actionUrl !== 'null') {
+            window.location.href = actionUrl;
+        }
+    });
+}
+
+// Mark single notification as read
+function markAsRead(notificationId) {
+    return fetch(`/api/notifications/${notificationId}/read`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadNotifications();
+        }
+    })
+    .catch(error => console.error('Error marking as read:', error));
+}
+
+// Mark all as read
+function markAllAsRead() {
+    fetch('/api/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            loadNotifications();
+        }
+    })
+    .catch(error => console.error('Error marking all as read:', error));
+}
+
+// Load unread count
+function loadUnreadCount() {
+    fetch('/api/notifications/unread-count')
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const badge = document.getElementById('unreadBadge');
+                badge.textContent = data.unread_count;
+            }
+        });
+}
+
+// Pagination
+function changePage(direction) {
+    if (direction === 'prev' && currentPage > 1) {
+        currentPage--;
+        loadNotifications();
+    } else if (direction === 'next' && currentPage < totalPages) {
+        currentPage++;
+        loadNotifications();
+    }
+}
+
+function updatePagination() {
+    document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+    document.getElementById('prevPage').disabled = currentPage === 1;
+    document.getElementById('nextPage').disabled = currentPage === totalPages;
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadNotifications();
+});
+</script>
+{% endblock %}

@@ -1,16 +1,10 @@
-{% extends "base.html" %}
+{% extends "cost_control/base.html" %}
 
 {% block title %}Cost Control Reports{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
-    <nav class="mb-6 text-sm text-gray-600">
-        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Home</a>
-        <span class="mx-2">/</span>
-        <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="hover:text-blue-600">Cost Control</a>
-        <span class="mx-2">/</span>
-        <span class="text-gray-900">Reports</span>
-    </nav>
+   
 
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Cost Control Reports</h1>
@@ -18,31 +12,7 @@
     </div>
 
     <!-- Quick Navigation -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cost_tracking') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-clipboard-list mr-2"></i>Cost Tracking
-            </a>
-            <a href="{{ url_for('cost_control_mgr.variance_analysis') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-chart-line mr-2"></i>Variance Analysis
-            </a>
-            <a href="{{ url_for('cost_control_mgr.budget_adjustments') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-adjust mr-2"></i>Budget Adjustments
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cash_flow') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-money-bill-wave mr-2"></i>Cash Flow
-            </a>
-            <a href="{{ url_for('cost_control_mgr.approvals') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-check-circle mr-2"></i>Approvals
-            </a>
-            <a href="{{ url_for('cost_control_mgr.reports') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                <i class="fas fa-file-alt mr-2"></i>Reports
-            </a>
-        </div>
-    </div>
+  
 
     <!-- Metrics Overview -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">

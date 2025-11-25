@@ -196,6 +196,23 @@ def purchases():
         flash("Error loading purchases", "error")
         return render_template('error.html'), 500
 
+@procurement_bp.route("/my-approvals")
+@role_required([Roles.HQ_PROCUREMENT])
+def my_approvals():
+    """View all purchase orders submitted by current user with approval status"""
+    try:
+        # Get all POs submitted by current user
+        purchase_orders = PurchaseOrder.query.filter_by(
+            requested_by=current_user.id
+        ).order_by(PurchaseOrder.order_date.desc()).all()
+        
+        return render_template('procurement/my_approvals.html', 
+                             purchase_orders=purchase_orders)
+    except Exception as e:
+        current_app.logger.error(f"My approvals error: {str(e)}")
+        flash("Error loading approval status", "error")
+        return render_template('error.html'), 500
+
 @procurement_bp.route("/suppliers")
 @role_required([Roles.HQ_PROCUREMENT])
 def suppliers():

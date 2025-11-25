@@ -5057,3 +5057,160 @@ def remove_user_project(user_id, project_id):
         flash('Error removing user from project', 'error')
     
     return redirect(url_for('admin.comprehensive_user_management'))
+
+
+# Audit Log Routes
+@admin_bp.route('/audit-logs')
+@role_required([Roles.SUPER_HQ])
+def audit_logs():
+    """Display system audit logs with filtering and pagination"""
+    from models import AuditLog
+    from sqlalchemy import or_
+    
+    try:
+        # Get filter parameters
+        page = request.args.get('page', 1, type=int)
+        per_page = 50
+        date_from = request.args.get('date_from')
+        date_to = request.args.get('date_to')
+        module = request.args.get('module')
+        action = request.args.get('action')
+        user_name = request.args.get('user_name')
+        
+        # Build query with filters
+        query = AuditLog.query
+        
+        if date_from:
+            try:
+                date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+                query = query.filter(AuditLog.timestamp >= date_from_obj)
+            except:
+                pass
+        
+        if date_to:
+            try:
+                date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+                # Add one day to include the entire end date
+                date_to_obj = date_to_obj + timedelta(days=1)
+                query = query.filter(AuditLog.timestamp < date_to_obj)
+            except:
+                pass
+        
+        if module:
+            query = query.filter(AuditLog.module == module)
+        
+        if action:
+            query = query.filter(AuditLog.action == action)
+        
+        if user_name:
+            query = query.filter(AuditLog.user_name.ilike(f'%{user_name}%'))
+        
+        # Check for CSV export
+        if request.args.get('export') == 'csv':
+            # Get all results for export (limit to 10000 for safety)
+            logs = query.order_by(AuditLog.timestamp.desc()).limit(10000).all()
+            
+            # Create CSV
+            output = io.StringIO()
+            writer = csv.writer(output)
+            
+            # Write headers
+            writer.writerow(['Timestamp', 'User', 'Role', 'Action', 'Module', 'Reference Type', 
+                           'Reference Number', 'Description', 'IP Address', 'Success'])
+            
+            # Write data
+            for log in logs:
+                writer.writerow([
+                    log.timestamp.strftime('%Y-%m-%d %H:%M:%S') if log.timestamp else '',
+                    log.user_name or 'System',
+                    log.user_role or '',
+                    log.action or '',
+                    log.module or '',
+                    log.reference_type or '',
+                    log.reference_number or (log.reference_id or ''),
+                    log.description or '',
+                    log.ip_address or '',
+                    'Yes' if log.success else 'No'
+                ])
+            
+            # Create response
+            output.seek(0)
+            return send_file(
+                io.BytesIO(output.getvalue().encode('utf-8')),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'audit_logs_{datetime.now().strftime("%Y%m%d_%H%M%S")}.csv'
+            )
+        
+        # Get paginated results
+        pagination = query.order_by(AuditLog.timestamp.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+        logs = pagination.items
+        
+        # Get statistics
+        total_count = query.count()
+        
+        today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_count = AuditLog.query.filter(AuditLog.timestamp >= today_start).count()
+        
+        active_users_count = db.session.query(func.count(func.distinct(AuditLog.user_id))).filter(
+            AuditLog.timestamp >= today_start
+        ).scalar()
+        
+        critical_count = AuditLog.query.filter(
+            or_(
+                AuditLog.action == 'deleted',
+                AuditLog.action == 'rejected',
+                AuditLog.success == False
+            )
+        ).filter(AuditLog.timestamp >= today_start).count()
+        
+        return render_template('admin/audit_logs.html',
+                             logs=logs,
+                             page=page,
+                             per_page=per_page,
+                             total_count=total_count,
+                             today_count=today_count,
+                             active_users_count=active_users_count,
+                             critical_count=critical_count)
+    
+    except Exception as e:
+        current_app.logger.error(f"Error loading audit logs: {str(e)}")
+        flash('Error loading audit logs', 'error')
+        return render_template('error.html'), 500
+
+
+@admin_bp.route('/audit-logs/<int:log_id>')
+@role_required([Roles.SUPER_HQ])
+def audit_log_details(log_id):
+    """Get details of a specific audit log entry"""
+    from models import AuditLog
+    
+    try:
+        log = AuditLog.query.get_or_404(log_id)
+        
+        return jsonify({
+            'success': True,
+            'log': {
+                'id': log.id,
+                'timestamp': log.timestamp.strftime('%B %d, %Y at %I:%M %p') if log.timestamp else 'N/A',
+                'user_name': log.user_name or 'System',
+                'user_role': log.user_role,
+                'action': log.action,
+                'module': log.module,
+                'reference_type': log.reference_type,
+                'reference_number': log.reference_number,
+                'reference_id': log.reference_id,
+                'description': log.description,
+                'old_values': log.old_values,
+                'new_values': log.new_values,
+                'ip_address': log.ip_address,
+                'user_agent': log.user_agent,
+                'success': log.success
+            }
+        })
+    
+    except Exception as e:
+        current_app.logger.error(f"Error loading audit log details: {str(e)}")
+        return jsonify({'success': False, 'message': 'Error loading details'}), 500

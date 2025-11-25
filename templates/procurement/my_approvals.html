@@ -1,0 +1,325 @@
+{% extends "procurement/base.html" %}
+
+{% block title %}My Purchase Order Approvals - Procurement{% endblock %}
+
+{% block header %}My Purchase Order Approvals{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4 py-6">
+    <!-- Header -->
+    <div class="mb-6 flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">My Purchase Order Approvals</h1>
+            <nav class="text-sm text-gray-600">
+                <a href="{{ url_for('procurement.procurement_home') }}" class="hover:text-green-600">Procurement</a>
+                <span class="mx-2">/</span>
+                <span>My Approvals</span>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="bg-white rounded-lg shadow-md mb-6 overflow-hidden">
+        <div class="border-b border-gray-200">
+            <nav class="flex">
+                <button onclick="filterStatus('all')" class="status-tab px-6 py-4 text-sm font-semibold border-b-2 border-green-600 text-green-600" data-status="all">
+                    All Orders
+                </button>
+                <button onclick="filterStatus('Pending_Cost_Control')" class="status-tab px-6 py-4 text-sm font-semibold border-b-2 border-transparent text-gray-600 hover:text-gray-800" data-status="Pending_Cost_Control">
+                    Pending Cost Control
+                </button>
+                <button onclick="filterStatus('Pending_Finance')" class="status-tab px-6 py-4 text-sm font-semibold border-b-2 border-transparent text-gray-600 hover:text-gray-800" data-status="Pending_Finance">
+                    Pending Finance
+                </button>
+                <button onclick="filterStatus('Approved')" class="status-tab px-6 py-4 text-sm font-semibold border-b-2 border-transparent text-gray-600 hover:text-gray-800" data-status="Approved">
+                    Approved
+                </button>
+                <button onclick="filterStatus('Rejected')" class="status-tab px-6 py-4 text-sm font-semibold border-b-2 border-transparent text-gray-600 hover:text-gray-800" data-status="Rejected">
+                    Rejected
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Purchase Orders List -->
+    <div class="space-y-4">
+        {% if purchase_orders %}
+            {% for po in purchase_orders %}
+            <div class="po-card bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow" data-status="{{ po.status }}">
+                <div class="p-6">
+                    <div class="flex justify-between items-start mb-4">
+                        <div class="flex-1">
+                            <div class="flex items-center gap-3 mb-2">
+                                <h3 class="text-xl font-bold text-gray-800">{{ po.order_number }}</h3>
+                                <span class="px-3 py-1 rounded-full text-sm font-semibold
+                                    {% if po.status == 'Approved' %}bg-green-100 text-green-800
+                                    {% elif po.status == 'Rejected' %}bg-red-100 text-red-800
+                                    {% elif po.status == 'Pending_Finance' %}bg-purple-100 text-purple-800
+                                    {% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                                    {{ po.status|replace('_', ' ')|title }}
+                                </span>
+                                {% if po.priority %}
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold
+                                    {% if po.priority == 'urgent' %}bg-red-100 text-red-800
+                                    {% elif po.priority == 'high' %}bg-orange-100 text-orange-800
+                                    {% else %}bg-green-100 text-green-800{% endif %}">
+                                    {{ po.priority|upper }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-2xl font-bold text-green-600">₦{{ "{:,.2f}".format(po.total_amount) }}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid md:grid-cols-3 gap-4 mb-4">
+                        <div>
+                            <p class="text-sm text-gray-600">Supplier</p>
+                            <p class="font-semibold text-gray-800">{{ po.supplier_name if po.supplier_name else 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Created Date</p>
+                            <p class="font-semibold text-gray-800">{{ po.created_at.strftime('%b %d, %Y') if po.created_at else 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600">Expected Delivery</p>
+                            <p class="font-semibold text-gray-800">{{ po.expected_delivery.strftime('%b %d, %Y') if po.expected_delivery else 'N/A' }}</p>
+                        </div>
+                    </div>
+
+                    {% if po.project %}
+                    <div class="mb-4 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                        <p class="text-sm text-gray-600">Project</p>
+                        <p class="font-semibold text-blue-800">{{ po.project.name }}</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Approval Progress -->
+                    {% if po.workflow and po.workflow.steps %}
+                    <div class="mb-4 p-4 bg-gray-50 rounded-lg">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-3">Approval Progress</h4>
+                        <div class="flex items-center justify-between">
+                            {% for step in po.workflow.steps|sort(attribute='step_order') %}
+                            <div class="flex-1">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-10 h-10 rounded-full flex items-center justify-center
+                                        {% if step.status == 'approved' %}bg-green-500 text-white
+                                        {% elif step.status == 'rejected' %}bg-red-500 text-white
+                                        {% elif step.status == 'pending' %}bg-yellow-500 text-white
+                                        {% else %}bg-gray-300 text-gray-600{% endif %}">
+                                        <i class='bx {% if step.status == 'approved' %}bx-check{% elif step.status == 'rejected' %}bx-x{% else %}bx-time{% endif %} text-xl'></i>
+                                    </div>
+                                    <p class="text-xs font-semibold text-gray-700 mt-2 text-center">{{ step.step_name }}</p>
+                                    {% if step.action_taken_at %}
+                                    <p class="text-xs text-gray-500">{{ step.action_taken_at.strftime('%b %d') }}</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% if not loop.last %}
+                            {% set next_step = po.workflow.steps|selectattr('step_order', 'equalto', step.step_order + 1)|first %}
+                            <div class="flex-1 h-1 mx-2
+                                {% if next_step and next_step.status == 'approved' %}bg-green-500
+                                {% elif step.status == 'approved' %}bg-yellow-300
+                                {% else %}bg-gray-300{% endif %}">
+                            </div>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Comments -->
+                    {% if po.cost_control_comments or po.finance_comments %}
+                    <div class="mb-4">
+                        <h4 class="text-sm font-semibold text-gray-700 mb-2">Approval Comments</h4>
+                        {% if po.cost_control_comments %}
+                        <div class="mb-2 p-3 bg-blue-50 rounded">
+                            <p class="text-xs text-gray-600 mb-1">Cost Control</p>
+                            <p class="text-sm text-gray-800">{{ po.cost_control_comments }}</p>
+                        </div>
+                        {% endif %}
+                        {% if po.finance_comments %}
+                        <div class="p-3 bg-purple-50 rounded">
+                            <p class="text-xs text-gray-600 mb-1">Finance</p>
+                            <p class="text-sm text-gray-800">{{ po.finance_comments }}</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    {% if po.notes %}
+                    <div class="mb-4">
+                        <p class="text-sm text-gray-600">Notes</p>
+                        <p class="text-gray-800">{{ po.notes }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="flex gap-3">
+                        <button onclick="viewPODetails({{ po.id }})" 
+                           class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            <i class='bx bx-show'></i> View Details
+                        </button>
+                        {% if po.status in ['Pending_Cost_Control', 'Pending_Finance'] %}
+                        <button class="bg-gray-500 text-white font-bold py-2 px-4 rounded-lg opacity-50 cursor-not-allowed">
+                            <i class='bx bx-time'></i> Awaiting Approval
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="bg-white rounded-lg shadow-md p-12 text-center">
+            <i class='bx bx-receipt text-6xl text-gray-400 mb-4'></i>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">No Purchase Orders Found</h3>
+            <p class="text-gray-600 mb-6">You haven't submitted any purchase orders for approval yet.</p>
+            <a href="{{ url_for('procurement.purchases') }}" 
+               class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
+                <i class='bx bx-plus'></i> Create Purchase Order
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- PO Details Modal -->
+<div id="poDetailsModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-11/12 max-w-4xl shadow-lg rounded-md bg-white">
+        <div class="flex justify-between items-center mb-4 border-b pb-3">
+            <h3 class="text-2xl font-bold text-gray-900" id="modalPONumber">Purchase Order Details</h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-500">
+                <i class='bx bx-x text-3xl'></i>
+            </button>
+        </div>
+        
+        <div id="modalContent" class="space-y-4">
+            <!-- Content will be loaded dynamically -->
+            <div class="text-center py-8">
+                <i class='bx bx-loader-alt bx-spin text-4xl text-green-600'></i>
+                <p class="mt-2 text-gray-600">Loading details...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function filterStatus(status) {
+    // Update active tab
+    document.querySelectorAll('.status-tab').forEach(tab => {
+        tab.classList.remove('border-green-600', 'text-green-600');
+        tab.classList.add('border-transparent', 'text-gray-600');
+    });
+    const activeTab = document.querySelector(`[data-status="${status}"]`);
+    activeTab.classList.add('border-green-600', 'text-green-600');
+    activeTab.classList.remove('border-transparent', 'text-gray-600');
+
+    // Filter cards
+    document.querySelectorAll('.po-card').forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function viewPODetails(poId) {
+    const modal = document.getElementById('poDetailsModal');
+    const modalContent = document.getElementById('modalContent');
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    
+    // Fetch PO details
+    fetch(`/procurement/purchases/${poId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const po = data.po;
+                document.getElementById('modalPONumber').textContent = po.po_number;
+                
+                modalContent.innerHTML = `
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Supplier</p>
+                            <p class="font-semibold text-gray-800">${po.supplier}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Total Amount</p>
+                            <p class="font-semibold text-green-600 text-xl">₦${parseFloat(po.total_amount).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Status</p>
+                            <p class="font-semibold text-gray-800">${po.status.replace(/_/g, ' ')}</p>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600 mb-1">Expected Delivery</p>
+                            <p class="font-semibold text-gray-800">${po.expected_delivery || 'N/A'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-3">Line Items</h4>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left text-xs font-semibold text-gray-600 uppercase">Item</th>
+                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Quantity</th>
+                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Unit Price</th>
+                                        <th class="px-4 py-2 text-right text-xs font-semibold text-gray-600 uppercase">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${po.items.map(item => `
+                                        <tr class="border-b">
+                                            <td class="px-4 py-3 text-gray-800">${item.item}</td>
+                                            <td class="px-4 py-3 text-right text-gray-800">${item.quantity}</td>
+                                            <td class="px-4 py-3 text-right text-gray-800">₦${parseFloat(item.unitPrice).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                            <td class="px-4 py-3 text-right font-semibold text-gray-800">₦${parseFloat(item.subtotal).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                                <tfoot class="bg-gray-50">
+                                    <tr>
+                                        <td colspan="3" class="px-4 py-3 text-right font-bold text-gray-800">Total:</td>
+                                        <td class="px-4 py-3 text-right font-bold text-green-600">₦${parseFloat(po.total_amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            } else {
+                modalContent.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class='bx bx-error text-4xl text-red-600'></i>
+                        <p class="mt-2 text-gray-600">Error loading purchase order details</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            modalContent.innerHTML = `
+                <div class="text-center py-8">
+                    <i class='bx bx-error text-4xl text-red-600'></i>
+                    <p class="mt-2 text-gray-600">Error loading purchase order details</p>
+                </div>
+            `;
+        });
+}
+
+function closeModal() {
+    document.getElementById('poDetailsModal').classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('poDetailsModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

@@ -1,16 +1,10 @@
-{% extends "base.html" %}
+{% extends "cost_control/base.html" %}
 
 {% block title %}Budget Adjustments{% endblock %}
 
 {% block content %}
 <div class="container mx-auto px-4 py-6">
-    <nav class="mb-6 text-sm text-gray-600">
-        <a href="{{ url_for('home') }}" class="hover:text-blue-600">Home</a>
-        <span class="mx-2">/</span>
-        <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="hover:text-blue-600">Cost Control</a>
-        <span class="mx-2">/</span>
-        <span class="text-gray-900">Budget Adjustments</span>
-    </nav>
+   
 
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Budget Adjustments</h1>
@@ -18,31 +12,7 @@
     </div>
 
     <!-- Quick Navigation -->
-    <div class="bg-white rounded-lg shadow-sm p-4 mb-6">
-        <div class="flex flex-wrap gap-2">
-            <a href="{{ url_for('cost_control_mgr.dashboard') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-tachometer-alt mr-2"></i>Dashboard
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cost_tracking') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-clipboard-list mr-2"></i>Cost Tracking
-            </a>
-            <a href="{{ url_for('cost_control_mgr.variance_analysis') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-chart-line mr-2"></i>Variance Analysis
-            </a>
-            <a href="{{ url_for('cost_control_mgr.budget_adjustments') }}" class="px-4 py-2 bg-blue-600 text-white rounded-lg">
-                <i class="fas fa-adjust mr-2"></i>Budget Adjustments
-            </a>
-            <a href="{{ url_for('cost_control_mgr.cash_flow') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-money-bill-wave mr-2"></i>Cash Flow
-            </a>
-            <a href="{{ url_for('cost_control_mgr.approvals') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-check-circle mr-2"></i>Approvals
-            </a>
-            <a href="{{ url_for('cost_control_mgr.reports') }}" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
-                <i class="fas fa-file-alt mr-2"></i>Reports
-            </a>
-        </div>
-    </div>
+   
 
     <!-- Request Budget Adjustment -->
     <div class="bg-white rounded-lg shadow mb-6">
@@ -51,6 +21,7 @@
         </div>
         <div class="p-6">
             <form method="POST" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Budget</label>
                     <select name="budget_id" required class="w-full px-4 py-2 border border-gray-300 rounded-lg">
@@ -108,7 +79,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right">₦{{ "{:,.0f}".format(adjustment.new_amount) }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
                             <span class="{% if adjustment.adjustment_amount > 0 %}text-red-600{% else %}text-green-600{% endif %} font-bold">
-                                {{ "%.1f"|format(adjustment.adjustment_percentage) }}%
+                                {{ "%.1f"|format((adjustment.adjustment_amount / adjustment.old_amount * 100) if adjustment.old_amount > 0 else 0) }}%
                             </span>
                         </td>
                         <td class="px-6 py-4 text-sm">{{ adjustment.reason[:50] }}...</td>

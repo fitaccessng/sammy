@@ -1,6 +1,6 @@
 
 # --- Admin/Manager Models ---
-from datetime import datetime
+from datetime import datetime, timezone
 from extensions import db
 
 class Department(db.Model):
@@ -85,6 +85,108 @@ class CostVarianceReport(db.Model):
     planned_amount = db.Column(db.Float, nullable=False)
     actual_amount = db.Column(db.Float, nullable=False)
     variance = db.Column(db.Float, nullable=False)
+
+class CostTrackingEntry(db.Model):
+    __tablename__ = 'cost_tracking_entries'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('cost_category.id'), nullable=True)
+    entry_date = db.Column(db.Date, nullable=False)
+    description = db.Column(db.String(500), nullable=False)
+    planned_cost = db.Column(db.Float, default=0.0)
+    actual_cost = db.Column(db.Float, default=0.0)
+    variance = db.Column(db.Float, default=0.0)
+    variance_percentage = db.Column(db.Float, default=0.0)
+    cost_type = db.Column(db.String(50), nullable=False)  # material, labor, equipment, overhead
+    quantity = db.Column(db.Float, nullable=True)
+    unit = db.Column(db.String(50), nullable=True)
+    unit_cost = db.Column(db.Float, nullable=True)
+    status = db.Column(db.String(32), default='pending')  # pending, approved, rejected
+    approval_required = db.Column(db.Boolean, default=False)
+    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def calculate_variance(self):
+        """Calculate variance and variance percentage"""
+        self.variance = self.actual_cost - self.planned_cost
+        if self.planned_cost > 0:
+            self.variance_percentage = (self.variance / self.planned_cost) * 100
+        else:
+            self.variance_percentage = 0
+    
+    def __repr__(self):
+        return f'<CostTrackingEntry {self.id} - {self.description}>'
+
+class CostApproval(db.Model):
+    __tablename__ = 'cost_approvals'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    reference_type = db.Column(db.String(64), nullable=False)  # 'cost_entry', 'budget_adjustment'
+    reference_id = db.Column(db.Integer, nullable=False)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    required_role = db.Column(db.String(64), nullable=False)  # Role needed to approve
+    amount = db.Column(db.Float, nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    
+    # Approval tracking
+    status = db.Column(db.String(32), default='pending')  # pending, approved, rejected
+    approver_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+    comments = db.Column(db.Text, nullable=True)
+    action_taken = db.Column(db.String(32), nullable=True)  # approved, rejected
+    
+    # Metadata
+    created_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    project = db.relationship('Project', backref='cost_approvals')
+    approver = db.relationship('User', foreign_keys=[approver_id], backref='approved_costs')
+    creator = db.relationship('User', foreign_keys=[created_by], backref='created_approvals')
+    
+    def __repr__(self):
+        return f'<CostApproval {self.id} - {self.reference_type} - {self.status}>'
+
+class BudgetAdjustment(db.Model):
+    __tablename__ = 'budget_adjustments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    budget_id = db.Column(db.Integer, db.ForeignKey('budgets.id'), nullable=False)
+    category = db.Column(db.String(64), nullable=False)
+    
+    # Adjustment details
+    old_amount = db.Column(db.Float, nullable=False)
+    new_amount = db.Column(db.Float, nullable=False)
+    adjustment_amount = db.Column(db.Float, nullable=False)
+    adjustment_type = db.Column(db.String(32), nullable=False)  # 'increase', 'decrease'
+    reason = db.Column(db.Text, nullable=False)
+    impact_analysis = db.Column(db.Text, nullable=True)
+    
+    # Approval tracking
+    status = db.Column(db.String(32), default='pending')  # pending, approved, rejected
+    approved_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
+    approved_at = db.Column(db.DateTime, nullable=True)
+    approval_comments = db.Column(db.Text, nullable=True)
+    
+    # Metadata
+    requested_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    requested_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    project = db.relationship('Project', backref='budget_adjustments')
+    budget = db.relationship('Budget', backref='adjustments')
+    approver = db.relationship('User', foreign_keys=[approved_by], backref='approved_adjustments')
+    requester = db.relationship('User', foreign_keys=[requested_by], backref='requested_adjustments')
+    
+    def __repr__(self):
+        return f'<BudgetAdjustment {self.id} - {self.category} - {self.adjustment_type}>'
+
 ## --- Procurement Models ---
 class ProcurementRequest(db.Model):
     __tablename__ = 'procurement_requests'
@@ -741,7 +843,7 @@ class PurchaseOrder(db.Model):
     supplier_email = db.Column(db.String(128))
     supplier_phone = db.Column(db.String(32))
     project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
-    status = db.Column(db.String(32), default='Draft')  # Draft, Pending, Approved, Rejected, Ordered, Delivered, Cancelled
+    status = db.Column(db.String(32), default='Draft')  # Draft, Pending_Cost_Control, Pending_Finance, Approved, Rejected, Ordered, Delivered, Cancelled
     priority = db.Column(db.String(32), default='Normal')  # Low, Normal, High, Urgent
     description = db.Column(db.Text)
     subtotal = db.Column(db.Float, default=0.0)
@@ -750,8 +852,20 @@ class PurchaseOrder(db.Model):
     total_amount = db.Column(db.Float, default=0.0)
     expected_delivery = db.Column(db.Date)
     requested_by = db.Column(db.Integer, db.ForeignKey('employee.id'))
+    
+    # Approval workflow fields
+    workflow_id = db.Column(db.Integer, db.ForeignKey('approval_workflows.id'))  # Link to approval workflow
+    cost_control_approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    cost_control_approved_at = db.Column(db.DateTime)
+    cost_control_comments = db.Column(db.Text)
+    finance_approved_by = db.Column(db.Integer, db.ForeignKey('user.id'))
+    finance_approved_at = db.Column(db.DateTime)
+    finance_comments = db.Column(db.Text)
+    
+    # Legacy approval field (kept for backward compatibility)
     approved_by = db.Column(db.Integer, db.ForeignKey('employee.id'))
     approval_date = db.Column(db.DateTime)
+    
     delivery_address = db.Column(db.Text)
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -760,6 +874,9 @@ class PurchaseOrder(db.Model):
     # Relationships
     requested_by_employee = db.relationship('Employee', foreign_keys=[requested_by], backref='requested_orders')
     approved_by_employee = db.relationship('Employee', foreign_keys=[approved_by], backref='approved_orders')
+    cost_control_approver = db.relationship('User', foreign_keys=[cost_control_approved_by], backref='cost_control_approved_pos')
+    finance_approver = db.relationship('User', foreign_keys=[finance_approved_by], backref='finance_approved_pos')
+    workflow = db.relationship('ApprovalWorkflow', foreign_keys=[workflow_id], backref='purchase_orders')
     line_items = db.relationship('PurchaseOrderLineItem', backref='purchase_order', cascade='all, delete-orphan')
 
 class PurchaseOrderLineItem(db.Model):
@@ -1495,3 +1612,159 @@ class MaterialSchedule(db.Model):
     
     def __repr__(self):
         return f'<MaterialSchedule {self.material_name}: {self.required_qty} {self.unit}>'
+
+
+# --- Approval Workflow Models ---
+class ApprovalWorkflow(db.Model):
+    """Master model for tracking multi-stage approval workflows"""
+    __tablename__ = 'approval_workflows'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    workflow_type = db.Column(db.String(64), nullable=False)  # purchase_order, payroll, budget_adjustment, expense, etc.
+    reference_id = db.Column(db.Integer, nullable=False)  # ID of the item being approved
+    reference_number = db.Column(db.String(128))  # Human-readable reference (PO-001, PAY-2024-01)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    
+    # Workflow status
+    current_stage = db.Column(db.String(64), nullable=False)  # procurement, cost_control, finance, admin, hr
+    overall_status = db.Column(db.String(32), default='pending')  # pending, in_progress, approved, rejected, cancelled
+    
+    # Tracking
+    initiated_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    initiated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    completed_at = db.Column(db.DateTime)
+    
+    # Metadata
+    total_amount = db.Column(db.Float)
+    description = db.Column(db.Text)
+    priority = db.Column(db.String(32), default='normal')  # low, normal, high, urgent
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    initiator = db.relationship('User', foreign_keys=[initiated_by], backref='initiated_workflows')
+    project = db.relationship('Project', backref='approval_workflows')
+    steps = db.relationship('WorkflowStep', backref='workflow', cascade='all, delete-orphan', order_by='WorkflowStep.step_order')
+    
+    def __repr__(self):
+        return f'<ApprovalWorkflow {self.workflow_type} - {self.reference_number}: {self.overall_status}>'
+
+
+class WorkflowStep(db.Model):
+    """Individual approval steps within a workflow"""
+    __tablename__ = 'workflow_steps'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    workflow_id = db.Column(db.Integer, db.ForeignKey('approval_workflows.id'), nullable=False)
+    
+    # Step details
+    step_order = db.Column(db.Integer, nullable=False)  # 1, 2, 3 for sequential steps
+    step_name = db.Column(db.String(64), nullable=False)  # cost_control_approval, finance_approval, etc.
+    required_role = db.Column(db.String(64), nullable=False)  # hq_cost_control, hq_finance, admin, etc.
+    
+    # Status
+    status = db.Column(db.String(32), default='pending')  # pending, approved, rejected, skipped
+    
+    # Approval details
+    approver_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    action_taken_at = db.Column(db.DateTime)
+    comments = db.Column(db.Text)
+    
+    # Notifications
+    notification_sent = db.Column(db.Boolean, default=False)
+    notification_sent_at = db.Column(db.DateTime)
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    approver = db.relationship('User', foreign_keys=[approver_id], backref='workflow_steps')
+    
+    def __repr__(self):
+        return f'<WorkflowStep {self.step_name}: {self.status}>'
+
+
+# --- Notification System ---
+class Notification(db.Model):
+    """In-app notifications for users"""
+    __tablename__ = 'notifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Notification content
+    title = db.Column(db.String(255), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    notification_type = db.Column(db.String(64))  # approval_request, approval_granted, approval_rejected, info, warning, success
+    
+    # Reference to source
+    reference_type = db.Column(db.String(64))  # purchase_order, payroll, budget_adjustment, etc.
+    reference_id = db.Column(db.Integer)
+    action_url = db.Column(db.String(255))  # Link to take action
+    
+    # Status
+    is_read = db.Column(db.Boolean, default=False)
+    read_at = db.Column(db.DateTime)
+    
+    # Email notification tracking
+    email_sent = db.Column(db.Boolean, default=False)
+    email_sent_at = db.Column(db.DateTime)
+    
+    # Priority
+    priority = db.Column(db.String(32), default='normal')  # low, normal, high, urgent
+    
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    expires_at = db.Column(db.DateTime)  # Optional expiration
+    
+    # Relationships
+    user = db.relationship('User', backref='notifications')
+    
+    def __repr__(self):
+        return f'<Notification {self.title} for User {self.user_id}>'
+
+
+# --- Audit Log System ---
+class AuditLog(db.Model):
+    """Comprehensive audit log for all system activities"""
+    __tablename__ = 'audit_logs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    
+    # Who performed the action
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_name = db.Column(db.String(128))  # Cached for deleted users
+    user_role = db.Column(db.String(64))
+    
+    # What action was performed
+    action = db.Column(db.String(128), nullable=False)  # created, updated, deleted, approved, rejected, submitted
+    module = db.Column(db.String(64), nullable=False)  # procurement, hr, finance, cost_control, admin
+    
+    # What was affected
+    reference_type = db.Column(db.String(64), nullable=False)  # purchase_order, payroll, user, project, etc.
+    reference_id = db.Column(db.Integer)
+    reference_number = db.Column(db.String(128))  # Human-readable reference
+    
+    # Details
+    description = db.Column(db.Text)  # Human-readable description
+    old_values = db.Column(db.Text)  # JSON string of old values
+    new_values = db.Column(db.Text)  # JSON string of new values
+    
+    # Context
+    ip_address = db.Column(db.String(45))  # IPv4 or IPv6
+    user_agent = db.Column(db.String(255))
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'))
+    
+    # Metadata
+    severity = db.Column(db.String(32), default='info')  # info, warning, critical
+    success = db.Column(db.Boolean, default=True)
+    error_message = db.Column(db.Text)
+    
+    timestamp = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True)
+    
+    # Relationships
+    user = db.relationship('User', backref='audit_logs')
+    project = db.relationship('Project', backref='audit_logs')
+    
+    def __repr__(self):
+        return f'<AuditLog {self.action} on {self.reference_type} by {self.user_name}>'
